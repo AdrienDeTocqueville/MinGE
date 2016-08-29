@@ -1,0 +1,433 @@
+# depslib dependency file v1.0
+1472494613 source:c:\users\otarie\programmes\c++\minge\billard.cpp
+	"Billard.h"
+
+1472494592 c:\users\otarie\programmes\c++\minge\billard.h
+	<MinGE.h>
+
+1472494592 c:\users\otarie\programmes\c++\minge\engine\minge.h
+	"includes.h"
+	"Engine.h"
+	"Entity.h"
+	"Components/Transform.h"
+	"Components/RigidBody.h"
+	"Components/Graphic.h"
+	"Components/Camera.h"
+	"Components/Skybox.h"
+	"Components/Script.h"
+	"Components/Light.h"
+	"Components/Cylinder.h"
+	"Components/Sphere.h"
+	"Components/Cone.h"
+	"Components/Box.h"
+	"Physic/Constraint.h"
+	"Physic/ContactConstraint.h"
+	"Physic/DistanceConstraint.h"
+	"Assets/Material.h"
+	"Assets/Program.h"
+	"Assets/Texture.h"
+	"Meshes/Model.h"
+	"Meshes/Terrain.h"
+	"Meshes/AnimatedModel.h"
+
+1471106287 c:\users\otarie\programmes\c++\minge\engine\engine.h
+	"Systems/Input.h"
+	"Systems/Debug.h"
+	"Systems/GraphicEngine.h"
+	"Systems/PhysicEngine.h"
+	"Systems/ScriptEngine.h"
+	"Assets/Program.h"
+
+1470150371 c:\users\otarie\programmes\c++\minge\engine\systems\input.h
+	"includes.h"
+
+1471114021 c:\users\otarie\programmes\c++\minge\engine\includes.h
+	<GL/glew.h>
+	<SFML/Graphics.hpp>
+	<SFML/OpenGL.hpp>
+	<SFML/Audio.hpp>
+	<iostream>
+	<fstream>
+	<sstream>
+	<string>
+	<cmath>
+	<algorithm>
+	<functional>
+	<vector>
+	<array>
+	<list>
+	<map>
+	<set>
+	<glm.hpp>
+	<gtc/epsilon.hpp>
+	<gtc/type_ptr.hpp>
+	<gtc/quaternion.hpp>
+	<gtx/quaternion.hpp>
+	<gtx/transform.hpp>
+	<gtx/matrix_operation.hpp>
+	<Windows.h>
+
+1471106401 c:\users\otarie\programmes\c++\minge\engine\systems\graphicengine.h
+	"includes.h"
+	"Systems/Debug.h"
+
+1471106401 c:\users\otarie\programmes\c++\minge\engine\systems\debug.h
+	"includes.h"
+
+1465781490 c:\users\otarie\programmes\c++\minge\engine\systems\physicengine.h
+	"includes.h"
+
+1467906870 c:\users\otarie\programmes\c++\minge\engine\systems\scriptengine.h
+	"includes.h"
+
+1472478721 c:\users\otarie\programmes\c++\minge\engine\assets\program.h
+	"includes.h"
+
+1472498099 c:\users\otarie\programmes\c++\minge\engine\entity.h
+	"includes.h"
+	<typeinfo>
+
+1471104840 c:\users\otarie\programmes\c++\minge\engine\components\transform.h
+	"Components/Component.h"
+
+1472495730 c:\users\otarie\programmes\c++\minge\engine\components\component.h
+	"Systems/Debug.h"
+	"Entity.h"
+
+1471104994 c:\users\otarie\programmes\c++\minge\engine\components\rigidbody.h
+	"Components/Component.h"
+
+1471104994 c:\users\otarie\programmes\c++\minge\engine\components\graphic.h
+	"Components/Component.h"
+	"Assets/Mesh.h"
+
+1471184730 c:\users\otarie\programmes\c++\minge\engine\assets\mesh.h
+	"Systems/GraphicEngine.h"
+	"Assets/Material.h"
+
+1471468206 c:\users\otarie\programmes\c++\minge\engine\assets\material.h
+	"Assets/Program.h"
+	"Assets/Texture.h"
+
+1469128739 c:\users\otarie\programmes\c++\minge\engine\assets\texture.h
+	"includes.h"
+
+1471104994 c:\users\otarie\programmes\c++\minge\engine\components\camera.h
+	"Components/Component.h"
+	"Assets/RenderTexture.h"
+
+1469126760 c:\users\otarie\programmes\c++\minge\engine\assets\renderbuffer.h
+	"Assets/Texture.h"
+
+1471104994 c:\users\otarie\programmes\c++\minge\engine\components\skybox.h
+	"Components/Component.h"
+	"Assets/Mesh.h"
+
+1472471491 c:\users\otarie\programmes\c++\minge\engine\components\script.h
+	"Components/Component.h"
+
+1471104994 c:\users\otarie\programmes\c++\minge\engine\components\light.h
+	"Components/Component.h"
+
+1471104994 c:\users\otarie\programmes\c++\minge\engine\components\cylinder.h
+	"Components/Collider.h"
+
+1471104994 c:\users\otarie\programmes\c++\minge\engine\components\collider.h
+	"Assets/PhysicMaterial.h"
+	"Components/Component.h"
+	"Physic/AABB.h"
+
+1468592343 c:\users\otarie\programmes\c++\minge\engine\assets\physicmaterial.h
+	"includes.h"
+
+1465942386 c:\users\otarie\programmes\c++\minge\engine\physic\aabb.h
+	"includes.h"
+
+1471104994 c:\users\otarie\programmes\c++\minge\engine\components\sphere.h
+	"Components/Collider.h"
+
+1471104994 c:\users\otarie\programmes\c++\minge\engine\components\cone.h
+	"Components/Collider.h"
+
+1471104994 c:\users\otarie\programmes\c++\minge\engine\components\box.h
+	"Components/Collider.h"
+
+1465781490 c:\users\otarie\programmes\c++\minge\engine\physic\constraint.h
+	"includes.h"
+
+1471114021 c:\users\otarie\programmes\c++\minge\engine\physic\contactconstraint.h
+	"Physic/Constraint.h"
+
+1465781490 c:\users\otarie\programmes\c++\minge\engine\physic\distanceconstraint.h
+	"Physic/Constraint.h"
+
+1472382816 c:\users\otarie\programmes\c++\minge\engine\assets\prototype.h
+	<Entity.h>
+
+1471115980 c:\users\otarie\programmes\c++\minge\engine\meshes\model.h
+	"Assets/Mesh.h"
+
+1468945555 c:\users\otarie\programmes\c++\minge\engine\meshes\terrain.h
+	"Assets/Mesh.h"
+	"Util/Structs.h"
+
+1468945113 c:\users\otarie\programmes\c++\minge\engine\util\structs.h
+	"Systems/GraphicEngine.h"
+
+1472476993 source:c:\users\otarie\programmes\c++\minge\engine\assets\material.cpp
+	"Assets/Material.h"
+	"Components/Light.h"
+	"Components/Camera.h"
+	"Components/Transform.h"
+	"Systems/GraphicEngine.h"
+
+1471262555 source:c:\users\otarie\programmes\c++\minge\engine\assets\mesh.cpp
+	"Assets/Mesh.h"
+
+1465781490 source:c:\users\otarie\programmes\c++\minge\engine\assets\physicmaterial.cpp
+	"PhysicMaterial.h"
+
+1472478790 source:c:\users\otarie\programmes\c++\minge\engine\assets\program.cpp
+	"Assets/Program.h"
+
+1471104056 source:c:\users\otarie\programmes\c++\minge\engine\assets\prototype.cpp
+	"Prototype.h"
+	"Components/Transform.h"
+
+1469126799 source:c:\users\otarie\programmes\c++\minge\engine\assets\renderbuffer.cpp
+	"Assets/RenderBuffer.h"
+
+1469128739 source:c:\users\otarie\programmes\c++\minge\engine\assets\texture.cpp
+	"Assets/Texture.h"
+
+1470150951 source:c:\users\otarie\programmes\c++\minge\engine\components\box.cpp
+	"Components/Transform.h"
+	"Components/RigidBody.h"
+	"Components/Box.h"
+
+1469287509 source:c:\users\otarie\programmes\c++\minge\engine\components\camera.cpp
+	"Components/Camera.h"
+	"Components/Skybox.h"
+	"Components/Transform.h"
+	"Systems/Input.h"
+
+1472471491 source:c:\users\otarie\programmes\c++\minge\engine\components\collider.cpp
+	"Components/RigidBody.h"
+	"Components/Collider.h"
+	"Systems/PhysicEngine.h"
+
+1472476984 source:c:\users\otarie\programmes\c++\minge\engine\components\component.cpp
+	"Components/Component.h"
+
+1470150951 source:c:\users\otarie\programmes\c++\minge\engine\components\cone.cpp
+	"Components/Transform.h"
+	"Components/RigidBody.h"
+	"Components/Cone.h"
+
+1470150951 source:c:\users\otarie\programmes\c++\minge\engine\components\cylinder.cpp
+	"Components/Transform.h"
+	"Components/RigidBody.h"
+	"Components/Cylinder.h"
+
+1471104721 source:c:\users\otarie\programmes\c++\minge\engine\components\graphic.cpp
+	"Components/Graphic.h"
+	"Components/Transform.h"
+
+1465781490 source:c:\users\otarie\programmes\c++\minge\engine\components\light.cpp
+	"Components/Transform.h"
+	"Components/Light.h"
+	"Systems/GraphicEngine.h"
+
+1471105377 source:c:\users\otarie\programmes\c++\minge\engine\components\rigidbody.cpp
+	"Components\Transform.h"
+	"Components\RigidBody.h"
+	"Components\Collider.h"
+	"Systems/PhysicEngine.h"
+
+1472471491 source:c:\users\otarie\programmes\c++\minge\engine\components\script.cpp
+	"Components/Script.h"
+	"Systems/ScriptEngine.h"
+
+1469287098 source:c:\users\otarie\programmes\c++\minge\engine\components\skybox.cpp
+	"Components/Skybox.h"
+	"Components/Transform.h"
+	"Components/Camera.h"
+
+1470150951 source:c:\users\otarie\programmes\c++\minge\engine\components\sphere.cpp
+	"Components/Transform.h"
+	"Components/RigidBody.h"
+	"Components/Sphere.h"
+
+1472382774 source:c:\users\otarie\programmes\c++\minge\engine\components\transform.cpp
+	"Components/Transform.h"
+	"Systems/GraphicEngine.h"
+
+1472494379 source:c:\users\otarie\programmes\c++\minge\engine\engine.cpp
+	"Engine.h"
+	"Entity.h"
+	"Assets/PhysicMaterial.h"
+	"Assets/Mesh.h"
+	"Components/Camera.h"
+
+1472497693 source:c:\users\otarie\programmes\c++\minge\engine\entity.cpp
+	"MinGE.h"
+
+1465781490 source:c:\users\otarie\programmes\c++\minge\engine\glew.c
+	<GL/glew.h>
+	<GL/wglew.h>
+	<GL/glxew.h>
+	<stddef.h>
+	<dlfcn.h>
+	<stdio.h>
+	<stdlib.h>
+	<stdlib.h>
+	<string.h>
+	<AvailabilityMacros.h>
+	<dlfcn.h>
+	<mach-o/dyld.h>
+
+1471117491 source:c:\users\otarie\programmes\c++\minge\engine\meshes\model.cpp
+	"Meshes/Model.h"
+
+1468946980 source:c:\users\otarie\programmes\c++\minge\engine\meshes\terrain.cpp
+	"Meshes/Terrain.h"
+
+1465942386 source:c:\users\otarie\programmes\c++\minge\engine\physic\aabb.cpp
+	"Physic/AABB.h"
+	"Assets/Program.h"
+	"Systems/GraphicEngine.h"
+
+1469042725 source:c:\users\otarie\programmes\c++\minge\engine\physic\collisiondetection.cpp
+	"Physic/CollisionDetection.h"
+	"Physic/ContactConstraint.h"
+	"Components/RigidBody.h"
+	"Components/Collider.h"
+	"Components/Transform.h"
+	"Systems/Input.h"
+	"Components/Sphere.h"
+
+1469042213 c:\users\otarie\programmes\c++\minge\engine\physic\collisiondetection.h
+	"includes.h"
+
+1465781490 source:c:\users\otarie\programmes\c++\minge\engine\physic\constraint.cpp
+	"Physic/Constraint.h"
+
+1469042281 source:c:\users\otarie\programmes\c++\minge\engine\physic\contactconstraint.cpp
+	"Physic/ContactConstraint.h"
+	"Physic/CollisionDetection.h"
+	"Components/Transform.h"
+	"Components/RigidBody.h"
+	"Components/Collider.h"
+	"Components/Script.h"
+	"Entity.h"
+	"Components/Sphere.h"
+
+1465781490 source:c:\users\otarie\programmes\c++\minge\engine\physic\distanceconstraint.cpp
+	"Physic/DistanceConstraint.h"
+	"Components/RigidBody.h"
+	"Components/Transform.h"
+	"Entity.h"
+
+1471276691 source:c:\users\otarie\programmes\c++\minge\engine\systems\debug.cpp
+	"Systems/Debug.h"
+	"Assets/Program.h"
+	"Systems/GraphicEngine.h"
+
+1471106287 source:c:\users\otarie\programmes\c++\minge\engine\systems\graphicengine.cpp
+	"Systems/GraphicEngine.h"
+	"Components/Graphic.h"
+	"Components/Camera.h"
+	"Components/Light.h"
+	"Physic/AABB.h"
+	"Entity.h"
+	<cstring>
+
+1471105872 source:c:\users\otarie\programmes\c++\minge\engine\systems\input.cpp
+	"Input.h"
+	"Components/Component.h"
+
+1471278686 source:c:\users\otarie\programmes\c++\minge\engine\systems\physicengine.cpp
+	"Systems/PhysicEngine.h"
+	"Components/Transform.h"
+	"Components/RigidBody.h"
+	"Components/Collider.h"
+	"Physic/Constraint.h"
+	"Physic/DistanceConstraint.h"
+	"Physic/ContactConstraint.h"
+
+1468925174 source:c:\users\otarie\programmes\c++\minge\engine\systems\scriptengine.cpp
+	"Systems/ScriptEngine.h"
+	"Components/Script.h"
+	"Entity.h"
+
+1471106995 source:c:\users\otarie\programmes\c++\minge\engine\util\errors.cpp
+	"includes.h"
+
+1468948651 source:c:\users\otarie\programmes\c++\minge\engine\util\structs.cpp
+	"Util/Structs.h"
+
+1465781490 source:c:\users\otarie\programmes\c++\minge\engine\util\tinyxml2.cpp
+	"tinyxml2.h"
+	<new>
+	<stddef.h>
+	<stdarg.h>
+	<cstddef>
+	<cstdarg>
+
+1465781490 c:\users\otarie\programmes\c++\minge\engine\util\tinyxml2.h
+	<ctype.h>
+	<limits.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<cctype>
+	<climits>
+	<cstdio>
+	<cstdlib>
+	<cstring>
+	<android/log.h>
+	<assert.h>
+
+1472497898 source:c:\users\otarie\programmes\c++\minge\main.cpp
+	<MinGE.h>
+	"Billard.h"
+	"Water.h"
+	"PlayerScript.h"
+	"TerrainScript.h"
+	"TPSCameraScript.h"
+
+1465781490 c:\users\otarie\programmes\c++\minge\editor.h
+	<Minge.h>
+
+1469197287 c:\users\otarie\programmes\c++\minge\water.h
+	<MinGE.h>
+
+1472497693 c:\users\otarie\programmes\c++\minge\playerscript.h
+	<MinGE.h>
+
+1471289621 c:\users\otarie\programmes\c++\minge\tpscamerascript.h
+	<MinGE.h>
+
+1472497994 source:c:\users\otarie\programmes\c++\minge\playerscript.cpp
+	"PlayerScript.h"
+	<gtc/random.hpp>
+
+1468753596 source:c:\users\otarie\programmes\c++\minge\water.cpp
+
+1471224250 c:\users\otarie\programmes\c++\minge\terrainscript.h
+	<MinGE.h>
+
+1469130175 c:\users\otarie\programmes\c++\minge\engine\assets\rendertexture.h
+	"Assets/Texture.h"
+
+1469130175 source:c:\users\otarie\programmes\c++\minge\engine\assets\rendertexture.cpp
+	"Assets/RenderTexture.h"
+
+1472477964 source:c:\users\otarie\programmes\c++\minge\engine\meshes\animatedmodel.cpp
+	"Components/Component.h"
+	"Meshes/AnimatedModel.h"
+	"Util/tinyxml2.h"
+
+1472477899 c:\users\otarie\programmes\c++\minge\engine\meshes\animatedmodel.h
+	"Assets/Mesh.h"
+
