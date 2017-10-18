@@ -1,0 +1,58 @@
+#include "Components/Transform.h"
+#include "Components/Light.h"
+
+#include "Systems/GraphicEngine.h"
+
+Light::Light(LightType _type, vec3 _offset, vec3 _diffuse, float _ambient, float _constant, float _linear, float _quadratic):
+    type(_type),
+    position(_offset), diffuse(_diffuse), ambient(_ambient),
+    attenuation(_constant, _linear, _quadratic)
+{ }
+
+Light::~Light()
+{ }
+
+/// Methods (public)
+Light* Light::clone() const
+{
+    return new Light(type);
+}
+
+void Light::registerComponent()
+{
+    if (registered)
+        return;
+
+    GraphicEngine::get()->addLight(this);
+    registered = true;
+}
+
+void Light::deregisterComponent()
+{
+    if (!registered)
+        return;
+
+    GraphicEngine::get()->removeLight(this);
+    registered = false;
+}
+
+/// Getters
+vec3 Light::getPosition() const
+{
+    return tr->getToWorldSpace(position);
+}
+
+vec3 Light::getDiffuseColor() const
+{
+    return diffuse;
+}
+
+float Light::getAmbientCoefficient() const
+{
+    return ambient;
+}
+
+vec3 Light::getAttenuation() const
+{
+    return attenuation;
+}

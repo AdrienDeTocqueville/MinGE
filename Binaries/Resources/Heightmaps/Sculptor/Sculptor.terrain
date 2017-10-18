@@ -1,8 +1,0 @@
-Heightmap Heightmaps/Sculptor/height.png
-Colormap Heightmaps/Sculptor/color.png
-Detailmap Heightmaps/Sculptor/detail.png
-
-DetailTexture Textures/rock.png    27.365000
-DetailTexture Textures/dirt.png    20.000000
-DetailTexture Textures/bigRock.png 32.340000
-DetailTexture Textures/grass.png   22.389999
