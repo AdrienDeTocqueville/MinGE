@@ -20,15 +20,13 @@ Skybox* Skybox::clone() const
 
 void Skybox::render()
 {
-    Transform tr(Camera::current->getTransform()->position);
-
     glPushAttrib(GL_POLYGON_BIT);
     glPushAttrib(GL_DEPTH_BUFFER_BIT);
 
         glCullFace(GL_FRONT);
         glDisable(GL_DEPTH_TEST);
 
-        sky->render(&tr, sky->getMaterials());
+        sky->render(tr, sky->getMaterials());
 
     glPopAttrib();
     glPopAttrib();

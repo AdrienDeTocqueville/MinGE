@@ -58,7 +58,6 @@ vec3 Cone::getSupport(vec3 _axis)
     return tr->getToWorldSpace(support + center);
 }
 
-
 float Cone::getRadius() const
 {
     return radius * tr->scale.x;

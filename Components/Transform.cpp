@@ -22,25 +22,6 @@ Transform* Transform::clone() const
     return new Transform(position, rotation, scale);
 }
 
-void Transform::attach(Entity* _entity)
-{
-    if (entity != nullptr)  // If already attached
-        return;             // Refuse to change
-
-    if (_entity->tr != nullptr)
-        return;
-
-    entity = _entity;       // Register entity
-    entity->tr = this;      // Set the shortcut
-
-    entity->components[typeid(Transform).hash_code()].push_back(this);   // Register component
-}
-
-void Transform::detach()
-{
-    return; // Impossible to detach transform
-}
-
 void Transform::toMatrix()
 {
     if (parent != nullptr)
@@ -98,11 +79,6 @@ void Transform::setParent(Transform* _parent)
 void Transform::setDirection(vec3 _direction)
 {
     rotation = glm::rotation(vec3(1, 0, 0), _direction);
-}
-
-void Transform::setRoot(Transform* _root) // private
-{
-    root = _root;
 }
 
 /// Getters
@@ -165,4 +141,10 @@ mat4 Transform::getToWorldSpace(const mat4& _matrix) const
 vec3 Transform::getVectorToWorldSpace(vec3 _vector) const
 {
     return vec3(toWorldSpace * vec4(_vector, 1.0f)) - position;
+}
+
+/// Methods (private)
+void Transform::setRoot(Transform* _root) // private
+{
+    root = _root;
 }

@@ -26,6 +26,7 @@ class Box : public Collider
             vec3 getHalfExtent() const;
             vec3 getDimensions() const;
 
+    private:
         /// Attributes
             vec3 halfExtent;
 };

@@ -139,16 +139,36 @@ void PhysicEngine::update()
     for(RigidBody* body: bodies)
     {
         body->integrateVelocities(dt);
-        body->updateAABBs();
     }
 
+    for(Collider* collider: colliders)
+    {
+        collider->computeAABB();
+        collider->getAABB()->prepare();
+    }
 
     sendAndFreeData();
 }
 
+RayHit PhysicEngine::raycast(vec3 _origin, vec3 _direction)
+{
+    RayHit closestHit;
+
+    for (Collider* collider: colliders)
+    {
+        RayHit hit = collider->raycast(_origin, _direction);
+
+        if (hit.distance != -1.0f)
+            if (closestHit.distance == -1.0f || hit.distance < closestHit.distance)
+                closestHit = hit;
+    }
+
+    return closestHit;
+}
+
 bool sortDistance(const RayHit& _a, const RayHit& _b) { return _a.distance < _b.distance; }
 
-std::vector<RayHit> PhysicEngine::raycast(vec3 _origin, vec3 _direction, bool _sort)
+std::vector<RayHit> PhysicEngine::raycastAll(vec3 _origin, vec3 _direction, bool _sort)
 {
     std::vector<RayHit> hits;
 
@@ -169,7 +189,7 @@ std::vector<RayHit> PhysicEngine::raycast(vec3 _origin, vec3 _direction, bool _s
 
 void PhysicEngine::detectCollision(Collider* a, Collider* b)
 {
-    if (a->getTransform()->getRoot() == b->getTransform()->getRoot())
+    if (a->get<Transform>()->getRoot() == b->get<Transform>()->getRoot())
         return;
 
     if (a->rigidBody && b->rigidBody)

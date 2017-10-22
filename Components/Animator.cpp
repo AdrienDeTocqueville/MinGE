@@ -23,13 +23,6 @@ Animator* Animator::clone() const
     return new Animator();
 }
 
-void Animator::attach(Entity* _entity)
-{
-    Component::attach(_entity);
-
-    setGraphic(getComponent<Graphic>());
-}
-
 void Animator::loadAnimation(int _index, bool _repeat)
 {
     if (_index == -1 || model == nullptr)
@@ -119,6 +112,16 @@ Transform* Animator::getBone(std::string _name)
 }
 
 /// Private
+bool Animator::attach(Entity* _entity)
+{
+    bool res = Component::attach(_entity);
+
+    if (res)
+        setGraphic(get<Graphic>());
+
+    return res;
+}
+
 void Animator::setGraphic(Graphic* _graphic)
 {
     if (_graphic == nullptr || typeid(AnimatedModel) != typeid(*_graphic->getMesh()))

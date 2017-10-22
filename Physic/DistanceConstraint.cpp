@@ -18,10 +18,10 @@ DistanceConstraint::DistanceConstraint(RigidBody* _a, vec3 _anchorPointA, RigidB
 bool DistanceConstraint::positionConstraint()
 {
 	// Détermination du vecteur allant du CDG au point d’attache sur les solides A et B
-    qA = bodies[0]->getTransform()->getVectorToWorldSpace(anchorPointA);
+    qA = bodies[0]->get<Transform>()->getVectorToWorldSpace(anchorPointA);
         pointA = bodies[0]->getCOM() + qA;
 
-    qB = bodies[1]->getTransform()->getVectorToWorldSpace(anchorPointB);
+    qB = bodies[1]->get<Transform>()->getVectorToWorldSpace(anchorPointB);
         pointB = bodies[1]->getCOM() + qB;
 
 
@@ -80,7 +80,7 @@ void DistanceConstraint::velocityConstraint(float _dt)
 }
 
 ////            Joint to COM
-//// simpler to understand because there is no angular velocity
+//// easier to understand because there is no angular velocity
 //
 //// Compute J
 //    vec3 J = normalize(point - anchorPoint);

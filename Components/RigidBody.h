@@ -5,6 +5,8 @@
 
 class RigidBody: public Component
 {
+    friend class Entity;
+
     friend class FixedConstraint;
     friend class ContactConstraint;
     friend class DistanceConstraint;
@@ -16,11 +18,6 @@ class RigidBody: public Component
         /// Methods (public)
             virtual RigidBody* clone() const override;
 
-            virtual void attach(Entity* _entity) override;
-            virtual void detach() override;
-            virtual void registerComponent() override;
-            virtual void deregisterComponent() override;
-
             void computeMass();
 
             void integrateForces(float _dt);
@@ -30,8 +27,6 @@ class RigidBody: public Component
 
             void applyForce     (vec3 _force, vec3 _point);
             void applyForceToCOM(vec3 _force);
-
-            void updateAABBs();
 
         /// Setter
             void setLinearVelocity(vec3 _velocity);
@@ -49,6 +44,10 @@ class RigidBody: public Component
             float getDensity() const;
 
     private:
+        /// Methods (private)
+            virtual void onRegister() override;
+            virtual void onDeregister() override;
+
         /// Attributes (private)
             vec3 COM;
 

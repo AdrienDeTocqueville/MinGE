@@ -66,6 +66,7 @@ class Mesh
             unsigned getMaterialIndex(std::string _name) const;
             const std::vector<Material*>& getMaterials() const;
 
+        // TODO: make them private
         /// Attributes (public)
             std::vector<Submesh> submeshes;
             std::vector<Material*> materials;

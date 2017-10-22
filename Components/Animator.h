@@ -15,8 +15,6 @@ class Animator : public Component
         /// Methods (public)
             virtual Animator* clone() const;
 
-            virtual void attach(Entity* _entity) override;
-
             void loadAnimation(int _index, bool _repeat = false);
 
             void update();
@@ -26,6 +24,9 @@ class Animator : public Component
             Transform* getBone(std::string _name);
 
     private:
+        /// Methods (private)
+            virtual bool attach(Entity* _entity) override;
+
         /// Setter (private)
             void setGraphic(Graphic* _graphic);
 

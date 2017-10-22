@@ -7,6 +7,7 @@ class Program
 {
     class Shader;
 
+    friend class Engine;
     friend class GraphicEngine;
 
     public:
@@ -60,8 +61,8 @@ class Program
                 private:
                     static Shader* load(std::string& _shader);
 
-                    static std::map<std::string, Shader*> shaders;
-                    static std::map<std::string, Shader*>::iterator it;
+                    static std::unordered_map<std::string, Shader*> shaders;
+                    static std::unordered_map<std::string, Shader*>::iterator it;
 
                     Shader(unsigned _shader): shader(_shader)
                     { }

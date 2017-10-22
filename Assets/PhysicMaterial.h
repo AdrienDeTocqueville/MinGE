@@ -15,7 +15,7 @@ class PhysicMaterial
             static void clear();
 
         /// Attributes (static)
-            static std::map<std::string, PhysicMaterial*> materials;
+            static std::unordered_map<std::string, PhysicMaterial*> materials;
             static PhysicMaterial* base;
 
         /// Setter

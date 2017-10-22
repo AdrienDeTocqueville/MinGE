@@ -7,6 +7,8 @@
 #include "Components/Script.h"
 #include "Entity.h"
 
+#include "Components/Sphere.h"
+
 using namespace MinGE;
 
 ContactConstraint::ContactConstraint(Collider* _a, Collider* _b):
@@ -179,19 +181,17 @@ void ContactConstraint::sendData()
 
             col.point = manifold->points[1-i];
 
-            for (auto script: colliders[i]->getEntity()->getComponents<Script>())
+            for (auto script: colliders[i]->getEntity()->getAll<Script>())
                 script->onCollision(col);
         }
     }
     else
     {
         for (unsigned i(0) ; i < 2 ; i++)
-            for (auto script: colliders[i]->getEntity()->getComponents<Script>())
+            for (auto script: colliders[i]->getEntity()->getAll<Script>())
                 script->onTrigger(colliders[1-i]);
     }
 }
-
-#include "Components/Sphere.h"
 
 /// Dispatcher
 std::map<Dispatcher::key, Dispatcher::collisionFunction> Dispatcher::functions;
@@ -208,13 +208,13 @@ void Dispatcher::clear()
 
 Manifold* Dispatcher::getManifold(Collider* _a, Collider* _b)
 {
-    std::size_t a = typeid(*_a).hash_code();
-    std::size_t b = typeid(*_b).hash_code();
+    std::type_index a = typeid(*_a);
+    std::type_index b = typeid(*_b);
 
     if (a > b)
         std::swap(a, b);
 
-    std::map<key, collisionFunction>::iterator it = functions.find( key(a, b) );
+    auto it = functions.find( key(a, b) );
 
     if (it != functions.end())
         return (it->second)(_a, _b);

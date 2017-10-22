@@ -3,9 +3,13 @@
 #include <ctime>
 #include <cstdlib>
 
+#include <iostream>
+
+long int Random::seed;
+
 void Random::init()
 {
-    srand(time(NULL));
+    setSeed( static_cast<long int>(time(NULL)) );
 }
 
 int Random::nextInt(int _min, float _max)
@@ -16,4 +20,15 @@ int Random::nextInt(int _min, float _max)
 float Random::nextFloat(float _min, float _max)
 {
     return _min +  (_max-_min) * rand() / RAND_MAX;
+}
+
+long int Random::getSeed()
+{
+    return seed;
+}
+
+void Random::setSeed(long int _seed)
+{
+    seed = _seed;
+    srand(seed);
 }

@@ -7,15 +7,16 @@
 
 struct RayHit
 {
-    Collider* collider;
+    Collider* collider = nullptr;
 
     vec3 point;
-    vec3 normal;
-    float distance;
+    vec3 normal = vec3(0.0f);
+    float distance = -1.0f;
 };
 
 class Collider : public Component
 {
+    friend class Entity;
     friend class RigidBody;
 
     public:
@@ -25,15 +26,10 @@ class Collider : public Component
         /// Methods (public)
             virtual Collider* clone() const = 0;
 
-            virtual void attach(Entity* _entity) override;
-            virtual void detach() override;
-            virtual void registerComponent() override;
-            virtual void deregisterComponent() override;
-
             virtual void computeMass() = 0;
             virtual void computeAABB() = 0;
 
-            virtual RayHit raycast(vec3 _o, vec3 _d) { RayHit r; r.distance = -1.0f; return r; }
+            virtual RayHit raycast(vec3 _o, vec3 _d) { return RayHit(); }
 
         /// Getters
             AABB* getAABB();
@@ -47,10 +43,15 @@ class Collider : public Component
 
             virtual vec3 getSupport(vec3 _axis) = 0;
 
+        // TODO: make it private
         /// Attributes (public)
             RigidBody* rigidBody;
 
     protected:
+        /// Methods (private)
+            virtual void onRegister() override;
+            virtual void onDeregister() override;
+
         /// Attributes (protected)
             PhysicMaterial* material;
             bool isTrigger;

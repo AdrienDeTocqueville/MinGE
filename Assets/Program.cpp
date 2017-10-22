@@ -180,9 +180,8 @@ void Program::send(unsigned _location, const std::vector<mat4>& _values) const
 }
 
 /// Shader Class
-
-std::map<std::string, Program::Shader*>             Program::Shader::shaders;
-std::map<std::string, Program::Shader*>::iterator   Program::Shader::it;
+std::unordered_map<std::string, Program::Shader*>             Program::Shader::shaders;
+std::unordered_map<std::string, Program::Shader*>::iterator   Program::Shader::it;
 
 Program::Shader* Program::Shader::load(std::string& _shader)
 {

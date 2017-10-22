@@ -35,25 +35,25 @@ void Sphere::computeAABB()
 RayHit Sphere::raycast(vec3 _o, vec3 _d)
 {
     RayHit r;
-    r.distance = -1.0f;
 
-    vec3 CO = _o - tr->position;
+    vec3 OC = tr->position - _o;
 
-    if (dot(CO, _d) > 0)
+    if (dot(OC, _d) < 0)
         return r;
 
     float rad = getRadius();
+    if (!epsilonEqual(length2(_d), 1.0f, EPSILON)) // _d must be unit length
+        _d = normalize(_d);
 
-    // _d must be unit length
-    float b = 2.0f* (CO.x*_d.x + CO.y*_d.y + CO.z*_d.z);
-    float c = length2(CO) - rad*rad;
+    float b = 2.0f* (OC.x*_d.x + OC.y*_d.y + OC.z*_d.z);
+    float c = length2(OC) - rad*rad;
 
     float delta = b*b - 4.0f*c;
 
     if (delta < 0.0f)
         return r;
 
-    float m = (-b - sqrt(delta)) * 0.5f;
+    float m = (b - sqrt(delta)) * 0.5f;
 
     if (m > 0)
     {

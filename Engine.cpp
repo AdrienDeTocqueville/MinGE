@@ -128,6 +128,7 @@ bool Engine::update()
         frames++;
 
     Input::window->pushGLStates();
+        Program::current = 0;
         Input::window->draw(text);
     Input::window->popGLStates();
 
@@ -166,7 +167,7 @@ void Engine::clear()
 
         Component::instances = 0;
 
-        exit(EXIT_FAILURE);
+//        exit(EXIT_FAILURE);
     }
 }
 

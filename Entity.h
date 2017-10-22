@@ -1,151 +1,220 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include "includes.h"
+#include "Tag.h"
 
-#include <typeinfo>
+#include <typeindex>
 
 class Component;
 class Transform;
 class Collider;
 class Script;
 
-typedef std::map<size_t, std::vector<Component*>> ComponentMap;
+typedef std::unordered_map<std::type_index, std::vector<Component*>> ComponentMap;
+typedef std::unordered_map<std::type_index, std::size_t> SizeMap;
 
 
 class Entity final
 {
-    friend class Component;
-
-    friend class Transform;
-    friend class Collider;
-    friend class Script;
-
     public:
-        Entity(std::string _tag);
-        Entity(std::string _tag, std::vector<Component*> _components, bool _prototype = false);
-
         /// Method (public)
-            Entity* clone(vec3 _position = vec3(0.0f), vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
-
-            void addComponent(Component* _component);
-
-            template<typename T>
-            void removeComponent()
-            {
-                auto& vec = components[typeid(T).hash_code()];
-
-                if (vec.size() != 1)
-                    return;
-
-                removeComponent(vec[0]);
-            }
-
-            void removeComponent(Component* _component);
-
-
-            template<typename T>
-            void removeComponents()
-            {
-                for (Component* component: components[typeid(T).hash_code()])
-                    removeComponent(component);
-            }
-
             void destroy();
 
-        /// Methods (static)
-            static unsigned getTagId(std::string _tag);
-            static Entity* findByTag(std::string _tag);
-            static std::list<Entity*> findAllByTag(std::string _tag);
+            template<typename T>
+            size_t has()
+            {
+                auto found = components.find(typeid(T));
 
-            static void clear();
+                if (found == components.end())
+                    return 0;
 
-        /// Attributes (static)
-            static std::vector< std::string > tags;
-            static std::list<Entity*> entities;
+                return found->second.size();
+            }
 
-        /// Getters
-            unsigned getTag() const;
-            std::string getTagName() const;
+            template<typename T, typename... Args>
+            Entity* add(Args&&... args)
+            {
+                if (typeid(T) == typeid(Transform))
+                {
+                    if (tr)
+                        Error::add(USER_ERROR, "Impossible to add a Transform component");
+                    else
+                    {
+                        T* c = new T(args...);
+                        c->entity = this;
 
-            size_t getColliderHashCode();
-            size_t getScriptHashCode();
+                        tr = reinterpret_cast<Transform*>(c);
+                    }
 
-            Transform* getTransform() const;
+                    return this;
+                }
 
-            template <typename T>
-            T* getComponent()
+                else if (std::is_base_of<Collider, T>::value)
+                    addComponent(new T(args...), typeid(Collider));
+
+                else if (std::is_base_of<Script, T>::value)
+                {
+                    scriptSizes[typeid(T)] = sizeof(T);
+
+                    addComponent(new T(args...), typeid(Script));
+                }
+
+                else
+                    addComponent(new T(args...), typeid(T));
+
+                return this;
+            }
+
+            template<typename T>
+            void remove()
+            {
+                if (std::is_base_of<Collider, T>::value)
+                    removeComponent(typeid(T), getColliderTypeIndex());
+
+                else if (std::is_base_of<Script, T>::value)
+                    removeComponent(typeid(T), getScriptTypeIndex());
+
+                else
+                    removeComponent(typeid(T), typeid(T));
+            }
+
+            template<typename T>
+            void removeAll()
+            {
+                if (std::is_base_of<Collider, T>::value)
+                    removeComponents(typeid(T), getColliderTypeIndex());
+
+                else if (std::is_base_of<Script, T>::value)
+                    removeComponents(typeid(T), getScriptTypeIndex());
+
+                else
+                    removeComponents(typeid(T), typeid(T));
+            }
+
+
+        /// Getters (public)
+            Tag getTag() const;
+
+            template<typename T>
+            T* get()
             {
                 std::vector<Component*>* vec = nullptr;
 
                 if (std::is_base_of<Collider, T>::value)
-                    vec = &components[getColliderHashCode()];
+                    vec = &components[getColliderTypeIndex()];
 
                 else if (std::is_base_of<Script, T>::value)
-                    vec = &components[getScriptHashCode()];
+                    vec = &components[getScriptTypeIndex()];
 
                 else
-                    vec = &components[typeid(T).hash_code()];
-
-                if (vec->size() != 0)
                 {
-                    for (unsigned i(0) ; i < vec->size() ; i++)
-                    {
-                        if (typeid(*(*vec)[i]) == typeid(T))
-                            return static_cast<T*>((*vec)[i]);
-                    }
+                    vec = &components[typeid(T)];
+                    return (vec->size() ? static_cast<T*>(vec->front()) : nullptr);
+
                 }
+
+                for (Component* c: *vec)
+                    if (typeid(*c) == typeid(T))
+                        return static_cast<T*>(c);
 
                 return nullptr;
             }
 
             template <typename T>
-            std::vector<T*> getComponents()
+            std::vector<T*> getAll()
             {
                 std::vector<Component*>* vec = nullptr;
+                std::vector<T*> allComponents;
 
                 if (std::is_base_of<Collider, T>::value)
-                    vec = &components[getColliderHashCode()];
+                    vec = &components[getColliderTypeIndex()];
 
                 else if (std::is_base_of<Script, T>::value)
-                    vec = &components[getScriptHashCode()];
+                    vec = &components[getScriptTypeIndex()];
 
                 else
-                    vec = &components[typeid(T).hash_code()];
+                    vec = &components[typeid(T)];
 
-                std::vector<T*> components; components.resize(vec->size());
+                allComponents.reserve(vec->size());
 
-                for (unsigned i(0) ; i < vec->size() ; i++)
-                    components[i] = static_cast<T*>((*vec)[i]);
+                for (Component* c: *vec)
+                    if (typeid(*c) == typeid(T))
+                        allComponents.push_back( static_cast<T*>(c) );
 
-                return components;
+                return allComponents;
             }
 
+        /// Methods (static)
+            static Entity* create(std::string _tag, bool _prototype = false, vec3 _position = vec3(0.0f), vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
+            static Entity* create(Tag _tag, bool _prototype = false, vec3 _position = vec3(0.0f), vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
+            static Entity* clone(Entity* _entity, vec3 _position = vec3(0.0f), vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
+            static void clear();
+
+            static Entity* findByTag(std::string _tag);
+            static std::list<Entity*> findAllByTag(std::string _tag);
+
+            static Entity* findByTag(Tag _tag);
+            static std::list<Entity*> findAllByTag(Tag _tag);
+
+        /// Attributes (public)
+            const bool prototype;
+
     private:
-        ~Entity();
+        /// Methods (private)
+            Entity(Tag _tag, bool _prototype);
+            ~Entity();
+
+            void addComponent(Component* _component, std::type_index _typeid);
+
+            void removeComponent(std::type_index _componentTypeid, std::type_index _typeid);
+            void removeComponents(std::type_index _componentTypeid, std::type_index _typeid);
+
+            void getComponents();
+
+        /// Getter (private)
+            std::type_index getColliderTypeIndex();
+            std::type_index getScriptTypeIndex();
 
         /// Attributes (private)
-            unsigned tag;
-            bool prototype;
+            Tag tag;
 
             ComponentMap components;
 
             Transform* tr;
+
+        /// Attributes (static)
+            static std::list<Entity*> entities;
+
+            static SizeMap scriptSizes;
 };
 
 template <>
-void Entity::removeComponents<Collider>();
+void Entity::remove<Transform>();
 
 template <>
-void Entity::removeComponents<Script>();
+Transform* Entity::get();
+
 
 template <>
-std::vector<Component*> Entity::getComponents();
+void Entity::removeAll<Transform>() = delete;
 
 template <>
-std::vector<Collider*> Entity::getComponents();
+void Entity::removeAll<Collider>();
 
 template <>
-std::vector<Script*> Entity::getComponents();
+void Entity::removeAll<Script>();
+
+
+template <>
+std::vector<Transform*> Entity::getAll() = delete;
+
+template <>
+std::vector<Component*> Entity::getAll();
+
+template <>
+std::vector<Collider*> Entity::getAll();
+
+template <>
+std::vector<Script*> Entity::getAll();
 
 #endif // ENTITY_H

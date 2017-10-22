@@ -14,33 +14,32 @@ class Component
         /// Methods (public)
             virtual Component* clone() const = 0;
 
-            virtual void attach(Entity* _entity);
-            virtual void detach();
-            virtual void registerComponent() { registered = true; }
-            virtual void deregisterComponent() { registered = false; }
-
-            void destroy();
-
         /// Getters
             Entity*    getEntity() const    { return entity; }
-            Transform* getTransform() const { return tr;     }
 
-            template <typename T>
-            T* getComponent() const         { return entity->getComponent<T>(); }
-            template <typename T>
-            std::vector<T*> getComponents() const         { return entity->getComponents<T>(); }
+            template <typename T> T* get() const
+            {
+                return entity->get<T>();
+            }
+
+            template <typename T> std::vector<T*> getAll() const
+            {
+                return entity->getAll<T>();
+            }
 
             static float deltaTime;
-            static unsigned instances;
+            static int instances;
 
     protected:
-        virtual ~Component();
+        /// Methods (private)
+            virtual ~Component();
+
+            virtual void onRegister();
+            virtual void onDeregister();
 
         /// Attributes (protected)
             Entity* entity;
             Transform* tr;
-
-            bool registered;
 };
 
 #endif // COMPONENT_H

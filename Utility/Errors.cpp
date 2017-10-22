@@ -33,7 +33,7 @@ void write(vec3 _vec, bool ret)
     if (ret) std::cout << std::endl;
 }
 
-bool epsilonEqual(vec3& a, vec3& b, float epsilon)
+bool epsilonEqual(const vec3& a, const vec3& b, float epsilon)
 {
     for (unsigned i(0) ; i < 3 ; i++)
     if (!epsilonEqual(a[i], b[i], epsilon))
@@ -42,7 +42,7 @@ bool epsilonEqual(vec3& a, vec3& b, float epsilon)
     return true;
 }
 
-bool epsilonEqual(quat& a, quat& b, float epsilon)
+bool epsilonEqual(const quat& a, const quat& b, float epsilon)
 {
     for (unsigned i(0) ; i < 4 ; i++)
     if (!epsilonEqual(a[i], b[i], epsilon))

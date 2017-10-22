@@ -99,7 +99,7 @@ void GraphicEngine::addCamera(Camera* _camera)
     if (_camera != nullptr)
         cameras.push_back(_camera);
 
-    if (Camera::main == nullptr && _camera->getEntity()->getTag() == 1)
+    if (Camera::main == nullptr && _camera->getEntity()->getTag() == "MainCamera")
         Camera::main = _camera;
 }
 
@@ -126,9 +126,9 @@ void GraphicEngine::removeCamera(Camera* _camera)
         auto _cameras = Entity::findAllByTag("MainCamera");
 
         for (Entity* _c: _cameras)
-            if (_c->getComponent<Camera>() != _camera)
+            if (_c->get<Camera>() != _camera)
             {
-                Camera::main = _c->getComponent<Camera>();
+                Camera::main = _c->get<Camera>();
                 return;
             }
     }

@@ -22,6 +22,7 @@ class Sphere : public Collider
 
             float getRadius();
 
+    private:
         /// Attributes
             float radius;
 };

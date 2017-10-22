@@ -122,13 +122,6 @@ bool Model::load_obj()
 
     submeshes.back().count = vertices.size() - submeshes.back().first;
 
-//    std::cout << "--------- " << file << std::endl;
-//    vec3 dim = (max-min);
-//    min = (max+min)*0.5f;
-//    std::cout << "Dimensions: " << dim.x << " " << dim.y << " " << dim.z << std::endl;
-//    std::cout << "Centre    : " << min.x << " " << min.y << " " << min.z << std::endl;
-//    std::cout << std::endl;
-
     return true;
 }
 

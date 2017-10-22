@@ -1,5 +1,5 @@
 #include "Components/Graphic.h"
-#include "Components/Animator.h"
+//#include "Components/Animator.h"
 #include "Components/Transform.h"
 
 Graphic::Graphic(Mesh* _mesh)
@@ -19,42 +19,6 @@ Graphic::~Graphic()
 Graphic* Graphic::clone() const
 {
     return new Graphic(mesh);
-}
-
-void Graphic::attach(Entity* _entity)
-{
-    Component::attach(_entity);
-
-    Animator* a = getComponent<Animator>();
-    if (a != nullptr)
-        a->setGraphic(this);
-}
-
-void Graphic::detach()
-{
-    Animator* a = getComponent<Animator>();
-    if (a != nullptr)
-        a->setGraphic(nullptr);
-
-    Component::detach();
-}
-
-void Graphic::registerComponent()
-{
-    if (registered)
-        return;
-
-    GraphicEngine::get()->addGraphic(this);
-    registered = true;
-}
-
-void Graphic::deregisterComponent()
-{
-    if (!registered)
-        return;
-
-    GraphicEngine::get()->removeGraphic(this);
-    registered = false;
 }
 
 void Graphic::render()
@@ -89,4 +53,23 @@ Material* Graphic::getMaterial(unsigned _index) const
 const std::vector<Material*>& Graphic::getMaterials() const
 {
     return materials;
+}
+
+/// Methods (private)
+void Graphic::onRegister()
+{
+//    Animator* a = get<Animator>();
+//    if (a != nullptr)
+//        a->setGraphic(this);
+
+    GraphicEngine::get()->addGraphic(this);
+}
+
+void Graphic::onDeregister()
+{
+//    Animator* a = get<Animator>();
+//    if (a != nullptr)
+//        a->setGraphic(nullptr);
+
+    GraphicEngine::get()->removeGraphic(this);
 }

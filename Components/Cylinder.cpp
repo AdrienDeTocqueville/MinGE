@@ -57,7 +57,6 @@ vec3 Cylinder::getSupport(vec3 _axis)
     return tr->getToWorldSpace(support + center);
 }
 
-
 float Cylinder::getRadius() const
 {
     return radius * tr->scale.x;

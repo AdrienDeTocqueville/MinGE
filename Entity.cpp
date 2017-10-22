@@ -1,94 +1,35 @@
 #include "MinGE.h"
 
-std::vector< std::string > Entity::tags = { "Untagged", "MainCamera" };
 std::list<Entity*> Entity::entities;
+SizeMap Entity::scriptSizes;
 
-Entity::Entity(std::string _tag):
-    tag(getTagId(_tag)),
+Entity::Entity(Tag _tag, bool _prototype):
+    prototype(_prototype), tag(_tag),
     tr(nullptr)
 {
     entities.push_back(this);
-
-    (new Transform())->attach(this);
-}
-
-Entity::Entity(std::string _tag, std::vector<Component*> _components, bool _prototype):
-    tag(getTagId(_tag)), prototype(_prototype),
-    components(),
-    tr(nullptr)
-{
-    entities.push_back(this);
-
-    for (Component* component: _components)
-    {
-        if (typeid(*component) == typeid(Transform))
-        {
-            component->attach(this);
-            break;
-        }
-    }
-
-    if (tr == nullptr)
-        (new Transform())->attach(this);
-
-
-    for (Component* component: _components)
-        component->attach(this);
-
-
-    if (!prototype)
-    for (auto& componentPair: components)
-        for (Component* component: componentPair.second)
-            component->registerComponent();
 }
 
 Entity::~Entity()
 {
     // free components
     for (auto& componentPair: components)
-        for (Component* component: componentPair.second)
-            component->destroy();
+    {
+        auto csize = componentPair.second.size();
+        for (unsigned i(0) ; i < csize ; i++)
+        {
+            if (!prototype)
+                componentPair.second.back()->onDeregister();
+
+            delete componentPair.second.back();
+            componentPair.second.pop_back();
+        }
+    }
+
+    delete tr;
 }
 
 /// Methods (public)
-Entity* Entity::clone(vec3 _position, vec3 _rotation, vec3 _scale)
-{
-    std::vector<Component*> _components;
-
-    for (auto& componentPair: components)
-        for (Component* component: componentPair.second)
-        {
-            if (typeid(*component) == typeid(Transform))
-                _components.push_back(new Transform(_position, _rotation, _scale));
-            else
-                _components.push_back(component->clone());
-        }
-
-
-    return new Entity(getTagName(), _components);
-}
-
-void Entity::addComponent(Component* _component)
-{
-    if (_component == nullptr)
-        return;
-
-    if (_component->entity != this)
-        _component->attach(this);
-
-    if (_component->entity == this && !prototype)
-        _component->registerComponent();
-}
-
-void Entity::removeComponent(Component* _component)
-{
-    if (_component == nullptr || _component->entity != this)
-        return;
-
-    _component->detach();
-    _component->deregisterComponent();
-}
-
 void Entity::destroy()
 {
     entities.remove(this);
@@ -96,60 +37,64 @@ void Entity::destroy()
     delete this;
 }
 
+/// Getters
+Tag Entity::getTag() const
+{
+    return tag;
+}
+
 /// Methods (static)
-unsigned Entity::getTagId(std::string _tag)
+Entity* Entity::create(std::string _tag, bool _prototype, vec3 _position, vec3 _rotation, vec3 _scale)
 {
-    auto it = std::find(tags.begin(), tags.end(), _tag);
-
-    if ( it != tags.end() )
-       return it - tags.begin();
-    else
-    {
-        tags.push_back(_tag);
-        return tags.size()-1;
-    }
+    return Entity::create(Tag(_tag), _prototype, _position, _rotation, _scale);
 }
 
-Entity* Entity::findByTag(std::string _tag)
+Entity* Entity::create(Tag _tag, bool _prototype, vec3 _position, vec3 _rotation, vec3 _scale)
 {
-    unsigned _tagId;
-
-    auto it = std::find(tags.begin(), tags.end(), _tag);
-
-    if ( it != Entity::tags.end() )
-       _tagId = it - Entity::tags.begin();
-    else
-        return nullptr;
-
-    for (Entity* entity: entities)
-    {
-        if (entity->tag == _tagId)
-            return entity;
-    }
-
-    return nullptr;
+    return (new Entity(_tag, _prototype))->add<Transform>(_position, _rotation, _scale);
 }
 
-std::list<Entity*> Entity::findAllByTag(std::string _tag)
+Entity* Entity::clone(Entity* _entity, vec3 _position, vec3 _rotation, vec3 _scale)
 {
-    unsigned _tagId;
-    std::list<Entity*> entities;
+    Entity* e = Entity::create(_entity->tag, false, _position, _rotation, _scale);
 
-    auto it = std::find(tags.begin(), tags.end(), _tag);
-
-    if ( it != tags.end() )
-       _tagId = it - tags.begin();
-    else
-        return entities;
-
-
-    for (Entity* entity: entities)
+    for (auto& componentPair: _entity->components)
     {
-        if (entity->tag == _tagId)
-            entities.push_back(entity);
+        auto& components = e->components[componentPair.first];
+
+        if (componentPair.first == typeid(Script))
+        {
+            for (Component* component: componentPair.second)
+            {
+                size_t s = scriptSizes[typeid(*component)];
+
+                Component* c = reinterpret_cast<Component*>(operator new(s));
+                memcpy(c, component, s);
+                Component::instances++;
+
+                components.push_back(c);
+
+                c->entity = e;
+                c->tr = e->tr;
+                c->onRegister();
+            }
+        }
+
+        else
+        {
+            for (Component* component: componentPair.second)
+            {
+                Component* c = component->clone();
+                components.push_back(c);
+
+                c->entity = e;
+                c->tr = e->tr;
+                c->onRegister();
+            }
+        }
     }
 
-    return entities;
+    return e;
 }
 
 void Entity::clear()
@@ -160,69 +105,177 @@ void Entity::clear()
     entities.clear();
 }
 
-/// Getters
-unsigned Entity::getTag() const
+Entity* Entity::findByTag(std::string _tag)
 {
-    return tag;
+    return findByTag(Tag(_tag));
 }
 
-std::string Entity::getTagName() const
+std::list<Entity*> Entity::findAllByTag(std::string _tag)
 {
-    return tags[tag];
+    Tag tagId = Tag(_tag);
+
+    std::list<Entity*> entities;
+
+    for (Entity* entity: entities)
+    {
+        if (entity->tag == tagId)
+            entities.push_back(entity);
+    }
+
+    return entities;
 }
 
-size_t Entity::getColliderHashCode()
+Entity* Entity::findByTag(Tag _tag)
 {
-    return typeid(Collider).hash_code();
+    for (Entity* entity: entities)
+    {
+        if (entity->tag == _tag)
+            return entity;
+    }
+
+    return nullptr;
 }
 
-size_t Entity::getScriptHashCode()
+std::list<Entity*> Entity::findAllByTag(Tag _tag)
 {
-    return typeid(Script).hash_code();
+    std::list<Entity*> entities;
+
+    for (Entity* entity: entities)
+    {
+        if (entity->tag == _tag)
+            entities.push_back(entity);
+    }
+
+    return entities;
 }
 
-Transform* Entity::getTransform() const
+/// Methods (private)
+void Entity::addComponent(Component* _component, std::type_index _typeid)
+{
+    components[_typeid].push_back(_component);
+
+    _component->entity = this;
+
+    if (!prototype)
+    {
+        _component->tr = tr;
+        _component->onRegister();
+    }
+}
+
+void Entity::removeComponent(std::type_index _componentTypeid, std::type_index _typeid)
+{
+    std::vector<Component*>& vec = components[_typeid];
+
+    for (unsigned i(0) ; i < vec.size() ; i++)
+    {
+        Component* c = vec[i];
+
+        if (std::type_index(typeid(*c)) == _componentTypeid)
+        {
+            vec.erase(vec.begin() + i);
+
+            if (!prototype)
+                c->onDeregister();
+
+            delete c;
+            return;
+        }
+    }
+}
+
+void Entity::removeComponents(std::type_index _componentTypeid, std::type_index _typeid)
+{
+    std::vector<Component*>& vec = components[_typeid];
+
+    for (unsigned i(0) ; i < vec.size() ; i++)
+    {
+        Component* c = vec[i];
+
+        if (std::type_index(typeid(*c)) == _componentTypeid)
+        {
+            vec.erase(vec.begin() + i--);
+
+            if (!prototype)
+                c->onDeregister();
+
+            delete c;
+        }
+    }
+}
+
+/// Getter (private)
+std::type_index Entity::getColliderTypeIndex()
+{
+    return typeid(Collider);
+}
+
+std::type_index Entity::getScriptTypeIndex()
+{
+    return typeid(Script);
+}
+
+/// Other
+//template<typename... Args>
+//Entity* Entity::add<Transform>(Args&&... args)
+//{
+//    if (tr != nullptr)
+//        Error::add(USER_ERROR, "Impossible to add a Transform component");
+//    else
+//        tr = new Transform(args...);
+//
+//    return this;
+//}
+
+template <>
+void Entity::remove<Transform>()
+{
+    Error::add(USER_ERROR, "Impossible to remove the Transform component");
+}
+
+template <>
+Transform* Entity::get()
 {
     return tr;
 }
 
 template <>
-void Entity::removeComponents<Collider>()
+void Entity::removeAll<Collider>()
 {
-    for (Component* collider: components[typeid(Collider).hash_code()])
+    for (Component* collider: components[typeid(Collider)])
     {
         Collider* c = static_cast<Collider*>(collider);
 
         c->entity = nullptr;
         c->rigidBody = nullptr;
 
-        c->deregisterComponent();
+        c->onDeregister();
     }
 
-    components[typeid(Collider).hash_code()].clear();
+    components[typeid(Collider)].clear();
 
-    RigidBody* rb = getComponent<RigidBody>();
+    RigidBody* rb = get<RigidBody>();
     if (rb != nullptr)
         rb->computeMass();
 }
 
 template <>
-void Entity::removeComponents<Script>()
+void Entity::removeAll<Script>()
 {
-    for (Component* script: components[typeid(Script).hash_code()])
+    for (Component* script: components[typeid(Script)])
     {
         Script* s = static_cast<Script*>(script);
 
         s->entity = nullptr;
 
-        s->deregisterComponent();
+        s->onDeregister();
     }
 
-    components[typeid(Script).hash_code()].clear();
+    components[typeid(Script)].clear();
 }
 
 template <>
-std::vector<Component*> Entity::getComponents()
+std::vector<Component*> Entity::getAll()
 {
     std::vector<Component*> _components;
 
@@ -234,9 +287,9 @@ std::vector<Component*> Entity::getComponents()
 }
 
 template <>
-std::vector<Collider*> Entity::getComponents()
+std::vector<Collider*> Entity::getAll()
 {
-    std::vector<Component*>& _colliders = components[typeid(Collider).hash_code()];
+    std::vector<Component*>& _colliders = components[typeid(Collider)];
     std::vector<Collider*> colliders; colliders.resize(_colliders.size());
 
     for (unsigned i(0) ; i < _colliders.size() ; i++)
@@ -246,9 +299,9 @@ std::vector<Collider*> Entity::getComponents()
 }
 
 template <>
-std::vector<Script*> Entity::getComponents()
+std::vector<Script*> Entity::getAll()
 {
-    std::vector<Component*>& _scripts = components[typeid(Script).hash_code()];
+    std::vector<Component*>& _scripts = components[typeid(Script)];
     std::vector<Script*> scripts; scripts.resize(_scripts.size());
 
     for (unsigned i(0) ; i < _scripts.size() ; i++)

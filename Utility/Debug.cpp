@@ -10,6 +10,8 @@ std::vector<vec3> Debug::lColors;
 
 Program* Debug::program = nullptr;
 
+bool Debug::linesDepthTest = true;
+
 /// Methods (public)
 void Debug::drawPoint(vec3 _point, vec3 _color)
 {

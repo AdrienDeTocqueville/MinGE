@@ -6,18 +6,14 @@
 
 class Graphic : public Component
 {
+    friend class Entity;
+
     public:
         Graphic(Mesh* _mesh);
         virtual ~Graphic();
 
         /// Methods (public)
             virtual Graphic* clone() const override;
-
-            virtual void attach(Entity* _entity) override;
-            virtual void detach() override;
-
-            virtual void registerComponent() override;
-            virtual void deregisterComponent() override;
 
             void render();
 
@@ -31,6 +27,10 @@ class Graphic : public Component
             const std::vector<Material*>& getMaterials() const;
 
     private:
+        /// Methods (private)
+            virtual void onRegister() override;
+            virtual void onDeregister() override;
+
         /// Attributes
             Mesh* mesh;
 

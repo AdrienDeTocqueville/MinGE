@@ -40,7 +40,7 @@ bool ModelMaterial::use(Transform* _tr)
         programs[_target]->send(2, mat3(transpose(inverse(GraphicEngine::get()->getMatrix(GE_MODEL)))));
 
         programs[_target]->send(3, Camera::current->getClipPlane());
-        programs[_target]->send(4, Camera::current->getTransform()->getToWorldSpace(vec3(0.0f)));
+        programs[_target]->send(4, Camera::current->get<Transform>()->getToWorldSpace(vec3(0.0f)));
 
         Light* light = GraphicEngine::get()->getLight();
         if (light)
@@ -87,7 +87,7 @@ bool AnimatedModelMaterial::use(Transform* _tr)
         if (matrices != nullptr)
             programs[_target]->send(2, *matrices);
 
-        programs[_target]->send(3, Camera::current->getTransform()->getToWorldSpace(vec3(0.0f)));
+        programs[_target]->send(3, Camera::current->get<Transform>()->getToWorldSpace(vec3(0.0f)));
 
         Light* light = GraphicEngine::get()->getLight();
         if (light)

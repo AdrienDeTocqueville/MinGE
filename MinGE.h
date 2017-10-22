@@ -12,6 +12,8 @@
 #ifndef MINGE_H_INCLUDED
 #define MINGE_H_INCLUDED
 
+#include <memory>
+
 #include "includes.h"
 
 #include "Engine.h"
@@ -19,6 +21,7 @@
 
 #include "Components/Transform.h"
 #include "Components/RigidBody.h"
+//#include "Components/Animator.h"
 #include "Components/Graphic.h"
 #include "Components/Camera.h"
 #include "Components/Skybox.h"

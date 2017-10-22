@@ -5,6 +5,8 @@
 
 class Transform : public Component
 {
+    friend class Entity;
+
     public:
         Transform(vec3 _position, quat _rotation, vec3 _scale);
         Transform(vec3 _position = vec3(0.0f), vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
@@ -13,9 +15,6 @@ class Transform : public Component
 
         /// Methods (public)
             virtual Transform* clone() const override;
-
-            virtual void attach(Entity* _entity) override;
-            virtual void detach() override;
 
             void toMatrix();
             void use() const;
@@ -46,6 +45,7 @@ class Transform : public Component
             mat4 getToWorldSpace(const mat4& _matrix) const;
             vec3 getVectorToWorldSpace(vec3 _vector) const;
 
+        // TODO: make them private
         /// Attributes (public)
             mat4 toWorldSpace;
             mat4 toLocalSpace;
@@ -55,7 +55,8 @@ class Transform : public Component
             vec3 scale;
 
     private:
-        void setRoot(Transform* _root);
+        /// Methods (private)
+            void setRoot(Transform* _root);
 
         /// Attributes (private)
             Transform *root, *parent;

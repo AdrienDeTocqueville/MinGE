@@ -33,24 +33,6 @@ Camera* Camera::clone() const
     return new Camera(fovy, zNear, zFar, clearColor, renderTexture, perspective, relViewport, clearFlags);
 }
 
-void Camera::registerComponent()
-{
-    if (registered)
-        return;
-
-    GraphicEngine::get()->addCamera(this);
-    registered = true;
-}
-
-void Camera::deregisterComponent()
-{
-    if (!registered)
-        return;
-
-    GraphicEngine::get()->removeCamera(this);
-    registered = false;
-}
-
 void Camera::use()
 {
     current = this;
@@ -75,61 +57,11 @@ void Camera::use()
 
     glClear(clearFlags);
 
-    Skybox* sky = getComponent<Skybox>();
+    Skybox* sky = get<Skybox>();
 
-    if (sky != nullptr)
+    if (sky)
         sky->render();
 
-}
-
-/// Methods (private)
-void Camera::computeViewPort()
-{
-    vec2 ws;
-    if (renderTexture)
-        ws = renderTexture->getSize();
-    else
-        ws = Input::getWindowSize();
-
-    viewport = vec4((int)(relViewport.x * ws.x),
-                    (int)(relViewport.y * ws.y),
-                    (int)(relViewport.z * ws.x),
-                    (int)(relViewport.w * ws.y));
-
-    if (perspective)
-        projection = glm::perspective(fovy, viewport.z/viewport.w, zNear, zFar);
-    else
-        projection = ortho(-fovy, fovy, -fovy, fovy, zNear, zFar);
-}
-
-void Camera::createFramebuffer()
-{
-    if (renderTexture == nullptr)
-        return;
-
-    glGenFramebuffersEXT(1, &fbo);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-    /// Color attachment
-        if (renderTexture->getColorBuffer() != nullptr)
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture->getColorBuffer()->getId(), 0);
-
-    /// Depth attachement
-        if (renderTexture->getDepthBuffer() != nullptr)
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderTexture->getDepthBuffer()->getId());
-
-
-	int val = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
-
-    if (val != GL_FRAMEBUFFER_COMPLETE)
-		Error::add(OPENGL_ERROR, "Camera::createFramebuffer() -> glCheckFramebufferStatus() returns: " + val);
-
-    if (fbo != 0)
-    {
-        GLuint buf[1] = {GL_COLOR_ATTACHMENT0};
-        glDrawBuffers(1, buf);
-    }
 }
 
 /// Setters
@@ -179,6 +111,66 @@ vec3 Camera::getPosition() const
 vec3 Camera::getDirection() const
 {
     return tr->getVectorToWorldSpace(vec3(1, 0, 0));
+}
+
+/// Methods (private)
+void Camera::onRegister()
+{
+    GraphicEngine::get()->addCamera(this);
+}
+
+void Camera::onDeregister()
+{
+    GraphicEngine::get()->removeCamera(this);
+}
+
+void Camera::computeViewPort()
+{
+    vec2 ws;
+    if (renderTexture)
+        ws = renderTexture->getSize();
+    else
+        ws = Input::getWindowSize();
+
+    viewport = vec4((int)(relViewport.x * ws.x),
+                    (int)(relViewport.y * ws.y),
+                    (int)(relViewport.z * ws.x),
+                    (int)(relViewport.w * ws.y));
+
+    if (perspective)
+        projection = glm::perspective(fovy, viewport.z/viewport.w, zNear, zFar);
+    else
+        projection = ortho(-fovy, fovy, -fovy, fovy, zNear, zFar);
+}
+
+void Camera::createFramebuffer()
+{
+    if (renderTexture == nullptr)
+        return;
+
+    glGenFramebuffersEXT(1, &fbo);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    /// Color attachment
+        if (renderTexture->getColorBuffer() != nullptr)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture->getColorBuffer()->getId(), 0);
+
+    /// Depth attachement
+        if (renderTexture->getDepthBuffer() != nullptr)
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderTexture->getDepthBuffer()->getId());
+
+
+	int val = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+
+    if (val != GL_FRAMEBUFFER_COMPLETE)
+		Error::add(OPENGL_ERROR, "Camera::createFramebuffer() -> glCheckFramebufferStatus() returns: " + val);
+
+    if (fbo != 0)
+    {
+        GLuint buf[1] = {GL_COLOR_ATTACHMENT0};
+        glDrawBuffers(1, buf);
+    }
 }
 
 /// Other

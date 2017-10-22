@@ -32,6 +32,8 @@ class Debug
             static std::vector<vec3> lColors;
 
             static Program* program;
+
+            static bool linesDepthTest;
 };
 
 #endif // DEBUG_H

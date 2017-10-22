@@ -1,6 +1,9 @@
 #ifndef CONTACTCONSTRAINT_H
 #define CONTACTCONSTRAINT_H
 
+#include <functional>
+#include <typeindex>
+
 #include "Physic/Constraint.h"
 
 #define BETA 0.3f
@@ -68,7 +71,7 @@ struct Collision
 class Dispatcher
 {
     public:
-        typedef std::pair<std::size_t, std::size_t> key;
+        typedef std::pair<std::type_index, std::type_index> key;
         typedef std::function<Manifold*(Collider*, Collider*)> collisionFunction;
 
         static void fill();
@@ -79,8 +82,8 @@ class Dispatcher
         template <typename A, typename B>
         static void addEntry(collisionFunction func)
         {
-            std::size_t a = typeid(A).hash_code();
-            std::size_t b = typeid(B).hash_code();
+            std::type_index a = typeid(A);
+            std::type_index b = typeid(B);
 
             if (a > b)
                 std::swap(a, b);

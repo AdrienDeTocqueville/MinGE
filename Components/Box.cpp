@@ -59,59 +59,50 @@ void Box::computeAABB()
     aabb.dim = (tr->getToWorldSpace(vec3(0.0f)) - aabb.center);
     aabb.center = tr->getToWorldSpace(center);
 }
+
 RayHit Box::raycast(vec3 _o, vec3 _d)
 {
     RayHit r;
-    r.distance = -1.0f;
 
-    vec3 CO = _o - tr->position;
+    vec3 OC = tr->position - _o;
 
-    if (dot(CO, _d) > 0)
+    if (dot(OC, _d) < 0)
         return r;
 
     vec3 o = tr->getToLocalSpace(_o);
     vec3 d = tr->getVectorToLocalSpace(_d);
 
-    unsigned _i = 4;
-    float _m = 0.0f;
-    float _n;
+    // https://tavianator.com/fast-branchless-raybounding-box-intersections/
+    float tmin = FLT_MIN, tmax = FLT_MAX;
+    float t1, t2;
+    unsigned axis = 0;
 
     for (unsigned i(0) ; i < 3 ; i++)
     {
-        if (abs(o[i]) < halfExtent[i])  // exit if origin is between
-            continue;
+        t1 = (-halfExtent[i] + center[i] - o[i]) / d[i];
+        t2 = ( halfExtent[i] + center[i] - o[i]) / d[i];
 
-        float n = (0.0f < o[i]) - (o[i] < 0.0f);   // get side of origin relative to i face
+        if (t1 > t2) std::swap(t1, t2);
 
-        float m = (n*halfExtent[i]-o[i]) / d[i];
+        if (t1 > tmin)
+        {
+            tmin = t1;
+            axis = i;
+        }
 
-        if (m < _m)
-            continue;
-
-        _i = i;
-        _m = m;
-        _n  = n;
+        tmax = min(tmax, t2);
     }
-    if (_i == 4)
+
+    if (tmin > tmax)
         return r;
 
-    vec3 h = o + _m*d;
-
-    for (unsigned i(0) ; i < 3 ; i++)
-    {
-        if (i == _i)
-            continue;
-
-        if (abs(h[i]) > halfExtent[i])
-            return r;
-    }
-
     r.collider = this;
-    r.point = tr->getToWorldSpace(h);
-    r.normal = vec3(0.0f);
-    r.normal[_i] = _n;
+    r.point = tr->getToWorldSpace(o + tmin*d);
+
+    r.normal[axis] = 2 * (0.0f < o[axis]) - 1.0f;
     r.normal = normalize(tr->getVectorToWorldSpace(r.normal));
-    r.distance = _m;
+
+    r.distance = tmin;
 
     return r;
 }

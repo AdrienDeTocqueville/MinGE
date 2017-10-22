@@ -23,47 +23,6 @@ RigidBody* RigidBody::clone() const
     return new RigidBody(density);
 }
 
-void RigidBody::attach(Entity* _entity)
-{
-    Component::attach(_entity);
-
-    for (Collider* collider: getComponents<Collider>())
-        collider->rigidBody = this;
-
-    float save = density; density = -1.0f;
-
-    setDensity(save);
-}
-
-void RigidBody::detach()
-{
-    if (entity == nullptr)
-        return;
-
-    for (Collider* collider: getComponents<Collider>())
-        collider->rigidBody = nullptr;
-
-    Component::detach();
-}
-
-void RigidBody::registerComponent()
-{
-    if (registered)
-        return;
-
-    PhysicEngine::get()->addRigidBody(this);
-    registered = true;
-}
-
-void RigidBody::deregisterComponent()
-{
-    if (!registered)
-        return;
-
-    PhysicEngine::get()->removeRigidBody(this);
-    registered = false;
-}
-
 void RigidBody::computeMass()
 {
     COM = vec3(0.0f);
@@ -74,7 +33,7 @@ void RigidBody::computeMass()
         return;
 
     // Mass and COM
-        for (Collider* collider: getComponents<Collider>())
+        for (Collider* collider: getAll<Collider>())
         {
             mass += collider->mass;
             COM += collider->mass * collider->center * tr->scale;
@@ -87,7 +46,7 @@ void RigidBody::computeMass()
         }
 
     // Inertia
-        for (Collider* collider: getComponents<Collider>())
+        for (Collider* collider: getAll<Collider>())
         {
             const vec3 r = COM - collider->center * tr->scale;
             const float d = dot(r, r);
@@ -181,18 +140,6 @@ void RigidBody::applyForceToCOM(vec3 _force)
     forces += _force;
 }
 
-void RigidBody::updateAABBs()
-{
-    for (Collider* collider: getComponents<Collider>())
-    {
-        if (collider->registered)
-        {
-            collider->computeAABB();
-            collider->getAABB()->prepare();
-        }
-    }
-}
-
 /// Setter
 void RigidBody::setLinearVelocity(vec3 _velocity)
 {
@@ -211,7 +158,7 @@ void RigidBody::setDensity(float _density)
 
     density = _density;
 
-    for (Collider* collider: getComponents<Collider>())
+    for (Collider* collider: getAll<Collider>())
         collider->computeMass();
 
     computeMass();
@@ -241,4 +188,25 @@ float RigidBody::getMass() const
 float RigidBody::getDensity() const
 {
     return density;
+}
+
+/// Methods (private)
+void RigidBody::onRegister()
+{
+    for (Collider* collider: getAll<Collider>())
+        collider->rigidBody = this;
+
+    float save = density; density = -1.0f; // To force computation of mass
+
+    setDensity(save);
+
+    PhysicEngine::get()->addRigidBody(this);
+}
+
+void RigidBody::onDeregister()
+{
+    for (Collider* collider: getAll<Collider>())
+        collider->rigidBody = nullptr;
+
+    PhysicEngine::get()->removeRigidBody(this);
 }

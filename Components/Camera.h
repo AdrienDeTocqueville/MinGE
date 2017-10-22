@@ -10,6 +10,7 @@ class Transform;
 
 class Camera : public Component
 {
+    friend class Entity;
     friend class GraphicEngine;
 
     public:
@@ -19,9 +20,6 @@ class Camera : public Component
 
         /// Methods (public)
             virtual Camera* clone() const override;
-
-            virtual void registerComponent() override;
-            virtual void deregisterComponent() override;
 
             void use();
 
@@ -44,6 +42,9 @@ class Camera : public Component
 
     private:
         /// Methods (private)
+            virtual void onRegister() override;
+            virtual void onDeregister() override;
+
             void computeViewPort();
 
             void createFramebuffer();

@@ -18,24 +18,6 @@ Light* Light::clone() const
     return new Light(type);
 }
 
-void Light::registerComponent()
-{
-    if (registered)
-        return;
-
-    GraphicEngine::get()->addLight(this);
-    registered = true;
-}
-
-void Light::deregisterComponent()
-{
-    if (!registered)
-        return;
-
-    GraphicEngine::get()->removeLight(this);
-    registered = false;
-}
-
 /// Getters
 vec3 Light::getPosition() const
 {
@@ -55,4 +37,15 @@ float Light::getAmbientCoefficient() const
 vec3 Light::getAttenuation() const
 {
     return attenuation;
+}
+
+/// Methods (private)
+void Light::onRegister()
+{
+    GraphicEngine::get()->addLight(this);
+}
+
+void Light::onDeregister()
+{
+    GraphicEngine::get()->removeLight(this);
 }

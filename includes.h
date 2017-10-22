@@ -15,20 +15,18 @@
 #include <cmath>
 #include <algorithm>
 
-#include <functional>
+#include <unordered_map>
 #include <vector>
-#include <array>
 #include <list>
 #include <map>
-#include <set>
 
-#include <glm.hpp>
-#include <gtc/epsilon.hpp>
-#include <gtc/type_ptr.hpp>
-#include <gtc/quaternion.hpp>
-#include <gtx/quaternion.hpp>
-#include <gtx/transform.hpp>
-#include <gtx/matrix_operation.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/epsilon.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtx/matrix_operation.hpp>
 
 
 #include <Windows.h>
@@ -57,10 +55,10 @@ vec3 vecClamp(vec3 v);
 
 void write(vec3 _vec, bool ret = true);
 
-bool epsilonEqual(vec3& a, vec3& b, float epsilon = EPSILON);
-bool epsilonEqual(quat& a, quat& b, float epsilon = EPSILON);
+bool epsilonEqual(const vec3& a, const vec3& b, float epsilon = EPSILON);
+bool epsilonEqual(const quat& a, const quat& b, float epsilon = EPSILON);
 
-enum ErrorType {WARNING, FILE_NOT_FOUND, OPENGL_ERROR, MINGE_ERROR};
+enum ErrorType {WARNING, FILE_NOT_FOUND, OPENGL_ERROR, MINGE_ERROR, USER_ERROR};
 
 // Implementation in "Util/Errors.cpp"
 class Error

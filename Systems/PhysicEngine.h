@@ -30,7 +30,8 @@ class PhysicEngine
             void simulate();
             void update();
 
-            std::vector<RayHit> raycast(vec3 _origin, vec3 _direction, bool _sort = false);
+            RayHit raycast(vec3 _origin, vec3 _direction);
+            std::vector<RayHit> raycastAll(vec3 _origin, vec3 _direction, bool _sort = false);
 
             void setGravity(vec3 _gravity = vec3(0, 0, -9.81f));
 

@@ -1,6 +1,6 @@
 #include "Assets/Texture.h"
 
-std::map<std::string, Texture*> Texture::textures;
+std::unordered_map<std::string, Texture*> Texture::textures;
 
 Texture::Texture():
     texture(0)

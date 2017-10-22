@@ -32,7 +32,7 @@ class Texture
             Texture operator=(Texture _original) = delete;
 
         /// Attributes (static)
-            static std::map<std::string, Texture*> textures;
+            static std::unordered_map<std::string, Texture*> textures;
 
         /// Attributes (private)
             std::string path;

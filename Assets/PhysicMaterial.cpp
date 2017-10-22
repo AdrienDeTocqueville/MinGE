@@ -1,6 +1,6 @@
 #include "PhysicMaterial.h"
 
-std::map<std::string, PhysicMaterial*> PhysicMaterial::materials;
+std::unordered_map<std::string, PhysicMaterial*> PhysicMaterial::materials;
 PhysicMaterial* PhysicMaterial::base = nullptr;
 
 PhysicMaterial::PhysicMaterial(std::string _name, float _restitution, float _dF, float _sF):

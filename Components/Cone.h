@@ -21,6 +21,7 @@ class Cone : public Collider
             float getRadius() const;
             float getHeight() const;
 
+    private:
         /// Attributes
             float radius;
             float height;

@@ -2,6 +2,7 @@
 #define INPUT_H
 
 #include "includes.h"
+#include <array>
 
 enum CursorMode {GE_FREE, GE_CAPTURE};
 
