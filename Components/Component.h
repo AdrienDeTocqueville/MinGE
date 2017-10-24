@@ -17,14 +17,29 @@ class Component
         /// Getters
             Entity*    getEntity() const    { return entity; }
 
-            template <typename T> T* get() const
+            template <typename T> bool has() const
             {
-                return entity->get<T>();
+                return entity->has<T>();
             }
 
-            template <typename T> std::vector<T*> getAll() const
+            template <typename T> void insert() const
             {
-                return entity->getAll<T>();
+                entity->insert<T>();
+            }
+
+            template <typename T> void remove() const
+            {
+                entity->remove<T>();
+            }
+
+            template <typename T> T* find() const
+            {
+                return entity->find<T>();
+            }
+
+            template <typename T> std::vector<T*> findAll() const
+            {
+                return entity->findAll<T>();
             }
 
             static float deltaTime;

@@ -58,7 +58,7 @@ const std::vector<Material*>& Graphic::getMaterials() const
 /// Methods (private)
 void Graphic::onRegister()
 {
-//    Animator* a = get<Animator>();
+//    Animator* a = find<Animator>();
 //    if (a != nullptr)
 //        a->setGraphic(this);
 
@@ -67,7 +67,7 @@ void Graphic::onRegister()
 
 void Graphic::onDeregister()
 {
-//    Animator* a = get<Animator>();
+//    Animator* a = find<Animator>();
 //    if (a != nullptr)
 //        a->setGraphic(nullptr);
 

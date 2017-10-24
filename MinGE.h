@@ -21,7 +21,6 @@
 
 #include "Components/Transform.h"
 #include "Components/RigidBody.h"
-//#include "Components/Animator.h"
 #include "Components/Graphic.h"
 #include "Components/Camera.h"
 #include "Components/Skybox.h"

@@ -51,7 +51,7 @@ Entity* Entity::create(std::string _tag, bool _prototype, vec3 _position, vec3 _
 
 Entity* Entity::create(Tag _tag, bool _prototype, vec3 _position, vec3 _rotation, vec3 _scale)
 {
-    return (new Entity(_tag, _prototype))->add<Transform>(_position, _rotation, _scale);
+    return (new Entity(_tag, _prototype))->insert<Transform>(_position, _rotation, _scale);
 }
 
 Entity* Entity::clone(Entity* _entity, vec3 _position, vec3 _rotation, vec3 _scale)
@@ -150,7 +150,7 @@ std::list<Entity*> Entity::findAllByTag(Tag _tag)
 }
 
 /// Methods (private)
-void Entity::addComponent(Component* _component, std::type_index _typeid)
+void Entity::insertComponent(Component* _component, std::type_index _typeid)
 {
     components[_typeid].push_back(_component);
 
@@ -217,7 +217,7 @@ std::type_index Entity::getScriptTypeIndex()
 
 /// Other
 //template<typename... Args>
-//Entity* Entity::add<Transform>(Args&&... args)
+//Entity* Entity::insert<Transform>(Args&&... args)
 //{
 //    if (tr != nullptr)
 //        Error::add(USER_ERROR, "Impossible to add a Transform component");
@@ -234,7 +234,7 @@ void Entity::remove<Transform>()
 }
 
 template <>
-Transform* Entity::get()
+Transform* Entity::find<Transform>()
 {
     return tr;
 }
@@ -254,7 +254,7 @@ void Entity::removeAll<Collider>()
 
     components[typeid(Collider)].clear();
 
-    RigidBody* rb = get<RigidBody>();
+    RigidBody* rb = find<RigidBody>();
     if (rb != nullptr)
         rb->computeMass();
 }
@@ -275,7 +275,7 @@ void Entity::removeAll<Script>()
 }
 
 template <>
-std::vector<Component*> Entity::getAll()
+std::vector<Component*> Entity::findAll()
 {
     std::vector<Component*> _components;
 
@@ -287,7 +287,7 @@ std::vector<Component*> Entity::getAll()
 }
 
 template <>
-std::vector<Collider*> Entity::getAll()
+std::vector<Collider*> Entity::findAll()
 {
     std::vector<Component*>& _colliders = components[typeid(Collider)];
     std::vector<Collider*> colliders; colliders.resize(_colliders.size());
@@ -299,7 +299,7 @@ std::vector<Collider*> Entity::getAll()
 }
 
 template <>
-std::vector<Script*> Entity::getAll()
+std::vector<Script*> Entity::findAll()
 {
     std::vector<Component*>& _scripts = components[typeid(Script)];
     std::vector<Script*> scripts; scripts.resize(_scripts.size());

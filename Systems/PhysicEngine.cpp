@@ -8,6 +8,7 @@
 #include "Physic/DistanceConstraint.h"
 #include "Physic/ContactConstraint.h"
 
+bool sortDistance(const RayHit& _a, const RayHit& _b);
 
 PhysicEngine* PhysicEngine::instance = nullptr;
 
@@ -189,7 +190,7 @@ std::vector<RayHit> PhysicEngine::raycastAll(vec3 _origin, vec3 _direction, bool
 
 void PhysicEngine::detectCollision(Collider* a, Collider* b)
 {
-    if (a->get<Transform>()->getRoot() == b->get<Transform>()->getRoot())
+    if (a->find<Transform>()->getRoot() == b->find<Transform>()->getRoot())
         return;
 
     if (a->rigidBody && b->rigidBody)

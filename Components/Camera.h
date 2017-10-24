@@ -14,7 +14,7 @@ class Camera : public Component
     friend class GraphicEngine;
 
     public:
-        Camera(float _fovy, float _zNear, float _zFar, vec3 _color = vec3(0.0f), RenderTexture* _renderTexture = nullptr, bool _perspective = true,
+        Camera(float _fovy, float _zNear, float _zFar, vec3 _color = vec3(0.0f), RenderTexture* _renderTexture = nullptr, bool _orthographic = false,
                vec4 _viewport = vec4(0.0f,0.0f,1.0f,1.0f), unsigned _flags = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         virtual ~Camera();
 
@@ -55,7 +55,7 @@ class Camera : public Component
             vec3 clearColor;
             unsigned clearFlags;
 
-            bool perspective;
+            bool orthographic;
 
             vec4 viewport;
             vec4 relViewport;    // in screen coordinates (between 0 and 1)

@@ -181,14 +181,14 @@ void ContactConstraint::sendData()
 
             col.point = manifold->points[1-i];
 
-            for (auto script: colliders[i]->getEntity()->getAll<Script>())
+            for (auto script: colliders[i]->getEntity()->findAll<Script>())
                 script->onCollision(col);
         }
     }
     else
     {
         for (unsigned i(0) ; i < 2 ; i++)
-            for (auto script: colliders[i]->getEntity()->getAll<Script>())
+            for (auto script: colliders[i]->getEntity()->findAll<Script>())
                 script->onTrigger(colliders[1-i]);
     }
 }

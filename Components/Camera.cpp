@@ -7,10 +7,10 @@
 Camera* Camera::main = nullptr;
 Camera* Camera::current = nullptr;
 
-Camera::Camera(float _fovy, float _zNear, float _zFar, vec3 _color, RenderTexture* _renderTexture, bool _perspective, vec4 _viewport, unsigned _flags):
+Camera::Camera(float _fovy, float _zNear, float _zFar, vec3 _color, RenderTexture* _renderTexture, bool _orthographic, vec4 _viewport, unsigned _flags):
     fovy(_fovy), zNear(_zNear), zFar(_zFar),
     clearColor(_color), clearFlags(_flags),
-    perspective(_perspective),
+    orthographic(_orthographic),
     relViewport(_viewport),
     clipPlane(0, 0, 0, 1000),
     fbo(0), renderTexture(_renderTexture)
@@ -30,7 +30,7 @@ Camera::~Camera()
 /// Methods (public)
 Camera* Camera::clone() const
 {
-    return new Camera(fovy, zNear, zFar, clearColor, renderTexture, perspective, relViewport, clearFlags);
+    return new Camera(fovy, zNear, zFar, clearColor, renderTexture, orthographic, relViewport, clearFlags);
 }
 
 void Camera::use()
@@ -57,7 +57,7 @@ void Camera::use()
 
     glClear(clearFlags);
 
-    Skybox* sky = get<Skybox>();
+    Skybox* sky = find<Skybox>();
 
     if (sky)
         sky->render();
@@ -137,10 +137,12 @@ void Camera::computeViewPort()
                     (int)(relViewport.z * ws.x),
                     (int)(relViewport.w * ws.y));
 
-    if (perspective)
-        projection = glm::perspective(fovy, viewport.z/viewport.w, zNear, zFar);
-    else
+    if (orthographic)
+//        projection = ortho(0.0f, viewport.z, viewport.w, 0.0f, 0.1f, 100.0f);
         projection = ortho(-fovy, fovy, -fovy, fovy, zNear, zFar);
+    else
+        projection = perspective(fovy, viewport.z/viewport.w, zNear, zFar);
+
 }
 
 void Camera::createFramebuffer()

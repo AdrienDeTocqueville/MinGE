@@ -16,12 +16,12 @@ class Script : public Component
         /// Methods (public)
             virtual Script* clone() const override final;
 
-            virtual void start      () {}
-            virtual void update     () {}
-            virtual void lateUpdate () {}
+            virtual void start      ();
+            virtual void update     ();
+            virtual void lateUpdate ();
 
-            virtual void onCollision(const Collision& _collision) {}
-            virtual void onTrigger  (Collider* _collider) {}
+            virtual void onCollision(const Collision& _collision);
+            virtual void onTrigger  (Collider* _collider);
 
     private:
         /// Methods (private)

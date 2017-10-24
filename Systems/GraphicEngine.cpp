@@ -126,9 +126,9 @@ void GraphicEngine::removeCamera(Camera* _camera)
         auto _cameras = Entity::findAllByTag("MainCamera");
 
         for (Entity* _c: _cameras)
-            if (_c->get<Camera>() != _camera)
+            if (_c->find<Camera>() != _camera)
             {
-                Camera::main = _c->get<Camera>();
+                Camera::main = _c->find<Camera>();
                 return;
             }
     }

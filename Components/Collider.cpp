@@ -13,6 +13,12 @@ Collider::Collider(PhysicMaterial* _material, bool _isTrigger, vec3 _center):
 Collider::~Collider()
 { }
 
+/// Methods (public)
+RayHit Collider::raycast(vec3 _o, vec3 _d)
+{
+    return RayHit();
+}
+
 /// Getters
 AABB* Collider::getAABB()
 {
@@ -50,7 +56,7 @@ vec3 Collider::getCenter() const
 /// Methods (private)
 void Collider::onRegister()
 {
-    rigidBody = get<RigidBody>();
+    rigidBody = find<RigidBody>();
     if (rigidBody != nullptr)
     {
         computeMass();

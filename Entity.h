@@ -1,7 +1,7 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include "Tag.h"
+#include "Utility/Tag.h"
 
 #include <typeindex>
 
@@ -10,6 +10,7 @@ class Transform;
 class Collider;
 class Script;
 
+// TODO: use unique_ptr<Component>
 typedef std::unordered_map<std::type_index, std::vector<Component*>> ComponentMap;
 typedef std::unordered_map<std::type_index, std::size_t> SizeMap;
 
@@ -21,23 +22,34 @@ class Entity final
             void destroy();
 
             template<typename T>
-            size_t has()
+            bool has()
             {
-                auto found = components.find(typeid(T));
+                std::vector<Component*>* vec = nullptr;
 
-                if (found == components.end())
-                    return 0;
+                if (std::is_base_of<Collider, T>::value)
+                    vec = &components[getColliderTypeIndex()];
 
-                return found->second.size();
+                else if (std::is_base_of<Script, T>::value)
+                    vec = &components[getScriptTypeIndex()];
+
+                else
+                    return !components[typeid(T)].empty();
+
+
+                for (Component* c: *vec)
+                    if (typeid(*c) == typeid(T))
+                        return true;
+
+                return false;
             }
 
             template<typename T, typename... Args>
-            Entity* add(Args&&... args)
+            Entity* insert(Args&&... args)
             {
                 if (typeid(T) == typeid(Transform))
                 {
                     if (tr)
-                        Error::add(USER_ERROR, "Impossible to add a Transform component");
+                        Error::add(USER_ERROR, "Impossible to insert a Transform component");
                     else
                     {
                         T* c = new T(args...);
@@ -50,17 +62,17 @@ class Entity final
                 }
 
                 else if (std::is_base_of<Collider, T>::value)
-                    addComponent(new T(args...), typeid(Collider));
+                    insertComponent(new T(args...), typeid(Collider));
 
                 else if (std::is_base_of<Script, T>::value)
                 {
                     scriptSizes[typeid(T)] = sizeof(T);
 
-                    addComponent(new T(args...), typeid(Script));
+                    insertComponent(new T(args...), typeid(Script));
                 }
 
                 else
-                    addComponent(new T(args...), typeid(T));
+                    insertComponent(new T(args...), typeid(T));
 
                 return this;
             }
@@ -96,7 +108,7 @@ class Entity final
             Tag getTag() const;
 
             template<typename T>
-            T* get()
+            T* find()
             {
                 std::vector<Component*>* vec = nullptr;
 
@@ -121,7 +133,7 @@ class Entity final
             }
 
             template <typename T>
-            std::vector<T*> getAll()
+            std::vector<T*> findAll()
             {
                 std::vector<Component*>* vec = nullptr;
                 std::vector<T*> allComponents;
@@ -164,7 +176,7 @@ class Entity final
             Entity(Tag _tag, bool _prototype);
             ~Entity();
 
-            void addComponent(Component* _component, std::type_index _typeid);
+            void insertComponent(Component* _component, std::type_index _typeid);
 
             void removeComponent(std::type_index _componentTypeid, std::type_index _typeid);
             void removeComponents(std::type_index _componentTypeid, std::type_index _typeid);
@@ -192,7 +204,7 @@ template <>
 void Entity::remove<Transform>();
 
 template <>
-Transform* Entity::get();
+Transform* Entity::find<Transform>();
 
 
 template <>
@@ -206,15 +218,15 @@ void Entity::removeAll<Script>();
 
 
 template <>
-std::vector<Transform*> Entity::getAll() = delete;
+std::vector<Transform*> Entity::findAll() = delete;
 
 template <>
-std::vector<Component*> Entity::getAll();
+std::vector<Component*> Entity::findAll();
 
 template <>
-std::vector<Collider*> Entity::getAll();
+std::vector<Collider*> Entity::findAll();
 
 template <>
-std::vector<Script*> Entity::getAll();
+std::vector<Script*> Entity::findAll();
 
 #endif // ENTITY_H

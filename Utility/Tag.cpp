@@ -13,8 +13,6 @@ bool Tag::operator==(const Tag& _tag) const
 
 bool Tag::operator==(const std::string& _tag) const
 {
-    std::cout << tag << std::endl;
-    std::cout << getTag(_tag) << std::endl;
     return (tag == getTag(_tag));
 }
 

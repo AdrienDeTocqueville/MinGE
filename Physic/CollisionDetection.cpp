@@ -23,7 +23,7 @@ Point support(Collider* a, Collider* b, vec3 _axis)
 /// GJK
 bool GJK(Collider* a, Collider* b, Simplex& _simplex)
 {
-    vec3 axis = b->get<Transform>()->position - a->get<Transform>()->position;
+    vec3 axis = b->find<Transform>()->position - a->find<Transform>()->position;
 
     // Permet a la fonction de quitter plus rapidement en cas de non intersection
     // 1er tour
@@ -347,7 +347,7 @@ Manifold* SphereSphere(Collider* _a, Collider* _b)
     Sphere* a = reinterpret_cast<Sphere*>(_a);
     Sphere* b = reinterpret_cast<Sphere*>(_b);
 
-    vec3 normal = b->get<Transform>()->position - a->get<Transform>()->position;
+    vec3 normal = b->find<Transform>()->position - a->find<Transform>()->position;
 
     float radiusSum = a->getRadius() + b->getRadius();
 
@@ -358,8 +358,8 @@ Manifold* SphereSphere(Collider* _a, Collider* _b)
             man->normal = vec3(0, 0, 1);
         man->penetration = -radiusSum;
 
-        man->points[0] = a->get<Transform>()->position + a->getRadius() * man->normal;
-        man->points[1] = b->get<Transform>()->position - b->getRadius() * man->normal;
+        man->points[0] = a->find<Transform>()->position + a->getRadius() * man->normal;
+        man->points[1] = b->find<Transform>()->position - b->getRadius() * man->normal;
 
         return man;
     }
@@ -374,8 +374,8 @@ Manifold* SphereSphere(Collider* _a, Collider* _b)
         man->normal = normal/distance;
         man->penetration = -radiusSum + distance;
 
-        man->points[0] = a->get<Transform>()->position + a->getRadius() * man->normal;
-        man->points[1] = b->get<Transform>()->position - b->getRadius() * man->normal;
+        man->points[0] = a->find<Transform>()->position + a->getRadius() * man->normal;
+        man->points[1] = b->find<Transform>()->position - b->getRadius() * man->normal;
 
     return man;
 }

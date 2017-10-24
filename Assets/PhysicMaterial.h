@@ -8,7 +8,7 @@ class PhysicMaterial
     friend class Collider;
 
     public:
-        PhysicMaterial(std::string _name, float _restitution = 0.2f, float _dF = 0.4f, float _sF = 0.4f);
+        PhysicMaterial(std::string _name, float _restitution = 0.2f, float _dF = 0.6f, float _sF = 0.6f);
 
         /// Methods (static)
             static PhysicMaterial* get(std::string _name);

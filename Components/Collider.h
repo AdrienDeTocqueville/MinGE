@@ -29,7 +29,8 @@ class Collider : public Component
             virtual void computeMass() = 0;
             virtual void computeAABB() = 0;
 
-            virtual RayHit raycast(vec3 _o, vec3 _d) { return RayHit(); }
+            // TODO: make it virtual pure
+            virtual RayHit raycast(vec3 _o, vec3 _d);
 
         /// Getters
             AABB* getAABB();

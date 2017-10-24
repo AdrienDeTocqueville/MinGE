@@ -167,7 +167,7 @@ void Engine::clear()
 
         Component::instances = 0;
 
-//        exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 }
 

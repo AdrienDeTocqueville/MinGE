@@ -14,6 +14,13 @@ Script* Script::clone() const
     return nullptr;
 }
 
+void Script::start      () {}
+void Script::update     () {}
+void Script::lateUpdate () {}
+
+void Script::onCollision(const Collision& _collision) {}
+void Script::onTrigger  (Collider* _collider) {}
+
 /// Methods (private)
 void Script::onRegister()
 {
