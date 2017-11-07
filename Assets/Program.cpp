@@ -112,7 +112,6 @@ Program* Program::get(std::string _vertex, std::string _fragment)
 void Program::clear()
 {
     Shader::clear();
-    std::cout << "Shaders" << std::endl;
 
     for (unsigned i(0) ; i < programs.size() ; ++i)
         delete programs[i];
@@ -239,7 +238,7 @@ Program::Shader* Program::Shader::load(std::string& _shader)
 
     const GLchar* charSource = sourceCode.c_str();
 
-    glShaderSource(shaderID, 1, &charSource, 0);
+    glShaderSource(shaderID, 1, &charSource, nullptr);
 
     glCompileShader(shaderID);
 

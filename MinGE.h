@@ -8,9 +8,8 @@
 *  (Billboards)          *
 \* ******************** */
 
+#pragma once
 
-#ifndef MINGE_H_INCLUDED
-#define MINGE_H_INCLUDED
 
 #include <memory>
 
@@ -19,8 +18,10 @@
 #include "Engine.h"
 #include "Entity.h"
 
+#include "Components/AudioListener.h"
 #include "Components/Transform.h"
 #include "Components/RigidBody.h"
+#include "Components/Animator.h"
 #include "Components/Graphic.h"
 #include "Components/Camera.h"
 #include "Components/Skybox.h"
@@ -45,4 +46,9 @@
 #include "Meshes/Terrain.h"
 #include "Meshes/AnimatedModel.h"
 
-#endif // MINGE_H_INCLUDED
+#include "Utility/Time.h"
+#include "Utility/Input.h"
+#include "Utility/Debug.h"
+#include "Utility/Random.h"
+#include "Utility/Network.h"
+#include "Utility/FileReader.h"

@@ -9,7 +9,7 @@ long int Random::seed;
 
 void Random::init()
 {
-    setSeed( static_cast<long int>(time(NULL)) );
+    setSeed( static_cast<long int>(time(nullptr)) );
 }
 
 int Random::nextInt(int _min, float _max)

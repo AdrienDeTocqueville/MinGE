@@ -2,17 +2,19 @@
 #include "Components/Animator.h"
 #include "Components/Transform.h"
 
+#include "Utility/Time.h"
+
 Animator::Animator():
     model(nullptr), current(nullptr)
 { }
 
 Animator::~Animator()
 {
-    for (Transform* bone: bones)
-    {
-        if (bone->getEntity() == nullptr)
-            bone->destroy();
-    }
+//    for (Transform* bone: bones)
+//    {
+//        if (bone->getEntity() == nullptr)
+//            bone->destroy();
+//    }
 
     bones.clear();
 }
@@ -45,7 +47,7 @@ void Animator::update()
     if (current == nullptr || model == nullptr)
         return;
 
-    accumulator += Component::deltaTime;
+    accumulator += Time::deltaTime;
 
     if (accumulator >= current->duration)
     {
@@ -112,14 +114,9 @@ Transform* Animator::getBone(std::string _name)
 }
 
 /// Private
-bool Animator::attach(Entity* _entity)
+void Animator::onRegister()
 {
-    bool res = Component::attach(_entity);
-
-    if (res)
-        setGraphic(get<Graphic>());
-
-    return res;
+    setGraphic(find<Graphic>());
 }
 
 void Animator::setGraphic(Graphic* _graphic)
@@ -131,9 +128,9 @@ void Animator::setGraphic(Graphic* _graphic)
 
     if (model == nullptr)
     {
-        for (Transform* bone: bones)
-            if (bone->getEntity() == nullptr)
-                bone->destroy();
+//        for (Transform* bone: bones)
+//            if (bone->getEntity() == nullptr)
+//                bone->destroy();
 
         bones.clear();
 
@@ -155,9 +152,9 @@ void Animator::setGraphic(Graphic* _graphic)
     }
 
 
-    bones.reserve(model->bones.size());
-    for (const AnimatedModel::Bone& bone: model->bones)
-        bones.push_back(new Transform(bone.position, bone.rotation, vec3(1.0f)));
+//    bones.reserve(model->bones.size());
+//    for (const AnimatedModel::Bone& bone: model->bones)
+//        bones.push_back(new Transform(bone.position, bone.rotation, vec3(1.0f)));
 
     for (unsigned i(0) ; i < model->bones.size() ; i++)
     {

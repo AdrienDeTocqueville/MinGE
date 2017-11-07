@@ -41,11 +41,21 @@ ScriptEngine* ScriptEngine::get()
 void ScriptEngine::addComponent(Script* _script)
 {
     started.push_back(_script);
-    components.push_back(_script);
 }
 
 void ScriptEngine::removeComponent(const Script* _script)
 {
+    for (unsigned i(0) ; i < started.size() ; i++)
+    {
+        if (started[i] == _script)
+        {
+            started[i] = started.back();
+            started.pop_back();
+
+            return;
+        }
+    }
+
     for (unsigned i(0) ; i < components.size() ; i++)
     {
         if (components[i] == _script)
@@ -60,8 +70,16 @@ void ScriptEngine::removeComponent(const Script* _script)
 
 void ScriptEngine::start()
 {
+    if (started.empty())
+        return;
+
+    components.reserve(components.size() + started.size());
+
     for (unsigned i(0) ; i < started.size() ; i++)
+    {
         started[i]->start();
+        components.push_back(started[i]);
+    }
     started.clear();
 }
 

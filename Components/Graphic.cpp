@@ -1,5 +1,5 @@
 #include "Components/Graphic.h"
-//#include "Components/Animator.h"
+#include "Components/Animator.h"
 #include "Components/Transform.h"
 
 Graphic::Graphic(Mesh* _mesh)
@@ -58,18 +58,18 @@ const std::vector<Material*>& Graphic::getMaterials() const
 /// Methods (private)
 void Graphic::onRegister()
 {
-//    Animator* a = find<Animator>();
-//    if (a != nullptr)
-//        a->setGraphic(this);
+    Animator* a = find<Animator>();
+    if (a != nullptr)
+        a->setGraphic(this);
 
     GraphicEngine::get()->addGraphic(this);
 }
 
 void Graphic::onDeregister()
 {
-//    Animator* a = find<Animator>();
-//    if (a != nullptr)
-//        a->setGraphic(nullptr);
+    Animator* a = find<Animator>();
+    if (a != nullptr)
+        a->setGraphic(nullptr);
 
     GraphicEngine::get()->removeGraphic(this);
 }

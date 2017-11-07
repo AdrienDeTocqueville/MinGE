@@ -61,7 +61,7 @@ void Mesh::loadBuffers()
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-        glBufferData(GL_ARRAY_BUFFER, offset[2], 0, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, offset[2], nullptr, GL_STATIC_DRAW);
 
         if (hasVertices)
             glBufferSubData(GL_ARRAY_BUFFER, 0        , dataSize[0], &vertices [0]);

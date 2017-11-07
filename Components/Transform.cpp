@@ -3,11 +3,10 @@
 #include "Systems/GraphicEngine.h"
 
 Transform::Transform(vec3 _position, quat _rotation, vec3 _scale):
+    validWorld(false), validLocal(false),
     position(_position), rotation(_rotation), scale(_scale),
     root(this), parent(nullptr)
-{
-    toMatrix();
-}
+{ }
 
 Transform::Transform(vec3 _position, vec3 _rotation, vec3 _scale):
     Transform(_position, quat(_rotation), _scale)
@@ -24,6 +23,8 @@ Transform* Transform::clone() const
 
 void Transform::toMatrix()
 {
+    validWorld = validLocal = true;
+
     if (parent != nullptr)
         toWorldSpace = parent->toWorldSpace;
     else
@@ -41,8 +42,9 @@ void Transform::toMatrix()
 
 void Transform::use() const
 {
-    GraphicEngine::get()->setMatrix(GE_MODEL, toWorldSpace);
+    computeWorldSpaceMatrix();
 
+    GraphicEngine::get()->setMatrix(GE_MODEL, toWorldSpace);
     GraphicEngine::get()->computeMVP();
 }
 
@@ -76,9 +78,32 @@ void Transform::setParent(Transform* _parent)
         child->setRoot(root);
 }
 
+void Transform::setPosition(vec3 _position)
+{
+    position = _position;
+
+    validLocal = validWorld = false;
+}
+
+void Transform::setRotation(vec3 _rotation)
+{
+    rotation = quat(_rotation);
+
+    validLocal = validWorld = false;
+}
+
+void Transform::setScale(vec3 _scale)
+{
+    scale = _scale;
+
+    validLocal = validWorld = false;
+}
+
 void Transform::setDirection(vec3 _direction)
 {
     rotation = glm::rotation(vec3(1, 0, 0), _direction);
+
+    validLocal = validWorld = false;
 }
 
 /// Getters
@@ -109,21 +134,27 @@ vec3 Transform::getDirection() const
 
 vec3 Transform::getToLocalSpace(vec3 _point) const
 {
+    computeLocalSpaceMatrix();
+
     return vec3(toLocalSpace * vec4(_point, 1.0f));
 }
 
 mat4 Transform::getToLocalSpace(const mat4& _matrix) const
 {
+    computeLocalSpaceMatrix();
+
     return toLocalSpace * _matrix;
 }
 
 vec3 Transform::getVectorToLocalSpace(vec3 _vector) const
 {
-    return vec3(toLocalSpace * vec4(_vector + position, 1.0f));
+    return getToLocalSpace(_vector + position);
 }
 
 vec3 Transform::getToWorldSpace(vec3 _point) const
 {
+    computeWorldSpaceMatrix();
+
     return vec3(toWorldSpace * vec4(_point, 1.0f));
 }
 
@@ -135,16 +166,43 @@ mat3 Transform::getToWorldSpace(const mat3& _matrix) const
 
 mat4 Transform::getToWorldSpace(const mat4& _matrix) const
 {
+    computeWorldSpaceMatrix();
+
     return toWorldSpace * _matrix;
 }
 
 vec3 Transform::getVectorToWorldSpace(vec3 _vector) const
 {
-    return vec3(toWorldSpace * vec4(_vector, 1.0f)) - position;
+    return getToWorldSpace(_vector) - position;
 }
 
 /// Methods (private)
 void Transform::setRoot(Transform* _root) // private
 {
     root = _root;
+}
+
+void Transform::computeWorldSpaceMatrix() const
+{
+    if (!validWorld)
+    {
+        toWorldSpace = glm::translate(position);
+        toWorldSpace *= toMat4(rotation);
+        toWorldSpace *= glm::scale(scale);
+
+        validWorld = true;
+        validLocal = false;
+    }
+}
+
+void Transform::computeLocalSpaceMatrix() const
+{
+    computeWorldSpaceMatrix();
+
+    if (!validLocal)
+    {
+        toLocalSpace = inverse(toWorldSpace);
+
+        validLocal = true;
+    }
 }

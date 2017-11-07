@@ -10,6 +10,7 @@ class Component
 
     public:
         Component();
+        virtual ~Component();
 
         /// Methods (public)
             virtual Component* clone() const = 0;
@@ -42,13 +43,10 @@ class Component
                 return entity->findAll<T>();
             }
 
-            static float deltaTime;
             static int instances;
 
     protected:
         /// Methods (private)
-            virtual ~Component();
-
             virtual void onRegister();
             virtual void onDeregister();
 

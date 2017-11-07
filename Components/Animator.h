@@ -13,7 +13,7 @@ class Animator : public Component
         virtual ~Animator();
 
         /// Methods (public)
-            virtual Animator* clone() const;
+            virtual Animator* clone() const override;
 
             void loadAnimation(int _index, bool _repeat = false);
 
@@ -25,7 +25,7 @@ class Animator : public Component
 
     private:
         /// Methods (private)
-            virtual bool attach(Entity* _entity) override;
+            virtual void onRegister() override;
 
         /// Setter (private)
             void setGraphic(Graphic* _graphic);

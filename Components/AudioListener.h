@@ -2,6 +2,7 @@
 #define AUDIOLISTENER_H
 
 #include "Components/Component.h"
+#include <SFML/Audio.hpp>
 
 class AudioListener : public Component
 {
@@ -10,14 +11,17 @@ class AudioListener : public Component
         virtual ~AudioListener();
 
         /// Methods (public)
-            Component* clone() override;
-
-            void registerComponent() override;
-            void deregisterComponent() override;
+            virtual AudioListener* clone() const override;
 
             void update();
 
-        static AudioListener* main;
+        /// Attributes (static)
+//            static AudioListener* main;
+
+    private:
+        /// Methods (private)
+//            virtual void onRegister() override;
+//            virtual void onDeregister() override;
 };
 
 #endif // AUDIOLISTENER_H

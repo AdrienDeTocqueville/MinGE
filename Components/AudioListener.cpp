@@ -1,7 +1,7 @@
 #include "Components/AudioListener.h"
 #include "Components/Transform.h"
 
-AudioListener* AudioListener::main = nullptr;
+//AudioListener* AudioListener::main = nullptr;
 
 AudioListener::AudioListener()
 { }
@@ -9,22 +9,9 @@ AudioListener::AudioListener()
 AudioListener::~AudioListener()
 { }
 
-Component* AudioListener::clone()
+AudioListener* AudioListener::clone() const
 {
     return new AudioListener();
-}
-
-void AudioListener::registerComponent()
-{
-    if (main != nullptr)
-        delete main;
-
-    main = this;
-}
-
-void AudioListener::deregisterComponent()
-{
-    main = nullptr;
 }
 
 void AudioListener::update()

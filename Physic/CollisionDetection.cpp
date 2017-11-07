@@ -9,6 +9,8 @@
 
 #include "Components/Sphere.h"
 
+#include <set>
+
 namespace MinGE
 {
 

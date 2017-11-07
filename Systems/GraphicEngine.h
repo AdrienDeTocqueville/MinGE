@@ -36,6 +36,8 @@ class GraphicEngine
             void removeCamera(Camera* _camera);
             void removeLight(Light* _light);
 
+            void toggleWireframe();
+
 	        void computeMVP()   { matrices[GE_MVP] = matrices[GE_VP]*matrices[GE_MODEL]; }
 
         	void render();
@@ -76,6 +78,8 @@ class GraphicEngine
 
             mat4 matrices[3];
             Light* light = nullptr;
+
+            bool wireframe = false;
 
         /// Attributes (static)
             static GraphicEngine* instance;

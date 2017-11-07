@@ -1,22 +1,30 @@
-#ifndef TAG_H
-#define TAG_H
+#pragma once
 
 #include "includes.h"
 
 class Tag
 {
     public:
-        Tag(std::string _tag);
+        Tag(const char* _tag);
+        Tag(const std::string& _tag);
+
+        void operator=(const char* _tag);
+        void operator=(const std::string& _tag);
 
         bool operator==(const Tag& _tag) const;
+        bool operator==(const char* _tag) const;
         bool operator==(const std::string& _tag) const;
 
+        bool operator!=(const Tag& _tag) const;
+
+        std::string toString() const;
+
     private:
-        static int getTag(std::string _tag);
+        static int getTag(const std::string& _tag);
 
         static std::vector< std::string > tags;
 
         int tag;
 };
 
-#endif // TAG_H
+std::ostream& operator<<(std::ostream& os, const Tag& tag);

@@ -65,7 +65,7 @@ void AnimatedModel::loadBuffers()
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-        glBufferData(GL_ARRAY_BUFFER, offset[4], 0, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, offset[4], nullptr, GL_STATIC_DRAW);
 
             glBufferSubData(GL_ARRAY_BUFFER, 0        , dataSize[0], &vertices [0]);
             glBufferSubData(GL_ARRAY_BUFFER, offset[0], dataSize[1], &normals  [0]);

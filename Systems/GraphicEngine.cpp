@@ -49,6 +49,9 @@ void GraphicEngine::clear()
     graphics.clear();
     cameras.clear();
     lights.clear();
+
+    Camera::main = nullptr;
+    Camera::current = nullptr;
 }
 
 /// Methods (static)
@@ -96,11 +99,21 @@ void GraphicEngine::addGraphic(Graphic* _graphic)
 
 void GraphicEngine::addCamera(Camera* _camera)
 {
-    if (_camera != nullptr)
-        cameras.push_back(_camera);
+    if (_camera)
+    {
+        if (Camera::main)
+        {
+            cameras.back() = _camera;
+            cameras.push_back(Camera::main);
+        }
+        else
+        {
+            cameras.push_back(_camera);
 
-    if (Camera::main == nullptr && _camera->getEntity()->getTag() == "MainCamera")
-        Camera::main = _camera;
+            if (_camera->getEntity()->tag == "MainCamera")
+            Camera::main = _camera;
+        }
+    }
 }
 
 void GraphicEngine::addLight(Light* _light)
@@ -116,27 +129,51 @@ void GraphicEngine::removeGraphic(Graphic* _graphic)
 
 void GraphicEngine::removeCamera(Camera* _camera)
 {
-    cameras.remove(_camera);
-
     // Replace if it was the main camera
     if (_camera == Camera::main)
     {
+        cameras.pop_back();
+
         Camera::main = nullptr;
 
         auto _cameras = Entity::findAllByTag("MainCamera");
 
         for (Entity* _c: _cameras)
+        {
             if (_c->find<Camera>() != _camera)
             {
                 Camera::main = _c->find<Camera>();
-                return;
+                break;
             }
+        }
+
+        if (Camera::main == nullptr || cameras.size() == 1)
+            return;
+
+        for (auto it(cameras.begin()) ; it != cameras.end() ; it++)
+        {
+            if (*it == Camera::main)
+            {
+                *it = cameras.back();
+                cameras.back() = Camera::main;
+                break;
+            }
+        }
     }
+    else
+        cameras.remove(_camera);
 }
 
 void GraphicEngine::removeLight(Light* _light)
 {
     lights.remove(_light);
+}
+
+void GraphicEngine::toggleWireframe()
+{
+    wireframe = !wireframe;
+
+    glPolygonMode(GL_FRONT_AND_BACK, wireframe? GL_LINE: GL_FILL);
 }
 
 void GraphicEngine::render()
@@ -145,9 +182,6 @@ void GraphicEngine::render()
 
     for (Camera* camera: cameras)
     {
-        if (camera == Camera::main)
-            continue;
-
         camera->use();
 
         for (Graphic* graphic: graphics)
@@ -155,14 +189,6 @@ void GraphicEngine::render()
             setMatrix(GE_MODEL);
             graphic->render();
         }
-    }
-
-    Camera::main->use();
-
-    for (Graphic* graphic: graphics)
-    {
-        setMatrix(GE_MODEL);
-        graphic->render();
     }
 
     AABB::draw();

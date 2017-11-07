@@ -1,10 +1,8 @@
-#ifndef INPUT_H
-#define INPUT_H
+#pragma once
 
 #include "includes.h"
-#include <array>
 
-enum CursorMode {GE_FREE, GE_CAPTURE};
+enum CursorMode {GE_FREE, GE_FREE_HIDDEN, GE_CAPTURE};
 
 class Input
 {
@@ -24,25 +22,32 @@ class Input
 
         /// Getters
             static CursorMode getCursorMode();
-            static vec2 getMouseDelta();
-            static int getMouseWheelDelta();
 
+            // Window
             static sf::Event* getEvent();
             static sf::RenderWindow* getWindow();
 
             static vec2 getWindowSize();
 
+            // Keyboard
             static bool getKeyDown(sf::Keyboard::Key _key);
             static bool getKeyPressed (sf::Keyboard::Key _key);
             static bool getKeyReleased(sf::Keyboard::Key _key);
 
-            static vec2 getMousePosition(bool openGLSpace = true);
+            static char getText();
 
+            // Mouse
             static bool getMouseDown(sf::Mouse::Button _button);
             static bool getMousePressed(sf::Mouse::Button _button);
             static bool getMouseReleased(sf::Mouse::Button _button);
 
-            static char getText();
+            static vec2 getMousePosition(bool openGLSpace = true);
+            static vec2 getMousePositionRelative();
+
+            static vec2 getMouseDelta();
+            static vec2 getMouseDeltaRelative();
+
+            static int getMouseWheelDelta();
 
             static sf::Uint32 unicode;
 
@@ -61,6 +66,7 @@ class Input
 
             static vec2 dim, center;
 
+            static vec2 prevMousePos, mousePos;
             static vec2 delta;
             static int wheelDelta;
 
@@ -69,11 +75,7 @@ class Input
             static bool focus;
             static bool close;
 
-            static std::array<bool, sf::Mouse::ButtonCount>  mouseStatePrev;
-            static std::array<bool, sf::Mouse::ButtonCount>  mouseState;
-
-            static std::array<bool, sf::Keyboard::KeyCount>  keyboardStatePrev;
-            static std::array<bool, sf::Keyboard::KeyCount>  keyboardState;
+            static int stateIndex;
+            static bool mouseState[2][sf::Mouse::ButtonCount];
+            static bool keyboardState[2][sf::Keyboard::KeyCount];
 };
-
-#endif // INPUT_H

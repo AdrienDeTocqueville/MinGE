@@ -8,6 +8,8 @@
 #include "Physic/DistanceConstraint.h"
 #include "Physic/ContactConstraint.h"
 
+#include "Utility/Time.h"
+
 bool sortDistance(const RayHit& _a, const RayHit& _b);
 
 PhysicEngine* PhysicEngine::instance = nullptr;
@@ -94,7 +96,7 @@ void PhysicEngine::removeConstraint(Constraint* _constraint)
 
 void PhysicEngine::simulate()
 {
-    accumulator += std::min(Component::deltaTime, 0.2f);
+    accumulator += std::min(Time::deltaTime, 0.2f);
 
     // main loop
     while(accumulator > dt)

@@ -37,19 +37,8 @@ void Entity::destroy()
     delete this;
 }
 
-/// Getters
-Tag Entity::getTag() const
-{
-    return tag;
-}
-
 /// Methods (static)
-Entity* Entity::create(std::string _tag, bool _prototype, vec3 _position, vec3 _rotation, vec3 _scale)
-{
-    return Entity::create(Tag(_tag), _prototype, _position, _rotation, _scale);
-}
-
-Entity* Entity::create(Tag _tag, bool _prototype, vec3 _position, vec3 _rotation, vec3 _scale)
+Entity* Entity::create(const Tag& _tag, bool _prototype, vec3 _position, vec3 _rotation, vec3 _scale)
 {
     return (new Entity(_tag, _prototype))->insert<Transform>(_position, _rotation, _scale);
 }
@@ -62,39 +51,35 @@ Entity* Entity::clone(Entity* _entity, vec3 _position, vec3 _rotation, vec3 _sca
     {
         auto& components = e->components[componentPair.first];
 
-        if (componentPair.first == typeid(Script))
+        for (Component* component: componentPair.second)
         {
-            for (Component* component: componentPair.second)
+            Component* c = component->clone();
+
+            if (c == nullptr)
             {
                 size_t s = scriptSizes[typeid(*component)];
 
-                Component* c = reinterpret_cast<Component*>(operator new(s));
+                c = reinterpret_cast<Component*>(operator new(s));
                 memcpy(c, component, s);
                 Component::instances++;
-
-                components.push_back(c);
-
-                c->entity = e;
-                c->tr = e->tr;
-                c->onRegister();
             }
-        }
 
-        else
-        {
-            for (Component* component: componentPair.second)
-            {
-                Component* c = component->clone();
-                components.push_back(c);
+            components.push_back(c);
 
-                c->entity = e;
-                c->tr = e->tr;
-                c->onRegister();
-            }
+            c->entity = e;
+            c->tr = e->tr;
+            c->onRegister();
         }
     }
 
     return e;
+}
+
+Entity* Entity::clone(Entity* _entity)
+{
+    Transform* tr = _entity->find<Transform>();
+
+    return Entity::clone(_entity, tr->position, eulerAngles(tr->rotation), tr->scale);
 }
 
 void Entity::clear()
@@ -105,48 +90,34 @@ void Entity::clear()
     entities.clear();
 }
 
-Entity* Entity::findByTag(std::string _tag)
-{
-    return findByTag(Tag(_tag));
-}
-
-std::list<Entity*> Entity::findAllByTag(std::string _tag)
-{
-    Tag tagId = Tag(_tag);
-
-    std::list<Entity*> entities;
-
-    for (Entity* entity: entities)
-    {
-        if (entity->tag == tagId)
-            entities.push_back(entity);
-    }
-
-    return entities;
-}
-
-Entity* Entity::findByTag(Tag _tag)
+Entity* Entity::findByTag(const Tag& _tag, bool _allowPrototypes)
 {
     for (Entity* entity: entities)
     {
         if (entity->tag == _tag)
-            return entity;
+        {
+            if (!entity->prototype || _allowPrototypes)
+                return entity;
+        }
     }
 
     return nullptr;
 }
 
-std::list<Entity*> Entity::findAllByTag(Tag _tag)
+std::list<Entity*> Entity::findAllByTag(const Tag& _tag, bool _allowPrototypes)
 {
-    std::list<Entity*> entities;
+    std::list<Entity*> samedTag;
 
     for (Entity* entity: entities)
     {
         if (entity->tag == _tag)
-            entities.push_back(entity);
+        {
+            if (!entity->prototype || _allowPrototypes)
+                samedTag.push_back(entity);
+        }
     }
 
-    return entities;
+    return samedTag;
 }
 
 /// Methods (private)
@@ -260,21 +231,6 @@ void Entity::removeAll<Collider>()
 }
 
 template <>
-void Entity::removeAll<Script>()
-{
-    for (Component* script: components[typeid(Script)])
-    {
-        Script* s = static_cast<Script*>(script);
-
-        s->entity = nullptr;
-
-        s->onDeregister();
-    }
-
-    components[typeid(Script)].clear();
-}
-
-template <>
 std::vector<Component*> Entity::findAll()
 {
     std::vector<Component*> _components;
@@ -298,14 +254,3 @@ std::vector<Collider*> Entity::findAll()
     return colliders;
 }
 
-template <>
-std::vector<Script*> Entity::findAll()
-{
-    std::vector<Component*>& _scripts = components[typeid(Script)];
-    std::vector<Script*> scripts; scripts.resize(_scripts.size());
-
-    for (unsigned i(0) ; i < _scripts.size() ; i++)
-        scripts[i] = static_cast<Script*>(_scripts[i]);
-
-    return scripts;
-}

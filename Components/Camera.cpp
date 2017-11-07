@@ -7,8 +7,8 @@
 Camera* Camera::main = nullptr;
 Camera* Camera::current = nullptr;
 
-Camera::Camera(float _fovy, float _zNear, float _zFar, vec3 _color, RenderTexture* _renderTexture, bool _orthographic, vec4 _viewport, unsigned _flags):
-    fovy(_fovy), zNear(_zNear), zFar(_zFar),
+Camera::Camera(float _FOV, float _zNear, float _zFar, vec3 _color, RenderTexture* _renderTexture, bool _orthographic, vec4 _viewport, unsigned _flags):
+    FOV(_FOV), zNear(_zNear), zFar(_zFar),
     clearColor(_color), clearFlags(_flags),
     orthographic(_orthographic),
     relViewport(_viewport),
@@ -30,7 +30,7 @@ Camera::~Camera()
 /// Methods (public)
 Camera* Camera::clone() const
 {
-    return new Camera(fovy, zNear, zFar, clearColor, renderTexture, orthographic, relViewport, clearFlags);
+    return new Camera(FOV, zNear, zFar, clearColor, renderTexture, orthographic, relViewport, clearFlags);
 }
 
 void Camera::use()
@@ -42,8 +42,6 @@ void Camera::use()
 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-
-    tr->toMatrix();
 
     view = glm::lookAt(tr->getToWorldSpace(vec3(0.0f)),
                        tr->getToWorldSpace(vec3(1, 0, 0)),
@@ -113,6 +111,16 @@ vec3 Camera::getDirection() const
     return tr->getVectorToWorldSpace(vec3(1, 0, 0));
 }
 
+float Camera::getFOV() const
+{
+    return FOV;
+}
+
+float Camera::getAspectRatio() const
+{
+    return viewport.z/viewport.w;
+}
+
 /// Methods (private)
 void Camera::onRegister()
 {
@@ -137,11 +145,12 @@ void Camera::computeViewPort()
                     (int)(relViewport.z * ws.x),
                     (int)(relViewport.w * ws.y));
 
+    float aspectRatio = viewport.z/viewport.w;
+
     if (orthographic)
-//        projection = ortho(0.0f, viewport.z, viewport.w, 0.0f, 0.1f, 100.0f);
-        projection = ortho(-fovy, fovy, -fovy, fovy, zNear, zFar);
+        projection = ortho(-FOV*0.5f, FOV*0.5f, -FOV*0.5f/aspectRatio, FOV*0.5f/aspectRatio, zNear, zFar);
     else
-        projection = perspective(fovy, viewport.z/viewport.w, zNear, zFar);
+        projection = perspective(FOV, aspectRatio, zNear, zFar);
 
 }
 

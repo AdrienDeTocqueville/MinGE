@@ -1,10 +1,6 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include "Utility/Input.h"
-#include "Utility/Debug.h"
-#include "Utility/Random.h"
-
 #include "Systems/GraphicEngine.h"
 #include "Systems/PhysicEngine.h"
 #include "Systems/ScriptEngine.h"
@@ -39,8 +35,6 @@ class Engine
 
     private:
         /// Attributes
-            Input* input = nullptr;
-
             GraphicEngine* gEngine = nullptr;
             PhysicEngine*  pEngine = nullptr;
             ScriptEngine*  sEngine = nullptr;

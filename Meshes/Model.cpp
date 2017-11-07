@@ -106,11 +106,16 @@ bool Model::load_obj()
         else if (line == "usemtl")
         {
             stream >> line;
+            unsigned index = getMaterialIndex(line);
 
-            if (submeshes.size())
+            if (submeshes.size() && index != submeshes.back().material)
+            {
                 submeshes.back().count = vertices.size() - submeshes.back().first;
+                submeshes.push_back( Submesh(GL_TRIANGLES, vertices.size(), 0, index) );
+            }
 
-            submeshes.push_back( Submesh(GL_TRIANGLES, vertices.size(), 0, getMaterialIndex(line)) );
+            else if (submeshes.empty())
+                submeshes.push_back( Submesh(GL_TRIANGLES, vertices.size(), 0, index) );
         }
         else if (line == "mtllib")
         {

@@ -26,6 +26,10 @@ class Transform : public Component
         /// Setters
             void setParent(Transform* _parent);
 
+            void setPosition(vec3 _position);
+            void setRotation(vec3 _rotation);
+            void setScale(vec3 _scale);
+
             void setDirection(vec3 _direction);
 
         /// Getters
@@ -47,8 +51,8 @@ class Transform : public Component
 
         // TODO: make them private
         /// Attributes (public)
-            mat4 toWorldSpace;
-            mat4 toLocalSpace;
+            mutable mat4 toWorldSpace; mutable bool validWorld;
+            mutable mat4 toLocalSpace; mutable bool validLocal;
 
             vec3 position;
             quat rotation;
@@ -57,6 +61,9 @@ class Transform : public Component
     private:
         /// Methods (private)
             void setRoot(Transform* _root);
+
+            void computeWorldSpaceMatrix() const;
+            void computeLocalSpaceMatrix() const;
 
         /// Attributes (private)
             Transform *root, *parent;

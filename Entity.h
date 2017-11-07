@@ -27,20 +27,16 @@ class Entity final
                 std::vector<Component*>* vec = nullptr;
 
                 if (std::is_base_of<Collider, T>::value)
-                    vec = &components[getColliderTypeIndex()];
+                {
+                    for (Component* c: components[getColliderTypeIndex()])
+                        if (typeid(*c) == typeid(T))
+                            return true;
 
-                else if (std::is_base_of<Script, T>::value)
-                    vec = &components[getScriptTypeIndex()];
+                    return false;
+                }
 
                 else
                     return !components[typeid(T)].empty();
-
-
-                for (Component* c: *vec)
-                    if (typeid(*c) == typeid(T))
-                        return true;
-
-                return false;
             }
 
             template<typename T, typename... Args>
@@ -64,15 +60,13 @@ class Entity final
                 else if (std::is_base_of<Collider, T>::value)
                     insertComponent(new T(args...), typeid(Collider));
 
-                else if (std::is_base_of<Script, T>::value)
-                {
-                    scriptSizes[typeid(T)] = sizeof(T);
-
-                    insertComponent(new T(args...), typeid(Script));
-                }
-
                 else
+                {
+                    if (std::is_base_of<Script, T>::value)
+                        scriptSizes[typeid(T)] = sizeof(T);
+
                     insertComponent(new T(args...), typeid(T));
+                }
 
                 return this;
             }
@@ -82,9 +76,6 @@ class Entity final
             {
                 if (std::is_base_of<Collider, T>::value)
                     removeComponent(typeid(T), getColliderTypeIndex());
-
-                else if (std::is_base_of<Script, T>::value)
-                    removeComponent(typeid(T), getScriptTypeIndex());
 
                 else
                     removeComponent(typeid(T), typeid(T));
@@ -96,40 +87,31 @@ class Entity final
                 if (std::is_base_of<Collider, T>::value)
                     removeComponents(typeid(T), getColliderTypeIndex());
 
-                else if (std::is_base_of<Script, T>::value)
-                    removeComponents(typeid(T), getScriptTypeIndex());
-
                 else
                     removeComponents(typeid(T), typeid(T));
             }
 
 
         /// Getters (public)
-            Tag getTag() const;
-
             template<typename T>
             T* find()
             {
-                std::vector<Component*>* vec = nullptr;
-
                 if (std::is_base_of<Collider, T>::value)
-                    vec = &components[getColliderTypeIndex()];
+                {
+                    for (Component* c: components[getColliderTypeIndex()])
+                        if (typeid(*c) == typeid(T))
+                            return static_cast<T*>(c);
 
-                else if (std::is_base_of<Script, T>::value)
-                    vec = &components[getScriptTypeIndex()];
+                    return nullptr;
+                }
 
                 else
                 {
-                    vec = &components[typeid(T)];
-                    return (vec->size() ? static_cast<T*>(vec->front()) : nullptr);
+                    const auto& vec = components[typeid(T)];
+
+                    return (vec.size() ? static_cast<T*>(vec.front()) : nullptr);
 
                 }
-
-                for (Component* c: *vec)
-                    if (typeid(*c) == typeid(T))
-                        return static_cast<T*>(c);
-
-                return nullptr;
             }
 
             template <typename T>
@@ -140,9 +122,6 @@ class Entity final
 
                 if (std::is_base_of<Collider, T>::value)
                     vec = &components[getColliderTypeIndex()];
-
-                else if (std::is_base_of<Script, T>::value)
-                    vec = &components[getScriptTypeIndex()];
 
                 else
                     vec = &components[typeid(T)];
@@ -157,19 +136,18 @@ class Entity final
             }
 
         /// Methods (static)
-            static Entity* create(std::string _tag, bool _prototype = false, vec3 _position = vec3(0.0f), vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
-            static Entity* create(Tag _tag, bool _prototype = false, vec3 _position = vec3(0.0f), vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
-            static Entity* clone(Entity* _entity, vec3 _position = vec3(0.0f), vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
+            static Entity* create(const Tag& _tag, bool _prototype = false, vec3 _position = vec3(0.0f), vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
+            static Entity* clone(Entity* _entity, vec3 _position, vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
+            static Entity* clone(Entity* _entity);
             static void clear();
 
-            static Entity* findByTag(std::string _tag);
-            static std::list<Entity*> findAllByTag(std::string _tag);
-
-            static Entity* findByTag(Tag _tag);
-            static std::list<Entity*> findAllByTag(Tag _tag);
+            static Entity* findByTag(const Tag& _tag, bool _allowPrototypes = true);
+            static std::list<Entity*> findAllByTag(const Tag& _tag, bool _allowPrototypes = true);
 
         /// Attributes (public)
             const bool prototype;
+
+            Tag tag;
 
     private:
         /// Methods (private)
@@ -188,8 +166,6 @@ class Entity final
             std::type_index getScriptTypeIndex();
 
         /// Attributes (private)
-            Tag tag;
-
             ComponentMap components;
 
             Transform* tr;
@@ -213,9 +189,6 @@ void Entity::removeAll<Transform>() = delete;
 template <>
 void Entity::removeAll<Collider>();
 
-template <>
-void Entity::removeAll<Script>();
-
 
 template <>
 std::vector<Transform*> Entity::findAll() = delete;
@@ -226,7 +199,5 @@ std::vector<Component*> Entity::findAll();
 template <>
 std::vector<Collider*> Entity::findAll();
 
-template <>
-std::vector<Script*> Entity::findAll();
 
 #endif // ENTITY_H

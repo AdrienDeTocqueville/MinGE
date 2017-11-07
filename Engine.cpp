@@ -4,7 +4,15 @@
 #include "Assets/PhysicMaterial.h"
 #include "Assets/Mesh.h"
 
-#include "Components/Camera.h"
+#include "Utility/Time.h"
+#include "Utility/Input.h"
+#include "Utility/Debug.h"
+#include "Utility/Random.h"
+#include "Utility/Network.h"
+
+#ifdef DEBUG
+    #include "Components/Component.h"
+#endif // DEBUG
 
 Engine* Engine::instance = nullptr;
 
@@ -16,8 +24,10 @@ Engine::Engine(sf::RenderWindow* _window, unsigned _FPS):
 
     _window->setFramerateLimit(_FPS);
 
+    Time::init();
     Input::init(_window);
     Random::init();
+    Network::init();
 
     GraphicEngine::create();
     PhysicEngine::create();
@@ -70,14 +80,16 @@ void Engine::start()
         std::cout << "OpenGL error detected: " << err << std::endl;
     }
 
-    float loadTime = clock.restart().asSeconds();
+//    float loadTime = clock.restart().asSeconds();
 
-    std::cout << "Loaded in " << loadTime << " seconds" << std::endl;
+//    std::cout << "Loaded in " << loadTime << " seconds" << std::endl;
+
+    clock.restart();
 }
 
 bool Engine::update()
 {
-    Component::deltaTime = clock.restart().asSeconds();
+    Time::deltaTime = clock.restart().asSeconds();
 
 
     if (Input::event->type == sf::Event::Resized)
@@ -114,7 +126,7 @@ bool Engine::update()
 
 
 
-    acu += Component::deltaTime;
+    acu += Time::deltaTime;
     if (acu >= 1.0f)
     {
         text.setString("FPS: " + toString<unsigned>(frames) +
@@ -127,48 +139,51 @@ bool Engine::update()
     else
         frames++;
 
-    Input::window->pushGLStates();
-        Program::current = 0;
-        Input::window->draw(text);
-    Input::window->popGLStates();
+//    Input::window->pushGLStates();
+//        Program::current = 0;
+//        Input::window->draw(text);
+//    Input::window->popGLStates();
 
     return true;
 }
 
 void Engine::clear()
 {
-    Entity::clear();
-        std::cout << "Entities" << std::endl;
+    std::cout << "Entities: "; Entity::clear();
+    std::cout << "done" << std::endl;
 
-    Mesh::clear();
-        std::cout << "Meshes" << std::endl;
+    std::cout << "Meshes: "; Mesh::clear();
+    std::cout << "done" << std::endl;
 
-    Program::clear();
-        std::cout << "Programs" << std::endl;
-    Texture::clear();
-        std::cout << "Textures" << std::endl;
-    Material::clear();
-        std::cout << "Materials" << std::endl;
-    PhysicMaterial::clear();
-        std::cout << "Physic materials" << std::endl;
+    std::cout << "Programs: "; Program::clear();
+    std::cout << "done" << std::endl;
+
+    std::cout << "Textures: "; Texture::clear();
+    std::cout << "done" << std::endl;
+
+    std::cout << "Materials: "; Material::clear();
+    std::cout << "done" << std::endl;
+
+    std::cout << "Physic materials: "; PhysicMaterial::clear();
+    std::cout << "done" << std::endl;
 
     GraphicEngine::get()->clear();
     PhysicEngine::get()->clear();
     ScriptEngine::get()->clear();
 
-    Camera::main = nullptr;
 
+    #ifdef DEBUG
+        if (Component::instances != 0)
+        {
+            std::string text = "One or more component have not been deleted ("+toString(Component::instances)+")";
+            MessageBox(nullptr, text.c_str(),
+                                "MinGE: closing error", MB_ICONWARNING);
 
-    if (Component::instances != 0)
-    {
-        std::string text = "One or more component have not been deleted ("+toString(Component::instances)+")";
-        MessageBox(nullptr, text.c_str(),
-                            "MinGE: closing error", MB_ICONWARNING);
+            Component::instances = 0;
 
-        Component::instances = 0;
-
-        exit(EXIT_FAILURE);
-    }
+            exit(EXIT_FAILURE);
+        }
+    #endif // DEBUG
 }
 
 /// Setters
