@@ -1,5 +1,7 @@
 #include "Utility/FileReader.h"
 
+#include <fstream>
+
 FileReader::FileReader(std::string _path):
     path("Resources/" + _path)
 {

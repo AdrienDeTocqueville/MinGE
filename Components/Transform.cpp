@@ -2,6 +2,8 @@
 
 #include "Systems/GraphicEngine.h"
 
+#include <glm/gtx/transform.hpp>
+
 Transform::Transform(vec3 _position, quat _rotation, vec3 _scale):
     validWorld(false), validLocal(false),
     position(_position), rotation(_rotation), scale(_scale),

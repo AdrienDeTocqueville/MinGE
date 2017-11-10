@@ -2,6 +2,7 @@
 #include "Entity.h"
 
 #include "Assets/PhysicMaterial.h"
+#include "Assets/Program.h"
 #include "Assets/Mesh.h"
 
 #include "Utility/Time.h"
@@ -12,6 +13,7 @@
 
 #ifdef DEBUG
     #include "Components/Component.h"
+    #include <windows.h>
 #endif // DEBUG
 
 Engine* Engine::instance = nullptr;
@@ -36,16 +38,16 @@ Engine::Engine(sf::RenderWindow* _window, unsigned _FPS):
     Material::base = new ModelMaterial("baseMaterial");
     PhysicMaterial::base = new PhysicMaterial("baseMaterial");
 
-    if (!font.loadFromFile("Resources/Calibri.ttf"))
-        Error::add(WARNING, "Engine(): Cannot load font: Resources/Calibri.ttf");
-    else
-    {
-        text.setString("Bonjour");
-        text.setFont(font);
-        text.setFillColor(sf::Color::Black);
-        text.setCharacterSize(20);
-        text.setPosition(8, 0);
-    }
+//    if (!font.loadFromFile("Resources/Calibri.ttf"))
+//        Error::add(WARNING, "Engine(): Cannot load font: Resources/Calibri.ttf");
+//    else
+//    {
+//        text.setString("Bonjour");
+//        text.setFont(font);
+//        text.setFillColor(sf::Color::Black);
+//        text.setCharacterSize(20);
+//        text.setPosition(8, 0);
+//    }
 }
 
 Engine::~Engine()
@@ -129,9 +131,9 @@ bool Engine::update()
     acu += Time::deltaTime;
     if (acu >= 1.0f)
     {
-        text.setString("FPS: " + toString<unsigned>(frames) +
-                       "\nDraw time:   " + toString<float>(1000.0f * dTime) + " ms" +
-                       "\nPhysic time: " + toString<float>(1000.0f * pTime) + " ms");
+//        text.setString("FPS: " + toString<unsigned>(frames) +
+//                       "\nDraw time:   " + toString<float>(1000.0f * dTime) + " ms" +
+//                       "\nPhysic time: " + toString<float>(1000.0f * pTime) + " ms");
 
         frames = 0;
         acu = 0.0f;
