@@ -1,9 +1,6 @@
 #include "Meshes/AnimatedModel.h"
 #include "Utility/tinyxml2.h"
 
-#include <fstream>
-#include <glm/gtx/transform.hpp>
-
 #define VEC3_XML(e) vec3(e->FloatAttribute("x"), e->FloatAttribute("y"), e->FloatAttribute("z"))
 
 using namespace tinyxml2;

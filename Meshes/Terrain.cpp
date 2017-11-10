@@ -1,7 +1,5 @@
 #include "Meshes/Terrain.h"
 
-#include <fstream>
-
 Terrain::Terrain(std::string _file):
     file(_file)
 {

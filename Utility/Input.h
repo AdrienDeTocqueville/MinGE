@@ -1,8 +1,5 @@
 #pragma once
 
-#include <SFML/Window/Event.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
-
 #include "includes.h"
 
 enum CursorMode {GE_FREE, GE_FREE_HIDDEN, GE_CAPTURE};

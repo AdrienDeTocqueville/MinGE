@@ -1,11 +1,8 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include <SFML/Graphics/RenderWindow.hpp>
-
 #include "includes.h"
 #include "Utility/Debug.h"
-
 
 #define BUFFER_OFFSET(offset) ((char*)nullptr + (offset))
 

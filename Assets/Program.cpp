@@ -1,8 +1,5 @@
 #include "Assets/Program.h"
 
-#include <fstream>
-#include <glm/gtc/type_ptr.hpp>
-
 std::vector<Program*> Program::programs;
 unsigned Program::current = 0;
 

@@ -1,5 +1,4 @@
 #include "MinGE.h"
-#include <cstring>
 
 std::list<Entity*> Entity::entities;
 SizeMap Entity::scriptSizes;

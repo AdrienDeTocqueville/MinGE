@@ -1,5 +1,5 @@
 #include "includes.h"
-#include <windows.h>
+
 
 vec2 toVec2(sf::Vector2i v)
 {

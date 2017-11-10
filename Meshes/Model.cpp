@@ -1,7 +1,5 @@
 #include "Meshes/Model.h"
 
-#include <fstream>
-
 Model::Model():
     Mesh()
 {}

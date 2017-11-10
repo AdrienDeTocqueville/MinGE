@@ -2,8 +2,6 @@
 #include "Components/RigidBody.h"
 #include "Components/Sphere.h"
 
-#include <glm/gtx/matrix_operation.hpp>
-
 Sphere::Sphere(float _radius, vec3 _center, PhysicMaterial* _material, bool _isTrigger):
     Collider(_material, _isTrigger, _center),
     radius(_radius)
