@@ -13,7 +13,7 @@ Experimental 3D game engine
 * opengl32
 * glu32
 
-*release
+* release: 
 -lsfml-audio-s
 -lopenal32
 -lflac
@@ -33,5 +33,5 @@ Experimental 3D game engine
 -lwinmm
 
 ### Defines
-GLEW_STATIC
-SFML_STATIC
+* GLEW_STATIC
+* SFML_STATIC
