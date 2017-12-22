@@ -1,5 +1,10 @@
 #pragma once
 
+#include <bitset>
+
+#include <SFML/Window/Event.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
+
 #include "includes.h"
 
 enum CursorMode {GE_FREE, GE_FREE_HIDDEN, GE_CAPTURE};
@@ -11,10 +16,12 @@ class Input
     public:
         /// Methods (public)
             static bool hasFocus();
-            static bool isClosed();
+            static bool isOpen();
 
             static bool textIsChar();
             static bool textIsNum();
+
+            static void close();
 
         /// Setters
             static void setCursorMode(CursorMode _mode);
@@ -73,9 +80,11 @@ class Input
             static CursorMode mode;
 
             static bool focus;
-            static bool close;
+            static bool closed;
 
-            static int stateIndex;
-            static bool mouseState[2][sf::Mouse::ButtonCount];
-            static bool keyboardState[2][sf::Keyboard::KeyCount];
+            static int mouseIndex, keyboardIndex;
+            static bool mouseNeedsUpdate, keyboardNeedsUpdate;
+
+            static std::bitset<sf::Mouse::ButtonCount> mouseState[2];
+            static std::bitset<sf::Keyboard::KeyCount> keyboardState[2];
 };

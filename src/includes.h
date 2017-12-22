@@ -3,16 +3,11 @@
 
 #include <GL/glew.h>
 
-#include <SFML/Graphics.hpp>
-#include <SFML/OpenGL.hpp>
+#include <SFML/System.hpp>
 
 #include <iostream>
-#include <fstream>
 #include <sstream>
 #include <string>
-
-#include <cmath>
-#include <algorithm>
 
 #include <unordered_map>
 #include <vector>
@@ -21,14 +16,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/epsilon.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtx/matrix_operation.hpp>
-
-
-#include <Windows.h>
 
 
 const float PI = 3.14159265358979323846f;

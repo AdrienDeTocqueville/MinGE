@@ -1,5 +1,4 @@
 #include "Input.h"
-#include "Components/Component.h"
 
 sf::RenderWindow* Input::window = nullptr;
 sf::Event* Input::event = nullptr;
@@ -13,11 +12,13 @@ int Input::wheelDelta(0);
 CursorMode Input::mode = GE_FREE;
 
 bool Input::focus = true;
-bool Input::close = false;
+bool Input::closed = false;
 
-int Input::stateIndex = 0;
-bool Input::mouseState[2][sf::Mouse::ButtonCount] = {false};
-bool Input::keyboardState[2][sf::Keyboard::KeyCount] = {false};
+int Input::mouseIndex = 0, Input::keyboardIndex = 0;
+bool Input::mouseNeedsUpdate = true, Input::keyboardNeedsUpdate = true;
+
+std::bitset<sf::Mouse::ButtonCount> Input::mouseState[2];
+std::bitset<sf::Keyboard::KeyCount> Input::keyboardState[2];
 
 sf::Uint32 Input::unicode;
 
@@ -34,7 +35,7 @@ void Input::init(sf::RenderWindow* _window)
     mousePos = center;
 
     focus = true;
-    close = false;
+    closed = false;
 }
 
 void Input::destroy()
@@ -45,11 +46,13 @@ void Input::destroy()
     event = nullptr;
 
     focus = true;
-    close = true;
+    closed = true;
 }
 
 void Input::update()
 {
+    bool mouseEvent = false, keyboardEvent = false;
+
     wheelDelta = 0;
     unicode = 0;
 
@@ -58,7 +61,7 @@ void Input::update()
         switch (event->type)
         {
             case sf::Event::Closed:
-                close = true;
+                closed = true;
             break;
 
             case sf::Event::MouseMoved:
@@ -89,19 +92,54 @@ void Input::update()
                 unicode = event->text.unicode;
             break;
 
+            case sf::Event::MouseButtonPressed:
+            case sf::Event::MouseButtonReleased:
+                mouseEvent = true;
+                mouseNeedsUpdate = true;
+            break;
+
+            case sf::Event::KeyPressed:
+            case sf::Event::KeyReleased:
+                keyboardEvent = true;
+                keyboardNeedsUpdate = true;
+            break;
+
             default: break;
         }
     }
 
-    for (int i(0) ; i < sf::Mouse::ButtonCount ; i++)
-        mouseState[stateIndex][i] = sf::Mouse::isButtonPressed( (sf::Mouse::Button)i );
+    /// Mouse click
+    if (mouseEvent)
+    {
+        for (int i(0) ; i < sf::Mouse::ButtonCount ; i++)
+            mouseState[mouseIndex][i] = sf::Mouse::isButtonPressed( (sf::Mouse::Button)i );
+    }
+    else if (mouseNeedsUpdate)
+    {
+        mouseNeedsUpdate = false;
+        mouseState[mouseIndex] = mouseState[1-mouseIndex];
+    }
 
-    for (int i(0) ; i < sf::Keyboard::KeyCount ; i++)
-        keyboardState[stateIndex][i] = sf::Keyboard::isKeyPressed( (sf::Keyboard::Key)i );
+    if (mouseNeedsUpdate)
+        mouseIndex = 1-mouseIndex;
 
-    stateIndex = 1-stateIndex;
+    /// Keyboard press
+    if (keyboardEvent)
+    {
+        for (int i(0) ; i < sf::Keyboard::KeyCount ; i++)
+            keyboardState[keyboardIndex][i] = sf::Keyboard::isKeyPressed( (sf::Keyboard::Key)i );
+    }
+    else if (keyboardNeedsUpdate)
+    {
+        keyboardNeedsUpdate = false;
+        keyboardState[keyboardIndex] = keyboardState[1-keyboardIndex];
+    }
+
+    if (keyboardNeedsUpdate)
+        keyboardIndex = 1-keyboardIndex;
 
 
+    /// Mouse move
     delta = mousePos - prevMousePos;
     delta.x *= -1;
 
@@ -129,9 +167,10 @@ bool Input::hasFocus()
 {
     return focus;
 }
-bool Input::isClosed()
+
+bool Input::isOpen()
 {
-    return close;
+    return !closed;
 }
 
 bool Input::textIsChar()
@@ -142,6 +181,11 @@ bool Input::textIsChar()
 bool Input::textIsNum()
 {
     return (unicode >= '0' && unicode <= '9');
+}
+
+void Input::close()
+{
+    window->close();
 }
 
 /// Setter
@@ -194,23 +238,23 @@ vec2 Input::getWindowSize()
 // Keyboard
 bool Input::getKeyDown(sf::Keyboard::Key _key)
 {
-    return keyboardState[stateIndex][_key];
+    return keyboardState[keyboardIndex][_key];
 }
 
 bool Input::getKeyPressed(sf::Keyboard::Key _key)
 {
-    if (keyboardState[stateIndex][_key] == keyboardState[1-stateIndex][_key])
+    if (keyboardState[keyboardIndex][_key] == keyboardState[1-keyboardIndex][_key])
         return false;
 
-    return keyboardState[stateIndex][_key];
+    return keyboardState[keyboardIndex][_key];
 }
 
 bool Input::getKeyReleased(sf::Keyboard::Key _key)
 {
-    if (keyboardState[stateIndex][_key] == keyboardState[1-stateIndex][_key])
+    if (keyboardState[keyboardIndex][_key] == keyboardState[1-keyboardIndex][_key])
         return false;
 
-    return !keyboardState[stateIndex][_key];
+    return !keyboardState[keyboardIndex][_key];
 }
 
 char Input::getText()
@@ -221,23 +265,23 @@ char Input::getText()
 // Mouse
 bool Input::getMouseDown(sf::Mouse::Button _button)
 {
-    return mouseState[stateIndex][_button];
+    return mouseState[mouseIndex][_button];
 }
 
 bool Input::getMousePressed(sf::Mouse::Button _button)
 {
-    if (mouseState[stateIndex][_button] == mouseState[1-stateIndex][_button])
+    if (mouseState[mouseIndex][_button] == mouseState[1-mouseIndex][_button])
         return false;
 
-    return mouseState[stateIndex][_button];
+    return mouseState[mouseIndex][_button];
 }
 
 bool Input::getMouseReleased(sf::Mouse::Button _button)
 {
-    if (mouseState[stateIndex][_button] == mouseState[1-stateIndex][_button])
+    if (mouseState[mouseIndex][_button] == mouseState[1-mouseIndex][_button])
         return false;
 
-    return !mouseState[stateIndex][_button];
+    return !mouseState[mouseIndex][_button];
 }
 
 vec2 Input::getMousePosition(bool openGLSpace)

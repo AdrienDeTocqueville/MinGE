@@ -5,8 +5,6 @@
 #include "Systems/PhysicEngine.h"
 #include "Systems/ScriptEngine.h"
 
-#include "Assets/Program.h"
-
 class Entity;
 
 class Engine
@@ -41,8 +39,8 @@ class Engine
 
             sf::Event* event;
             sf::Clock clock;
-            sf::Font font;
-            sf::Text text;
+//            sf::Font font;
+//            sf::Text text;
 
             float acu;  unsigned frames;
             bool pause;

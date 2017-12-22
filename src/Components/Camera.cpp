@@ -4,6 +4,8 @@
 
 #include "Utility/Input.h"
 
+#include <glm/gtx/transform.hpp>
+
 Camera* Camera::main = nullptr;
 Camera* Camera::current = nullptr;
 

@@ -1,5 +1,7 @@
 #include "Assets/Texture.h"
 
+#include <SFML/Graphics/Image.hpp>
+
 std::unordered_map<std::string, Texture*> Texture::textures;
 
 Texture::Texture():
