@@ -1,6 +1,7 @@
 #include <MinGE.h>
 
 #include "physic/physic.h"
+#include "bvh/bvh.h"
 
 
 #define FULL_SCREEN sf::VideoMode::getDesktopMode()
@@ -43,12 +44,15 @@ int main()
 			->insert<Light>(GE_POINT_LIGHT, vec3(0.0f), vec3(0.9f), 1.0f, 1, 0.01, 0);
 
 
-		test_physic();
+		std::vector<void (*)()> setups = {test_physic, test_bvh};
+
+		int scene = 1;
+		setups[scene]();
 
 
 	/// Main loop
 		engine->start();
-		Input::setCursorMode(CursorMode::GE_CAPTURE);
+		Input::setCursorMode(CursorMode::Capture);
 
 		while ( Input::isOpen() )
 		{
@@ -65,10 +69,10 @@ int main()
 
 
 				if (Input::getKeyReleased(sf::Keyboard::Escape))
-					engine->setPause(true);
+					engine->setPause(true), Input::setCursorMode(CursorMode::Free);
 
 				if (Input::getMousePressed(sf::Mouse::Left) && Input::hasFocus())
-					engine->setPause(false);
+					engine->setPause(false), Input::setCursorMode(CursorMode::Capture);
 
 			/// Render
 				if (engine->update())

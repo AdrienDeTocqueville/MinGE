@@ -8,7 +8,6 @@
 #include "Utility/Time.h"
 #include "Utility/Input.h"
 #include "Utility/Debug.h"
-#include "Utility/Random.h"
 
 #ifdef DEBUG
 	#include "Components/Component.h"
@@ -26,7 +25,6 @@ Engine::Engine(sf::RenderWindow* _window, unsigned _FPS):
 
 	Time::init();
 	Input::init(_window);
-	Random::init();
 
 	GraphicEngine::create();
 	PhysicEngine::create();

@@ -1,34 +1,28 @@
-#include "Random.h"
+#include "Utility/Random.h"
 
 #include <ctime>
-#include <cstdlib>
 
-#include <iostream>
+long int Random::seed = 0;
+Random Random::initalizer;
 
-long int Random::seed;
-
-void Random::init()
+bool Random::nextBool()
 {
-	setSeed( static_cast<long int>(time(nullptr)) );
+    return (double)rand() / RAND_MAX < 0.5;
 }
 
-int Random::nextInt(int _min, float _max)
-{
-	return _min + (rand() % (int)(_max - _min + 1));
-}
 
-float Random::nextFloat(float _min, float _max)
+Random::Random()
 {
-	return _min +  (_max-_min) * rand() / RAND_MAX;
-}
-
-long int Random::getSeed()
-{
-	return seed;
+    setSeed( static_cast<long int>(time(nullptr)) );
 }
 
 void Random::setSeed(long int _seed)
 {
-	seed = _seed;
-	srand(seed);
+    seed = _seed;
+    srand(seed);
+}
+
+long int Random::getSeed()
+{
+    return seed;
 }

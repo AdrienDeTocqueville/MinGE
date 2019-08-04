@@ -9,7 +9,7 @@ vec2 Input::prevMousePos(0.0f), Input::mousePos(0.0f);
 vec2 Input::delta(0.0f);
 int Input::wheelDelta(0);
 
-CursorMode Input::mode = GE_FREE;
+CursorMode Input::mode = CursorMode::Free;
 
 bool Input::focus = true;
 bool Input::closed = false;
@@ -84,7 +84,7 @@ void Input::update()
 				dim = vec2(event->size.width, event->size.height);
 				center = ivec2(0.5f*dim);
 
-				if (mode == GE_CAPTURE)
+				if (mode == CursorMode::Capture)
 					prevMousePos = center;
 			break;
 
@@ -144,7 +144,7 @@ void Input::update()
 	delta.x *= -1;
 
 
-	if (mode == GE_CAPTURE)
+	if (mode == CursorMode::Capture)
 		sf::Mouse::setPosition(toSFVec2i(center), *window);
 	else
 		prevMousePos = mousePos;
@@ -158,7 +158,7 @@ void Input::setWindowSize(vec2 _size)
 	dim = _size;
 	center = ivec2(0.5f*dim);
 
-	if (mode == GE_CAPTURE)
+	if (mode == CursorMode::Capture)
 		prevMousePos = center;
 }
 
@@ -199,10 +199,10 @@ void Input::setCursorMode(CursorMode _mode)
 	sf::Mouse::setPosition(toSFVec2i(center), *window);
 	delta = vec2(0.0f);
 
-	if (mode == GE_CAPTURE)
+	if (mode == CursorMode::Capture)
 		prevMousePos = center;
 
-	if (mode == GE_FREE_HIDDEN || mode == GE_CAPTURE)
+	if (mode == CursorMode::FreeHidden || mode == CursorMode::Capture)
 		window->setMouseCursorVisible(false);
 	else
 		window->setMouseCursorVisible(true);
