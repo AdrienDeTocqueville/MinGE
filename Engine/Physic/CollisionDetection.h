@@ -10,13 +10,13 @@ namespace MinGE
 
 struct Point
 {
-    Point(vec3 _supA, vec3 _supB):
-        p(_supA - _supB), supA(_supA), supB(_supB)
-    { }
+	Point(vec3 _supA, vec3 _supB):
+		p(_supA - _supB), supA(_supA), supB(_supB)
+	{ }
 
-    vec3 p;
+	vec3 p;
 
-    vec3 supA, supB;
+	vec3 supA, supB;
 };
 
 Point support(Collider* a, Collider* b, vec3 _axis);
@@ -34,15 +34,15 @@ Manifold* EPA(Collider* a, Collider* b, Simplex& _simplex);
 
 struct Face
 {
-    Face(unsigned _a, unsigned _b, unsigned _c);    // CCW
+	Face(unsigned _a, unsigned _b, unsigned _c);	// CCW
 
-    void draw() const;
+	void draw() const;
 
-    unsigned a, b, c;
-    float distance;
-    vec3 normal;
+	unsigned a, b, c;
+	float distance;
+	vec3 normal;
 
-    static Simplex* simplex;
+	static Simplex* simplex;
 };
 
 typedef std::pair<unsigned, unsigned> Edge;

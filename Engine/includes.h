@@ -27,10 +27,10 @@ using namespace glm;
 template <typename T>
 std::string toString(T _number)
 {
-    std::stringstream os;
-    os << _number;
+	std::stringstream os;
+	os << _number;
 
-    return os.str();
+	return os.str();
 }
 
 vec2 toVec2(sf::Vector2i v);
@@ -50,24 +50,24 @@ enum ErrorType {WARNING, FILE_NOT_FOUND, OPENGL_ERROR, MINGE_ERROR, USER_ERROR};
 // Implementation in "Util/Errors.cpp"
 class Error
 {
-    public:
-        static void init();
+	public:
+		static void init();
 
-        static void add(ErrorType _type, std::string _description);
+		static void add(ErrorType _type, std::string _description);
 
-        static bool check();
+		static bool check();
 
-    private:
-        Error();
-        ~Error();
+	private:
+		Error();
+		~Error();
 
-    /// Attributes (private)
-        static const unsigned maxType = MINGE_ERROR+1;
-        static bool error;
+	/// Attributes (private)
+		static const unsigned maxType = MINGE_ERROR+1;
+		static bool error;
 
-    /// Methods (private)
-        static std::string getTitle(ErrorType _type);
-        static int getIcon(ErrorType _type);
+	/// Methods (private)
+		static std::string getTitle(ErrorType _type);
+		static int getIcon(ErrorType _type);
 };
 
 #endif // INCLUDES_H_INCLUDED

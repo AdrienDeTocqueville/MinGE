@@ -121,39 +121,39 @@
 /* <windef.h> and <gl.h>*/
 #ifdef APIENTRY
 #  ifndef GLAPIENTRY
-#    define GLAPIENTRY APIENTRY
+#	define GLAPIENTRY APIENTRY
 #  endif
 #  ifndef GLEWAPIENTRY
-#    define GLEWAPIENTRY APIENTRY
+#	define GLEWAPIENTRY APIENTRY
 #  endif
 #else
 #define GLEW_APIENTRY_DEFINED
 #  if defined(__MINGW32__) || defined(__CYGWIN__) || (_MSC_VER >= 800) || defined(_STDCALL_SUPPORTED) || defined(__BORLANDC__)
-#    define APIENTRY __stdcall
-#    ifndef GLAPIENTRY
-#      define GLAPIENTRY __stdcall
-#    endif
-#    ifndef GLEWAPIENTRY
-#      define GLEWAPIENTRY __stdcall
-#    endif
+#	define APIENTRY __stdcall
+#	ifndef GLAPIENTRY
+#	  define GLAPIENTRY __stdcall
+#	endif
+#	ifndef GLEWAPIENTRY
+#	  define GLEWAPIENTRY __stdcall
+#	endif
 #  else
-#    define APIENTRY
+#	define APIENTRY
 #  endif
 #endif
 #ifndef GLAPI
 #  if defined(__MINGW32__) || defined(__CYGWIN__)
-#    define GLAPI extern
+#	define GLAPI extern
 #  endif
 #endif
 /* <winnt.h> */
 #ifndef CALLBACK
 #define GLEW_CALLBACK_DEFINED
 #  if defined(__MINGW32__) || defined(__CYGWIN__)
-#    define CALLBACK __attribute__ ((__stdcall__))
+#	define CALLBACK __attribute__ ((__stdcall__))
 #  elif (defined(_M_MRX000) || defined(_M_IX86) || defined(_M_ALPHA) || defined(_M_PPC)) && !defined(MIDL_PASS)
-#    define CALLBACK __stdcall
+#	define CALLBACK __stdcall
 #  else
-#    define CALLBACK
+#	define CALLBACK
 #  endif
 #endif
 /* <wingdi.h> and <winnt.h> */
@@ -169,9 +169,9 @@ typedef unsigned short wchar_t;
 /* <stddef.h> */
 #if !defined(_W64)
 #  if !defined(__midl) && (defined(_X86_) || defined(_M_IX86)) && defined(_MSC_VER) && _MSC_VER >= 1300
-#    define _W64 __w64
+#	define _W64 __w64
 #  else
-#    define _W64
+#	define _W64
 #  endif
 #endif
 #if !defined(_PTRDIFF_T_DEFINED) && !defined(_PTRDIFF_T_) && !defined(__MINGW64__)
@@ -186,9 +186,9 @@ typedef _W64 int ptrdiff_t;
 
 #ifndef GLAPI
 #  if defined(__MINGW32__) || defined(__CYGWIN__)
-#    define GLAPI extern
+#	define GLAPI extern
 #  else
-#    define GLAPI WINGDIAPI
+#	define GLAPI WINGDIAPI
 #  endif
 #endif
 
@@ -201,9 +201,9 @@ typedef _W64 int ptrdiff_t;
 #  define GLEWAPI extern
 #else
 #  ifdef GLEW_BUILD
-#    define GLEWAPI extern __declspec(dllexport)
+#	define GLEWAPI extern __declspec(dllexport)
 #  else
-#    define GLEWAPI extern __declspec(dllimport)
+#	define GLEWAPI extern __declspec(dllimport)
 #  endif
 #endif
 
@@ -220,7 +220,7 @@ typedef _W64 int ptrdiff_t;
 
 #include <stddef.h>
 
-/* SGI MIPSPro doesn't like stdint.h in C++ mode          */
+/* SGI MIPSPro doesn't like stdint.h in C++ mode		  */
 /* ID: 3376260 Solaris 9 has inttypes.h, but not stdint.h */
 
 #if (defined(__sgi) || defined(__sun)) && !defined(__GNUC__)
@@ -1190,19 +1190,19 @@ GLAPI void GLAPIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei heigh
 
 #ifndef GLEW_NO_GLU
 #  ifdef __APPLE__
-#    include <Availability.h>
-#    if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
-#      define GLEW_NO_GLU
-#    endif
+#	include <Availability.h>
+#	if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
+#	  define GLEW_NO_GLU
+#	endif
 #  endif
 #endif
 
 #ifndef GLEW_NO_GLU
 /* this is where we can safely include GLU */
 #  if defined(__APPLE__) && defined(__MACH__)
-#    include <OpenGL/glu.h>
+#	include <OpenGL/glu.h>
 #  else
-#    include <GL/glu.h>
+#	include <GL/glu.h>
 #  endif
 #endif
 

@@ -5,90 +5,90 @@
 
 class AnimatedModel : public Mesh
 {
-    friend class Animator;
+	friend class Animator;
 
-    // Structure definitions
-    struct Bone
-    {
-        Bone(std::string _name, vec3 _position, float _angle, vec3 _axis):
-            position(_position), rotation(angleAxis(_angle, _axis)),
-            name(_name),
-            parent(-1)
-        { }
+	// Structure definitions
+	struct Bone
+	{
+		Bone(std::string _name, vec3 _position, float _angle, vec3 _axis):
+			position(_position), rotation(angleAxis(_angle, _axis)),
+			name(_name),
+			parent(-1)
+		{ }
 
-        vec3 position;
-        quat rotation;
+		vec3 position;
+		quat rotation;
 
-        mat4 inverseBindMatrix;
+		mat4 inverseBindMatrix;
 
-        std::string name;
+		std::string name;
 
-        int parent;
-        std::vector<int> children;
-    };
+		int parent;
+		std::vector<int> children;
+	};
 
-    struct Track
-    {
-        Track(unsigned _boneId):
-            boneId(_boneId)
-        { }
+	struct Track
+	{
+		Track(unsigned _boneId):
+			boneId(_boneId)
+		{ }
 
-        unsigned boneId;
-        std::vector<std::pair<float, vec3>> translations;
-        std::vector<std::pair<float, quat>> rotations;
-    };
+		unsigned boneId;
+		std::vector<std::pair<float, vec3>> translations;
+		std::vector<std::pair<float, quat>> rotations;
+	};
 
-    struct Animation
-    {
-        Animation(std::string _name, float _duration):
-            name(_name), duration(_duration)
-        { }
+	struct Animation
+	{
+		Animation(std::string _name, float _duration):
+			name(_name), duration(_duration)
+		{ }
 
-        std::string name;
-        float duration;
+		std::string name;
+		float duration;
 
-        std::vector<Track> tracks;
-    };
-    // Structure definitions
+		std::vector<Track> tracks;
+	};
+	// Structure definitions
 
-    public:
-        AnimatedModel(std::string _mesh);
-        virtual ~AnimatedModel();
+	public:
+		AnimatedModel(std::string _mesh);
+		virtual ~AnimatedModel();
 
-        /// Methods (public)
-            virtual void render(Transform* _tr, const std::vector<Material*>& _materials) override;
+		/// Methods (public)
+			virtual void render(Transform* _tr, const std::vector<Material*>& _materials) override;
 
-        /// Getters
-            unsigned getBoneIndex(std::string _name);
-            unsigned getAnimationIndex(std::string _name);
+		/// Getters
+			unsigned getBoneIndex(std::string _name);
+			unsigned getAnimationIndex(std::string _name);
 
-    protected:
-        /// Methods (protected)
-            virtual void loadBuffers() override;
+	protected:
+		/// Methods (protected)
+			virtual void loadBuffers() override;
 
-            bool load_mesh_xml();
-            bool load_skeleton_xml();
+			bool load_mesh_xml();
+			bool load_skeleton_xml();
 
-            bool load_material();
+			bool load_material();
 
-            void reduceKeyframes(Track& _track);
+			void reduceKeyframes(Track& _track);
 
-        /// Attributes
-            std::vector<ivec4> boneIds;
-            std::vector< vec4> weights;
+		/// Attributes
+			std::vector<ivec4> boneIds;
+			std::vector< vec4> weights;
 
-            std::vector<Bone> bones;
-            Bone* root;
+			std::vector<Bone> bones;
+			Bone* root;
 
-            std::vector<Animation> animations;
+			std::vector<Animation> animations;
 
-            unsigned ibo = 0;
-            std::vector<unsigned short> indices;
+			unsigned ibo = 0;
+			std::vector<unsigned short> indices;
 
-            std::string mesh, skeleton, material;
+			std::string mesh, skeleton, material;
 
-    private:
-        void computeMatrix(Bone* _bone);
+	private:
+		void computeMatrix(Bone* _bone);
 };
 
 #endif // ANIMATEDMODEL_H

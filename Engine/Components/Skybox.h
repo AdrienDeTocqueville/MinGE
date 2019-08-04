@@ -6,17 +6,17 @@
 
 class Skybox : public Component
 {
-    public:
-        Skybox();
-        virtual ~Skybox();
+	public:
+		Skybox();
+		virtual ~Skybox();
 
-        /// Methods (public)
-            virtual Skybox* clone() const override;
+		/// Methods (public)
+			virtual Skybox* clone() const override;
 
-            void render();
+			void render();
 
-    private:
-        Mesh* sky;
+	private:
+		Mesh* sky;
 };
 
 #endif // SKYBOX_H

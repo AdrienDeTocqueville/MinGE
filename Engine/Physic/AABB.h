@@ -5,23 +5,23 @@
 
 struct AABB
 {
-    void prepare();
-    static bool collide(AABB* a, AABB* b);
+	void prepare();
+	static bool collide(AABB* a, AABB* b);
 
-    static void draw();
+	static void draw();
 
-    vec3 center = vec3(0.0f);
-    vec3 dim = vec3(0.0f);
+	vec3 center = vec3(0.0f);
+	vec3 dim = vec3(0.0f);
 
-    vec3 color;
+	vec3 color;
 
-    static unsigned vbo;
-    static unsigned vao;
+	static unsigned vbo;
+	static unsigned vao;
 
-    static std::vector<vec3> vertices;
-    static std::vector<vec3> colors;
+	static std::vector<vec3> vertices;
+	static std::vector<vec3> colors;
 
-    static bool drawAABBs;
+	static bool drawAABBs;
 };
 
 #endif // SHAPE_H

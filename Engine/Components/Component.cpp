@@ -5,16 +5,16 @@ int Component::instances = 0;
 #endif
 
 Component::Component():
-    entity(nullptr), tr(nullptr)
+	entity(nullptr), tr(nullptr)
 {
 #ifdef DEBUG
-    instances++;
+	instances++;
 #endif
 }
 
 Component::~Component()
 {
 #ifdef DEBUG
-    instances--;
+	instances--;
 #endif
 }

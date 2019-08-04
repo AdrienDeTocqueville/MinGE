@@ -4,31 +4,31 @@
 
 class CameraScript : public Script
 {
-    public:
-        CameraScript(Transform* _target, float _sensivity = 0.2f, float _distance = 0.01f, vec3 _offset = vec3(0.0f)):
-            target(_target), angles(0.0f), clampAngleY(-0.499f*PI, 0.499f*PI),
-            sensivity(_sensivity), distance(_distance), offset(_offset)
-        { }
+	public:
+		CameraScript(Transform* _target, float _sensivity = 0.2f, float _distance = 0.01f, vec3 _offset = vec3(0.0f)):
+			target(_target), angles(0.0f), clampAngleY(-0.499f*PI, 0.499f*PI),
+			sensivity(_sensivity), distance(_distance), offset(_offset)
+		{ }
 
-        /// Methods (public)
-            void update() override
-            {
+		/// Methods (public)
+			void update() override
+			{
 #ifdef DEBUG
-                Debug::drawVector(vec3(0.0f), vec3(1, 0, 0), vec3(1, 0, 0));
-                Debug::drawVector(vec3(0.0f), vec3(0, 1, 0), vec3(0, 1, 0));
-                Debug::drawVector(vec3(0.0f), vec3(0, 0, 1), vec3(0, 0, 1));
+				Debug::drawVector(vec3(0.0f), vec3(1, 0, 0), vec3(1, 0, 0));
+				Debug::drawVector(vec3(0.0f), vec3(0, 1, 0), vec3(0, 1, 0));
+				Debug::drawVector(vec3(0.0f), vec3(0, 0, 1), vec3(0, 0, 1));
 #endif
 
-                angles += radians(Input::getMouseDelta() * sensivity);
-                angles.y = clamp(angles.y, clampAngleY.x, clampAngleY.y);
+				angles += radians(Input::getMouseDelta() * sensivity);
+				angles.y = clamp(angles.y, clampAngleY.x, clampAngleY.y);
 
-                distance = max(0.01f, distance - 0.2f*Input::getMouseWheelDelta());
-            }
+				distance = max(0.01f, distance - 0.2f*Input::getMouseWheelDelta());
+			}
 
-            void lateUpdate() override
-            {
-                if (Input::getCursorMode() != GE_CAPTURE)
-                    return;
+			void lateUpdate() override
+			{
+				if (Input::getCursorMode() != GE_CAPTURE)
+					return;
 
 		bool fps_mode = false;
 		if (fps_mode)
@@ -55,26 +55,26 @@ class CameraScript : public Script
 		}
 
 
-                tr->toMatrix();
-            }
+				tr->toMatrix();
+			}
 
-            void lookAt(vec3 _pos)
-            {
-                tr->lookAt(_pos);
-                vec3 ea = eulerAngles(tr->rotation);
+			void lookAt(vec3 _pos)
+			{
+				tr->lookAt(_pos);
+				vec3 ea = eulerAngles(tr->rotation);
 
-                angles.x = ea.z;
-                angles.y = ea.y;
-            }
+				angles.x = ea.z;
+				angles.y = ea.y;
+			}
 
-    private:
-        Transform* target;
+	private:
+		Transform* target;
 
-        vec2 angles;
-        vec2 clampAngleY;
+		vec2 angles;
+		vec2 clampAngleY;
 
-        float sensivity;
-        float distance;
+		float sensivity;
+		float distance;
 
-        vec3 offset;
+		vec3 offset;
 };

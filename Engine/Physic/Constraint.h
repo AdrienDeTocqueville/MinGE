@@ -7,15 +7,15 @@
 
 class Constraint
 {
-    public:
-        Constraint();
-        virtual ~Constraint();
+	public:
+		Constraint();
+		virtual ~Constraint();
 
-        virtual bool positionConstraint() = 0;
-        virtual void velocityConstraint(float _dt) = 0;
+		virtual bool positionConstraint() = 0;
+		virtual void velocityConstraint(float _dt) = 0;
 
-    protected:
-        float accumulatedLambda;
+	protected:
+		float accumulatedLambda;
 };
 
 #endif // CONSTRAINT_H

@@ -152,17 +152,17 @@ typedef khronos_stime_nanoseconds_t EGLnsecsANDROID;
 
 struct EGLClientPixmapHI;
 
-#define EGL_DONT_CARE                     ((EGLint)-1)
+#define EGL_DONT_CARE					 ((EGLint)-1)
 
-#define EGL_NO_CONTEXT                    ((EGLContext)0)
-#define EGL_NO_DISPLAY                    ((EGLDisplay)0)
-#define EGL_NO_IMAGE                      ((EGLImage)0)
-#define EGL_NO_SURFACE                    ((EGLSurface)0)
-#define EGL_NO_SYNC                       ((EGLSync)0)
+#define EGL_NO_CONTEXT					((EGLContext)0)
+#define EGL_NO_DISPLAY					((EGLDisplay)0)
+#define EGL_NO_IMAGE					  ((EGLImage)0)
+#define EGL_NO_SURFACE					((EGLSurface)0)
+#define EGL_NO_SYNC					   ((EGLSync)0)
 
-#define EGL_UNKNOWN                       ((EGLint)-1)
+#define EGL_UNKNOWN					   ((EGLint)-1)
 
-#define EGL_DEFAULT_DISPLAY               ((EGLNativeDisplayType)0)
+#define EGL_DEFAULT_DISPLAY			   ((EGLNativeDisplayType)0)
 
 EGLAPI __eglMustCastToProperFunctionPointerType EGLAPIENTRY eglGetProcAddress (const char *procname);
 /* ---------------------------- EGL_VERSION_1_0 ---------------------------- */

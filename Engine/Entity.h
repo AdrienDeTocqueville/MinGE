@@ -17,161 +17,161 @@ typedef std::unordered_map<std::type_index, std::size_t> SizeMap;
 
 class Entity final
 {
-    public:
-        /// Method (public)
-            void destroy();
+	public:
+		/// Method (public)
+			void destroy();
 
-            template<typename T>
-            bool has()
-            {
-                if (std::is_base_of<Collider, T>::value)
-                {
-                    for (Component* c: components[getColliderTypeIndex()])
-                        if (typeid(*c) == typeid(T))
-                            return true;
+			template<typename T>
+			bool has()
+			{
+				if (std::is_base_of<Collider, T>::value)
+				{
+					for (Component* c: components[getColliderTypeIndex()])
+						if (typeid(*c) == typeid(T))
+							return true;
 
-                    return false;
-                }
+					return false;
+				}
 
-                else
-                    return !components[typeid(T)].empty();
-            }
+				else
+					return !components[typeid(T)].empty();
+			}
 
-            template<typename T, typename... Args>
-            Entity* insert(Args&&... args)
-            {
-                if (typeid(T) == typeid(Transform))
-                {
-                    if (tr)
-                        Error::add(USER_ERROR, "Impossible to insert a Transform component");
-                    else
-                    {
-                        T* c = new T(args...);
-                        c->entity = this;
+			template<typename T, typename... Args>
+			Entity* insert(Args&&... args)
+			{
+				if (typeid(T) == typeid(Transform))
+				{
+					if (tr)
+						Error::add(USER_ERROR, "Impossible to insert a Transform component");
+					else
+					{
+						T* c = new T(args...);
+						c->entity = this;
 
-                        tr = reinterpret_cast<Transform*>(c);
-                    }
+						tr = reinterpret_cast<Transform*>(c);
+					}
 
-                    return this;
-                }
+					return this;
+				}
 
-                else if (std::is_base_of<Collider, T>::value)
-                    insertComponent(new T(args...), typeid(Collider));
+				else if (std::is_base_of<Collider, T>::value)
+					insertComponent(new T(args...), typeid(Collider));
 
-                else
-                {
-                    if (std::is_base_of<Script, T>::value)
-                        scriptSizes[typeid(T)] = sizeof(T);
+				else
+				{
+					if (std::is_base_of<Script, T>::value)
+						scriptSizes[typeid(T)] = sizeof(T);
 
-                    insertComponent(new T(args...), typeid(T));
-                }
+					insertComponent(new T(args...), typeid(T));
+				}
 
-                return this;
-            }
+				return this;
+			}
 
-            template<typename T>
-            void remove()
-            {
-                if (std::is_base_of<Collider, T>::value)
-                    removeComponent(typeid(T), getColliderTypeIndex());
+			template<typename T>
+			void remove()
+			{
+				if (std::is_base_of<Collider, T>::value)
+					removeComponent(typeid(T), getColliderTypeIndex());
 
-                else
-                    removeComponent(typeid(T), typeid(T));
-            }
+				else
+					removeComponent(typeid(T), typeid(T));
+			}
 
-            template<typename T>
-            void removeAll()
-            {
-                if (std::is_base_of<Collider, T>::value)
-                    removeComponents(typeid(T), getColliderTypeIndex());
+			template<typename T>
+			void removeAll()
+			{
+				if (std::is_base_of<Collider, T>::value)
+					removeComponents(typeid(T), getColliderTypeIndex());
 
-                else
-                    removeComponents(typeid(T), typeid(T));
-            }
+				else
+					removeComponents(typeid(T), typeid(T));
+			}
 
 
-        /// Getters (public)
-            template<typename T>
-            T* find()
-            {
-                if (std::is_base_of<Collider, T>::value)
-                {
-                    for (Component* c: components[getColliderTypeIndex()])
-                        if (typeid(*c) == typeid(T))
-                            return static_cast<T*>(c);
+		/// Getters (public)
+			template<typename T>
+			T* find()
+			{
+				if (std::is_base_of<Collider, T>::value)
+				{
+					for (Component* c: components[getColliderTypeIndex()])
+						if (typeid(*c) == typeid(T))
+							return static_cast<T*>(c);
 
-                    return nullptr;
-                }
+					return nullptr;
+				}
 
-                else
-                {
-                    const auto& vec = components[typeid(T)];
+				else
+				{
+					const auto& vec = components[typeid(T)];
 
-                    return (vec.size() ? static_cast<T*>(vec.front()) : nullptr);
+					return (vec.size() ? static_cast<T*>(vec.front()) : nullptr);
 
-                }
-            }
+				}
+			}
 
-            template <typename T>
-            std::vector<T*> findAll()
-            {
-                std::vector<Component*>* vec = nullptr;
-                std::vector<T*> allComponents;
+			template <typename T>
+			std::vector<T*> findAll()
+			{
+				std::vector<Component*>* vec = nullptr;
+				std::vector<T*> allComponents;
 
-                if (std::is_base_of<Collider, T>::value)
-                    vec = &components[getColliderTypeIndex()];
+				if (std::is_base_of<Collider, T>::value)
+					vec = &components[getColliderTypeIndex()];
 
-                else
-                    vec = &components[typeid(T)];
+				else
+					vec = &components[typeid(T)];
 
-                allComponents.reserve(vec->size());
+				allComponents.reserve(vec->size());
 
-                for (Component* c: *vec)
-                    if (typeid(*c) == typeid(T))
-                        allComponents.push_back( static_cast<T*>(c) );
+				for (Component* c: *vec)
+					if (typeid(*c) == typeid(T))
+						allComponents.push_back( static_cast<T*>(c) );
 
-                return allComponents;
-            }
+				return allComponents;
+			}
 
-        /// Methods (static)
-            static Entity* create(const Tag& _tag, bool _prototype = false, vec3 _position = vec3(0.0f), vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
-            static Entity* clone(Entity* _entity, vec3 _position, vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
-            static Entity* clone(Entity* _entity);
-            static void clear();
+		/// Methods (static)
+			static Entity* create(const Tag& _tag, bool _prototype = false, vec3 _position = vec3(0.0f), vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
+			static Entity* clone(Entity* _entity, vec3 _position, vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
+			static Entity* clone(Entity* _entity);
+			static void clear();
 
-            static Entity* findByTag(const Tag& _tag, bool _allowPrototypes = true);
-            static std::list<Entity*> findAllByTag(const Tag& _tag, bool _allowPrototypes = true);
+			static Entity* findByTag(const Tag& _tag, bool _allowPrototypes = true);
+			static std::list<Entity*> findAllByTag(const Tag& _tag, bool _allowPrototypes = true);
 
-        /// Attributes (public)
-            const bool prototype;
+		/// Attributes (public)
+			const bool prototype;
 
-            Tag tag;
+			Tag tag;
 
-    private:
-        /// Methods (private)
-            Entity(Tag _tag, bool _prototype);
-            ~Entity();
+	private:
+		/// Methods (private)
+			Entity(Tag _tag, bool _prototype);
+			~Entity();
 
-            void insertComponent(Component* _component, std::type_index _typeid);
+			void insertComponent(Component* _component, std::type_index _typeid);
 
-            void removeComponent(std::type_index _componentTypeid, std::type_index _typeid);
-            void removeComponents(std::type_index _componentTypeid, std::type_index _typeid);
+			void removeComponent(std::type_index _componentTypeid, std::type_index _typeid);
+			void removeComponents(std::type_index _componentTypeid, std::type_index _typeid);
 
-            void getComponents();
+			void getComponents();
 
-        /// Getter (private)
-            std::type_index getColliderTypeIndex();
-            std::type_index getScriptTypeIndex();
+		/// Getter (private)
+			std::type_index getColliderTypeIndex();
+			std::type_index getScriptTypeIndex();
 
-        /// Attributes (private)
-            ComponentMap components;
+		/// Attributes (private)
+			ComponentMap components;
 
-            Transform* tr;
+			Transform* tr;
 
-        /// Attributes (static)
-            static std::list<Entity*> entities;
+		/// Attributes (static)
+			static std::list<Entity*> entities;
 
-            static SizeMap scriptSizes;
+			static SizeMap scriptSizes;
 };
 
 template <>

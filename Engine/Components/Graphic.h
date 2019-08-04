@@ -6,35 +6,35 @@
 
 class Graphic : public Component
 {
-    friend class Entity;
+	friend class Entity;
 
-    public:
-        Graphic(Mesh* _mesh);
-        virtual ~Graphic();
+	public:
+		Graphic(Mesh* _mesh);
+		virtual ~Graphic();
 
-        /// Methods (public)
-            virtual Graphic* clone() const override;
+		/// Methods (public)
+			virtual Graphic* clone() const override;
 
-            void render();
+			void render();
 
-        /// Setters
-            void setMesh(Mesh* _mesh);
+		/// Setters
+			void setMesh(Mesh* _mesh);
 
-        /// Getters
-            Mesh* getMesh() const;
+		/// Getters
+			Mesh* getMesh() const;
 
-            Material* getMaterial(unsigned _index) const;
-            const std::vector<Material*>& getMaterials() const;
+			Material* getMaterial(unsigned _index) const;
+			const std::vector<Material*>& getMaterials() const;
 
-    private:
-        /// Methods (private)
-            virtual void onRegister() override;
-            virtual void onDeregister() override;
+	private:
+		/// Methods (private)
+			virtual void onRegister() override;
+			virtual void onDeregister() override;
 
-        /// Attributes
-            Mesh* mesh;
+		/// Attributes
+			Mesh* mesh;
 
-            std::vector<Material*> materials;
+			std::vector<Material*> materials;
 };
 
 #endif // GRAPHIC_H

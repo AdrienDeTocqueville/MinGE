@@ -6,22 +6,22 @@
 
 class AudioListener : public Component
 {
-    public:
-        AudioListener();
-        virtual ~AudioListener();
+	public:
+		AudioListener();
+		virtual ~AudioListener();
 
-        /// Methods (public)
-            virtual AudioListener* clone() const override;
+		/// Methods (public)
+			virtual AudioListener* clone() const override;
 
-            void update();
+			void update();
 
-        /// Attributes (static)
-//            static AudioListener* main;
+		/// Attributes (static)
+//			static AudioListener* main;
 
-    private:
-        /// Methods (private)
-//            virtual void onRegister() override;
-//            virtual void onDeregister() override;
+	private:
+		/// Methods (private)
+//			virtual void onRegister() override;
+//			virtual void onDeregister() override;
 };
 
 #endif // AUDIOLISTENER_H

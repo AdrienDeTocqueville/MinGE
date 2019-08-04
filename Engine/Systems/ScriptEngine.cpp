@@ -14,83 +14,83 @@ ScriptEngine::~ScriptEngine()
 
 void ScriptEngine::clear()
 {
-    components.clear();
+	components.clear();
 }
 
 /// Methods (static)
 void ScriptEngine::create()
 {
-    if (instance != nullptr)
-        return;
+	if (instance != nullptr)
+		return;
 
-    instance = new ScriptEngine();
+	instance = new ScriptEngine();
 }
 
 void ScriptEngine::destroy()
 {
-    delete instance;
-    instance = nullptr;
+	delete instance;
+	instance = nullptr;
 }
 
 ScriptEngine* ScriptEngine::get()
 {
-    return instance;
+	return instance;
 }
 
 /// Methods (public)
 void ScriptEngine::addComponent(Script* _script)
 {
-    started.push_back(_script);
+	started.push_back(_script);
 }
 
 void ScriptEngine::removeComponent(const Script* _script)
 {
-    for (unsigned i(0) ; i < started.size() ; i++)
-    {
-        if (started[i] == _script)
-        {
-            started[i] = started.back();
-            started.pop_back();
+	for (unsigned i(0) ; i < started.size() ; i++)
+	{
+		if (started[i] == _script)
+		{
+			started[i] = started.back();
+			started.pop_back();
 
-            return;
-        }
-    }
+			return;
+		}
+	}
 
-    for (unsigned i(0) ; i < components.size() ; i++)
-    {
-        if (components[i] == _script)
-        {
-            components[i] = components.back();
-            components.pop_back();
+	for (unsigned i(0) ; i < components.size() ; i++)
+	{
+		if (components[i] == _script)
+		{
+			components[i] = components.back();
+			components.pop_back();
 
-            return;
-        }
-    }
+			return;
+		}
+	}
 }
 
 void ScriptEngine::start()
 {
-    if (started.empty())
-        return;
+	if (started.empty())
+		return;
 
-    components.reserve(components.size() + started.size());
+	components.reserve(components.size() + started.size());
 
-    for (unsigned i(0) ; i < started.size() ; i++)
-    {
-        started[i]->start();
-        components.push_back(started[i]);
-    }
-    started.clear();
+	for (unsigned i(0) ; i < started.size() ; i++)
+	{
+		started[i]->start();
+		components.push_back(started[i]);
+	}
+	started.clear();
 }
 
 void ScriptEngine::update()
 {
-    for (unsigned i(0) ; i < components.size() ; i++)
-        components[i]->update();
+	for (unsigned i(0) ; i < components.size() ; i++)
+		components[i]->update();
 }
 
 void ScriptEngine::lateUpdate() const
 {
-    for (unsigned i(0) ; i < components.size() ; i++)
-        components[i]->lateUpdate();
+	for (unsigned i(0) ; i < components.size() ; i++)
+		components[i]->lateUpdate();
 }

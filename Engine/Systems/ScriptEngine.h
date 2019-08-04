@@ -10,36 +10,36 @@ class ContactConstraint;
 
 class ScriptEngine
 {
-    friend class Engine;
+	friend class Engine;
 
-    public:
-        /// Methods (static)
-            static ScriptEngine* get();
+	public:
+		/// Methods (static)
+			static ScriptEngine* get();
 
 		/// Methods (public)
-            void addComponent(Script* _script);
-            void removeComponent(const Script* _script);
+			void addComponent(Script* _script);
+			void removeComponent(const Script* _script);
 
-            void start();
-            void update();
-            void lateUpdate() const;
+			void start();
+			void update();
+			void lateUpdate() const;
 
-    private:
-        /// Methods (private)
-            ScriptEngine();
-            ~ScriptEngine();
+	private:
+		/// Methods (private)
+			ScriptEngine();
+			~ScriptEngine();
 
-            void clear();
+			void clear();
 
-            static void create();
-            static void destroy();
+			static void create();
+			static void destroy();
 
-        /// Attributes (private)
-            std::vector<Script*> started;
-            std::vector<Script*> components;
+		/// Attributes (private)
+			std::vector<Script*> started;
+			std::vector<Script*> components;
 
-        /// Attributes (static)
-            static ScriptEngine* instance;
+		/// Attributes (static)
+			static ScriptEngine* instance;
 };
 
 #endif // SCRIPTENGINE_H

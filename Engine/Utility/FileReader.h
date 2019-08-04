@@ -4,23 +4,23 @@
 
 class FileReader
 {
-    public:
-        FileReader(std::string _path);
-        ~FileReader();
+	public:
+		FileReader(std::string _path);
+		~FileReader();
 
-        template <typename T>
-        T readAs(std::string _entry)
-        {
-            T val;
-            operator[](_entry) >> val;
+		template <typename T>
+		T readAs(std::string _entry)
+		{
+			T val;
+			operator[](_entry) >> val;
 
-            return val;
-        }
+			return val;
+		}
 
-        std::istringstream& operator[](std::string _entry);
+		std::istringstream& operator[](std::string _entry);
 
-    private:
-        std::string path;
+	private:
+		std::string path;
 
-        std::map<std::string, std::istringstream*> entries;
+		std::map<std::string, std::istringstream*> entries;
 };

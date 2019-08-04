@@ -22,70 +22,70 @@ class Light;
 
 class GraphicEngine
 {
-    friend class Engine;
+	friend class Engine;
 
-    public:
-        /// Methods (static)
-            static GraphicEngine* get();
+	public:
+		/// Methods (static)
+			static GraphicEngine* get();
 
-            static void editBuffer(GLenum _target, unsigned _size, const void* _data);
+			static void editBuffer(GLenum _target, unsigned _size, const void* _data);
 
 		/// Methods (public)
-            void addGraphic(Graphic* _graphic);
-            void addCamera(Camera* _camera);
-            void addLight(Light* _light);
+			void addGraphic(Graphic* _graphic);
+			void addCamera(Camera* _camera);
+			void addLight(Light* _light);
 
-            void removeGraphic(Graphic* _graphic);
-            void removeCamera(Camera* _camera);
-            void removeLight(Light* _light);
+			void removeGraphic(Graphic* _graphic);
+			void removeCamera(Camera* _camera);
+			void removeLight(Light* _light);
 
-            void toggleWireframe();
+			void toggleWireframe();
 
-	        void computeMVP()   { matrices[GE_MVP] = matrices[GE_VP]*matrices[GE_MODEL]; }
+			void computeMVP()   { matrices[GE_MVP] = matrices[GE_VP]*matrices[GE_MODEL]; }
 
-        	void render();
+			void render();
 
-        /// Setters
-	        void setMatrix(const MatrixType _type, mat4 _value = mat4(1.0f));
+		/// Setters
+			void setMatrix(const MatrixType _type, mat4 _value = mat4(1.0f));
 
-            void updateCameraViewPort() const;
+			void updateCameraViewPort() const;
 
-            void setLock(bool _lock);
+			void setLock(bool _lock);
 
-        /// Getters
-	        mat4 getMatrix(const MatrixType _type) const;
+		/// Getters
+			mat4 getMatrix(const MatrixType _type) const;
 
-	        Light* getLight() const;
+			Light* getLight() const;
 
-//	        vec3 getViewPosition() const;
+//			vec3 getViewPosition() const;
 
-	        bool getLock() const;
+			bool getLock() const;
 
-        /// Attributes (static)
-            static unsigned renderTarget;
+		/// Attributes (static)
+			static unsigned renderTarget;
 
-    private:
-        /// Methods (private)
-            GraphicEngine();
-            ~GraphicEngine();
+	private:
+		/// Methods (private)
+			GraphicEngine();
+			~GraphicEngine();
 
-            void clear();
+			void clear();
 
-            static void create();
-            static void destroy();
+			static void create();
+			static void destroy();
 
-        /// Attributes (private)
-            std::list<Graphic*> graphics;
-            std::list<Camera*> cameras;
-            std::list<Light*> lights;
+		/// Attributes (private)
+			std::list<Graphic*> graphics;
+			std::list<Camera*> cameras;
+			std::list<Light*> lights;
 
-            mat4 matrices[3];
-            Light* light = nullptr;
+			mat4 matrices[3];
+			Light* light = nullptr;
 
-            bool wireframe = false;
+			bool wireframe = false;
 
-        /// Attributes (static)
-            static GraphicEngine* instance;
+		/// Attributes (static)
+			static GraphicEngine* instance;
 };
 
 #endif // RENDERER_H

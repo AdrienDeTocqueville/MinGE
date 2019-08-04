@@ -4,14 +4,14 @@
 
 class Network
 {
-    friend class Engine;
+	friend class Engine;
 
-    public:
-        static sf::IpAddress getPublicIP();
-        static sf::IpAddress getLocalIP();
+	public:
+		static sf::IpAddress getPublicIP();
+		static sf::IpAddress getLocalIP();
 
-    private:
-        static void init();
+	private:
+		static void init();
 
-        static sf::IpAddress publicIP, localIP;
+		static sf::IpAddress publicIP, localIP;
 };

@@ -6,44 +6,44 @@
 
 class Animator : public Component
 {
-    friend class Graphic;
+	friend class Graphic;
 
-    public:
-        Animator();
-        virtual ~Animator();
+	public:
+		Animator();
+		virtual ~Animator();
 
-        /// Methods (public)
-            virtual Animator* clone() const override;
+		/// Methods (public)
+			virtual Animator* clone() const override;
 
-            void loadAnimation(int _index, bool _repeat = false);
+			void loadAnimation(int _index, bool _repeat = false);
 
-            void update();
+			void update();
 
-        /// Getter
-            Transform* getBone(unsigned _index);
-            Transform* getBone(std::string _name);
+		/// Getter
+			Transform* getBone(unsigned _index);
+			Transform* getBone(std::string _name);
 
-    private:
-        /// Methods (private)
-            virtual void onRegister() override;
+	private:
+		/// Methods (private)
+			virtual void onRegister() override;
 
-        /// Setter (private)
-            void setGraphic(Graphic* _graphic);
+		/// Setter (private)
+			void setGraphic(Graphic* _graphic);
 
-        /// Attributes (private)
-            AnimatedModel* model;
+		/// Attributes (private)
+			AnimatedModel* model;
 
-            AnimatedModel::Animation* current;
-            float accumulator;
-            bool loop;
+			AnimatedModel::Animation* current;
+			float accumulator;
+			bool loop;
 
-            std::vector<unsigned> trKeys;
-            std::vector<unsigned> roKeys;
+			std::vector<unsigned> trKeys;
+			std::vector<unsigned> roKeys;
 
-            std::vector<Transform*> bones;
-            std::vector<mat4> matrices;
+			std::vector<Transform*> bones;
+			std::vector<mat4> matrices;
 
-            int root;
+			int root;
 };
 
 #endif // ANIMATOR_H

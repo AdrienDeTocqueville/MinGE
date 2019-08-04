@@ -14,81 +14,81 @@ class Transform;
 
 struct Submesh
 {
-    Submesh():  mode(GL_TRIANGLES), first(0), count(0), material(-1)
-    { }
-    Submesh(GLdouble _mode, unsigned _first, unsigned _count, unsigned _material):
-        mode(_mode), first(_first), count(_count), material(_material)
-    { }
+	Submesh():  mode(GL_TRIANGLES), first(0), count(0), material(-1)
+	{ }
+	Submesh(GLdouble _mode, unsigned _first, unsigned _count, unsigned _material):
+		mode(_mode), first(_first), count(_count), material(_material)
+	{ }
 
-    ~Submesh()
-    { }
+	~Submesh()
+	{ }
 
-    GLdouble mode;
-    unsigned first, count;
+	GLdouble mode;
+	unsigned first, count;
 
-    unsigned material;
+	unsigned material;
 };
 
 
 class Mesh
 {
-    public:
-        Mesh(unsigned _dataFlags = ALLFLAGS);
+	public:
+		Mesh(unsigned _dataFlags = ALLFLAGS);
 
-        /// Methods (public)
-            virtual void render(Transform* _tr, const std::vector<Material*>& _materials);
+		/// Methods (public)
+			virtual void render(Transform* _tr, const std::vector<Material*>& _materials);
 
-            void destroy();
+			void destroy();
 
-        /// Methods (static)
-            static void clear()
-            {
-                for(Mesh* mesh: meshes)
-                    delete mesh;
+		/// Methods (static)
+			static void clear()
+			{
+				for(Mesh* mesh: meshes)
+					delete mesh;
 
-                meshes.clear();
-            }
+				meshes.clear();
+			}
 
-            static Mesh* createCube(Material* _material = Material::base, unsigned _dataFlags = ALLFLAGS, vec3 _halfExtent = vec3(0.5f));
-            static Mesh* createQuad(Material* _material = Material::base, unsigned _dataFlags = ALLFLAGS, vec2 _halfExtent = vec2(0.5f));
-            static Mesh* createSphere(Material* _material = Material::base, unsigned _dataFlags = ALLFLAGS, float _radius = 0.5f, unsigned _slices = 20, unsigned _stacks = 10);
-            static Mesh* createCylinder(Material* _material = Material::base, unsigned _dataFlags = ALLFLAGS, float _base = 0.5f, float _top = 0.5f, float _height = 1.0f, unsigned _slices = 20);
+			static Mesh* createCube(Material* _material = Material::base, unsigned _dataFlags = ALLFLAGS, vec3 _halfExtent = vec3(0.5f));
+			static Mesh* createQuad(Material* _material = Material::base, unsigned _dataFlags = ALLFLAGS, vec2 _halfExtent = vec2(0.5f));
+			static Mesh* createSphere(Material* _material = Material::base, unsigned _dataFlags = ALLFLAGS, float _radius = 0.5f, unsigned _slices = 20, unsigned _stacks = 10);
+			static Mesh* createCylinder(Material* _material = Material::base, unsigned _dataFlags = ALLFLAGS, float _base = 0.5f, float _top = 0.5f, float _height = 1.0f, unsigned _slices = 20);
 
-        /// Getter
-            unsigned getSubmeshesCount() const
-            { return submeshes.size(); }
+		/// Getter
+			unsigned getSubmeshesCount() const
+			{ return submeshes.size(); }
 
-            std::vector<vec3>* getVertices()
-            { return &vertices; }
-            std::vector<vec3>* getNormals()
-            { return &normals; }
+			std::vector<vec3>* getVertices()
+			{ return &vertices; }
+			std::vector<vec3>* getNormals()
+			{ return &normals; }
 
-            unsigned getMaterialIndex(std::string _name) const;
-            const std::vector<Material*>& getMaterials() const;
+			unsigned getMaterialIndex(std::string _name) const;
+			const std::vector<Material*>& getMaterials() const;
 
-        // TODO: make them private
-        /// Attributes (public)
-            std::vector<Submesh> submeshes;
-            std::vector<Material*> materials;
+		// TODO: make them private
+		/// Attributes (public)
+			std::vector<Submesh> submeshes;
+			std::vector<Material*> materials;
 
-            std::vector<vec3> vertices;
-            std::vector<vec3> normals;
-            std::vector<vec2> texCoords;
+			std::vector<vec3> vertices;
+			std::vector<vec3> normals;
+			std::vector<vec2> texCoords;
 
-    protected:
-        /// Methods (protected)
-            virtual ~Mesh();
+	protected:
+		/// Methods (protected)
+			virtual ~Mesh();
 
-            virtual void loadBuffers();
+			virtual void loadBuffers();
 
-        /// Attributes (protected)
-            unsigned vbo;
-            unsigned vao;
+		/// Attributes (protected)
+			unsigned vbo;
+			unsigned vao;
 
-            unsigned dataFlags;
+			unsigned dataFlags;
 
-        /// Attributes (static)
-            static std::list<Mesh*> meshes;
+		/// Attributes (static)
+			static std::list<Mesh*> meshes;
 };
 
 #endif // MESH_H

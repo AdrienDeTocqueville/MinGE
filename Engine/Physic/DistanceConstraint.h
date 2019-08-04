@@ -7,36 +7,36 @@ class RigidBody;
 
 class DistanceConstraint : public Constraint
 {
-    public:
-        DistanceConstraint(RigidBody* _a, vec3 _anchorPointA, RigidBody* _b, vec3 _anchorPointB, float _maxDistance);
+	public:
+		DistanceConstraint(RigidBody* _a, vec3 _anchorPointA, RigidBody* _b, vec3 _anchorPointB, float _maxDistance);
 
-        /// Methods (public)
-            bool positionConstraint();
-            void velocityConstraint(float _dt);
+		/// Methods (public)
+			bool positionConstraint();
+			void velocityConstraint(float _dt);
 
-        /// Methods (static)
-            static void clear()
-            {
-                for (unsigned i(0) ; i < joints.size() ; i++)
-                    delete joints[i];
+		/// Methods (static)
+			static void clear()
+			{
+				for (unsigned i(0) ; i < joints.size() ; i++)
+					delete joints[i];
 
-                joints.clear();
-            }
+				joints.clear();
+			}
 
-    private:
-        virtual ~DistanceConstraint();
+	private:
+		virtual ~DistanceConstraint();
 
-        RigidBody* bodies[2];
+		RigidBody* bodies[2];
 
-        vec3 pointA, pointB, qA, qB;
-        vec3 n;
+		vec3 pointA, pointB, qA, qB;
+		vec3 n;
 
-        vec3 anchorPointA, anchorPointB;
+		vec3 anchorPointA, anchorPointB;
 
-        float maxDistance, squaredMaxDistance;
-        float distance;
+		float maxDistance, squaredMaxDistance;
+		float distance;
 
-        static std::vector<DistanceConstraint*> joints;
+		static std::vector<DistanceConstraint*> joints;
 };
 
 #endif // DISTANCECONSTRAINT_H

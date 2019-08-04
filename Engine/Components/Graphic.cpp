@@ -4,72 +4,72 @@
 
 Graphic::Graphic(Mesh* _mesh)
 {
-    setMesh(_mesh);
+	setMesh(_mesh);
 }
 
 Graphic::~Graphic()
 {
-    for (Material* material: materials)
-        delete material;
+	for (Material* material: materials)
+		delete material;
 
-    materials.clear();
+	materials.clear();
 }
 
 /// Methods (public)
 Graphic* Graphic::clone() const
 {
-    return new Graphic(mesh);
+	return new Graphic(mesh);
 }
 
 void Graphic::render()
 {
-    if (mesh != nullptr)
-        mesh->render(tr, materials);
+	if (mesh != nullptr)
+		mesh->render(tr, materials);
 }
 
 /// Setters
 void Graphic::setMesh(Mesh* _mesh)
 {
-    mesh = _mesh;
+	mesh = _mesh;
 
-    if (mesh == nullptr)
-        return;
+	if (mesh == nullptr)
+		return;
 
-    for (Material* material: mesh->materials)
-        materials.push_back(material->clone());
+	for (Material* material: mesh->materials)
+		materials.push_back(material->clone());
 }
 
 /// Getters
 Mesh* Graphic::getMesh() const
 {
-    return mesh;
+	return mesh;
 }
 
 Material* Graphic::getMaterial(unsigned _index) const
 {
-    return materials[_index];
+	return materials[_index];
 }
 
 const std::vector<Material*>& Graphic::getMaterials() const
 {
-    return materials;
+	return materials;
 }
 
 /// Methods (private)
 void Graphic::onRegister()
 {
-    Animator* a = find<Animator>();
-    if (a != nullptr)
-        a->setGraphic(this);
+	Animator* a = find<Animator>();
+	if (a != nullptr)
+		a->setGraphic(this);
 
-    GraphicEngine::get()->addGraphic(this);
+	GraphicEngine::get()->addGraphic(this);
 }
 
 void Graphic::onDeregister()
 {
-    Animator* a = find<Animator>();
-    if (a != nullptr)
-        a->setGraphic(nullptr);
+	Animator* a = find<Animator>();
+	if (a != nullptr)
+		a->setGraphic(nullptr);
 
-    GraphicEngine::get()->removeGraphic(this);
+	GraphicEngine::get()->removeGraphic(this);
 }
