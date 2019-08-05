@@ -21,8 +21,6 @@ void Material::clear()
 	   delete materials[i];
 
 	materials.clear();
-
-	base = nullptr;
 }
 /// ModelMaterial
 bool ModelMaterial::use(Transform* _tr)

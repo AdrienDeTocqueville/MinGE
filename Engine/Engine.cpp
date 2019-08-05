@@ -6,8 +6,8 @@
 #include "Assets/Mesh.h"
 
 #include "Utility/Time.h"
-#include "Utility/Input.h"
 #include "Utility/Debug.h"
+#include "Utility/IO/Input.h"
 
 #ifdef DEBUG
 	#include "Components/Component.h"
@@ -29,9 +29,6 @@ Engine::Engine(sf::RenderWindow* _window, unsigned _FPS):
 	GraphicEngine::create();
 	PhysicEngine::create();
 	ScriptEngine::create();
-
-	Material::base = new ModelMaterial("baseMaterial");
-	PhysicMaterial::base = new PhysicMaterial("baseMaterial");
 
 #ifdef REPORTFPS
 	if (!font.loadFromFile("Resources/Calibri.ttf"))
@@ -63,6 +60,8 @@ Engine::~Engine()
 /// Methods (public)
 void Engine::start()
 {
+	clock.restart();
+
 	if (Error::check())
 	{
 		delete this;

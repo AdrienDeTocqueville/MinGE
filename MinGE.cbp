@@ -183,6 +183,8 @@
 		<Unit filename="test/CameraScript.h" />
 		<Unit filename="test/PlayerScript.cpp" />
 		<Unit filename="test/PlayerScript.h" />
+		<Unit filename="test/bvh/bvh.cpp" />
+		<Unit filename="test/bvh/bvh.h" />
 		<Unit filename="test/main.cpp" />
 		<Unit filename="test/physic/physic.cpp" />
 		<Unit filename="test/physic/physic.h" />

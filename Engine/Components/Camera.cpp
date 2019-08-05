@@ -2,7 +2,7 @@
 #include "Components/Skybox.h"
 #include "Components/Transform.h"
 
-#include "Utility/Input.h"
+#include "Utility/IO/Input.h"
 
 #include <glm/gtx/transform.hpp>
 

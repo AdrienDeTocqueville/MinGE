@@ -39,12 +39,12 @@ class CameraScript : public Script
 
 				float speed = (Input::getKeyDown(sf::Keyboard::LShift)?5.0f:12.0f) * Time::deltaTime;
 
-				if (Input::getKeyDown(sf::Keyboard::Z)) tr->position +=  dir * speed;
-				if (Input::getKeyDown(sf::Keyboard::S)) tr->position -=  dir * speed;
-				if (Input::getKeyDown(sf::Keyboard::Q)) tr->position += left * speed;
-				if (Input::getKeyDown(sf::Keyboard::D)) tr->position -= left * speed;
-				if (Input::getKeyDown(sf::Keyboard::Space))    tr->position += up * speed;
-				if (Input::getKeyDown(sf::Keyboard::LControl)) tr->position -= up * speed;
+				if (Input::getKeyDown(sf::Keyboard::Z))	tr->position +=  dir * speed;
+				if (Input::getKeyDown(sf::Keyboard::S))	tr->position -=  dir * speed;
+				if (Input::getKeyDown(sf::Keyboard::Q))	tr->position += left * speed;
+				if (Input::getKeyDown(sf::Keyboard::D))	tr->position -= left * speed;
+				if (Input::getKeyDown(sf::Keyboard::Space))		tr->position += up * speed;
+				if (Input::getKeyDown(sf::Keyboard::LControl))	tr->position -= up * speed;
 
 				tr->rotation = quat(vec3(0.0f, angles.y, angles.x));
 			}

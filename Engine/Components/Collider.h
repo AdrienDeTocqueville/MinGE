@@ -3,7 +3,7 @@
 
 #include "Assets/PhysicMaterial.h"
 #include "Components/Component.h"
-#include "Physic/AABB.h"
+#include "Utility/AABB.h"
 
 struct RayHit
 {

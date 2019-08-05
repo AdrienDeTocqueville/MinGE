@@ -4,10 +4,11 @@
 
 void test_physic()
 {
+	Input::setCursorMode(CursorMode::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
 	Mesh* cubeMesh = Mesh::createCube();
-	Model* boule = new Model("Models/Boule/Boule.obj");
+	Mesh* boule = Mesh::createSphere();
 
 	// Prototypes
 		Entity* sphere = Entity::create("Ball", true)
@@ -42,6 +43,7 @@ void test_physic()
 			vec3(0.0f),
 			vec3(30.0f)
 		);
+
 
 //		plane->clone(vec3(0  , -15, 5 ), vec3(-PI/2, 0	, 0), vec3(30.0f));
 //		plane->clone(vec3(0  , 15 , 5 ), vec3(PI/2 , 0	, 0), vec3(30.0f));

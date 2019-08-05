@@ -4,8 +4,6 @@
 
 void test_bvh()
 {
-	PhysicEngine::get()->setGravity(vec3(0.0f));
-
 	Mesh* cubeMesh = Mesh::createCube();
 
 	// Prototypes
@@ -14,8 +12,7 @@ void test_bvh()
 
 		Entity* plane = Entity::create("Walls", true)
 			->insert<Graphic>(Mesh::createQuad())
-			->insert<Box>(vec3(0.55f, 0.55f, 0.005f), vec3(0, 0, -0.005f))
-			->insert<RigidBody>(0.0f);
+			->insert<Box>(vec3(0.55f, 0.55f, 0.005f), vec3(0, 0, -0.005f));
 
 	// scene setup
 		Entity::clone(plane,

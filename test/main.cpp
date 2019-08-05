@@ -14,6 +14,29 @@
 	#define STYLE sf::Style::Fullscreen
 #endif
 
+int scene = 0;
+std::vector<void (*)()> setups = {test_physic, test_bvh};
+
+void start_scene(Engine *engine, int _scene)
+{
+	Material::base = new ModelMaterial("baseMaterial", "Textures/0.png");
+	PhysicMaterial::base = new PhysicMaterial("baseMaterial");
+
+	// Light source
+	ModelMaterial* bright = new ModelMaterial("bright");
+		bright->ambient = vec3(10.0f/4.0f);
+		bright->diffuse = vec3(0.0f);
+		bright->specular = vec3(0.0f);
+		bright->texture = Texture::get("Textures/white.png");
+
+	Entity::create("Light", false, vec3(5, 2, 4))
+		->insert<Graphic>(Mesh::createSphere(bright, ALLFLAGS, 0.25f))
+		->insert<Light>(GE_POINT_LIGHT, vec3(0.0f), vec3(0.9f), 1.0f, 1, 0.01, 0);
+
+	scene = _scene % setups.size();
+	setups[scene]();
+	engine->start();
+}
 
 int main()
 {
@@ -30,30 +53,9 @@ int main()
 
 
 	/// Init scene
-		reinterpret_cast<ModelMaterial*>(Material::base)->texture = Texture::get("Textures/0.png");
-
-		// Light source
-		ModelMaterial* bright = new ModelMaterial("bright");
-			bright->ambient = vec3(10.0f/4.0f);
-			bright->diffuse = vec3(0.0f);
-			bright->specular = vec3(0.0f);
-			bright->texture = Texture::get("Textures/white.png");
-
-		Entity::create("Light", false, vec3(5, 2, 4))
-			->insert<Graphic>(Mesh::createSphere(bright, ALLFLAGS, 0.25f))
-			->insert<Light>(GE_POINT_LIGHT, vec3(0.0f), vec3(0.9f), 1.0f, 1, 0.01, 0);
-
-
-		std::vector<void (*)()> setups = {test_physic, test_bvh};
-
-		int scene = 1;
-		setups[scene]();
-
+		start_scene(engine, 0);
 
 	/// Main loop
-		engine->start();
-		Input::setCursorMode(CursorMode::Capture);
-
 		while ( Input::isOpen() )
 		{
 			/// Handle events
@@ -73,6 +75,12 @@ int main()
 
 				if (Input::getMousePressed(sf::Mouse::Left) && Input::hasFocus())
 					engine->setPause(false), Input::setCursorMode(CursorMode::Capture);
+
+				if (Input::getKeyReleased(sf::Keyboard::Tab))
+				{
+					engine->clear();
+					start_scene(engine, scene + 1);
+				}
 
 			/// Render
 				if (engine->update())
