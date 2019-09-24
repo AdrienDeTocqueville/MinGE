@@ -22,6 +22,7 @@ class Graphic : public Component
 
 		/// Getters
 			Mesh* getMesh() const;
+			AABB getAABB() const;
 
 			Material* getMaterial(unsigned _index) const;
 			const std::vector<Material*>& getMaterials() const;

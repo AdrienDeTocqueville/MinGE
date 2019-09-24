@@ -1,7 +1,7 @@
 #pragma once
 
 #include <MinGE.h>
-
+#include <stack>
 
 void test_physic();
 
@@ -20,7 +20,7 @@ class TestPhysic : public Script
 					return;
 
 				entity->find<Graphic>()->setMesh(shapes[shape]);
-				entity->remove<Collider>();
+				entity->removeAll<Collider>();
 				if (shape == 0) entity->insert<Box>();
 				if (shape == 1) entity->insert<Cylinder>();
 				if (shape == 2) entity->insert<Cone>();
@@ -31,11 +31,10 @@ class TestPhysic : public Script
 
 	private:
 		Entity* prot;
-
-		float fireRate = 0.75f, time = 0.0f;
-
-		DistanceConstraint* dj;
+		std::stack<DistanceConstraint*> constraints;
 
 		Mesh* shapes[4];
 		int current;
+
+		float fireRate = 0.75f, time = 0.0f;
 };

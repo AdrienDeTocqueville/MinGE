@@ -4,6 +4,8 @@
 
 void test_physic()
 {
+	//Time::timeScale = 1.0f / 5.0f;
+
 	Input::setCursorMode(CursorMode::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
@@ -31,24 +33,20 @@ void test_physic()
 			->insert<Box>(vec3(0.55f, 0.55f, 0.005f), vec3(0, 0, -0.005f))
 			->insert<RigidBody>(0.0f);
 
-	// Other entities
-		Entity* player = Entity::create("Player")
-			->insert<Graphic>(nullptr)
-			->insert<RigidBody>(20.0f)
-			->insert<TestPhysic>(sphere)
-			->insert<PlayerScript>(10.0f, 2.0f, 30.0f);
+	// Playground
+		float dim = 8.0f;
 
-		Entity* ground = Entity::clone(plane,
-			vec3(0.0f, 0.0f, -10.0f),
+		Entity::clone(plane,
+			vec3(0.0f, 0.0f, -dim),
 			vec3(0.0f),
-			vec3(30.0f)
+			vec3(2.0f * dim)
 		);
 
 
-//		plane->clone(vec3(0  , -15, 5 ), vec3(-PI/2, 0	, 0), vec3(30.0f));
-//		plane->clone(vec3(0  , 15 , 5 ), vec3(PI/2 , 0	, 0), vec3(30.0f));
-//		plane->clone(vec3(15 , 0  , 5 ), vec3(0	, -PI/2, 0), vec3(30.0f));
-//		plane->clone(vec3(-15, 0  , 5 ), vec3(0	, PI/2 , 0), vec3(30.0f));
+		Entity::clone(plane, vec3(0   , -dim, 0), vec3(-PI/2, 0	, 0), vec3(2.0f * dim));
+		Entity::clone(plane, vec3(0   ,  dim, 0), vec3( PI/2, 0	, 0), vec3(2.0f * dim));
+		Entity::clone(plane, vec3( dim, 0   , 0), vec3(0	 , -PI/2, 0), vec3(2.0f * dim));
+		Entity::clone(plane, vec3(-dim, 0   , 0), vec3(0	 ,  PI/2, 0), vec3(2.0f * dim));
 
 //		new Entity("Plane",
 //		{
@@ -69,30 +67,29 @@ void test_physic()
 
 
 
+	// Player
+	Entity* player = Entity::create("Player")
+		->insert<Graphic>(nullptr)
+		->insert<RigidBody>(20.0f)
+		->insert<TestPhysic>(sphere)
+		->insert<PlayerScript>(30.0f, 15.0f);
+
 	// Camera
 	Entity::create("MainCamera")
 		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
 		->insert<Skybox>()
 
-		->insert<CameraScript>(player->find<Transform>(), 0.2f, 7.0f, vec3(0, 0, 0.75f));
+		->insert<CameraScript>(player->find<Transform>(), 0.2f, 7.0f);
 }
 
 
 
 TestPhysic::TestPhysic(Entity* _prot):
-	prot(_prot), dj(nullptr)
+	prot(_prot)
 { }
 
 void TestPhysic::start()
 {
-	Entity* cube = Entity::findByTag("Cube2");
-	if (cube != nullptr)
-	{
-		dj = new DistanceConstraint(find<RigidBody>(), vec3(0, 0, 0.5f),
-							   cube->find<RigidBody>(), vec3(0, 0, -0.5f), 3);
-//					PhysicEngine::get()->addConstraint(dj);
-	}
-
 	shapes[0] = Mesh::createCube();
 	shapes[1] = Mesh::createCylinder();
 	shapes[2] = Mesh::createCylinder(Material::base, ALLFLAGS, 0.5f, 0.0f);
@@ -104,10 +101,21 @@ void TestPhysic::start()
 
 void TestPhysic::update()
 {
-	if (Input::getKeyReleased(sf::Keyboard::B))
-		PhysicEngine::get()->removeConstraint(dj);
-	if (Input::getKeyReleased(sf::Keyboard::N))
-		PhysicEngine::get()->addConstraint(dj);
+	if (Input::getKeyReleased(sf::Keyboard::N) && Entity::findByTag("Ball", false))
+	{
+		Entity* ball = Random::element(Entity::findAllByTag("Ball", false));
+
+		constraints.push(new DistanceConstraint(
+			this->find<RigidBody>(), vec3(0, 0, 0.5f),
+			ball->find<RigidBody>(), vec3(0, 0, -0.5f), 3)
+		);
+		PhysicEngine::get()->addConstraint(constraints.top());
+	}
+	if (Input::getKeyReleased(sf::Keyboard::B) && !constraints.empty())
+	{
+		PhysicEngine::get()->removeConstraint(constraints.top());
+		constraints.pop();
+	}
 
 	if (Input::getKeyReleased(sf::Keyboard::I))
 	{

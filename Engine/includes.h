@@ -1,5 +1,4 @@
-#ifndef INCLUDES_H_INCLUDED
-#define INCLUDES_H_INCLUDED
+#pragma once
 
 #include <GL/glew.h>
 
@@ -69,5 +68,3 @@ class Error
 		static std::string getTitle(ErrorType _type);
 		static int getIcon(ErrorType _type);
 };
-
-#endif // INCLUDES_H_INCLUDED

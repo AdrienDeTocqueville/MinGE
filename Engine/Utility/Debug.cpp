@@ -51,17 +51,17 @@ void Debug::update()
 	program->send(0, GraphicEngine::get()->getMatrix(GE_MVP));
 
 	glPushAttrib(GL_DEPTH_BUFFER_BIT);
-		glDisable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 
 	/// Points
 	if (points.size())
 		drawPoints();
 
-	glPopAttrib();
-
 	/// Lines
 	if (lines.size())
 		drawLines();
+
+	glPopAttrib();
 
 	points.clear();
 	pColors.clear();

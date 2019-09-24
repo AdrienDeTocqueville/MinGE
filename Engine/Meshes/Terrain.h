@@ -2,7 +2,7 @@
 #define TERRAIN_H
 
 #include "Assets/Mesh.h"
-#include "Utility/Structs.h"
+#include "Utility/Accel/Quadtree.h"
 
 class Terrain : public Mesh
 {

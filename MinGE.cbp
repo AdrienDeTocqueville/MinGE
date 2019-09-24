@@ -15,10 +15,11 @@
 				<Option use_console_runner="0" />
 				<Compiler>
 					<Add option="-Wnon-virtual-dtor" />
+					<Add option="-Wshadow" />
 					<Add option="-Winit-self" />
 					<Add option="-Wredundant-decls" />
+					<Add option="-Wcast-align" />
 					<Add option="-Wunreachable-code" />
-					<Add option="-Wmissing-declarations" />
 					<Add option="-Wmissing-include-dirs" />
 					<Add option="-pedantic" />
 					<Add option="-Wextra" />
@@ -55,11 +56,13 @@
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
 				<Compiler>
-					<Add option="-O1" />
+					<Add option="-fomit-frame-pointer" />
+					<Add option="-O3" />
 					<Add option="-Wfatal-errors" />
 					<Add option="-Wextra" />
 				</Compiler>
 				<Linker>
+					<Add option="-s" />
 					<Add option="-lsfml-audio-s" />
 					<Add option="-lopenal32" />
 					<Add option="-lflac" />
@@ -106,6 +109,8 @@
 		<Unit filename="Engine/Assets/Texture.h" />
 		<Unit filename="Engine/Components/Animator.cpp" />
 		<Unit filename="Engine/Components/Animator.h" />
+		<Unit filename="Engine/Components/AudioListener.cpp" />
+		<Unit filename="Engine/Components/AudioListener.h" />
 		<Unit filename="Engine/Components/Box.cpp" />
 		<Unit filename="Engine/Components/Box.h" />
 		<Unit filename="Engine/Components/Camera.cpp" />
@@ -157,8 +162,12 @@
 		<Unit filename="Engine/Systems/PhysicEngine.h" />
 		<Unit filename="Engine/Systems/ScriptEngine.cpp" />
 		<Unit filename="Engine/Systems/ScriptEngine.h" />
-		<Unit filename="Engine/Utility/AABB.cpp" />
-		<Unit filename="Engine/Utility/AABB.h" />
+		<Unit filename="Engine/Utility/Accel/AABB.cpp" />
+		<Unit filename="Engine/Utility/Accel/AABB.h" />
+		<Unit filename="Engine/Utility/Accel/BVH.cpp" />
+		<Unit filename="Engine/Utility/Accel/BVH.h" />
+		<Unit filename="Engine/Utility/Accel/Quadtree.cpp" />
+		<Unit filename="Engine/Utility/Accel/Quadtree.h" />
 		<Unit filename="Engine/Utility/Debug.cpp" />
 		<Unit filename="Engine/Utility/Debug.h" />
 		<Unit filename="Engine/Utility/Errors.cpp" />
@@ -170,8 +179,6 @@
 		<Unit filename="Engine/Utility/IO/Network.h" />
 		<Unit filename="Engine/Utility/Random.cpp" />
 		<Unit filename="Engine/Utility/Random.h" />
-		<Unit filename="Engine/Utility/Structs.cpp" />
-		<Unit filename="Engine/Utility/Structs.h" />
 		<Unit filename="Engine/Utility/Tag.cpp" />
 		<Unit filename="Engine/Utility/Tag.h" />
 		<Unit filename="Engine/Utility/Time.cpp" />

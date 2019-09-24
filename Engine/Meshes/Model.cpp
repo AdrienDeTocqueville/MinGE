@@ -38,7 +38,6 @@ bool Model::load_obj()
 	std::string line;
 	vec3 v3;
 	vec2 v2;
-	vec3 min(0.0f), max(0.0f);
 
 	while (getline(wavefront, line))
 	{
@@ -54,13 +53,6 @@ bool Model::load_obj()
 			stream >> v3.x >> v3.y >> v3.z;
 
 			t_vertices.push_back(v3);
-
-			if (v3.x > max.x)   max.x = v3.x;
-			if (v3.x < min.x)   min.x = v3.x;
-			if (v3.y > max.y)   max.y = v3.y;
-			if (v3.y < min.y)   min.y = v3.y;
-			if (v3.z > max.z)   max.z = v3.z;
-			if (v3.z < min.z)   min.z = v3.z;
 		}
 		else if (line == "vn")
 		{

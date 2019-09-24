@@ -30,8 +30,11 @@ void Sphere::computeAABB()
 {
 	vec3 r = vec3(radius) * tr->scale;
 
-	aabb.center = tr->getToWorldSpace(center);
-	aabb.dim = r;
+	vec3 _center = tr->getToWorldSpace(center);
+	vec3 _dim = r;
+
+	aabb.bounds[0] = _center - _dim;
+	aabb.bounds[1] = _center + _dim;
 }
 
 RayHit Sphere::raycast(vec3 _o, vec3 _d)

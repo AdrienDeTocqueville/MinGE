@@ -35,7 +35,7 @@ Engine::Engine(sf::RenderWindow* _window, unsigned _FPS):
 		Error::add(WARNING, "Engine(): Cannot load font: Resources/Calibri.ttf");
 	else
 	{
-		text.setString("Bonjour");
+		text.setString("");
 		text.setFont(font);
 		text.setFillColor(sf::Color::Black);
 		text.setCharacterSize(20);
@@ -88,8 +88,8 @@ void Engine::start()
 
 bool Engine::update()
 {
-	Time::deltaTime = clock.restart().asSeconds();
-
+	Time::deltaTime = clock.restart().asSeconds() * Time::timeScale;
+	Time::time += Time::deltaTime;
 
 	if (Input::event->type == sf::Event::Resized)
 		GraphicEngine::get()->updateCameraViewPort();
@@ -103,7 +103,7 @@ bool Engine::update()
 
 #ifdef REPORTFPS
 	sf::Clock timer;
-	float sTime, pTime, dTime;
+	static float sTime = 0.0f, pTime = 0.0f, dTime = 0.0f;
 #endif
 
 
@@ -111,13 +111,13 @@ bool Engine::update()
 		ScriptEngine::get()->start();
 		ScriptEngine::get()->update();
 #ifdef REPORTFPS
-		sTime = timer.restart().asSeconds();
+		sTime += timer.restart().asSeconds();
 #endif
 
 	/// Step physic simulation
 		PhysicEngine::get()->simulate();
 #ifdef REPORTFPS
-		pTime = timer.restart().asSeconds();
+		pTime += timer.restart().asSeconds();
 #endif
 
 	/// Re-update scripts
@@ -129,7 +129,7 @@ bool Engine::update()
 	/// Render scene
 		GraphicEngine::get()->render();
 #ifdef REPORTFPS
-		dTime = timer.getElapsedTime().asSeconds();
+		dTime += timer.restart().asSeconds();
 #endif
 
 
@@ -138,13 +138,15 @@ bool Engine::update()
 	acu += Time::deltaTime;
 	if (acu >= 1.0f)
 	{
+		float ratio = 1000.0f / frames;
 		text.setString("FPS: " + toString<unsigned>(frames) +
-					   "\nScripts: " + toString<float>(1000.0f * dTime) + " ms" +
-					   "\nPhysics: " + toString<float>(1000.0f * dTime) + " ms" +
-					   "\nDraw:	" + toString<float>(1000.0f * pTime) + " ms");
+					   "\nScripts: " + toString<float>(ratio * sTime) + " ms" +
+					   "\nPhysics: " + toString<float>(ratio * dTime) + " ms" +
+					   "\nDraw:	" + toString<float>(ratio * pTime) + " ms");
 
 		frames = 0;
 		acu = 0.0f;
+		sTime = pTime = dTime = 0.0f;
 	}
 	else
 		frames++;
@@ -186,8 +188,8 @@ void Engine::clear()
 #ifdef DEBUG
 	if (Component::instances != 0)
 	{
-		std::string text = "One or more component have not been deleted ("+toString(Component::instances)+")";
-		MessageBox(nullptr, text.c_str(),
+		std::string err = "One or more component have not been deleted ("+toString(Component::instances)+")";
+		MessageBox(nullptr, err.c_str(),
 							"MinGE: closing error", MB_ICONWARNING);
 
 		Component::instances = 0;

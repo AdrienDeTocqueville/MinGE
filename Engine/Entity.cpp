@@ -62,7 +62,9 @@ Entity* Entity::clone(Entity* _entity, vec3 _position, vec3 _rotation, vec3 _sca
 
 				c = reinterpret_cast<Component*>(operator new(s));
 				memcpy(c, component, s);
+#ifdef DEBUG
 				Component::instances++;
+#endif
 			}
 
 			components.push_back(c);
@@ -105,9 +107,9 @@ Entity* Entity::findByTag(const Tag& _tag, bool _allowPrototypes)
 	return nullptr;
 }
 
-std::list<Entity*> Entity::findAllByTag(const Tag& _tag, bool _allowPrototypes)
+std::vector<Entity*> Entity::findAllByTag(const Tag& _tag, bool _allowPrototypes)
 {
-	std::list<Entity*> samedTag;
+	std::vector<Entity*> samedTag;
 
 	for (Entity* entity: entities)
 	{
@@ -218,10 +220,10 @@ void Entity::removeAll<Collider>()
 	{
 		Collider* c = static_cast<Collider*>(collider);
 
-		c->entity = nullptr;
-		c->rigidBody = nullptr;
+		if (!prototype)
+			c->onDeregister();
 
-		c->onDeregister();
+		delete c;
 	}
 
 	components[typeid(Collider)].clear();

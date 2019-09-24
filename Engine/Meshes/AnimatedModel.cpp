@@ -182,11 +182,11 @@ bool AnimatedModel::load_mesh_xml()
 
 
 		/// BONE ASSIGNEMENTS
-		XMLElement* bones = submesh->FirstChildElement("boneassignments");
 		boneIds.resize(vertices.size(), ivec4(0));
 		weights.resize(vertices.size(), vec4(0.0f));
 
-		XMLElement* vba = bones->FirstChildElement("vertexboneassignment");
+		XMLElement* ba = submesh->FirstChildElement("boneassignments");
+		XMLElement* vba = ba->FirstChildElement("vertexboneassignment");
 		while (vba)
 		{
 			unsigned vi = vba->IntAttribute("vertexindex");

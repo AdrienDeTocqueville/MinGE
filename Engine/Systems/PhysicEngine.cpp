@@ -96,7 +96,7 @@ void PhysicEngine::removeConstraint(Constraint* _constraint)
 
 void PhysicEngine::simulate()
 {
-	accumulator += std::min(Time::deltaTime, 0.2f);
+	accumulator += Time::deltaTime;
 
 	// main loop
 	while(accumulator > dt)
@@ -147,7 +147,9 @@ void PhysicEngine::update()
 	for(Collider* collider: colliders)
 	{
 		collider->computeAABB();
+#ifdef DRAWAABB
 		collider->getAABB()->prepare();
+#endif
 	}
 
 	sendAndFreeData();

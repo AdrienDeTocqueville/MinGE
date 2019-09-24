@@ -45,6 +45,36 @@ Mesh* Graphic::getMesh() const
 	return mesh;
 }
 
+AABB Graphic::getAABB() const
+{
+	AABB box = mesh->getAABB();
+	vec3 center = box.center();
+	vec3 hdim = 0.5f * box.dim();
+
+	// On cherche le point le plus bas
+	// 1ere iteration
+	vec3 lowest = tr->getToWorldSpace(center - hdim);
+
+	hdim.z *= -1;
+	lowest = min(lowest, tr->getToWorldSpace(center - hdim));
+
+	// les 6 autres points du cube
+	for (int i: {0, 1, 0})
+	{
+		hdim[i] *= -1;
+
+		lowest = min(lowest, tr->getToWorldSpace(center - hdim));
+		hdim.z *= -1;
+		lowest = min(lowest, tr->getToWorldSpace(center - hdim));
+	}
+
+	center = tr->getToWorldSpace(center);
+
+	box.bounds[0] = lowest;
+	box.bounds[1] = center + center - lowest;
+	return box;
+}
+
 Material* Graphic::getMaterial(unsigned _index) const
 {
 	return materials[_index];

@@ -33,19 +33,11 @@ class CameraScript : public Script
 
 			if (target == nullptr) /// FPS
 			{
-				vec3 dir  = tr->getVectorToWorldSpace(vec3(1, 0, 0));
-				vec3 left = tr->getVectorToWorldSpace(vec3(0, 1, 0));
-				vec3 up   = tr->getVectorToWorldSpace(vec3(0, 0, 1));
+				vec3 dir = getMovement(tr->getVectorToWorldSpace(vec3(1, 0, 0)));
 
 				float speed = (Input::getKeyDown(sf::Keyboard::LShift)?5.0f:12.0f) * Time::deltaTime;
 
-				if (Input::getKeyDown(sf::Keyboard::Z))	tr->position +=  dir * speed;
-				if (Input::getKeyDown(sf::Keyboard::S))	tr->position -=  dir * speed;
-				if (Input::getKeyDown(sf::Keyboard::Q))	tr->position += left * speed;
-				if (Input::getKeyDown(sf::Keyboard::D))	tr->position -= left * speed;
-				if (Input::getKeyDown(sf::Keyboard::Space))		tr->position += up * speed;
-				if (Input::getKeyDown(sf::Keyboard::LControl))	tr->position -= up * speed;
-
+				tr->position += dir * speed;
 				tr->rotation = quat(vec3(0.0f, angles.y, angles.x));
 			}
 
@@ -68,6 +60,23 @@ class CameraScript : public Script
 
 			angles.x = ea.z;
 			angles.y = ea.y;
+		}
+
+		static vec3 getMovement(vec3 direction)
+		{
+			vec3 dir = vec3(0.0f);
+
+			vec3 up = vec3(0, 0, 1);
+			vec3 right = normalize(cross(direction, up));
+
+			if (Input::getKeyDown(sf::Keyboard::Z))	 dir += direction;
+			if (Input::getKeyDown(sf::Keyboard::S))	 dir -= direction;
+			if (Input::getKeyDown(sf::Keyboard::D))	 dir += right;
+			if (Input::getKeyDown(sf::Keyboard::Q))	 dir -= right;
+			if (Input::getKeyDown(sf::Keyboard::Space))		dir += up;
+			if (Input::getKeyDown(sf::Keyboard::LControl))	dir -= up;
+
+			return dir;
 		}
 
 	private:

@@ -2,10 +2,10 @@
 /**	  Started in January 2015	   **/
 
 /* ******  TODO  ****** *\
-*  Shadows			   *
-*  Particle effects	  *
+*  Shadows               *
+*  Particle effects      *
 *  Skeletal animations   *
-*  (Billboards)		  *
+*  (Billboards)	         *
 \* ******************** */
 
 #pragma once

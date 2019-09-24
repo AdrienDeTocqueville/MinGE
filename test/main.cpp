@@ -14,8 +14,9 @@
 	#define STYLE sf::Style::Fullscreen
 #endif
 
-int scene = 0;
+int scene = 1;
 std::vector<void (*)()> setups = {test_physic, test_bvh};
+std::vector<std::string> names = {"physic", "bvh"};
 
 void start_scene(Engine *engine, int _scene)
 {
@@ -29,11 +30,12 @@ void start_scene(Engine *engine, int _scene)
 		bright->specular = vec3(0.0f);
 		bright->texture = Texture::get("Textures/white.png");
 
-	Entity::create("Light", false, vec3(5, 2, 4))
+	Entity::create("Light", false, vec3(4, 2, 4))
 		->insert<Graphic>(Mesh::createSphere(bright, ALLFLAGS, 0.25f))
 		->insert<Light>(GE_POINT_LIGHT, vec3(0.0f), vec3(0.9f), 1.0f, 1, 0.01, 0);
 
 	scene = _scene % setups.size();
+	Input::getWindow()->setTitle("MinGE (test " + names[scene] + ")");
 	setups[scene]();
 	engine->start();
 }
@@ -44,7 +46,7 @@ int main()
 
 
 	/// Create window
-		sf::RenderWindow window(VIDEOMODE, "Gyroscope", STYLE, sf::ContextSettings(24, 0, 0, 4, 3));
+		sf::RenderWindow window(VIDEOMODE, "MinGE test suite", STYLE, sf::ContextSettings(24, 0, 0, 4, 3));
 
 
 	/// Create engine
@@ -53,20 +55,22 @@ int main()
 
 
 	/// Init scene
-		start_scene(engine, 0);
+		start_scene(engine, scene);
 
 	/// Main loop
 		while ( Input::isOpen() )
 		{
 			/// Handle events
+				#ifdef DRAWAABB
 				if (Input::getKeyReleased(sf::Keyboard::F1))
 					AABB::drawAABBs = !AABB::drawAABBs;
+				#endif
 
 				if (Input::getKeyReleased(sf::Keyboard::F2))
-					PhysicEngine::get()->setGravity();
+					GraphicEngine::get()->toggleWireframe();
 
 				if (Input::getKeyReleased(sf::Keyboard::F3))
-					GraphicEngine::get()->toggleWireframe();
+					PhysicEngine::get()->setGravity();
 
 
 

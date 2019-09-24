@@ -38,6 +38,8 @@ void Mesh::destroy()
 /// Methods (protected)
 void Mesh::loadBuffers()
 {
+	aabb.compute(vertices);
+
 	if (!dataFlags)
 		return;
 

@@ -3,6 +3,7 @@
 
 #include "Systems/GraphicEngine.h"
 #include "Assets/Material.h"
+#include "Utility/Accel/AABB.h"
 
 #define VERTICES  1
 #define NORMALS   2
@@ -66,6 +67,9 @@ class Mesh
 			unsigned getMaterialIndex(std::string _name) const;
 			const std::vector<Material*>& getMaterials() const;
 
+			AABB getAABB() const
+			{ return aabb; }
+
 		// TODO: make them private
 		/// Attributes (public)
 			std::vector<Submesh> submeshes;
@@ -86,6 +90,7 @@ class Mesh
 			unsigned vao;
 
 			unsigned dataFlags;
+			AABB aabb;
 
 		/// Attributes (static)
 			static std::list<Mesh*> meshes;

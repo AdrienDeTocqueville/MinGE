@@ -1,25 +1,21 @@
 #include "PlayerScript.h"
+#include "CameraScript.h"
 
-PlayerScript::PlayerScript(float _speed, float _minSpeed, float _maxSpeed):
-	speed(_speed), minSpeed(_minSpeed), maxSpeed(_maxSpeed)
+PlayerScript::PlayerScript(float _speed, float _alt_speed):
+	speed(_speed), alt_speed(_alt_speed)
 { }
 
 void PlayerScript::update()
 {
-	float realSpeed = Input::getKeyDown(sf::Keyboard::LShift) ? maxSpeed: speed;
-		  realSpeed = Input::getKeyDown(sf::Keyboard::LControl) ? minSpeed: realSpeed;
+	speed = max(0.0f, speed - 4.0f * Input::getMouseWheelDelta());
 
-	vec3 direction = Camera::main->getDirection();
-	vec3 right = normalize(cross(direction, vec3(0, 0, 1)));
-
+	float realSpeed = Input::getKeyDown(sf::Keyboard::LShift) ? alt_speed: speed;
 	float force = 50.0f * rb->getMass() * Time::deltaTime * realSpeed;
 
-	if (Input::getKeyDown(sf::Keyboard::Z))	 rb->applyForceToCOM( force * direction);
-	if (Input::getKeyDown(sf::Keyboard::S))	 rb->applyForceToCOM(-force * direction);
-	if (Input::getKeyDown(sf::Keyboard::D))	 rb->applyForceToCOM( force * right);
-	if (Input::getKeyDown(sf::Keyboard::Q))	 rb->applyForceToCOM(-force * right);
+	vec3 direction = CameraScript::getMovement(Camera::main->getDirection());
+	rb->applyForceToCOM(force * direction);
 
-	if (Input::getKeyDown(sf::Keyboard::Space))
+	if (Input::getKeyDown(sf::Keyboard::P))
 	{
 		rb->setLinearVelocity(vec3(0.0f));
 		rb->setAngularVelocity(vec3(0.0f));
@@ -27,7 +23,7 @@ void PlayerScript::update()
 
 	if (Input::getKeyDown(sf::Keyboard::O))
 	{
-		tr->position = vec3(0.0f, 0, 1);
+		tr->position = vec3(0.0f);
 		tr->rotation = quat(vec3(0.0f));
 	}
 }

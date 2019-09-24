@@ -1,23 +1,71 @@
-#include "Utility/AABB.h"
-#include "Assets/Program.h"
-#include "Systems/GraphicEngine.h"
+#include "Utility/Accel/AABB.h"
+
+#ifdef DRAWAABB
+	#include "Assets/Program.h"
+	#include "Systems/GraphicEngine.h"
+#endif
 
 bool AABB::collide(AABB* a, AABB* b)
 {
+	/*
 	for (unsigned i(0) ; i < 3 ; i++)
 	{
 		if (a->center[i] + a->dim[i] <= b->center[i] - b->dim[i] || a->center[i] - a->dim[i] >= b->center[i] + b->dim[i])
 			return false;
+	}*/
+	for (unsigned i(0) ; i < 3 ; i++)
+	{
+		if (a->bounds[1][i] <= b->bounds[0][i] || a->bounds[0][i] >= b->bounds[1][i])
+			return false;
 	}
 
+#ifdef DRAWAABB
 	a->color = b->color = vec3(0.0f, 1.0f, 0.70f);
+#endif
 
 	return true;
 }
 
-#ifdef DEBUG
+void AABB::compute(const std::vector<vec3>& points)
+{
+	vec3 b0(points[0]), b1(points[0]);
 
-bool AABB::drawAABBs = false;
+	for (size_t i = 1; i < points.size(); i++)
+	{
+		b0 = min(b0, points[i]);
+		b1 = max(b1, points[i]);
+	}
+
+	bounds[0] = b0;
+	bounds[1] = b1;
+
+
+#ifdef DRAWAABB
+	color = default_color = vec3(0.9f, 0.1f, 0.0f);
+#endif
+}
+
+void AABB::extend(const AABB& box)
+{
+	bounds[0] = min(bounds[0], box.bounds[0]);
+	bounds[1] = max(bounds[1], box.bounds[1]);
+}
+
+float AABB::volume() const
+{
+	 vec3 d = bounds[1] - bounds[0];
+	 return d.x * d.y * d.z;
+}
+
+bool AABB::operator==(const AABB& box)
+{
+    return (bounds[0] == box.bounds[0] &&
+			bounds[1] == box.bounds[1]);
+}
+
+#ifdef DRAWAABB
+
+bool AABB::drawAABBs = true;
 
 unsigned AABB::vbo;
 unsigned AABB::vao;
@@ -25,13 +73,16 @@ unsigned AABB::vao;
 std::vector<vec3> AABB::vertices;
 std::vector<vec3> AABB::colors;
 
-void AABB::prepare()
+void AABB::prepare(float padding)
 {
 	if (!drawAABBs)
 		return;
 
 	vertices.reserve(vertices.size() + 16);
 	colors.reserve(colors.size() + 16);
+
+	vec3 center = 0.5f * (bounds[0] + bounds[1]);
+	vec3 dim = bounds[1] - center + vec3(padding);
 
 	vertices.push_back(center + vec3( dim.x, dim.y,  dim.z));
 	vertices.push_back(center + vec3(-dim.x, dim.y,  dim.z));
@@ -58,7 +109,7 @@ void AABB::prepare()
 	for (unsigned i(0) ; i < 16 ; i++)
 		colors.push_back(color);
 
-	color = vec3(0.3f, 0.78f, 0.84f);
+	color = default_color;
 }
 
 void AABB::draw()

@@ -4,15 +4,15 @@
 
 void test_bvh()
 {
+	PhysicEngine::get()->setGravity(vec3(0.0f));
 	Mesh* cubeMesh = Mesh::createCube();
 
 	// Prototypes
 		Entity* cube = Entity::create("Cube", true)
 			->insert<Graphic>(cubeMesh);
 
-		Entity* plane = Entity::create("Walls", true)
-			->insert<Graphic>(Mesh::createQuad())
-			->insert<Box>(vec3(0.55f, 0.55f, 0.005f), vec3(0, 0, -0.005f));
+		Entity* plane = Entity::create("Plane", true)
+			->insert<Graphic>(Mesh::createQuad());
 
 	// scene setup
 		Entity::clone(plane,
@@ -29,6 +29,21 @@ void test_bvh()
 		Entity::clone(cube, vec3(-7.0f, 0.0f, -2.0f));
 
 
+	// Player
+	Entity* player = Entity::create("Player")
+		->insert<Graphic>(cubeMesh)
+		->insert<Box>()
+		->insert<RigidBody>(20.0f)
+		->insert<PlayerScript>(30.0f, 15.0f);
+
+	// Camera
+	Entity::create("MainCamera")
+		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
+		->insert<Skybox>()
+
+		->insert<CameraScript>(player->find<Transform>(), 0.2f, 7.0f);
+
+/*
 	// Camera
 	auto cam = Entity::create("MainCamera", false, vec3(0, -14, 0))
 		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
@@ -37,4 +52,13 @@ void test_bvh()
 		->insert<CameraScript>(nullptr, 0.2f, 7.0f, vec3(0, 0, 0.75f));
 
 	cam->find<CameraScript>()->lookAt(vec3(0.0f));
+*/
+}
+
+void MoveScript::update()
+{
+	vec3 p = tr->position;
+
+	p[axis] = base + sin(Time::time * PI / 2.0f);
+	tr->setPosition(p);
 }

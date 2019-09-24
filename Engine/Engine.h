@@ -1,9 +1,14 @@
-#ifndef ENGINE_H
-#define ENGINE_H
+#pragma once
+
+#define REPORTFPS
 
 #include "Systems/GraphicEngine.h"
 #include "Systems/PhysicEngine.h"
 #include "Systems/ScriptEngine.h"
+
+#ifdef REPORTFPS
+	#include <SFML/Graphics.hpp>
+#endif // REPORTFPS
 
 class Entity;
 
@@ -53,5 +58,3 @@ class Engine
 		/// Attributes (static)
 			static Engine* instance;
 };
-
-#endif // ENGINE_H

@@ -33,33 +33,29 @@ void Box::computeMass()
 
 void Box::computeAABB()
 {
-//	vec3 base[3] = {	tr->getToWorldSpace(vec3(1, 0, 0)),
-//						tr->getToWorldSpace(vec3(0, 1, 0)),
-//						tr->getToWorldSpace(vec3(0, 0, 1))	};
-//
-//	vec3 halfExtent2;
-//	for (unsigned i(0) ; i < 3 ; i++)
-//		halfExtent2[i] = dot(halfExtent2, abs(base[i] - tr->position));
-//
-//	Debug::drawVector(origin, halfExtent2);
-//	Debug::drawVector(origin, -halfExtent2);
+	vec3 hdim = halfExtent;
 
+	// On cherche le point le plus bas
+	// 1ere iteration: 2 premiers points
+	vec3 lowest = tr->getToWorldSpace(center - hdim);
 
-	aabb.center = min(tr->getToWorldSpace(-halfExtent),
-				   tr->getToWorldSpace(vec3(-halfExtent.x, -halfExtent.y, halfExtent.z)));  // Valeur initiale
+	hdim.z *= -1;
+	lowest = min(lowest, tr->getToWorldSpace(center - hdim));
 
-	for (int i(1) ; i < 4 ; i++)	// On cherche le point le plus bas
+	// les 6 autres points du cube (2 par iteration)
+	for (int i: {0, 1, 0})
 	{
-		vec3 point(halfExtent.x *(2.0f*(i>1) -1.0f), halfExtent.y *(2.0f*(i%2) -1.0f), -halfExtent.z);
+		hdim[i] *= -1;
 
-		aabb.center = min(aabb.center, tr->getToWorldSpace(point));
-		point.z *= -1.0f;
-
-		aabb.center = min(aabb.center, tr->getToWorldSpace(point));
+		lowest = min(lowest, tr->getToWorldSpace(center - hdim));
+		hdim.z *= -1;
+		lowest = min(lowest, tr->getToWorldSpace(center - hdim));
 	}
 
-	aabb.dim = (tr->getToWorldSpace(vec3(0.0f)) - aabb.center);
-	aabb.center = tr->getToWorldSpace(center);
+	vec3 offset = tr->getToWorldSpace(center);
+
+	aabb.bounds[0] = lowest;
+	aabb.bounds[1] = offset + offset - lowest;
 }
 
 RayHit Box::raycast(vec3 _o, vec3 _d)

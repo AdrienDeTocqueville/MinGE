@@ -1,4 +1,4 @@
-#include "Utility/Structs.h"
+#include "Utility/Accel/Quadtree.h"
 
 /// Quadtree
 QuadTree::QuadTree() :

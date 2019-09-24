@@ -5,7 +5,7 @@
 class PlayerScript : public Script
 {
 	public:
-		PlayerScript(float _speed, float _minSpeed, float _maxSpeed);
+		PlayerScript(float _speed, float _alt_speed);
 
 		/// Methods (public)
 			void start() override
@@ -18,6 +18,5 @@ class PlayerScript : public Script
 	private:
 		RigidBody* rb;
 
-		float speed;
-		float minSpeed, maxSpeed;
+		float speed, alt_speed;
 };

@@ -35,8 +35,11 @@ void Cone::computeAABB()
 {
 	float m = max(0.75f * height, length( vec3(radius, 0.0f, 0.25f * height) ));
 
-	aabb.center = tr->getToWorldSpace(center);
-	aabb.dim = vec3(m);
+	vec3 _center = tr->getToWorldSpace(center);
+	vec3 _dim = vec3(m);
+
+	aabb.bounds[0] = _center - _dim;
+	aabb.bounds[1] = _center + _dim;
 }
 
 /// Getters
