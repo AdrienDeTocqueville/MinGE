@@ -12,7 +12,7 @@ LPATH =
 
 
 SRC = $(shell find test -name '*.cpp')
-INC = $(shell find test -name '*.h')
+#INC = $(shell find test -name '*.h')
 
 # Engine
 SRC += $(shell find Engine -name '*.cpp')

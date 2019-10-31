@@ -2,6 +2,7 @@
 
 #include "physic/physic.h"
 #include "bvh/bvh.h"
+#include "materials/materials.h"
 
 
 const auto desktop = sf::VideoMode::getDesktopMode();
@@ -14,9 +15,9 @@ const auto video_mode = desktop;
 const auto style = sf::Style::Fullscreen;
 #endif
 
-int scene = 0;
-std::vector<void (*)()> setups = {test_physic, test_bvh};
-std::vector<std::string> names = {"physic", "bvh"};
+int scene = 2;
+std::vector<void (*)()> setups = {test_physic, test_bvh, test_materials};
+std::vector<std::string> names = {"physic", "bvh", "materials"};
 
 void start_scene(Engine *engine, int _scene)
 {

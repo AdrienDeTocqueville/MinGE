@@ -2,8 +2,6 @@
 
 #include "Utility/helpers.h"
 
-#define DRAWAABB
-
 struct AABB
 {
 	static bool collide(AABB* a, AABB* b);

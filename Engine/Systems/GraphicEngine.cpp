@@ -1,5 +1,8 @@
 #include "Systems/GraphicEngine.h"
 
+
+// 10.5ms (41 * 21 * 3 cubes)
+
 #include "Components/Graphic.h"
 #include "Components/Camera.h"
 #include "Components/Light.h"
@@ -197,7 +200,9 @@ void GraphicEngine::render()
 	AABB::draw();
 #endif
 
-	Debug::update();
+#ifdef DEBUG
+	//Debug::update();
+#endif
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);

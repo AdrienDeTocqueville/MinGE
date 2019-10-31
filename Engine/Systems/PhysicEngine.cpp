@@ -109,19 +109,19 @@ void PhysicEngine::simulate()
 void PhysicEngine::update()
 {
 	// Generate collision informations
-	for(auto i(colliders.begin()) ; i != colliders.end() ; ++i)
-		for(auto j(std::next(i)) ; j != colliders.end() ; ++j)
+	for (auto i(colliders.begin()) ; i != colliders.end() ; ++i)
+		for (auto j(std::next(i)) ; j != colliders.end() ; ++j)
 			detectCollision(*i, *j);
 
 	// Detect active constraints
-	for(Constraint* constraint: constraints)
+	for (Constraint* constraint: constraints)
 	{
 		if (constraint->positionConstraint())
 			activeConstraints.push_back(constraint);
 	}
 
 	// Integrate forces
-	for(RigidBody* body: bodies)
+	for (RigidBody* body: bodies)
 	{
 		body->applyForceToCOM(body->getMass() * gravity);
 
@@ -129,22 +129,22 @@ void PhysicEngine::update()
 	}
 
 	// Solve contacts with sequential impulses
-	for(unsigned j = 0; j < maxIterations; ++j)
+	for (unsigned j = 0; j < maxIterations; ++j)
 	{
-		for(ContactConstraint* collision: collisions)
+		for (ContactConstraint* collision: collisions)
 			collision->velocityConstraint(dt);
 
-		for(Constraint* constraint: activeConstraints)
+		for (Constraint* constraint: activeConstraints)
 			constraint->velocityConstraint(dt);
 	}
 
 	// Integrate velocities
-	for(RigidBody* body: bodies)
+	for (RigidBody* body: bodies)
 	{
 		body->integrateVelocities(dt);
 	}
 
-	for(Collider* collider: colliders)
+	for (Collider* collider: colliders)
 	{
 		collider->computeAABB();
 #ifdef DRAWAABB
@@ -227,14 +227,14 @@ void PhysicEngine::sendAndFreeData()
 	activeConstraints.clear();
 
 	// Send to scripts and clear lists
-	for(ContactConstraint* trigger: triggers)
+	for (ContactConstraint* trigger: triggers)
 	{
 		trigger->sendData();
 		delete trigger;
 	}
 	triggers.clear();
 
-	for(ContactConstraint* collision: collisions)
+	for (ContactConstraint* collision: collisions)
 	{
 		collision->sendData();
 		delete collision;

@@ -140,8 +140,8 @@ bool Engine::update()
 		float ratio = 1000.0f / frames;
 		text.setString("FPS: " + toString<unsigned>(frames) +
 					   "\nScripts: " + toString<float>(ratio * sTime) + " ms" +
-					   "\nPhysics: " + toString<float>(ratio * dTime) + " ms" +
-					   "\nDraw:	" + toString<float>(ratio * pTime) + " ms");
+					   "\nPhysics: " + toString<float>(ratio * pTime) + " ms" +
+					   "\nRender:  " + toString<float>(ratio * dTime) + " ms");
 
 		frames = 0;
 		acu = 0.0f;

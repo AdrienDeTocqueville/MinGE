@@ -46,8 +46,8 @@ void Camera::use()
 
 
 	view = glm::lookAt(tr->getToWorldSpace(vec3(0.0f)),
-					   tr->getToWorldSpace(vec3(1, 0, 0)),
-					   vec3(0, 0, 1));
+			tr->getToWorldSpace(vec3(1, 0, 0)),
+			vec3(0, 0, 1));
 
 	GraphicEngine::get()->setMatrix(GE_VP, projection * view);
 
