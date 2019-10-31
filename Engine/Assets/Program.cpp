@@ -1,4 +1,5 @@
 #include "Assets/Program.h"
+#include "Utility/Error.h"
 
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
@@ -38,7 +39,7 @@ Program::Program(Shader* _vertex, Shader* _fragment):
 /// Destructor (private)
 Program::~Program()
 {
-	glDeleteProgram(program);
+	glCheck(glDeleteProgram(program));
 }
 
 /// Methods (private)
@@ -49,37 +50,37 @@ void Program::linkProgram()
 	/// Link
 
 	if (vertex)
-		glAttachShader(program, vertex->shader);
+		glCheck(glAttachShader(program, vertex->shader));
 	if (fragment)
-		glAttachShader(program, fragment->shader);
+		glCheck(glAttachShader(program, fragment->shader));
 
-	glLinkProgram(program);
+	glCheck(glLinkProgram(program));
 
 	if (vertex)
-		glDetachShader(program, vertex->shader);
+		glCheck(glDetachShader(program, vertex->shader));
 	if (fragment)
-		glDetachShader(program, fragment->shader);
+		glCheck(glDetachShader(program, fragment->shader));
 
 	///Detect errors
 
 	GLint succes(0);
-	glGetProgramiv(program, GL_LINK_STATUS, &succes);
+	glCheck(glGetProgramiv(program, GL_LINK_STATUS, &succes));
 
 	if(succes != GL_TRUE)
 	{
 		GLint stringSize(0);
-		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &stringSize);
+		glCheck(glGetProgramiv(program, GL_INFO_LOG_LENGTH, &stringSize));
 
 		char* error = new char[stringSize + 1];
 
-		glGetShaderInfoLog(program, stringSize, &stringSize, error);
+		glCheck(glGetShaderInfoLog(program, stringSize, &stringSize, error));
 		error[stringSize] = '\0';
 
 		std::string errorString(reinterpret_cast<char*>(error));
 		Error::add(OPENGL_ERROR, "Shader::linkProgram() -> " + errorString);
 
 		delete[] error;
-		glDeleteProgram(program);
+		glCheck(glDeleteProgram(program));
 
 		return;
 	}
@@ -130,7 +131,7 @@ void Program::use()
 
 	current = program;
 
-	glUseProgram(program);
+	glCheck(glUseProgram(program));
 }
 
 GLuint Program::getLocation(const std::string& _name) const
@@ -150,35 +151,35 @@ void Program::addLocation(GLuint _location)
 
 void Program::send(unsigned _location, int _value) const
 {
-	glUniform1i(locations[_location], _value);
+	glCheck(glUniform1i(locations[_location], _value));
 }
 void Program::send(unsigned _location, unsigned _value) const
 {
-	glUniform1i(locations[_location], (int)_value);
+	glCheck(glUniform1i(locations[_location], (int)_value));
 }
 void Program::send(unsigned _location, float _value) const
 {
-	glUniform1f(locations[_location], _value);
+	glCheck(glUniform1f(locations[_location], _value));
 }
 void Program::send(unsigned _location, vec3 _value) const
 {
-	glUniform3f(locations[_location], _value[0], _value[1], _value[2]);
+	glCheck(glUniform3f(locations[_location], _value[0], _value[1], _value[2]));
 }
 void Program::send(unsigned _location, vec4 _value) const
 {
-	glUniform4f(locations[_location], _value[0], _value[1], _value[2], _value[3]);
+	glCheck(glUniform4f(locations[_location], _value[0], _value[1], _value[2], _value[3]));
 }
 void Program::send(unsigned _location, mat3 _value) const
 {
-	glUniformMatrix3fv(locations[_location], 1, GL_FALSE, value_ptr(_value));
+	glCheck(glUniformMatrix3fv(locations[_location], 1, GL_FALSE, value_ptr(_value)));
 }
 void Program::send(unsigned _location, mat4 _value) const
 {
-	glUniformMatrix4fv(locations[_location], 1, GL_FALSE, value_ptr(_value));
+	glCheck(glUniformMatrix4fv(locations[_location], 1, GL_FALSE, value_ptr(_value)));
 }
 void Program::send(unsigned _location, const std::vector<mat4>& _values) const
 {
-	glUniformMatrix4fv(locations[_location], _values.size(), GL_FALSE, value_ptr(_values[0]));
+	glCheck(glUniformMatrix4fv(locations[_location], _values.size(), GL_FALSE, value_ptr(_values[0])));
 }
 
 /// Shader Class
@@ -241,21 +242,21 @@ Program::Shader* Program::Shader::load(std::string& _shader)
 
 	const GLchar* charSource = sourceCode.c_str();
 
-	glShaderSource(shaderID, 1, &charSource, nullptr);
+	glCheck(glShaderSource(shaderID, 1, &charSource, nullptr));
 
-	glCompileShader(shaderID);
+	glCheck(glCompileShader(shaderID));
 
 	GLint success(0);
-	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
+	glCheck(glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success));
 
 	if(success != GL_TRUE)
 	{
 		GLint stringSize(0);
-		glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &stringSize);
+		glCheck(glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &stringSize));
 
 		char *error = new char[stringSize + 1];
 
-		glGetShaderInfoLog(shaderID, stringSize, &stringSize, error);
+		glCheck(glGetShaderInfoLog(shaderID, stringSize, &stringSize, error));
 		error[stringSize] = '\0';
 
 		Error::add(OPENGL_ERROR, "Shader::compileShader() -> Compilation error in file: " + _shader);

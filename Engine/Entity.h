@@ -2,6 +2,7 @@
 #define ENTITY_H
 
 #include "Utility/Tag.h"
+#include "Utility/Error.h"
 
 #include <typeindex>
 

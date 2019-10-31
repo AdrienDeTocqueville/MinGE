@@ -5,6 +5,8 @@
 *  Shadows               *
 *  Particle effects      *
 *  Skeletal animations   *
+*  Occlusion culling	 *
+*  Optimize materials	 *
 *  (Billboards)	         *
 \* ******************** */
 
@@ -12,8 +14,6 @@
 
 
 #include <memory>
-
-#include "includes.h"
 
 #include "Engine.h"
 #include "Entity.h"
@@ -44,7 +44,9 @@
 #include "Physic/ContactConstraint.h"
 #include "Physic/Constraint.h"
 
+#include "Utility/helpers.h"
 #include "Utility/Random.h"
+#include "Utility/Error.h"
 #include "Utility/Debug.h"
 #include "Utility/Time.h"
 #include "Utility/Tag.h"

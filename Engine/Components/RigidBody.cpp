@@ -1,6 +1,6 @@
-#include "Components\Transform.h"
-#include "Components\RigidBody.h"
-#include "Components\Collider.h"
+#include "Components/Transform.h"
+#include "Components/RigidBody.h"
+#include "Components/Collider.h"
 
 #include "Systems/PhysicEngine.h"
 

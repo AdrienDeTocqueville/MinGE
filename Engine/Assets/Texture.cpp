@@ -1,4 +1,5 @@
 #include "Assets/Texture.h"
+#include "Utility/Error.h"
 
 #include <SFML/Graphics/Image.hpp>
 

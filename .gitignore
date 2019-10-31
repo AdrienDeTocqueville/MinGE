@@ -1,3 +1,7 @@
+.vimsession
+tags
+.gdb_history
+
 *.layout
 *.depend
 

@@ -1,4 +1,5 @@
 #include "Assets/RenderTexture.h"
+#include "Utility/Error.h"
 
 RenderTexture::RenderTexture(unsigned _width, unsigned _height, unsigned _depth):
 	width(_width), height(_height),

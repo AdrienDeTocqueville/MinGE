@@ -5,7 +5,7 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
-#include "includes.h"
+#include "Utility/helpers.h"
 
 enum CursorMode {Free, FreeHidden, Capture};
 

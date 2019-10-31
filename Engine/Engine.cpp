@@ -11,7 +11,6 @@
 
 #ifdef DEBUG
 	#include "Components/Component.h"
-	#include <windows.h>
 #endif
 
 Engine* Engine::instance = nullptr;
@@ -188,12 +187,8 @@ void Engine::clear()
 #ifdef DEBUG
 	if (Component::instances != 0)
 	{
-		std::string err = "One or more component have not been deleted ("+toString(Component::instances)+")";
-		MessageBox(nullptr, err.c_str(),
-							"MinGE: closing error", MB_ICONWARNING);
-
 		Component::instances = 0;
-
+		Error::add(WARNING, "One or more component have not been deleted ("+toString(Component::instances)+")");
 		exit(EXIT_FAILURE);
 	}
 #endif // DEBUG

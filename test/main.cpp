@@ -4,17 +4,17 @@
 #include "bvh/bvh.h"
 
 
-#define FULL_SCREEN sf::VideoMode::getDesktopMode()
+const auto desktop = sf::VideoMode::getDesktopMode();
 
 #ifdef DEBUG
-	#define VIDEOMODE sf::VideoMode(2*FULL_SCREEN.width/3, 2*FULL_SCREEN.height/3)
-	#define STYLE sf::Style::Default
+const auto video_mode = sf::VideoMode(2*desktop.width/3, 2*desktop.height/3);
+const auto style = sf::Style::Default;
 #else
-	#define VIDEOMODE FULL_SCREEN
-	#define STYLE sf::Style::Fullscreen
+const auto video_mode = desktop;
+const auto style = sf::Style::Fullscreen;
 #endif
 
-int scene = 1;
+int scene = 0;
 std::vector<void (*)()> setups = {test_physic, test_bvh};
 std::vector<std::string> names = {"physic", "bvh"};
 
@@ -46,7 +46,8 @@ int main()
 
 
 	/// Create window
-		sf::RenderWindow window(VIDEOMODE, "MinGE test suite", STYLE, sf::ContextSettings(24, 0, 0, 4, 3));
+		sf::RenderWindow window(video_mode, "MinGE test suite", style, sf::ContextSettings(24, 0, 0, 4, 3));
+		window.setPosition(sf::Vector2i(desktop.width - video_mode.width, desktop.height - video_mode.height) / 2);
 
 
 	/// Create engine
@@ -96,7 +97,7 @@ int main()
 	/// Delete resources
 		delete engine;
 
-	#ifdef DEBUG
+	#if defined(DEBUG) && defined(_WIN32)
 		sf::sleep(sf::seconds(1.0f));
 	#endif // DEBUG
 

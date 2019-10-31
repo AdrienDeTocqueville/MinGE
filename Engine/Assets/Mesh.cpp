@@ -11,8 +11,8 @@ Mesh::Mesh(unsigned _dataFlags):
 
 Mesh::~Mesh()
 {
-	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);
+	glCheck(glDeleteBuffers(1, &vbo));
+	glCheck(glDeleteVertexArrays(1, &vao));
 }
 
 /// Methods (public)
@@ -20,11 +20,11 @@ void Mesh::render(Transform* _tr, const std::vector<Material*>& _materials)
 {
 	if (vao)
 	{
-		glBindVertexArray(vao);
+		glCheck(glBindVertexArray(vao));
 
 		for (Submesh& submesh: submeshes)
 			if (_materials[submesh.material]->use(_tr))
-				glDrawArrays(submesh.mode, submesh.first, submesh.count);
+				glCheck(glDrawArrays(submesh.mode, submesh.first, submesh.count));
 	}
 }
 
@@ -58,44 +58,44 @@ void Mesh::loadBuffers()
 	offset[2] = dataSize[2] * hasTexcoords + offset[1];;
 
 	/// VBO
-	glDeleteBuffers(1, &vbo);
-	glGenBuffers(1, &vbo);
+	glCheck(glDeleteBuffers(1, &vbo));
+	glCheck(glGenBuffers(1, &vbo));
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glCheck(glBindBuffer(GL_ARRAY_BUFFER, vbo));
 
-		glBufferData(GL_ARRAY_BUFFER, offset[2], nullptr, GL_STATIC_DRAW);
+		glCheck(glBufferData(GL_ARRAY_BUFFER, offset[2], nullptr, GL_STATIC_DRAW));
 
 		if (hasVertices)
-			glBufferSubData(GL_ARRAY_BUFFER, 0		, dataSize[0], &vertices [0]);
+			glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0		, dataSize[0], &vertices [0]));
 
 		if (hasNormals)
-			glBufferSubData(GL_ARRAY_BUFFER, offset[0], dataSize[1], &normals  [0]);
+			glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset[0], dataSize[1], &normals  [0]));
 
 		if (hasTexcoords)
-			glBufferSubData(GL_ARRAY_BUFFER, offset[1], dataSize[2], &texCoords[0]);
+			glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset[1], dataSize[2], &texCoords[0]));
 
 	/// VAO
-	glDeleteVertexArrays(1, &vao);
-	glGenVertexArrays(1, &vao);
+	glCheck(glDeleteVertexArrays(1, &vao));
+	glCheck(glGenVertexArrays(1, &vao));
 
-	glBindVertexArray(vao);
+	glCheck(glBindVertexArray(vao));
 
 		if (hasVertices)
 		{
-			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+			glCheck(glEnableVertexAttribArray(0));
+			glCheck(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0)));
 		}
 
 		if (hasNormals)
 		{
-			glEnableVertexAttribArray(hasVertices);
-			glVertexAttribPointer(hasVertices, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(offset[0]));
+			glCheck(glEnableVertexAttribArray(hasVertices));
+			glCheck(glVertexAttribPointer(hasVertices, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(offset[0])));
 		}
 
 		if (hasTexcoords)
 		{
-			glEnableVertexAttribArray(hasVertices+hasNormals);
-			glVertexAttribPointer(hasVertices+hasNormals, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(offset[1]));
+			glCheck(glEnableVertexAttribArray(hasVertices+hasNormals));
+			glCheck(glVertexAttribPointer(hasVertices+hasNormals, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(offset[1])));
 		}
 }
 

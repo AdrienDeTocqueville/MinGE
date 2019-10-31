@@ -142,7 +142,7 @@ bool TerrainMaterial::use(Transform* _tr)
 
 		  textures[i]->use(i+2);
 	   }
-	   glActiveTexture(GL_TEXTURE0);
+	   glCheck(glActiveTexture(GL_TEXTURE0));
 	}
 	else if (_target == GE_DEPTH)
 	   programs[_target]->send(0, GraphicEngine::get()->getMatrix(GE_MVP));

@@ -2,9 +2,8 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
-#include "includes.h"
+#include "Utility/helpers.h"
 #include "Utility/Debug.h"
-#include "Utility/Accel/BVH.h"
 
 
 #define BUFFER_OFFSET(offset) ((char*)nullptr + (offset))
@@ -75,8 +74,6 @@ class GraphicEngine
 			static void destroy();
 
 		/// Attributes (private)
-			BVH bvh;
-
 			std::list<Graphic*> graphics;
 			std::list<Camera*> cameras;
 			std::list<Light*> lights;

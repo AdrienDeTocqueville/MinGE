@@ -170,7 +170,7 @@
 		<Unit filename="Engine/Utility/Accel/Quadtree.h" />
 		<Unit filename="Engine/Utility/Debug.cpp" />
 		<Unit filename="Engine/Utility/Debug.h" />
-		<Unit filename="Engine/Utility/Errors.cpp" />
+		<Unit filename="Engine/Utility/Error.cpp" />
 		<Unit filename="Engine/Utility/IO/IOFile.cpp" />
 		<Unit filename="Engine/Utility/IO/IOFile.h" />
 		<Unit filename="Engine/Utility/IO/Input.cpp" />

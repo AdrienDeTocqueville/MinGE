@@ -4,7 +4,6 @@
 #include "Components/Camera.h"
 #include "Components/Light.h"
 
-#include "Utility/Accel/AABB.h"
 #include "Entity.h"
 
 #include <cstring>
@@ -94,10 +93,7 @@ void GraphicEngine::editBuffer(GLenum _target, unsigned _size, const void* _data
 void GraphicEngine::addGraphic(Graphic* _graphic)
 {
 	if (_graphic != nullptr)
-	{
 		graphics.push_back(_graphic);
-		bvh.insert(_graphic);
-	}
 }
 
 void GraphicEngine::addCamera(Camera* _camera)
@@ -181,8 +177,6 @@ void GraphicEngine::toggleWireframe()
 
 void GraphicEngine::render()
 {
-	bvh.update();
-
 	glEnable(GL_SCISSOR_TEST);
 
 	for (Camera* camera: cameras)
@@ -197,8 +191,8 @@ void GraphicEngine::render()
 	}
 
 #ifdef DRAWAABB
-//	for(Graphic* g: graphics)
-//		g->getAABB().prepare();
+	for(Graphic* g: graphics)
+		g->getAABB().prepare();
 
 	AABB::draw();
 #endif

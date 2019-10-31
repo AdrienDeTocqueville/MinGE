@@ -1,4 +1,5 @@
 #include "Meshes/AnimatedModel.h"
+#include "Utility/Error.h"
 #include "Utility/tinyxml2.h"
 
 #include <fstream>
