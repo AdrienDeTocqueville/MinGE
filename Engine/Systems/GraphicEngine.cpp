@@ -204,9 +204,14 @@ void GraphicEngine::render()
 
 		vec3 attenuation;
 	};
+	struct cam
+	{
+		mat4 vp;
+		vec4 clipplane;
+	};
 
 	static Program *p = NULL;
-	static unsigned int m_block, l_block;
+	static unsigned int m_block, l_block, c_block;
 	if (p == NULL)
 	{
 		mat m;
@@ -225,12 +230,16 @@ void GraphicEngine::render()
 		   }
 
 
-		int m_binding = 1, l_binding = 0;
+		int m_binding = 2, l_binding = 1, c_binding = 0;
+
+		glCheck(glGenBuffers(1, &c_block));
+		glCheck(glBindBuffer(GL_UNIFORM_BUFFER, c_block));
+		glCheck(glBufferData(GL_UNIFORM_BUFFER, sizeof(cam), NULL, GL_STATIC_DRAW));
+		glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, c_binding, c_block));
 
 		glCheck(glGenBuffers(1, &l_block));
 		glCheck(glBindBuffer(GL_UNIFORM_BUFFER, l_block));
-		glCheck(glBufferData(GL_UNIFORM_BUFFER, sizeof(light), NULL, GL_STATIC_DRAW));
-		glCheck(glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(light), &l));
+		glCheck(glBufferData(GL_UNIFORM_BUFFER, sizeof(light), &l, GL_STATIC_DRAW));
 		glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, l_binding, l_block));
 
 		glCheck(glGenBuffers(1, &m_block));
@@ -239,6 +248,7 @@ void GraphicEngine::render()
 		glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, m_binding, m_block));
 
 		p = Program::get("object.vert", "object.frag");
+		p->bind("Camera", c_binding);
 		p->bind("Light", l_binding);
 		p->bind("Material", m_binding);
 	}
@@ -248,19 +258,22 @@ void GraphicEngine::render()
 	for (Camera* camera: cameras)
 	{
 		camera->use();
+		cam c;
+		   c.vp = GraphicEngine::get()->getMatrix(GE_VP);
+		   c.clipplane = camera->getClipPlane();
+		glCheck(glBindBuffer(GL_UNIFORM_BUFFER, c_block));
+		glCheck(glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(cam), &c));
 
 		for (Graphic* graphic: graphics)
 		{
 			graphic->find<Transform>()->use();
 		{
-		   p->send(0, GraphicEngine::get()->getMatrix(GE_MVP));
-		   p->send(1, GraphicEngine::get()->getMatrix(GE_MODEL));
-		   p->send(2, mat3(transpose(inverse(GraphicEngine::get()->getMatrix(GE_MODEL)))));
+		   p->send(0, GraphicEngine::get()->getMatrix(GE_MODEL));
+		   //p->send(1, mat3(transpose(inverse(GraphicEngine::get()->getMatrix(GE_MODEL)))));
 
-		   p->send(3, Camera::current->getClipPlane());
-		   p->send(4, Camera::current->find<Transform>()->getToWorldSpace(vec3(0.0f)));
+		   p->send(2, Camera::current->find<Transform>()->getToWorldSpace(vec3(0.0f)));
 
-		   p->send(5, 0);  // Texture
+		   //p->send(3, 0);  // Texture
 		}
 			graphic->render();
 		}

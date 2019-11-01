@@ -4,10 +4,14 @@ layout(location = 0) in vec3 in_Vertex;
 layout(location = 1) in vec3 in_Normal;
 layout(location = 2) in vec2 in_TexCoord;
 
-uniform mat4 MVPMatrix;
-uniform mat4 modelMatrix;
-uniform mat3 normalMatrix;
-uniform vec4 clipPlane;
+layout (std140) uniform Camera
+{
+	mat4 MATRIX_VP;
+	vec4 clipPlane;
+};
+
+uniform mat4 MATRIX_M;
+uniform mat3 MATRIX_N;
 
 out VS_FS
 {
@@ -18,10 +22,11 @@ out VS_FS
 
 void main()
 {
-    vs_out.fragPos = vec3(modelMatrix * vec4(in_Vertex, 1.0f));
-    vs_out.normal = normalMatrix * in_Normal;
-    vs_out.texCoord = in_TexCoord;
+	vec4 vertex = MATRIX_M * vec4(in_Vertex, 1.0f);
+	vs_out.fragPos = vec3(vertex);
+	vs_out.normal = MATRIX_N * in_Normal;
+	vs_out.texCoord = in_TexCoord;
 
-    gl_Position = MVPMatrix * vec4(in_Vertex, 1.0f);
-    gl_ClipDistance[0] = (dot(vec4(vs_out.fragPos, 1.0f), clipPlane));
+	gl_Position = MATRIX_VP * vertex;
+	gl_ClipDistance[0] = (dot(vec4(vs_out.fragPos, 1.0f), clipPlane));
 }

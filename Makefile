@@ -23,8 +23,9 @@ OBJDIR = obj
 OBJ := $(addprefix $(OBJDIR)/, $(SRC:.cpp=.o))
 
 
-#all: $(NAME)
-all: debug
+all: CFLAGS += -O3
+all: $(NAME)
+#all: debug
 
 debug: CFLAGS += -DDEBUG -g3 -ggdb
 debug: $(NAME)

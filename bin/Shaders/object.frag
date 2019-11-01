@@ -9,9 +9,6 @@ in VS_FS
 
 uniform vec3 cameraPosition;
 
-// Material
-uniform sampler2D mainTexture;
-
 // Light
 layout (std140) uniform Light
 {
@@ -24,6 +21,8 @@ layout (std140) uniform Light
 	float aQuadratic;
 };
 
+// Material
+uniform sampler2D mainTexture;
 
 layout (std140) uniform Material
 {

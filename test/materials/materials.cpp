@@ -13,6 +13,7 @@
 // tr + smid = 4ms
 //
 // inlined(no tex) = 9.0ms;
+// uniform blocks = 7.5ms
 
 void test_materials()
 {
