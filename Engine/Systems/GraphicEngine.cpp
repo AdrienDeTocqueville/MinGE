@@ -215,13 +215,13 @@ void GraphicEngine::render()
 		   m.s = vec4(0.0f);
 		   m.e = 8.0f;
 		light l;
-		   Light* light = GraphicEngine::get()->getLight();
-		   if (light)
+		   Light* src = GraphicEngine::get()->getLight();
+		   if (src)
 		   {
-			  l.lightPosition = vec4(light->getPosition(), 0.0f);
-			  l.diffuseColor = vec4(light->getDiffuseColor(), 0.0f);
-			  l.ambientCoefficient = light->getAmbientCoefficient();
-			  l.attenuation = light->getAttenuation();
+			  l.lightPosition = vec4(src->getPosition(), 0.0f);
+			  l.diffuseColor = vec4(src->getDiffuseColor(), 0.0f);
+			  l.ambientCoefficient = src->getAmbientCoefficient();
+			  l.attenuation = src->getAttenuation();
 		   }
 
 
