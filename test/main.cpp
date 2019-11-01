@@ -32,7 +32,7 @@ void start_scene(Engine *engine, int _scene)
 		bright->texture = Texture::get("Textures/white.png");
 
 	Entity::create("Light", false, vec3(4, 2, 4))
-		->insert<Graphic>(Mesh::createSphere(bright, ALLFLAGS, 0.25f))
+		//->insert<Graphic>(Mesh::createSphere(bright, ALLFLAGS, 0.25f))
 		->insert<Light>(GE_POINT_LIGHT, vec3(0.0f), vec3(0.9f), 1.0f, 1, 0.01, 0);
 
 	scene = _scene % setups.size();

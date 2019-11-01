@@ -5,6 +5,11 @@
 // (41 * 21 * 3 cubes)
 // QUAD = 10.5ms
 // TRIANGLES = same
+// no bind = 2.4ms
+// tr = 6.8ms
+// tr + prgm = 7ms
+// tr + prgm + texture = 8ms
+// everything + sse2 = 7ms (but it doesn't work)
 
 void test_materials()
 {

@@ -2,8 +2,6 @@
 
 #include "Systems/GraphicEngine.h"
 
-#include <glm/gtx/transform.hpp>
-
 Transform::Transform(vec3 _position, quat _rotation, vec3 _scale):
 	validWorld(false), validLocal(false),
 	position(_position), rotation(_rotation), scale(_scale),
@@ -25,21 +23,9 @@ Transform* Transform::clone() const
 
 void Transform::toMatrix()
 {
-	validWorld = validLocal = true;
+	validWorld = validLocal = false;
 
-	if (parent != nullptr)
-		toWorldSpace = parent->toWorldSpace;
-	else
-		toWorldSpace = mat4(1.0f);
-
-	toWorldSpace *= glm::translate(position);
-	toWorldSpace *= toMat4(rotation);
-	toWorldSpace *= glm::scale(scale);
-
-	toLocalSpace = inverse(toWorldSpace);
-
-	for (Transform* child: children)
-		child->toMatrix();
+	computeLocalSpaceMatrix();
 }
 
 void Transform::use() const
@@ -190,12 +176,25 @@ void Transform::computeWorldSpaceMatrix() const
 {
 	if (!validWorld)
 	{
+		/*
+		 * TODO: Multiply matrix with parent matrix
+		if (parent != nullptr)
+			toWorldSpace = parent->toWorldSpace;
+		else
+			toWorldSpace = mat4(1.0f);
+		*/
+
 		toWorldSpace = glm::translate(position);
 		toWorldSpace *= toMat4(rotation);
 		toWorldSpace *= glm::scale(scale);
 
 		validWorld = true;
 		validLocal = false;
+
+		/*
+		for (Transform* child: children)
+			child->toMatrix();
+		*/
 	}
 }
 

@@ -18,13 +18,22 @@ Mesh::~Mesh()
 /// Methods (public)
 void Mesh::render(Transform* _tr, const std::vector<Material*>& _materials)
 {
+	static bool used = false;
 	if (vao)
 	{
 		glCheck(glBindVertexArray(vao));
 
 		for (Submesh& submesh: submeshes)
+		{
+			/*
+			if (!used)
+			{
+				_materials[submesh.material]->use(_tr);
+				used = true;
+			}*/
 			if (_materials[submesh.material]->use(_tr))
 				glCheck(glDrawArrays(submesh.mode, submesh.first, submesh.count));
+		}
 	}
 }
 

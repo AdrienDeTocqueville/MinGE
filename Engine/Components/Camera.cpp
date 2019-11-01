@@ -4,8 +4,6 @@
 
 #include "Utility/IO/Input.h"
 
-#include <glm/gtx/transform.hpp>
-
 Camera* Camera::main = nullptr;
 Camera* Camera::current = nullptr;
 
@@ -49,7 +47,9 @@ void Camera::use()
 			tr->getToWorldSpace(vec3(1, 0, 0)),
 			vec3(0, 0, 1));
 
-	GraphicEngine::get()->setMatrix(GE_VP, projection * view);
+	mat4 vp;
+	simd_mul(projection, view, vp);
+	GraphicEngine::get()->setMatrix(GE_VP, vp);
 
 
 	// Background

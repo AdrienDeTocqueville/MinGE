@@ -14,8 +14,11 @@
 #include <map>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/epsilon.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtx/matrix_operation.hpp>
 
 
 #ifdef DEBUG
@@ -52,3 +55,6 @@ void write(vec3 _vec, bool ret = true);
 
 bool epsilonEqual(const vec3& a, const vec3& b, float epsilon = EPSILON);
 bool epsilonEqual(const quat& a, const quat& b, float epsilon = EPSILON);
+
+
+void simd_mul(const mat4& a, const mat4& b, mat4& out);

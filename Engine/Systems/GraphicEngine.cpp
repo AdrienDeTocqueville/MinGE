@@ -178,9 +178,17 @@ void GraphicEngine::toggleWireframe()
 	glPolygonMode(GL_FRONT_AND_BACK, wireframe? GL_LINE: GL_FILL);
 }
 
+void GraphicEngine::computeMVP()
+{
+	//if no simd
+	//matrices[GE_MVP] = matrices[GE_VP]*matrices[GE_MODEL];
+	simd_mul(matrices[GE_VP], matrices[GE_MODEL], matrices[GE_MVP]);
+}
+
 void GraphicEngine::render()
 {
-	glEnable(GL_SCISSOR_TEST);
+	//glEnable(GL_SCISSOR_TEST);
+	//glBindVertexArray(0);
 
 	for (Camera* camera: cameras)
 	{
@@ -188,7 +196,7 @@ void GraphicEngine::render()
 
 		for (Graphic* graphic: graphics)
 		{
-			setMatrix(GE_MODEL);
+			//setMatrix(GE_MODEL);
 			graphic->render();
 		}
 	}
@@ -201,12 +209,12 @@ void GraphicEngine::render()
 #endif
 
 #ifdef DEBUG
-	//Debug::update();
+	Debug::update();
 #endif
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-	glDisable(GL_SCISSOR_TEST);
+	//glDisable(GL_SCISSOR_TEST);
 }
 
 /// Setters

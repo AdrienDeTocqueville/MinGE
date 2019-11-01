@@ -40,7 +40,7 @@ class GraphicEngine
 
 			void toggleWireframe();
 
-			void computeMVP()   { matrices[GE_MVP] = matrices[GE_VP]*matrices[GE_MODEL]; }
+			void computeMVP();
 
 			void render();
 
