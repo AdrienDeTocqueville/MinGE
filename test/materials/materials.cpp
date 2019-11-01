@@ -9,7 +9,10 @@
 // tr = 6.8ms
 // tr + prgm = 7ms
 // tr + prgm + texture = 8ms
-// everything + sse2 = 7ms (but it doesn't work)
+// everything + glm sse2 = 7ms (but it doesn't work)
+// tr + smid = 4ms
+//
+// inlined(no tex) = 9.0ms;
 
 void test_materials()
 {

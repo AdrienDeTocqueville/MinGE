@@ -185,10 +185,65 @@ void GraphicEngine::computeMVP()
 	simd_mul(matrices[GE_VP], matrices[GE_MODEL], matrices[GE_MVP]);
 }
 
+#include "Components/Transform.h"
 void GraphicEngine::render()
 {
 	//glEnable(GL_SCISSOR_TEST);
 	//glBindVertexArray(0);
+	
+	struct mat
+	{
+		vec4 a, d, s;
+		float e;
+	};
+	struct light
+	{
+		vec4 lightPosition;
+		vec4 diffuseColor;
+		float ambientCoefficient;
+
+		vec3 attenuation;
+	};
+
+	static Program *p = NULL;
+	static unsigned int m_block, l_block;
+	if (p == NULL)
+	{
+		mat m;
+		   m.a = vec4(0.3f);
+		   m.d = vec4(0.8f);
+		   m.s = vec4(0.0f);
+		   m.e = 8.0f;
+		light l;
+		   Light* light = GraphicEngine::get()->getLight();
+		   if (light)
+		   {
+			  l.lightPosition = vec4(light->getPosition(), 0.0f);
+			  l.diffuseColor = vec4(light->getDiffuseColor(), 0.0f);
+			  l.ambientCoefficient = light->getAmbientCoefficient();
+			  l.attenuation = light->getAttenuation();
+		   }
+
+
+		int m_binding = 1, l_binding = 0;
+
+		glCheck(glGenBuffers(1, &l_block));
+		glCheck(glBindBuffer(GL_UNIFORM_BUFFER, l_block));
+		glCheck(glBufferData(GL_UNIFORM_BUFFER, sizeof(light), NULL, GL_STATIC_DRAW));
+		glCheck(glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(light), &l));
+		glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, l_binding, l_block));
+
+		glCheck(glGenBuffers(1, &m_block));
+		glCheck(glBindBuffer(GL_UNIFORM_BUFFER, m_block));
+		glCheck(glBufferData(GL_UNIFORM_BUFFER, sizeof(mat), &m, GL_STATIC_DRAW));
+		glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, m_binding, m_block));
+
+		p = Program::get("object.vert", "object.frag");
+		p->bind("Light", l_binding);
+		p->bind("Material", m_binding);
+	}
+
+	p->use();
 
 	for (Camera* camera: cameras)
 	{
@@ -196,7 +251,17 @@ void GraphicEngine::render()
 
 		for (Graphic* graphic: graphics)
 		{
-			//setMatrix(GE_MODEL);
+			graphic->find<Transform>()->use();
+		{
+		   p->send(0, GraphicEngine::get()->getMatrix(GE_MVP));
+		   p->send(1, GraphicEngine::get()->getMatrix(GE_MODEL));
+		   p->send(2, mat3(transpose(inverse(GraphicEngine::get()->getMatrix(GE_MODEL)))));
+
+		   p->send(3, Camera::current->getClipPlane());
+		   p->send(4, Camera::current->find<Transform>()->getToWorldSpace(vec3(0.0f)));
+
+		   p->send(5, 0);  // Texture
+		}
 			graphic->render();
 		}
 	}

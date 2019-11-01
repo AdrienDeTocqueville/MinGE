@@ -126,7 +126,7 @@ bool epsilonEqual(const quat& a, const quat& b, float epsilon)
 	return true;
 }
 
-#include <emmintrin.h>
+#include <immintrin.h>
 void simd_mul(const mat4& a, const mat4& b, mat4& out)
 {
 	__m128 r0 = _mm_loadu_ps(&a[0][0]);

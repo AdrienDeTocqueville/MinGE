@@ -34,6 +34,8 @@ class CameraScript : public Script
 			if (target == nullptr) /// FPS
 			{
 				vec3 dir = getMovement(tr->getVectorToWorldSpace(vec3(1, 0, 0)));
+				if (dir == vec3(0.0f))
+					return;
 
 				float speed = (Input::getKeyDown(sf::Keyboard::LShift)?5.0f:12.0f) * Time::deltaTime;
 

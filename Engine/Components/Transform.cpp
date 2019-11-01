@@ -185,8 +185,8 @@ void Transform::computeWorldSpaceMatrix() const
 		*/
 
 		toWorldSpace = glm::translate(position);
-		toWorldSpace *= toMat4(rotation);
-		toWorldSpace *= glm::scale(scale);
+		simd_mul(toWorldSpace, toMat4(rotation), toWorldSpace);
+		simd_mul(toWorldSpace, glm::scale(scale), toWorldSpace);
 
 		validWorld = true;
 		validLocal = false;

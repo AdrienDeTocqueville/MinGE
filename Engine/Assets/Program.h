@@ -33,6 +33,8 @@ class Program
 			void send(unsigned _location, mat4 _value) const;
 			void send(unsigned _location, const std::vector<mat4>& _values) const;
 
+			void bind(std::string name, GLuint binding) const;
+
 	private:
 		/// Destructor (private)
 			~Program();

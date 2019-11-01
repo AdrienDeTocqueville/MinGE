@@ -9,16 +9,19 @@ uniform mat4 modelMatrix;
 uniform mat3 normalMatrix;
 uniform vec4 clipPlane;
 
-out vec3 fragPos;
-out vec3 normal;
-out vec2 texCoord;
+out VS_FS
+{
+	vec3 fragPos;
+	vec3 normal;
+	vec2 texCoord;
+} vs_out;
 
 void main()
 {
-    fragPos = vec3(modelMatrix * vec4(in_Vertex, 1.0f));
-    normal = normalMatrix * in_Normal;
-    texCoord = in_TexCoord;
+    vs_out.fragPos = vec3(modelMatrix * vec4(in_Vertex, 1.0f));
+    vs_out.normal = normalMatrix * in_Normal;
+    vs_out.texCoord = in_TexCoord;
 
     gl_Position = MVPMatrix * vec4(in_Vertex, 1.0f);
-	gl_ClipDistance[0] = (dot(vec4(fragPos, 1.0f), clipPlane));
+    gl_ClipDistance[0] = (dot(vec4(vs_out.fragPos, 1.0f), clipPlane));
 }

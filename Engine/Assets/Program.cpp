@@ -6,6 +6,7 @@
 std::vector<Program*> Program::programs;
 unsigned Program::current = 0;
 
+
 Program::Program(std::string& _vertex, std::string& _fragment):
 	program(0),
 	vertex(nullptr), fragment(nullptr)
@@ -179,6 +180,12 @@ void Program::send(unsigned _location, mat4 _value) const
 void Program::send(unsigned _location, const std::vector<mat4>& _values) const
 {
 	glCheck(glUniformMatrix4fv(locations[_location], _values.size(), GL_FALSE, value_ptr(_values[0])));
+}
+
+void Program::bind(std::string name, GLuint binding) const
+{
+	GLuint index = glGetUniformBlockIndex(program, name.c_str());
+	glCheck(glUniformBlockBinding(program, index, binding));
 }
 
 /// Shader Class

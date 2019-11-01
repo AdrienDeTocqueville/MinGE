@@ -1,6 +1,7 @@
 .vimsession
-tags
 .gdb_history
+tags
+cscope*
 
 *.layout
 *.depend

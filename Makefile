@@ -16,15 +16,15 @@ SRC = $(shell find test -name '*.cpp')
 
 # Engine
 SRC += $(shell find Engine -name '*.cpp')
-INC += $(shell find Engine -name '*.h')
+#INC += $(shell find Engine -name '*.h')
 
 
 OBJDIR = obj
 OBJ := $(addprefix $(OBJDIR)/, $(SRC:.cpp=.o))
 
 
-all: $(NAME)
-#all: debug
+#all: $(NAME)
+all: debug
 
 debug: CFLAGS += -DDEBUG -g3 -ggdb
 debug: $(NAME)

@@ -31,7 +31,7 @@ void Mesh::render(Transform* _tr, const std::vector<Material*>& _materials)
 				_materials[submesh.material]->use(_tr);
 				used = true;
 			}*/
-			if (_materials[submesh.material]->use(_tr))
+			//if (_materials[submesh.material]->use(_tr))
 				glCheck(glDrawArrays(submesh.mode, submesh.first, submesh.count));
 		}
 	}
