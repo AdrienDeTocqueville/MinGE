@@ -34,9 +34,19 @@ void Debug::drawVector(vec3 _point, vec3 _vector, vec3 _color)
 }
 
 /// Methods (private)
+static unsigned vbo = 0, vao = 0;
 void Debug::init()
 {
 	program = Program::get("debug.vert", "debug.frag");
+
+	glCheck(glGenBuffers(1, &vbo));
+	glCheck(glGenVertexArrays(1, &vao));
+}
+
+void Debug::destroy()
+{
+	glDeleteBuffers(1, &vbo);
+	glDeleteVertexArrays(1, &vao);
 }
 
 void Debug::update()
@@ -71,17 +81,13 @@ void Debug::update()
 
 void Debug::drawPoints()
 {
-	unsigned vbo = 0, vao = 0;
 	unsigned offset[2];
-
-	glGenBuffers(1, &vbo);
-	glGenVertexArrays(1, &vao);
 
 	offset[0] = points.size() *sizeof(vec3);
 	offset[1] = offset[0]+ pColors.size() *sizeof(vec3);
 
 	/// VBO
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	GL::BindVertexBuffer(vbo);
 
 		glBufferData(GL_ARRAY_BUFFER, offset[1], nullptr, GL_STATIC_DRAW);
 
@@ -89,7 +95,7 @@ void Debug::drawPoints()
 		glBufferSubData(GL_ARRAY_BUFFER, offset[0], offset[1]-offset[0], &pColors[0]);
 
 	/// VAO
-	glBindVertexArray(vao);
+	GL::BindVertexArray(vao);
 
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
@@ -99,32 +105,25 @@ void Debug::drawPoints()
 
 
 		glDrawArrays(GL_POINTS, 0, points.size());
-
-	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);
 }
 
 void Debug::drawLines()
 {
-	unsigned vbo = 0, vao = 0;
 	unsigned offset[2];
-
-	glGenBuffers(1, &vbo);
-	glGenVertexArrays(1, &vao);
 
 	offset[0] = lines.size() *sizeof(vec3);
 	offset[1] = offset[0]+ lColors.size() *sizeof(vec3);
 
 	/// VBO
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	GL::BindVertexBuffer(vbo);
 
-		glBufferData(GL_ARRAY_BUFFER, offset[1], nullptr, GL_STATIC_DRAW);
+		glCheck(glBufferData(GL_ARRAY_BUFFER, offset[1], nullptr, GL_STATIC_DRAW));
 
-		glBufferSubData(GL_ARRAY_BUFFER, 0, offset[0], &lines[0]);
-		glBufferSubData(GL_ARRAY_BUFFER, offset[0], offset[1]-offset[0], &lColors[0]);
+		glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, offset[0], &lines[0]));
+		glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset[0], offset[1]-offset[0], &lColors[0]));
 
 	/// VAO
-	glBindVertexArray(vao);
+	GL::BindVertexArray(vao);
 
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
@@ -134,8 +133,4 @@ void Debug::drawLines()
 
 
 	glDrawArrays(GL_LINES, 0, lines.size());
-
-
-	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);
 }

@@ -1,6 +1,22 @@
 #include "Renderer/UBO.h"
 
-static const uint32_t buf_size = 1024*1024*16;
+#ifdef DEBUG
+#include <iostream>
+#endif
+
+static inline uint32_t align(uint32_t val, uint32_t alignment)
+{
+	return ((val + alignment - 1) / alignment ) * alignment;
+}
+
+static GLint ubo_alignment = 0;
+static uint32_t buf_size = 1024*1024*16;
+void UBO::setupPool()
+{
+	glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &ubo_alignment);
+
+	buf_size = align(buf_size, ubo_alignment);
+}
 
 struct PoolBuffer
 {
@@ -19,16 +35,21 @@ UBO UBO::create(uint32_t size)
 {
 	UBO ubo;
 
+#ifdef DEBUG
+	if (size >= buf_size)
+		std::cout << "UBO is too big" << std::endl;
+#endif
+
 	for (PoolBuffer& buf : pool)
 	{
 		if (buf.used + size < buf.allocated)
 		{
 			ubo.res = buf.res;
-			ubo.offset = buf.used;
+			ubo.offset = align(buf.used, ubo_alignment);
 			ubo.size = size;
-			ubo.data = buf.data;
+			ubo.data = buf.data + ubo.offset;
 
-			buf.used += size;
+			buf.used = ubo.offset + size;
 			buf.refs++;
 			return ubo;
 		}

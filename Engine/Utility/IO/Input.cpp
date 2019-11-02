@@ -1,7 +1,7 @@
 #include "Input.h"
+#include "Systems/GraphicEngine.h"
 
 sf::RenderWindow* Input::window = nullptr;
-sf::Event* Input::event = nullptr;
 
 vec2 Input::dim(0.0f), Input::center(0.0f);
 
@@ -15,7 +15,6 @@ bool Input::focus = true;
 bool Input::closed = false;
 
 int Input::mouseIndex = 0, Input::keyboardIndex = 0;
-bool Input::mouseNeedsUpdate = true, Input::keyboardNeedsUpdate = true;
 
 std::bitset<sf::Mouse::ButtonCount> Input::mouseState[2];
 std::bitset<sf::Keyboard::KeyCount> Input::keyboardState[2];
@@ -26,7 +25,6 @@ sf::Uint32 Input::unicode;
 void Input::init(sf::RenderWindow* _window)
 {
 	window = _window;
-	event = new sf::Event();
 
 	dim = toVec2(window->getSize());
 	center = ivec2(0.5f*dim);
@@ -40,10 +38,7 @@ void Input::init(sf::RenderWindow* _window)
 
 void Input::destroy()
 {
-	delete event;
-
 	window = nullptr;
-	event = nullptr;
 
 	focus = true;
 	closed = true;
@@ -56,88 +51,67 @@ void Input::update()
 	wheelDelta = 0;
 	unicode = 0;
 
-	while (window->pollEvent(*event))
+	sf::Event event;
+	while (window->pollEvent(event))
 	{
-		switch (event->type)
+		switch (event.type)
 		{
-			case sf::Event::Closed:
-				closed = true;
+		case sf::Event::Closed:
+			closed = true;
 			break;
 
-			case sf::Event::MouseMoved:
-				mousePos = toVec2(sf::Mouse::getPosition(*window));
+		case sf::Event::MouseMoved:
+			mousePos = toVec2(sf::Mouse::getPosition(*window));
 			break;
 
-			case sf::Event::MouseWheelMoved:
-				wheelDelta = event->mouseWheel.delta;
+		case sf::Event::MouseWheelMoved:
+			wheelDelta = event.mouseWheel.delta;
 			break;
 
-			case sf::Event::LostFocus:
-				focus = false;
+		case sf::Event::LostFocus:
+			focus = false;
 			break;
 
-			case sf::Event::GainedFocus:
-				focus = true;
+		case sf::Event::GainedFocus:
+			focus = true;
 			break;
 
-			case sf::Event::Resized:
-				dim = vec2(event->size.width, event->size.height);
-				center = ivec2(0.5f*dim);
+		case sf::Event::Resized:
+			dim = vec2(event.size.width, event.size.height);
+			center = ivec2(0.5f*dim);
 
-				if (mode == CursorMode::Capture)
-					prevMousePos = center;
+			if (mode == CursorMode::Capture)
+				prevMousePos = center;
+			GraphicEngine::get()->updateCameraViewPort();
 			break;
 
-			case sf::Event::TextEntered:
-				unicode = event->text.unicode;
+		case sf::Event::TextEntered:
+			unicode = event.text.unicode;
 			break;
 
-			case sf::Event::MouseButtonPressed:
-			case sf::Event::MouseButtonReleased:
+		case sf::Event::MouseButtonPressed:
+		case sf::Event::MouseButtonReleased:
+			if (!mouseEvent) {
 				mouseEvent = true;
-				mouseNeedsUpdate = true;
+				mouseIndex = 1-mouseIndex;
+				mouseState[mouseIndex] = mouseState[1-mouseIndex];
+			}
+			mouseState[mouseIndex][event.mouseButton.button] = (event.type == sf::Event::MouseButtonPressed);
 			break;
 
-			case sf::Event::KeyPressed:
-			case sf::Event::KeyReleased:
+		case sf::Event::KeyPressed:
+		case sf::Event::KeyReleased:
+			if (!keyboardEvent) {
 				keyboardEvent = true;
-				keyboardNeedsUpdate = true;
+				keyboardIndex = 1-keyboardIndex;
+				keyboardState[keyboardIndex] = keyboardState[1-keyboardIndex];
+			}
+			keyboardState[keyboardIndex][event.key.code] = (event.type == sf::Event::KeyPressed);
 			break;
 
-			default: break;
+		default: break;
 		}
 	}
-
-	/// Mouse click
-	if (mouseEvent)
-	{
-		for (int i(0) ; i < sf::Mouse::ButtonCount ; i++)
-			mouseState[mouseIndex][i] = sf::Mouse::isButtonPressed( (sf::Mouse::Button)i );
-	}
-	else if (mouseNeedsUpdate)
-	{
-		mouseNeedsUpdate = false;
-		mouseState[mouseIndex] = mouseState[1-mouseIndex];
-	}
-
-	if (mouseNeedsUpdate)
-		mouseIndex = 1-mouseIndex;
-
-	/// Keyboard press
-	if (keyboardEvent)
-	{
-		for (int i(0) ; i < sf::Keyboard::KeyCount ; i++)
-			keyboardState[keyboardIndex][i] = sf::Keyboard::isKeyPressed( (sf::Keyboard::Key)i );
-	}
-	else if (keyboardNeedsUpdate)
-	{
-		keyboardNeedsUpdate = false;
-		keyboardState[keyboardIndex] = keyboardState[1-keyboardIndex];
-	}
-
-	if (keyboardNeedsUpdate)
-		keyboardIndex = 1-keyboardIndex;
-
 
 	/// Mouse move
 	delta = mousePos - prevMousePos;
@@ -220,11 +194,6 @@ CursorMode Input::getCursorMode()
 }
 
 // Window
-sf::Event* Input::getEvent()
-{
-	return event;
-}
-
 sf::RenderWindow* Input::getWindow()
 {
 	return window;

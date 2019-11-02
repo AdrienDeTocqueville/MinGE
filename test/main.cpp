@@ -31,9 +31,9 @@ void start_scene(Engine *engine, int _scene)
 		bright->specular = vec3(0.0f);
 		bright->texture = Texture::get("Textures/white.png");
 
-	Entity::create("Light", false, vec3(4, 2, 4))
+	Entity::create("Light", false, vec3(-5, 0, 0))
 		//->insert<Graphic>(Mesh::createSphere(bright, ALLFLAGS, 0.25f))
-		->insert<Light>(GE_POINT_LIGHT, vec3(0.0f), vec3(0.9f), 1.0f, 1, 0.01, 0);
+		->insert<Light>(GE_POINT_LIGHT, vec3(0.0f), vec3(0.9f), 1.0f);
 
 	scene = _scene % setups.size();
 	Input::getWindow()->setTitle("MinGE (test " + names[scene] + ")");

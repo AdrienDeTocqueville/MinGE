@@ -66,7 +66,7 @@ void AnimatedModel::loadBuffers()
 	glDeleteBuffers(1, &vbo);
 	glGenBuffers(1, &vbo);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	GL::BindVertexBuffer(vbo);
 
 		glBufferData(GL_ARRAY_BUFFER, offset[4], nullptr, GL_STATIC_DRAW);
 
@@ -99,7 +99,7 @@ void AnimatedModel::loadBuffers()
 	glGenBuffers(1, &ibo);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size()*sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size()*sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);
 }
 
 bool AnimatedModel::load_mesh_xml()

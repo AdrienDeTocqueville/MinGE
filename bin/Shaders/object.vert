@@ -8,6 +8,7 @@ layout (std140) uniform Camera
 {
 	mat4 MATRIX_VP;
 	vec4 clipPlane;
+	vec4 cameraPosition;
 };
 
 uniform mat4 MATRIX_M;

@@ -21,7 +21,7 @@ void Mesh::render(Transform* _tr, const std::vector<Material*>& _materials)
 	static bool used = false;
 	if (vao)
 	{
-		glCheck(glBindVertexArray(vao));
+		GL::BindVertexArray(vao);
 
 		for (Submesh& submesh: submeshes)
 		{
@@ -70,7 +70,7 @@ void Mesh::loadBuffers()
 	glCheck(glDeleteBuffers(1, &vbo));
 	glCheck(glGenBuffers(1, &vbo));
 
-	glCheck(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+	GL::BindVertexBuffer(vbo);
 
 		glCheck(glBufferData(GL_ARRAY_BUFFER, offset[2], nullptr, GL_STATIC_DRAW));
 
@@ -87,7 +87,7 @@ void Mesh::loadBuffers()
 	glCheck(glDeleteVertexArrays(1, &vao));
 	glCheck(glGenVertexArrays(1, &vao));
 
-	glCheck(glBindVertexArray(vao));
+	GL::BindVertexArray(vao);
 
 		if (hasVertices)
 		{

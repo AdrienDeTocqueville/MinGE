@@ -4,7 +4,6 @@
 #include <fstream>
 
 std::vector<Program*> Program::programs;
-unsigned Program::current = 0;
 
 
 Program::Program(std::string& _vertex, std::string& _fragment):
@@ -126,12 +125,7 @@ void Program::clear()
 /// Methods (public)
 void Program::use()
 {
-	if (program == current)
-		return;
-
-	current = program;
-
-	glCheck(glUseProgram(program));
+	GL::UseProgram(program);
 }
 
 GLuint Program::getLocation(const std::string& _name) const

@@ -127,7 +127,7 @@ void AABB::draw()
 	offset[1] = offset[0]+ colors.size() *sizeof(vec3);
 
 	/// VBO
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	GL::BindVertexBuffer(vbo);
 
 		glBufferData(GL_ARRAY_BUFFER, offset[1], nullptr, GL_STATIC_DRAW);
 
@@ -135,7 +135,7 @@ void AABB::draw()
 		glBufferSubData(GL_ARRAY_BUFFER, offset[0], offset[1]-offset[0], &colors[0]);
 
 	/// VAO
-	glBindVertexArray(vao);
+	GL::BindVertexArray(vao);
 
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);

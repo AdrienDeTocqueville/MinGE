@@ -7,9 +7,13 @@ in VS_FS
 	vec2 texCoord;
 } fs_in;
 
-uniform vec3 cameraPosition;
+layout (std140) uniform Camera
+{
+	mat4 MATRIX_VP;
+	vec4 clipPlane;
+	vec4 cameraPosition;
+};
 
-// Light
 layout (std140) uniform Light
 {
 	vec4 lightPosition;
@@ -21,9 +25,7 @@ layout (std140) uniform Light
 	float aQuadratic;
 };
 
-// Material
 uniform sampler2D mainTexture;
-
 layout (std140) uniform Material
 {
 	vec4 ambient;
@@ -41,7 +43,7 @@ void main()
 
 	vec3 norm = normalize(fs_in.normal);
 	vec3 lightDir = (lightPosition.xyz - fs_in.fragPos) / lightDistance;
-	vec3 viewDir = normalize(cameraPosition - fs_in.fragPos);
+	vec3 viewDir = normalize(cameraPosition.xyz - fs_in.fragPos);
 
 	//ambient
 	vec3 ambientResult = ambient.xyz * ambientCoefficient * diffuseColor.xyz * texColor;
@@ -59,5 +61,5 @@ void main()
 	//attenuation
 	float attenuation = 1.0f / (aConstant + aLinear * lightDistance + aQuadratic * lightDistance * lightDistance);
 
-	outColor = vec4(ambientResult + attenuation*(diffuseResult + specularResult), 1.0f);
+	outColor = vec4(ambientResult + attenuation*(diffuseResult + specularResult), 0.0f);
 }

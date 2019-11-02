@@ -45,7 +45,6 @@ class Program
 
 		/// Attributes (static)
 			static std::vector<Program*> programs;
-			static unsigned current;
 
 		/// Attributes
 			unsigned program;

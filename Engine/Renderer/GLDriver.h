@@ -5,6 +5,7 @@
 
 
 #ifdef DEBUG
+#include <iostream>
 // Macro and function from SFML
 #define glCheck(expr) do { expr; glCheckError(__FILE__, __LINE__, #expr); } while (false)
 void glCheckError(const char* file, unsigned int line, const char* expression);
@@ -68,6 +69,15 @@ public:
 		{
 			glCheck(glBindFramebuffer(GL_FRAMEBUFFER, buf));
 			state.fbo = buf;
+		}
+	}
+
+	static void UseProgram(GLuint prog)
+	{
+		if (prog != state.program)
+		{
+			glCheck(glUseProgram(prog));
+			state.program = prog;
 		}
 	}
 };

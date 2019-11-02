@@ -90,9 +90,6 @@ bool Engine::update()
 	Time::deltaTime = clock.restart().asSeconds() * Time::timeScale;
 	Time::time += Time::deltaTime;
 
-	if (Input::event->type == sf::Event::Resized)
-		GraphicEngine::get()->updateCameraViewPort();
-
 	/// Update events
 		Input::update();
 
@@ -151,7 +148,7 @@ bool Engine::update()
 		frames++;
 
 	Input::window->pushGLStates();
-		Program::current = 0;
+		GL::UseProgram(0);
 		Input::window->draw(text);
 	Input::window->popGLStates();
 #endif
@@ -182,6 +179,8 @@ void Engine::clear()
 	GraphicEngine::get()->clear();
 	PhysicEngine::get()->clear();
 	ScriptEngine::get()->clear();
+
+	Debug::destroy();
 
 
 #ifdef DEBUG

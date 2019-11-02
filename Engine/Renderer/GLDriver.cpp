@@ -3,6 +3,7 @@
 GL::GLState GL::state;
 
 #ifdef DEBUG
+#include <iostream>
 // https://github.com/SFML/SFML/blob/master/src/SFML/Graphics/GLCheck.cpp
 void glCheckError(const char* file, unsigned int line, const char* expression)
 {

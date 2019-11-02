@@ -31,7 +31,6 @@ class Input
 			static CursorMode getCursorMode();
 
 			// Window
-			static sf::Event* getEvent();
 			static sf::RenderWindow* getWindow();
 
 			static vec2 getWindowSize();
@@ -69,7 +68,6 @@ class Input
 
 		/// Attributes (private)
 			static sf::RenderWindow* window;
-			static sf::Event* event;
 
 			static vec2 dim, center;
 
@@ -83,7 +81,6 @@ class Input
 			static bool closed;
 
 			static int mouseIndex, keyboardIndex;
-			static bool mouseNeedsUpdate, keyboardNeedsUpdate;
 
 			static std::bitset<sf::Mouse::ButtonCount> mouseState[2];
 			static std::bitset<sf::Keyboard::KeyCount> keyboardState[2];

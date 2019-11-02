@@ -21,6 +21,7 @@ class Debug
 		/// Methods (private)
 			static void init();
 			static void update();
+			static void destroy();
 
 			static void drawLines();
 			static void drawPoints();

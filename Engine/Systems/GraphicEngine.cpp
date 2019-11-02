@@ -1,4 +1,5 @@
 #include "Systems/GraphicEngine.h"
+#include "Renderer/UBO.h"
 
 #include "Components/Graphic.h"
 #include "Components/Camera.h"
@@ -38,6 +39,8 @@ GraphicEngine::GraphicEngine()
 
 	glPointSize(7);
 	glLineWidth(3);
+
+	UBO::setupPool();
 }
 
 GraphicEngine::~GraphicEngine()
@@ -183,7 +186,6 @@ void GraphicEngine::computeMVP()
 }
 
 #include "Components/Transform.h"
-#include "Renderer/UBO.h"
 void GraphicEngine::render()
 {
 	//glEnable(GL_SCISSOR_TEST);
@@ -192,7 +194,7 @@ void GraphicEngine::render()
 	struct mat
 	{
 		vec4 a, d, s;
-		float e;
+		vec4 e;
 	};
 	struct light
 	{
@@ -206,17 +208,18 @@ void GraphicEngine::render()
 	{
 		mat4 vp;
 		vec4 clipplane;
+		vec4 pos;
 	};
 
 	static Program *p = NULL;
-	static unsigned l_block, c_block;
+	static UBO c_block;
 	if (p == NULL)
 	{
 		mat m;
 		   m.a = vec4(0.3f);
-		   m.d = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+		   m.d = vec4(1.0f);
 		   m.s = vec4(0.0f);
-		   m.e = 8.0f;
+		   m.e = vec4(8.0f);
 		light l;
 		   Light* src = GraphicEngine::get()->getLight();
 		   if (src)
@@ -230,36 +233,25 @@ void GraphicEngine::render()
 
 		int m_binding = 2, l_binding = 1, c_binding = 0;
 
-		glCheck(glGenBuffers(1, &c_block));
-		glCheck(glBindBuffer(GL_UNIFORM_BUFFER, c_block));
-		glCheck(glBufferData(GL_UNIFORM_BUFFER, sizeof(cam), NULL, GL_STATIC_DRAW));
-		glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, c_binding, c_block));
+		c_block = UBO::create(sizeof(cam));
+		GL::BindBufferRange(c_binding, c_block.res, c_block.offset, c_block.size);
 
-		glCheck(glGenBuffers(1, &l_block));
-		glCheck(glBindBuffer(GL_UNIFORM_BUFFER, l_block));
-		glCheck(glBufferData(GL_UNIFORM_BUFFER, sizeof(light), &l, GL_STATIC_DRAW));
-		glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, l_binding, l_block));
+		UBO l_block = UBO::create(sizeof(light));
+		GL::BindBufferRange(l_binding, l_block.res, l_block.offset, l_block.size);
+		memcpy(l_block.data, &l, sizeof(light));
 
-		/*
 		UBO m_block = UBO::create(sizeof(mat));
-		memcpy(m_block.data, &m, sizeof(mat));
 		GL::BindBufferRange(m_binding, m_block.res, m_block.offset, m_block.size);
-		*/
-		unsigned m_block;
-		glCheck(glGenBuffers(1, &m_block));
-		glCheck(glBindBuffer(GL_UNIFORM_BUFFER, m_block));
-		glCheck(glBufferData(GL_UNIFORM_BUFFER, sizeof(mat), &m, GL_STATIC_DRAW));
-		glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, m_binding, m_block));
+		memcpy(m_block.data, &m, sizeof(mat));
 
 		p = Program::get("object.vert", "object.frag");
 		p->bind("Camera", c_binding);
 		p->bind("Light", l_binding);
 		p->bind("Material", m_binding);
-
-		glCheck(glBindBuffer(GL_UNIFORM_BUFFER, c_block));
 	}
 
 	p->use();
+	//Texture::get("Textures/0.png")->use();
 
 	for (Camera* camera: cameras)
 	{
@@ -267,19 +259,22 @@ void GraphicEngine::render()
 		cam c;
 		   c.vp = GraphicEngine::get()->getMatrix(GE_VP);
 		   c.clipplane = camera->getClipPlane();
-		glCheck(glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(cam), &c));
+		   c.pos = vec4(camera->getPosition(), 0.0f);
+
+		GL::BindUniformBuffer(c_block.res);
+		memcpy(c_block.data, &c, sizeof(cam));
 
 		for (Graphic* graphic: graphics)
 		{
-			graphic->find<Transform>()->use();
-		{
-		   p->send(0, GraphicEngine::get()->getMatrix(GE_MODEL));
-		   //p->send(1, mat3(transpose(inverse(GraphicEngine::get()->getMatrix(GE_MODEL)))));
+			{
+				graphic->find<Transform>()->use();
+				p->send(0, GraphicEngine::get()->getMatrix(GE_MODEL));
+				p->send(1, mat3(transpose(inverse(GraphicEngine::get()->getMatrix(GE_MODEL)))));
 
-		   p->send(2, Camera::current->find<Transform>()->getToWorldSpace(vec3(0.0f)));
+				//p->send(2, Camera::current->find<Transform>()->getToWorldSpace(vec3(0.0f)));
 
-		   //p->send(3, 0);  // Texture
-		}
+				p->send(2, 0);  // Texture
+			}
 			graphic->render();
 		}
 	}
@@ -295,8 +290,8 @@ void GraphicEngine::render()
 	Debug::update();
 #endif
 
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	//GL::BindVertexBuffer(0);
+	GL::BindVertexArray(0);
 	//glDisable(GL_SCISSOR_TEST);
 }
 
