@@ -1,7 +1,5 @@
 #pragma once
 
-#include <GL/glew.h>
-
 #include <SFML/System.hpp>
 
 #include <iostream>
@@ -19,15 +17,6 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/matrix_operation.hpp>
-
-
-#ifdef DEBUG
-// Macro and function from SFML
-#define glCheck(expr) do { expr; glCheckError(__FILE__, __LINE__, #expr); } while (false)
-void glCheckError(const char* file, unsigned int line, const char* expression);
-#else
-#define glCheck(expr) expr
-#endif
 
 
 const float PI = 3.14159265358979323846f;

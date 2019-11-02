@@ -75,7 +75,7 @@ void Mesh::loadBuffers()
 		glCheck(glBufferData(GL_ARRAY_BUFFER, offset[2], nullptr, GL_STATIC_DRAW));
 
 		if (hasVertices)
-			glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0		, dataSize[0], &vertices [0]));
+			glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0        , dataSize[0], &vertices [0]));
 
 		if (hasNormals)
 			glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset[0], dataSize[1], &normals  [0]));

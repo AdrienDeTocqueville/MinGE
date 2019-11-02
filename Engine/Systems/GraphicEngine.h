@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SFML/Graphics/RenderWindow.hpp>
+#include "Renderer/GLDriver.h"
 
 #include "Utility/helpers.h"
 #include "Utility/Debug.h"

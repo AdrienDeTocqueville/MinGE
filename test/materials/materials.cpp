@@ -27,7 +27,7 @@ void test_materials()
 
 	for (int i(0); i < 41; i++)
 	for (int j(0); j < 21; j++)
-	for (int k(0); k < 3; k++)
+	for (int k(3); k >= 0; k--)
 		Entity::clone(cube, vec3(k, i-20.0f, j-10.0f), vec3(0.0f), vec3(0.5f));
 
 	// Camera

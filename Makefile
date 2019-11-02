@@ -3,7 +3,6 @@ CC = g++
 CFLAGS = #-Wall -Wextra -Werror
 
 
-#LDFLAGS := -lstdc++ -lglib-2.0 -lpthread -lm
 LDFLAGS := -lGLEW -lGLU -lGL
 LDFLAGS += -lsfml-audio -lsfml-graphics -lsfml-window -lsfml-network -lsfml-system
 

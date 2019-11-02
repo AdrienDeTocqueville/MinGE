@@ -2,6 +2,7 @@
 #define TEXTURE_H
 
 #include "Utility/helpers.h"
+#include "Renderer/GLDriver.h"
 
 class Texture
 {

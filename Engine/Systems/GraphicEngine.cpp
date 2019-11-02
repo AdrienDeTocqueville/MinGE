@@ -1,8 +1,5 @@
 #include "Systems/GraphicEngine.h"
 
-
-// 10.5ms (41 * 21 * 3 cubes)
-
 #include "Components/Graphic.h"
 #include "Components/Camera.h"
 #include "Components/Light.h"
@@ -186,6 +183,7 @@ void GraphicEngine::computeMVP()
 }
 
 #include "Components/Transform.h"
+#include "Renderer/UBO.h"
 void GraphicEngine::render()
 {
 	//glEnable(GL_SCISSOR_TEST);
@@ -211,12 +209,12 @@ void GraphicEngine::render()
 	};
 
 	static Program *p = NULL;
-	static unsigned int m_block, l_block, c_block;
+	static unsigned l_block, c_block;
 	if (p == NULL)
 	{
 		mat m;
 		   m.a = vec4(0.3f);
-		   m.d = vec4(0.8f);
+		   m.d = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		   m.s = vec4(0.0f);
 		   m.e = 8.0f;
 		light l;
@@ -242,6 +240,12 @@ void GraphicEngine::render()
 		glCheck(glBufferData(GL_UNIFORM_BUFFER, sizeof(light), &l, GL_STATIC_DRAW));
 		glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, l_binding, l_block));
 
+		/*
+		UBO m_block = UBO::create(sizeof(mat));
+		memcpy(m_block.data, &m, sizeof(mat));
+		GL::BindBufferRange(m_binding, m_block.res, m_block.offset, m_block.size);
+		*/
+		unsigned m_block;
 		glCheck(glGenBuffers(1, &m_block));
 		glCheck(glBindBuffer(GL_UNIFORM_BUFFER, m_block));
 		glCheck(glBufferData(GL_UNIFORM_BUFFER, sizeof(mat), &m, GL_STATIC_DRAW));
@@ -251,6 +255,8 @@ void GraphicEngine::render()
 		p->bind("Camera", c_binding);
 		p->bind("Light", l_binding);
 		p->bind("Material", m_binding);
+
+		glCheck(glBindBuffer(GL_UNIFORM_BUFFER, c_block));
 	}
 
 	p->use();
@@ -261,7 +267,6 @@ void GraphicEngine::render()
 		cam c;
 		   c.vp = GraphicEngine::get()->getMatrix(GE_VP);
 		   c.clipplane = camera->getClipPlane();
-		glCheck(glBindBuffer(GL_UNIFORM_BUFFER, c_block));
 		glCheck(glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(cam), &c));
 
 		for (Graphic* graphic: graphics)
