@@ -11,11 +11,8 @@ layout (std140) uniform Camera
 	vec4 cameraPosition;
 };
 
-layout (std140) uniform Object
-{
-	mat4 MATRIX_M;
-	mat4 MATRIX_N;
-};
+uniform mat4 MATRIX_M;
+uniform mat4 MATRIX_N;
 
 out VS_FS
 {

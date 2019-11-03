@@ -70,8 +70,31 @@ void Program::link()
 		return;
 	}
 
-	// Bind uniforms
+	// Parse uniforms
 
+	GLint uniform_count = 0;
+	glCheck(glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &uniform_count));
+
+	GLint name_len, real_len;
+	glCheck(glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &name_len));
+	char *temp_name = new char[name_len];
+
+	for (GLint i = 0; i < uniform_count; ++i)
+	{
+		uniforms.emplace_back();
+		Uniform& u = uniforms.back();
+
+		glCheck(glGetActiveUniform(program, i, name_len, &real_len, &u.num, &u.type, temp_name) );
+		u.location = glGetUniformLocation(program, temp_name);
+		u.name = std::string(temp_name, real_len);
+
+		// TODO: handle uniform arrays
+	}
+
+	delete temp_name;
+
+
+	/*
 	int ub_count = 0, custom_ub_count = 0;
 	glCheck(glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &ub_count));
 	blocks.reserve(ub_count);
@@ -129,6 +152,7 @@ void Program::link()
 			uniforms.emplace_back(std::move(name), indices[i], types[i], offsets[i]);
 		}
 	}
+	*/
 }
 
 /// Methods (static)
@@ -170,44 +194,9 @@ void Program::use()
 	GL::UseProgram(program);
 }
 
-/*
-void Program::send(unsigned _location, int _value) const
+const std::vector<Uniform>& Program::getUniforms() const
 {
-	glCheck(glUniform1i(locations[_location], _value));
-}
-void Program::send(unsigned _location, unsigned _value) const
-{
-	glCheck(glUniform1i(locations[_location], (int)_value));
-}
-void Program::send(unsigned _location, float _value) const
-{
-	glCheck(glUniform1f(locations[_location], _value));
-}
-void Program::send(unsigned _location, vec3 _value) const
-{
-	glCheck(glUniform3f(locations[_location], _value[0], _value[1], _value[2]));
-}
-void Program::send(unsigned _location, vec4 _value) const
-{
-	glCheck(glUniform4f(locations[_location], _value[0], _value[1], _value[2], _value[3]));
-}
-void Program::send(unsigned _location, mat3 _value) const
-{
-	glCheck(glUniformMatrix3fv(locations[_location], 1, GL_FALSE, value_ptr(_value)));
-}
-void Program::send(unsigned _location, mat4 _value) const
-{
-	glCheck(glUniformMatrix4fv(locations[_location], 1, GL_FALSE, value_ptr(_value)));
-}
-void Program::send(unsigned _location, const std::vector<mat4>& _values) const
-{
-	glCheck(glUniformMatrix4fv(locations[_location], _values.size(), GL_FALSE, value_ptr(_values[0])));
-}
-*/
-
-const std::vector<UniformBlock>& Program::getBlocks() const
-{
-	return blocks;
+	return uniforms;
 }
 
 /// Shader Class

@@ -253,6 +253,7 @@ void GraphicEngine::render()
 			}
 			*/
 			graphic->render();
+			glFinish();
 		}
 	}
 

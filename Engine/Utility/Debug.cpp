@@ -8,7 +8,7 @@ std::vector<vec3> Debug::pColors;
 std::vector<vec3> Debug::lines;
 std::vector<vec3> Debug::lColors;
 
-Program* Debug::program = nullptr;
+MaterialRef Debug::material;
 
 bool Debug::linesDepthTest = true;
 
@@ -37,7 +37,7 @@ void Debug::drawVector(vec3 _point, vec3 _vector, vec3 _color)
 static unsigned vbo = 0, vao = 0;
 void Debug::init()
 {
-	program = Program::get("debug");
+	material = Material::create("debug");
 
 	glCheck(glGenBuffers(1, &vbo));
 	glCheck(glGenVertexArrays(1, &vao));
@@ -54,11 +54,8 @@ void Debug::update()
 	if (!points.size() && !lines.size())
 		return;
 
-	GraphicEngine::get()->setMatrix(GE_MODEL, mat4(1.0f));
-	GraphicEngine::get()->computeMVP();
-
-	program->use();
-	//program->send(0, GraphicEngine::get()->getMatrix(GE_MVP));
+	material->set("MATRIX_VP", GraphicEngine::get()->getMatrix(GE_VP));
+	material->bind();
 
 	glPushAttrib(GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);

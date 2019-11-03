@@ -10,9 +10,16 @@ typedef std::shared_ptr<Material> MaterialRef;
 
 class Material
 {
+	struct Property
+	{
+		GLuint type;
+		GLuint location;
+		size_t offset;
+	};
+
 public:
 	/// Methods (static)
-	static MaterialRef create(Program *program);
+	static MaterialRef create(std::string name);
 	static MaterialRef getDefault();
 
 	/// Methods (public)
@@ -20,26 +27,32 @@ public:
 	void bind() const;
 
 	template <typename T>
-	void set(std::string name, T value)
+	inline void set(std::string name, T value)
 	{
-		auto it = uniforms.find(name);
-		if (it != uniforms.end())
-			memcpy(it->second, &value, sizeof(T));
+		auto it = property_names.find(name);
+		if (it != property_names.end())
+			set(it->second, value);
 		else
-			std::cout << "Unknown uniform" << std::endl;
+			std::cout << "Unknown uniform: " << name << std::endl;
 	}
 
-	~Material();
+	template <typename T>
+	inline void set(uint32_t prop, T value)
+	{
+		memcpy(uniforms.data() + properties[prop].offset, &value, sizeof(T));
+	}
 
 private:
 	Material(Program *_program);
 
 	Program *program;
-	std::vector<UBO> ubos;
-	std::map<std::string, uint8_t*> uniforms;
+
+	std::map<std::string, uint32_t> property_names;
+	std::vector<Property> properties;
+	std::vector<uint8_t> uniforms;
 
 	static std::weak_ptr<Material> basic;
 };
 
 template<>
-void Material::set(std::string name, Texture *value);
+void Material::set(uint32_t prop, Texture *value);

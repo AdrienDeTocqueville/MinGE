@@ -26,13 +26,10 @@ layout (std140) uniform Light
 };
 
 uniform sampler2D mainTexture;
-layout (std140) uniform Material
-{
-	vec4 ambient;
-	vec4 diffuse;
-	vec4 specular;
-	float exponent;
-};
+uniform vec3 ambient;
+uniform vec3 diffuse;
+uniform vec3 specular;
+uniform float exponent;
 
 out vec4 outColor;
 
@@ -46,17 +43,17 @@ void main()
 	vec3 viewDir = normalize(cameraPosition.xyz - fs_in.fragPos);
 
 	//ambient
-	vec3 ambientResult = ambient.xyz * ambientCoefficient * diffuseColor.xyz * texColor;
+	vec3 ambientResult = ambient * ambientCoefficient * diffuseColor.xyz * texColor;
 
 	//diffuse
 	float diffuseCoefficient = max(0.0f, dot(norm, lightDir));
-	vec3 diffuseResult = diffuse.xyz * diffuseCoefficient * diffuseColor.xyz * texColor;
+	vec3 diffuseResult = diffuse * diffuseCoefficient * diffuseColor.xyz * texColor;
 
 	//specular
 	float specularCoefficient = 0.0f;
 	if(diffuseCoefficient != 0.0f)
 		specularCoefficient = pow(max(dot(viewDir, reflect(-lightDir, norm)), 0.0f), exponent);
-	vec3 specularResult = specular.xyz * specularCoefficient * diffuseColor.xyz;
+	vec3 specularResult = specular * specularCoefficient * diffuseColor.xyz;
 
 	//attenuation
 	float attenuation = 1.0f / (aConstant + aLinear * lightDistance + aQuadratic * lightDistance * lightDistance);

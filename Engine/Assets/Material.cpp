@@ -1,27 +1,30 @@
 #include "Assets/Material.h"
+#include "Utility/Error.h"
+
+static const std::map<GLuint, uint32_t> uniform_type_size = {
+	{GL_FLOAT,	sizeof(float)},
+	{GL_FLOAT_VEC2, sizeof(vec2)},
+	{GL_FLOAT_VEC3, sizeof(vec3)},
+	{GL_FLOAT_VEC4, sizeof(vec4)},
+	{GL_FLOAT_MAT3, sizeof(mat3)},
+	{GL_FLOAT_MAT4, sizeof(mat4)},
+	{GL_SAMPLER_2D, sizeof(Texture*)},
+};
 
 std::weak_ptr<Material> Material::basic;
 
 Material::Material(Program *_program):
 	program(_program)
 {
-	// Create custom UBOs
-	for (auto block : program->getBlocks())
+	for (auto& u : program->getUniforms())
 	{
-		if (block.binding <= 1)
-			continue;
-		ubos.emplace_back(UBO::create(block.binding, block.size));
+		if (uniform_type_size.find(u.type) == uniform_type_size.end())
+			Error::add(USER_ERROR, "Unsupprted uniform type");
 
-		uint8_t *data = ubos.back().data;
-		for (auto uniform : block.uniforms)
-			uniforms.emplace(uniform.name, data + uniform.offset);
+		property_names[u.name] = properties.size();
+		properties.push_back({u.type, u.location, uniforms.size()});
+		uniforms.resize(uniforms.size() + uniform_type_size.at(u.type));
 	}
-}
-
-Material::~Material()
-{
-	for (UBO& ubo : ubos)
-		UBO::release(ubo);
 }
 
 MaterialRef Material::clone() const
@@ -32,30 +35,57 @@ MaterialRef Material::clone() const
 void Material::bind() const
 {
 	GL::UseProgram(program->program);
-	for (const UBO& ubo : ubos)
-		ubo.bind();
+	for (const Property& prop : properties)
+	{
+		const void *value = uniforms.data() + prop.offset;
+		switch (prop.type)
+		{
+		case GL_SAMPLER_2D:
+		{
+			Texture *t = *(Texture**)value;
+			t->use(0);
+			glCheck(glUniform1i(prop.location, 0));
+			break;
+		}
+		case GL_FLOAT:
+			glCheck(glUniform1f(prop.location, *(float*)value));
+			break;
+		case GL_FLOAT_VEC2:
+			glCheck(glUniform2fv(prop.location, 1, (float*)value));
+			break;
+		case GL_FLOAT_VEC3:
+			glCheck(glUniform3fv(prop.location, 1, (float*)value));
+			break;
+		case GL_FLOAT_VEC4:
+			glCheck(glUniform4fv(prop.location, 1, (float*)value));
+			break;
+		case GL_FLOAT_MAT3:
+			glCheck(glUniformMatrix3fv(prop.location, 1, GL_FALSE, (float*)value));
+			break;
+		case GL_FLOAT_MAT4:
+			glCheck(glUniformMatrix4fv(prop.location, 1, GL_FALSE, (float*)value));
+			break;
+		}
+	}
 }
 
-MaterialRef Material::create(Program *program)
+MaterialRef Material::create(std::string name)
 {
-	return std::shared_ptr<Material>(new Material(program));
+	return std::shared_ptr<Material>(new Material(Program::get(name)));
 }
 
 MaterialRef Material::getDefault()
 {
 	if (auto shared = basic.lock())
 		return shared;
-	auto shared = Material::create(Program::getDefault());
+	auto shared = std::shared_ptr<Material>(new Material(Program::getDefault()));
 	basic = shared;
 
 	return shared;
 }
 
 template<>
-void Material::set(std::string name, Texture* value)
+void Material::set(uint32_t prop, Texture *value)
 {
-	GL::UseProgram(program->program);
-	GLint loc = glGetUniformLocation(program->program, name.c_str());
-	glCheck(glUniform1i(loc, 0));
-	value->use();
+	*(Texture**)(uniforms.data() + properties[prop].offset) = value;
 }

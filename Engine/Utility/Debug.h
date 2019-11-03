@@ -1,9 +1,7 @@
-#ifndef DEBUG_H
-#define DEBUG_H
+#pragma once
 
 #include "Utility/helpers.h"
-
-class Program;
+#include "Assets/Material.h"
 
 class Debug
 {
@@ -33,9 +31,7 @@ class Debug
 			static std::vector<vec3> lines;
 			static std::vector<vec3> lColors;
 
-			static Program* program;
+			static MaterialRef material;
 
 			static bool linesDepthTest;
 };
-
-#endif // DEBUG_H
