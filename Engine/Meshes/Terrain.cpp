@@ -29,6 +29,7 @@ void Terrain::updateTree(vec3 _position)
 	tree->update( vec2(_position.x, _position.y) );
 }
 
+/*
 void Terrain::render(Transform* _tr, const std::vector<Material*>& _materials)
 {
 	glBindVertexArray(vao);
@@ -36,10 +37,12 @@ void Terrain::render(Transform* _tr, const std::vector<Material*>& _materials)
 	if (_materials[submeshes[0].material]->use(_tr))
 		tree->draw();
 }
+*/
 
 /// Methods (protected)
 bool Terrain::loadArrays()
 {
+	/*
 	std::string path("Resources/" + file);
 
 	std::ifstream field(path.c_str());
@@ -137,6 +140,7 @@ bool Terrain::loadArrays()
 		generateNormals();
 	/// Load texture coordinates array
 		generateTexCoord();
+	*/
 
 	return true;
 }

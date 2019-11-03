@@ -31,9 +31,12 @@ struct PoolBuffer
 };
 static std::vector<PoolBuffer> pool;
 
-UBO UBO::create(uint32_t size)
+UBO UBO::create(uint32_t binding, uint32_t size)
 {
 	UBO ubo;
+
+	ubo.binding = binding;
+	ubo.size = size;
 
 #ifdef DEBUG
 	if (size >= buf_size)
@@ -46,7 +49,6 @@ UBO UBO::create(uint32_t size)
 		{
 			ubo.res = buf.res;
 			ubo.offset = align(buf.used, ubo_alignment);
-			ubo.size = size;
 			ubo.data = buf.data + ubo.offset;
 
 			buf.used = ubo.offset + size;
@@ -65,6 +67,23 @@ UBO UBO::create(uint32_t size)
 	pool.emplace_back(ubo.res, size, buf_size, ubo.data, 0);
 
 	ubo.offset = 0;
-	ubo.size = size;
 	return ubo;
+}
+
+void UBO::release(UBO& ubo)
+{
+	for (size_t i = 0; i < pool.size(); i++)
+	{
+		PoolBuffer& buf = pool[i];
+		if (buf.res == ubo.res)
+		{
+			ubo.res = 0;
+			if (!(--buf.refs))
+			{
+				GL::DeleteBuffer(buf.res);
+				pool.erase(pool.begin() + i);
+			}
+			return;
+		}
+	}
 }

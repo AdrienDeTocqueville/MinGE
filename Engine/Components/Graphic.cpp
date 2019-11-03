@@ -7,36 +7,66 @@ Graphic::Graphic(Mesh* _mesh)
 	setMesh(_mesh);
 }
 
+Graphic::Graphic(Mesh* _mesh, std::vector<MaterialRef> _materials)
+{
+	setMesh(_mesh, _materials);
+}
+
 Graphic::~Graphic()
 {
-	for (Material* material: materials)
-		delete material;
-
-	materials.clear();
 }
 
 /// Methods (public)
 Graphic* Graphic::clone() const
 {
-	return new Graphic(mesh);
+	return new Graphic(mesh, materials);
 }
 
 void Graphic::render()
 {
-	if (mesh != nullptr)
-		mesh->render(tr, materials);
+	if (mesh == nullptr)
+		return;
+
+	GL::BindVertexArray(mesh->vao);
+	for (int i(0); i < materials.size(); i++)
+	{
+		const MaterialRef& material = materials[i];
+		const Submesh& submesh = mesh->submeshes[i];
+
+		tr->use();
+		material->bind();
+		material->set("MATRIX_M", tr->toWorldSpace);
+		material->set("MATRIX_N", tr->toWorldSpace);
+		submesh.draw();
+	}
 }
 
 /// Setters
 void Graphic::setMesh(Mesh* _mesh)
 {
 	mesh = _mesh;
+	materials.clear();
 
 	if (mesh == nullptr)
 		return;
 
-	for (Material* material: mesh->materials)
-		materials.push_back(material->clone());
+	for (int i(0); i < mesh->submeshes.size(); i++)
+		materials.emplace_back(Material::getDefault());
+}
+
+void Graphic::setMesh(Mesh* _mesh, std::vector<MaterialRef> _materials)
+{
+	mesh = _mesh;
+	materials.clear();
+
+	if (mesh == nullptr)
+		return;
+
+	if (_materials.size() != mesh->submeshes.size())
+		Error::add(USER_ERROR, "Wrong material count");
+
+	for (auto mat : _materials)
+		materials.emplace_back(mat);
 }
 
 /// Getters
@@ -75,12 +105,7 @@ AABB Graphic::getAABB() const
 	return box;
 }
 
-Material* Graphic::getMaterial(unsigned _index) const
-{
-	return materials[_index];
-}
-
-const std::vector<Material*>& Graphic::getMaterials() const
+const std::vector<MaterialRef>& Graphic::getMaterials() const
 {
 	return materials;
 }
@@ -88,18 +113,22 @@ const std::vector<Material*>& Graphic::getMaterials() const
 /// Methods (private)
 void Graphic::onRegister()
 {
+	/*
 	Animator* a = find<Animator>();
 	if (a != nullptr)
 		a->setGraphic(this);
+	*/
 
 	GraphicEngine::get()->addGraphic(this);
 }
 
 void Graphic::onDeregister()
 {
+	/*
 	Animator* a = find<Animator>();
 	if (a != nullptr)
 		a->setGraphic(nullptr);
+	*/
 
 	GraphicEngine::get()->removeGraphic(this);
 }

@@ -39,9 +39,10 @@ public:
 			state.ubo = buf;
 		}
 	}
-	static void BindBufferRange(GLuint index, GLuint buf, GLintptr offset, GLsizeiptr size)
+
+	static void BindBufferRange(GLuint binding, GLuint buf, GLintptr offset, GLsizeiptr size)
 	{
-		glCheck(glBindBufferRange(GL_UNIFORM_BUFFER, index, buf, offset, size));
+		glCheck(glBindBufferRange(GL_UNIFORM_BUFFER, binding, buf, offset, size));
 		state.ubo = buf;
 	}
 
@@ -79,5 +80,14 @@ public:
 			glCheck(glUseProgram(prog));
 			state.program = prog;
 		}
+	}
+
+	static void DeleteBuffer(GLuint buf)
+	{
+		glCheck(glDeleteBuffers(1, &buf));
+		if (state.ubo == buf)
+			state.ubo = 0;
+		else if (state.vbo == buf)
+			state.vbo = 0;
 	}
 };

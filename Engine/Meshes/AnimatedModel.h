@@ -1,8 +1,8 @@
-#ifndef ANIMATEDMODEL_H
-#define ANIMATEDMODEL_H
+#pragma once
 
 #include "Assets/Mesh.h"
 
+/*
 class AnimatedModel : public Mesh
 {
 	friend class Animator;
@@ -90,5 +90,4 @@ class AnimatedModel : public Mesh
 	private:
 		void computeMatrix(Bone* _bone);
 };
-
-#endif // ANIMATEDMODEL_H
+*/

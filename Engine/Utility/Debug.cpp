@@ -37,7 +37,7 @@ void Debug::drawVector(vec3 _point, vec3 _vector, vec3 _color)
 static unsigned vbo = 0, vao = 0;
 void Debug::init()
 {
-	program = Program::get("debug.vert", "debug.frag");
+	program = Program::get("debug");
 
 	glCheck(glGenBuffers(1, &vbo));
 	glCheck(glGenVertexArrays(1, &vao));
@@ -58,7 +58,7 @@ void Debug::update()
 	GraphicEngine::get()->computeMVP();
 
 	program->use();
-	program->send(0, GraphicEngine::get()->getMatrix(GE_MVP));
+	//program->send(0, GraphicEngine::get()->getMatrix(GE_MVP));
 
 	glPushAttrib(GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);

@@ -21,15 +21,14 @@ std::vector<std::string> names = {"physic", "bvh", "materials"};
 
 void start_scene(Engine *engine, int _scene)
 {
-	Material::base = new ModelMaterial("baseMaterial", "Textures/0.png");
 	PhysicMaterial::base = new PhysicMaterial("baseMaterial");
 
 	// Light source
-	ModelMaterial* bright = new ModelMaterial("bright");
-		bright->ambient = vec3(10.0f/4.0f);
-		bright->diffuse = vec3(0.0f);
-		bright->specular = vec3(0.0f);
-		bright->texture = Texture::get("Textures/white.png");
+	//Material* bright = Material::getDefault();
+	//	bright->ambient = vec3(10.0f/4.0f);
+	//	bright->diffuse = vec3(0.0f);
+	//	bright->specular = vec3(0.0f);
+	//	bright->texture = Texture::get("Textures/white.png");
 
 	Entity::create("Light", false, vec3(-5, 0, 0))
 		//->insert<Graphic>(Mesh::createSphere(bright, ALLFLAGS, 0.25f))

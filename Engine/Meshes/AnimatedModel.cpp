@@ -4,6 +4,7 @@
 
 #include <fstream>
 
+/*
 #define VEC3_XML(e) vec3(e->FloatAttribute("x"), e->FloatAttribute("y"), e->FloatAttribute("z"))
 
 using namespace tinyxml2;
@@ -465,3 +466,4 @@ void AnimatedModel::computeMatrix(Bone* _bone)
 	for (unsigned i(0) ; i < _bone->children.size() ; i++)
 		computeMatrix( &bones[_bone->children[i]] );
 }
+*/

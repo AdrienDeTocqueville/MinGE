@@ -2,6 +2,7 @@
 #include "Entity.h"
 
 #include "Assets/PhysicMaterial.h"
+#include "Assets/Texture.h"
 #include "Assets/Program.h"
 #include "Assets/Mesh.h"
 
@@ -168,9 +169,6 @@ void Engine::clear()
 	std::cout << "done" << std::endl;
 
 	std::cout << "Textures: "; Texture::clear();
-	std::cout << "done" << std::endl;
-
-	std::cout << "Materials: "; Material::clear();
 	std::cout << "done" << std::endl;
 
 	std::cout << "Physic materials: "; PhysicMaterial::clear();

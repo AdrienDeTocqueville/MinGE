@@ -21,6 +21,7 @@ Model::~Model()
 /// Methods (protected)
 bool Model::load_obj()
 {
+	/*
 	std::string path = "Resources/" + file;
 	std::ifstream wavefront((path).c_str());
 
@@ -121,12 +122,14 @@ bool Model::load_obj()
 	}
 
 	submeshes.back().count = vertices.size() - submeshes.back().first;
+	*/
 
 	return true;
 }
 
 bool Model::load_mtl(std::string _path)
 {
+	/*
 	std::ifstream mtl(_path.c_str());
 
 	if (!mtl)
@@ -180,6 +183,7 @@ bool Model::load_mtl(std::string _path)
 			mat->texture = Texture::get(line);
 		}
 	}
+	*/
 
 	return true;
 }

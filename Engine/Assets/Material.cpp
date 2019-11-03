@@ -1,183 +1,61 @@
 #include "Assets/Material.h"
 
-#include "Components/Light.h"
-#include "Components/Camera.h"
-#include "Components/Transform.h"
+std::weak_ptr<Material> Material::basic;
 
-#include "Systems/GraphicEngine.h"
-
-std::vector<Material*> Material::materials;
-Material* Material::base = nullptr;
-
-Material::Material(std::string _name):
-	name(_name)
+Material::Material(Program *_program):
+	program(_program)
 {
-	materials.push_back(this);
-}
-
-void Material::clear()
-{
-	for (unsigned i(0) ; i < materials.size() ; i++)
-	   delete materials[i];
-
-	materials.clear();
-}
-/// ModelMaterial
-bool ModelMaterial::use(Transform* _tr)
-{
-	unsigned _target = GraphicEngine::renderTarget;
-
-	_tr->use();
-
-	programs[_target]->use();
-
-	if (_target == GE_DEPTH_COLOR)
+	// Create custom UBOs
+	for (auto block : program->getBlocks())
 	{
-	   programs[_target]->send(0, GraphicEngine::get()->getMatrix(GE_MVP));
-	   programs[_target]->send(1, GraphicEngine::get()->getMatrix(GE_MODEL));
-	   programs[_target]->send(2, mat3(transpose(inverse(GraphicEngine::get()->getMatrix(GE_MODEL)))));
+		if (block.binding <= 1)
+			continue;
+		ubos.emplace_back(UBO::create(block.binding, block.size));
 
-	   programs[_target]->send(3, Camera::current->getClipPlane());
-	   programs[_target]->send(4, Camera::current->find<Transform>()->getToWorldSpace(vec3(0.0f)));
-
-	   Light* light = GraphicEngine::get()->getLight();
-	   if (light)
-	   {
-		  vec3 attenuation(light->getAttenuation());
-
-		  programs[_target]->send(5, light->getPosition());
-		  programs[_target]->send(6, light->getDiffuseColor());
-		  programs[_target]->send(7, light->getAmbientCoefficient());
-
-		  programs[_target]->send(8, attenuation.x);
-		  programs[_target]->send(9, attenuation.y);
-		  programs[_target]->send(10, attenuation.z);
-	   }
-
-	   programs[_target]->send(11, 0);  // Texture
-
-	   programs[_target]->send(12, ambient);
-	   programs[_target]->send(13, diffuse);
-	   programs[_target]->send(14, specular);
-	   programs[_target]->send(15, exponent);
-
-	   texture->use();
+		uint8_t *data = ubos.back().data;
+		for (auto uniform : block.uniforms)
+			uniforms.emplace(uniform.name, data + uniform.offset);
 	}
-	else if (_target == GE_DEPTH)
-	   programs[_target]->send(0, GraphicEngine::get()->getMatrix(GE_MVP));
-
-	return true;
 }
 
-bool AnimatedModelMaterial::use(Transform* _tr)
+Material::~Material()
 {
-	unsigned _target = GraphicEngine::renderTarget;
-
-	_tr->use();
-
-	programs[_target]->use();
-
-	if (_target == GE_DEPTH_COLOR)
-	{
-	   programs[_target]->send(0, GraphicEngine::get()->getMatrix(GE_VP));
-	   programs[_target]->send(1, Camera::current->getClipPlane());
-
-	   if (matrices != nullptr)
-		  programs[_target]->send(2, *matrices);
-
-	   programs[_target]->send(3, Camera::current->find<Transform>()->getToWorldSpace(vec3(0.0f)));
-
-	   Light* light = GraphicEngine::get()->getLight();
-	   if (light)
-	   {
-		  vec3 attenuation(light->getAttenuation());
-
-		  programs[_target]->send(4, light->getPosition());
-		  programs[_target]->send(5, light->getDiffuseColor());
-		  programs[_target]->send(6, light->getAmbientCoefficient());
-
-		  programs[_target]->send(7, attenuation.x);
-		  programs[_target]->send(8, attenuation.y);
-		  programs[_target]->send(9, attenuation.z);
-	   }
-
-	   programs[_target]->send(10, 0);  // Texture
-
-	   programs[_target]->send(11, ambient);
-	   programs[_target]->send(12, diffuse);
-	   programs[_target]->send(13, specular);
-	   programs[_target]->send(14, exponent);
-
-	   texture->use();
-	}
-	else if (_target == GE_DEPTH)
-	   programs[_target]->send(0, GraphicEngine::get()->getMatrix(GE_MVP));
-
-	return true;
+	for (UBO& ubo : ubos)
+		UBO::release(ubo);
 }
 
-/// TerrainMaterial
-bool TerrainMaterial::use(Transform* _tr)
+MaterialRef Material::clone() const
 {
-	unsigned _target = GraphicEngine::renderTarget;
-
-	_tr->use();
-
-	programs[_target]->use();
-
-	if (_target == GE_DEPTH_COLOR)
-	{
-	   programs[_target]->send(0, GraphicEngine::get()->getMatrix(GE_MVP));
-	   programs[_target]->send(1, GraphicEngine::get()->getMatrix(GE_MODEL));
-	   programs[_target]->send(2, mat3(transpose(inverse(GraphicEngine::get()->getMatrix(GE_MODEL)))));
-
-	   programs[_target]->send(3, Camera::current->getClipPlane());
-
-	   programs[_target]->send(4, side);
-	   programs[_target]->send(5, detailScale);
-
-	   for (int i(TEX_COUNT-1) ; i >= 0 ; i--) // /!\ int because i is going to be negative
-	   {
-		  programs[_target]->send(i+6, i+2);
-
-		  textures[i]->use(i+2);
-	   }
-	   glCheck(glActiveTexture(GL_TEXTURE0));
-	}
-	else if (_target == GE_DEPTH)
-	   programs[_target]->send(0, GraphicEngine::get()->getMatrix(GE_MVP));
-
-	return true;
+	return std::shared_ptr<Material>(new Material(program));
 }
 
-/// SkyboxMaterial
-bool SkyboxMaterial::use(Transform* _tr)
+void Material::bind() const
 {
-	if (GraphicEngine::renderTarget == GE_DEPTH)
-	   return false;
-
-	_tr->use();
-
-	programs[0]->use();
-
-	   programs[0]->send(0, GraphicEngine::get()->getMatrix(GE_MVP));
-
-	return true;
+	GL::UseProgram(program->program);
+	for (const UBO& ubo : ubos)
+		ubo.bind();
 }
 
-/// GUIMaterial
-bool GUIMaterial::use(Transform* _tr)
+MaterialRef Material::create(Program *program)
 {
-	if (GraphicEngine::renderTarget == GE_DEPTH || texture == nullptr || Camera::current != Camera::main)
-	   return false;
+	return std::shared_ptr<Material>(new Material(program));
+}
 
-	_tr->use();
+MaterialRef Material::getDefault()
+{
+	if (auto shared = basic.lock())
+		return shared;
+	auto shared = Material::create(Program::getDefault());
+	basic = shared;
 
-	programs[0]->use();
+	return shared;
+}
 
-	   programs[0]->send(0, GraphicEngine::get()->getMatrix(GE_MODEL));
-	   programs[0]->send(1, 0);
-	   texture->use();
-
-	return true;
+template<>
+void Material::set(std::string name, Texture* value)
+{
+	GL::UseProgram(program->program);
+	GLint loc = glGetUniformLocation(program->program, name.c_str());
+	glCheck(glUniform1i(loc, 0));
+	value->use();
 }

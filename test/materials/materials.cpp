@@ -34,4 +34,11 @@ void test_materials()
 	Entity::create("MainCamera", false, vec3(-25.0f, 0.0f, 0.0f))
 		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
 		->insert<CameraScript>(nullptr, 0.2f, 7.0f);
+
+	MaterialRef m = Material::getDefault();
+		m->set("ambient", vec4(0.3f));
+		m->set("diffuse", vec4(1.0f));
+		m->set("specular", vec4(0.0f));
+		m->set("exponent", 8.0f);
+		m->set("mainTexture", Texture::get("Textures/white.png"));
 }

@@ -4,7 +4,7 @@
 
 Skybox::Skybox()
 {
-	sky = Mesh::createCube(new SkyboxMaterial("leCiel"));
+	//sky = Mesh::createCube(new SkyboxMaterial("leCiel"));
 }
 
 Skybox::~Skybox()
@@ -26,7 +26,7 @@ void Skybox::render()
 		glCullFace(GL_FRONT);
 		glDisable(GL_DEPTH_TEST);
 
-		sky->render(tr, sky->getMaterials());
+		//sky->render(tr, sky->getMaterials());
 
 	glPopAttrib();
 	glPopAttrib();

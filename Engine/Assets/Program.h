@@ -1,85 +1,91 @@
-#ifndef PROGRAM_H
-#define PROGRAM_H
+#pragma once
 
 #include "Utility/helpers.h"
+
 #include "Renderer/GLDriver.h"
+
+struct Uniform
+{
+	std::string name;
+	GLuint index;
+	GLint type;
+	GLint offset;
+
+	Uniform(std::string&& _name, GLuint i, GLint t, GLint o):
+	name(_name), index(i), type(t), offset(o) {}
+};
+
+struct UniformBlock
+{
+	std::string name;
+	unsigned binding, index;
+	std::vector<Uniform> uniforms;
+	int size;
+
+	UniformBlock(std::string&& _name, unsigned b, unsigned i, int s):
+	name(_name), binding(b), index(i), size(s) {}
+};
 
 class Program
 {
-	class Shader;
+	friend class Material;
 
-	friend class Engine;
-	friend class GraphicEngine;
+public:
+	/// Methods (static)
+	static Program* get(std::string _name);
+	static Program* getDefault();
+	static void clear();
 
-	public:
-		Program(std::string& _vertex, std::string& _fragment);
-		Program(Shader* _vertex, Shader* _fragment);
+	/// Methods (public)
+	void use();
 
-		/// Methods (static)
-			static Program* get(std::string _vertex, std::string _fragment);
-			static void clear();
+	/*
+	void send(unsigned _location, int _value) const;
+	void send(unsigned _location, unsigned _value) const;
+	void send(unsigned _location, float _value) const;
+	void send(unsigned _location, vec3 _value) const;
+	void send(unsigned _location, vec4 _value) const;
+	void send(unsigned _location, mat3 _value) const;
+	void send(unsigned _location, mat4 _value) const;
+	void send(unsigned _location, const std::vector<mat4>& _values) const;
+	*/
 
-		/// Methods (public)
-			void use();
+	const std::vector<UniformBlock>& getBlocks() const;
 
-			unsigned getLocation(const std::string& _name) const;
-			void addLocation(unsigned _location);
+private:
+	/// Methods (private)
+	Program(std::string _name);
+	~Program();
 
-			void send(unsigned _location, int _value) const;
-			void send(unsigned _location, unsigned _value) const;
-			void send(unsigned _location, float _value) const;
-			void send(unsigned _location, vec3 _value) const;
-			void send(unsigned _location, vec4 _value) const;
-			void send(unsigned _location, mat3 _value) const;
-			void send(unsigned _location, mat4 _value) const;
-			void send(unsigned _location, const std::vector<mat4>& _values) const;
+	void link();
 
-			void bind(std::string name, GLuint binding) const;
+	/// Attributes (static)
+	static std::map<std::string, Program*> programs;
 
-	private:
-		/// Destructor (private)
-			~Program();
+	/// Attributes
+	struct Shader;
+	Shader *vertex, *fragment;
 
-		/// Methods (private)
-			void linkProgram();
+	unsigned program;
+	std::string name;
 
-		/// Attributes (static)
-			static std::vector<Program*> programs;
-
-		/// Attributes
-			unsigned program;
-
-			std::vector<unsigned> locations;
-
-			Shader *vertex, *fragment;
-
-			class Shader
-			{
-				friend class Program;
-
-				public:
-					static Shader* get(std::string& _shader);
-					static void clear();
-				private:
-					static Shader* load(std::string& _shader);
-
-					static std::unordered_map<std::string, Shader*> shaders;
-					static std::unordered_map<std::string, Shader*>::iterator it;
-
-					Shader(unsigned _shader): shader(_shader)
-					{ }
-
-					~Shader()
-					{
-						glDeleteShader(shader);
-					}
-
-					unsigned shader;
-					std::vector<std::string> uniforms;
+	std::vector<UniformBlock> blocks;
 
 
-					std::string getVarName(std::string str);
-			};
+	struct Shader
+	{
+		static Shader* get(GLuint type, std::string shader);
+		static Shader* load(GLuint type, std::string& _shader);
+		static void clear();
+
+		Shader(unsigned _shader): shader(_shader)
+		{ }
+
+		~Shader()
+		{ glDeleteShader(shader); }
+
+		unsigned shader;
+
+		static std::unordered_map<std::string, Shader*> shaders;
+	};
 };
-
-#endif // PROGRAM_H

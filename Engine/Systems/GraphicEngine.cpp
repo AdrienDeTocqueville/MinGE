@@ -191,11 +191,6 @@ void GraphicEngine::render()
 	//glEnable(GL_SCISSOR_TEST);
 	//glBindVertexArray(0);
 	
-	struct mat
-	{
-		vec4 a, d, s;
-		vec4 e;
-	};
 	struct light
 	{
 		vec4 lightPosition;
@@ -211,15 +206,9 @@ void GraphicEngine::render()
 		vec4 pos;
 	};
 
-	static Program *p = NULL;
 	static UBO c_block;
-	if (p == NULL)
+	if (c_block.res == 0)
 	{
-		mat m;
-		   m.a = vec4(0.3f);
-		   m.d = vec4(1.0f);
-		   m.s = vec4(0.0f);
-		   m.e = vec4(8.0f);
 		light l;
 		   Light* src = GraphicEngine::get()->getLight();
 		   if (src)
@@ -231,27 +220,13 @@ void GraphicEngine::render()
 		   }
 
 
-		int m_binding = 2, l_binding = 1, c_binding = 0;
+		c_block = UBO::create(0, sizeof(cam));
+		c_block.bind();
 
-		c_block = UBO::create(sizeof(cam));
-		GL::BindBufferRange(c_binding, c_block.res, c_block.offset, c_block.size);
-
-		UBO l_block = UBO::create(sizeof(light));
-		GL::BindBufferRange(l_binding, l_block.res, l_block.offset, l_block.size);
+		UBO l_block = UBO::create(1, sizeof(light));
+		l_block.bind();
 		memcpy(l_block.data, &l, sizeof(light));
-
-		UBO m_block = UBO::create(sizeof(mat));
-		GL::BindBufferRange(m_binding, m_block.res, m_block.offset, m_block.size);
-		memcpy(m_block.data, &m, sizeof(mat));
-
-		p = Program::get("object.vert", "object.frag");
-		p->bind("Camera", c_binding);
-		p->bind("Light", l_binding);
-		p->bind("Material", m_binding);
 	}
-
-	p->use();
-	//Texture::get("Textures/0.png")->use();
 
 	for (Camera* camera: cameras)
 	{
@@ -266,6 +241,7 @@ void GraphicEngine::render()
 
 		for (Graphic* graphic: graphics)
 		{
+			/*
 			{
 				graphic->find<Transform>()->use();
 				p->send(0, GraphicEngine::get()->getMatrix(GE_MODEL));
@@ -275,6 +251,7 @@ void GraphicEngine::render()
 
 				p->send(2, 0);  // Texture
 			}
+			*/
 			graphic->render();
 		}
 	}

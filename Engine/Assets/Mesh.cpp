@@ -2,6 +2,11 @@
 
 std::list<Mesh*> Mesh::meshes;
 
+void Submesh::draw() const
+{
+	glCheck(glDrawArrays(mode, first, count));
+}
+
 Mesh::Mesh(unsigned _dataFlags):
 	vbo(0), vao(0),
 	dataFlags(_dataFlags)
@@ -16,27 +21,6 @@ Mesh::~Mesh()
 }
 
 /// Methods (public)
-void Mesh::render(Transform* _tr, const std::vector<Material*>& _materials)
-{
-	static bool used = false;
-	if (vao)
-	{
-		GL::BindVertexArray(vao);
-
-		for (Submesh& submesh: submeshes)
-		{
-			/*
-			if (!used)
-			{
-				_materials[submesh.material]->use(_tr);
-				used = true;
-			}*/
-			//if (_materials[submesh.material]->use(_tr))
-				glCheck(glDrawArrays(submesh.mode, submesh.first, submesh.count));
-		}
-	}
-}
-
 void Mesh::destroy()
 {
 	meshes.remove(this);
@@ -108,28 +92,11 @@ void Mesh::loadBuffers()
 		}
 }
 
-/// Getter
-unsigned Mesh::getMaterialIndex(std::string _name) const
-{
-	for (unsigned i(0) ; i < materials.size() ; i++)
-		if (materials[i]->name == _name)
-			return i;
-
-	return -1;
-}
-
-const std::vector<Material*>& Mesh::getMaterials() const
-{
-	return materials;
-}
-
 /// Methods (static)
-Mesh* Mesh::createCube(Material* _material, unsigned _dataFlags, vec3 _halfExtent)
+Mesh* Mesh::createCube(unsigned _dataFlags, vec3 _halfExtent)
 {
 	const vec3& e = _halfExtent;
 	Mesh* m = new Mesh(_dataFlags);
-
-		m->materials.push_back(_material);
 
 		m->vertices =
 		{
@@ -167,19 +134,17 @@ Mesh* Mesh::createCube(Material* _material, unsigned _dataFlags, vec3 _halfExten
 			vec2(1, 0), vec2(0, 0), vec2(0, 1), vec2(1, 1)
 		};
 
-		m->submeshes.push_back(Submesh(GL_QUADS, 0, m->vertices.size(), 0));
+		m->submeshes.push_back(Submesh(GL_QUADS, 0, m->vertices.size()));
 
 	m->loadBuffers();
 
 	return m;
 }
 
-Mesh* Mesh::createQuad(Material* _material, unsigned _dataFlags, vec2 _halfExtent)
+Mesh* Mesh::createQuad(unsigned _dataFlags, vec2 _halfExtent)
 {
 	const vec2& e = _halfExtent;
 	Mesh* m = new Mesh(_dataFlags);
-
-		m->materials.push_back(_material);
 
 		m->vertices = { vec3(-e.x, -e.y, 0), vec3(e.x, -e.y, 0), vec3(e.x, e.y, 0), vec3(-e.x, e.y, 0) };
 
@@ -187,18 +152,16 @@ Mesh* Mesh::createQuad(Material* _material, unsigned _dataFlags, vec2 _halfExten
 
 		m->texCoords = { vec2(0, 0), vec2(1, 0), vec2(1, 1), vec2(0, 1) };
 
-		m->submeshes.push_back(Submesh(GL_QUADS, 0, m->vertices.size(), 0));
+		m->submeshes.push_back(Submesh(GL_QUADS, 0, m->vertices.size()));
 
 	m->loadBuffers();
 
 	return m;
 }
 
-Mesh* Mesh::createSphere(Material* _material, unsigned _dataFlags, float _radius, unsigned _slices, unsigned _stacks)
+Mesh* Mesh::createSphere(unsigned _dataFlags, float _radius, unsigned _slices, unsigned _stacks)
 {
 	Mesh* m = new Mesh(_dataFlags);
-
-		m->materials.push_back(_material);
 
 		const float iStacks = 1.0f/(float)(_stacks-1);
 		const float iSlices = 1.0f/(float)(_slices-1);
@@ -253,18 +216,16 @@ Mesh* Mesh::createSphere(Material* _material, unsigned _dataFlags, float _radius
 			}
 		}
 
-		m->submeshes.push_back(Submesh(GL_QUADS, 0, m->vertices.size(), 0));
+		m->submeshes.push_back(Submesh(GL_QUADS, 0, m->vertices.size()));
 
 	m->loadBuffers();
 
 	return m;
 }
 
-Mesh* Mesh::createCylinder(Material* _material, unsigned _dataFlags, float _base, float _top, float _height, unsigned _slices)
+Mesh* Mesh::createCylinder(unsigned _dataFlags, float _base, float _top, float _height, unsigned _slices)
 {
 	Mesh* m = new Mesh(_dataFlags);
-
-		m->materials.push_back(_material);
 
 		const float iSlices = 1/((float)_slices);
 
@@ -346,7 +307,7 @@ Mesh* Mesh::createCylinder(Material* _material, unsigned _dataFlags, float _base
 			m->texCoords.push_back(vec2(0.0f));
 		}
 
-		m->submeshes.push_back(Submesh(GL_TRIANGLES, 0, m->vertices.size(), 0));
+		m->submeshes.push_back(Submesh(GL_TRIANGLES, 0, m->vertices.size()));
 
 	m->loadBuffers();
 

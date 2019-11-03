@@ -4,6 +4,7 @@
 
 #include "Utility/Time.h"
 
+/*
 Animator::Animator():
 	model(nullptr), current(nullptr)
 { }
@@ -169,3 +170,4 @@ void Animator::setGraphic(Graphic* _graphic)
 
 	matrices.resize(bones.size());
 }
+*/

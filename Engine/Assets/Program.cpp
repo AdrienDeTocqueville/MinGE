@@ -3,36 +3,21 @@
 
 #include <fstream>
 
-std::vector<Program*> Program::programs;
+std::map<std::string, Program*> Program::programs;
 
 
-Program::Program(std::string& _vertex, std::string& _fragment):
+Program::Program(std::string _name):
 	program(0),
+	name(_name),
 	vertex(nullptr), fragment(nullptr)
 {
-	if (!_vertex.empty())
-	{
-		vertex = Shader::get(_vertex);
-		if (vertex == nullptr)	return;
-	}
+	if (!(vertex = Shader::get(GL_VERTEX_SHADER, _name + ".vert")))
+		return;
 
-	if (!_fragment.empty())
-	{
-		fragment = Shader::get(_fragment);
-		if (fragment == nullptr)	return;
-	}
+	if (!(fragment = Shader::get(GL_FRAGMENT_SHADER, _name + ".frag")))
+		return;
 
-	linkProgram();
-
-	programs.push_back(this);
-}
-
-Program::Program(Shader* _vertex, Shader* _fragment):
-	vertex(_vertex), fragment(_fragment)
-{
-	linkProgram();
-
-	programs.push_back(this);
+	link();
 }
 
 /// Destructor (private)
@@ -42,7 +27,7 @@ Program::~Program()
 }
 
 /// Methods (private)
-void Program::linkProgram()
+void Program::link()
 {
 	program = glCreateProgram();
 
@@ -65,7 +50,7 @@ void Program::linkProgram()
 	GLint succes(0);
 	glCheck(glGetProgramiv(program, GL_LINK_STATUS, &succes));
 
-	if(succes != GL_TRUE)
+	if (succes != GL_TRUE)
 	{
 		GLint stringSize(0);
 		glCheck(glGetProgramiv(program, GL_INFO_LOG_LENGTH, &stringSize));
@@ -80,44 +65,101 @@ void Program::linkProgram()
 
 		delete[] error;
 		glCheck(glDeleteProgram(program));
+		program = 0;
 
 		return;
 	}
 
-	if (vertex)
-		for (unsigned i(0) ; i < vertex->uniforms.size() ; ++i)
-			addLocation(getLocation(vertex->uniforms[i]));
+	// Bind uniforms
 
-	if (fragment)
-		for (unsigned i(0) ; i < fragment->uniforms.size() ; ++i)
-			addLocation(getLocation(fragment->uniforms[i]));
+	int ub_count = 0, custom_ub_count = 0;
+	glCheck(glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &ub_count));
+	blocks.reserve(ub_count);
+
+	for (int i = 0; i < ub_count; ++i)
+	{
+		const int MAX_NAME_LENGTH = 255;
+		char c_name[MAX_NAME_LENGTH];
+		int name_len;
+		glCheck(glGetActiveUniformBlockName(program, (GLuint)i, MAX_NAME_LENGTH, &name_len, c_name));
+		std::string name(c_name, name_len);
+
+		// Find binding slot
+		static const std::map<std::string, unsigned> bindings = {
+			{"Camera", 0},
+			{"Light", 1},
+		};
+
+		unsigned binding;
+		auto it = bindings.find(name);
+		if (it != bindings.end())
+			binding = it->second;
+		else
+			binding = bindings.size() + (custom_ub_count++);
+
+		// Bind uniform block
+		unsigned index = glGetUniformBlockIndex(program, c_name);
+		glUniformBlockBinding(program, index, binding);
+
+		// Keep track of the block
+		int size;
+		glGetActiveUniformBlockiv(program, index, GL_UNIFORM_BLOCK_DATA_SIZE, &size);
+
+		blocks.emplace_back(std::move(name), binding, index, size);
+
+		// Query block content
+		int uniform_count;
+		glGetActiveUniformBlockiv(program, index, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &uniform_count);
+
+		std::vector<GLuint> indices(uniform_count);
+		glGetActiveUniformBlockiv(program, index, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, (GLint*)indices.data());
+
+		std::vector<GLint> types(uniform_count);
+		glGetActiveUniformsiv(program, uniform_count, indices.data(), GL_UNIFORM_TYPE, types.data());
+
+		std::vector<GLint> offsets(uniform_count);
+		glGetActiveUniformsiv(program, uniform_count, indices.data(), GL_UNIFORM_OFFSET, offsets.data());
+
+		auto& uniforms = blocks.back().uniforms;
+		for (int i = 0; i < uniform_count; ++i)
+		{
+			glGetActiveUniformName(program, indices[i], MAX_NAME_LENGTH, &name_len, c_name);
+			name = std::string(c_name, name_len);
+
+			uniforms.emplace_back(std::move(name), indices[i], types[i], offsets[i]);
+		}
+	}
 }
 
 /// Methods (static)
-Program* Program::get(std::string _vertex, std::string _fragment)
+Program* Program::get(std::string _name)
 {
-	Shader *vertex = nullptr, *fragment = nullptr;
+	auto it = programs.find(_name);
+	if (it != programs.end())
+		return it->second;
 
-	if (!_vertex.empty())
-		vertex = Shader::get(_vertex);
+	Program *prgm = new Program(_name);
+	if (!prgm->program)
+	{
+		delete prgm;
+		return nullptr;
+	}
 
-	if (!_fragment.empty())
-		fragment = Shader::get(_fragment);
+	programs.emplace(_name, prgm);
+	return prgm;
+}
 
-
-	for (unsigned i(0) ; i < programs.size() ; i++)
-		if (programs[i]->vertex->shader == vertex->shader && programs[i]->fragment->shader == fragment->shader)
-			return programs[i];
-
-	return new Program(vertex, fragment);
+Program* Program::getDefault()
+{
+	return Program::get("object");
 }
 
 void Program::clear()
 {
 	Shader::clear();
 
-	for (unsigned i(0) ; i < programs.size() ; ++i)
-		delete programs[i];
+	for (auto& entry: programs)
+		delete entry.second;
 
 	programs.clear();
 }
@@ -128,21 +170,7 @@ void Program::use()
 	GL::UseProgram(program);
 }
 
-GLuint Program::getLocation(const std::string& _name) const
-{
-	GLint loc = glGetUniformLocation(program, _name.c_str());
-
-	if (loc == -1)
-		Error::add(OPENGL_ERROR, "Program::getLocation() -> Invalid uniform name: " + _name);
-
-	return loc;
-}
-
-void Program::addLocation(GLuint _location)
-{
-	locations.push_back(_location);
-}
-
+/*
 void Program::send(unsigned _location, int _value) const
 {
 	glCheck(glUniform1i(locations[_location], _value));
@@ -175,29 +203,18 @@ void Program::send(unsigned _location, const std::vector<mat4>& _values) const
 {
 	glCheck(glUniformMatrix4fv(locations[_location], _values.size(), GL_FALSE, value_ptr(_values[0])));
 }
+*/
 
-void Program::bind(std::string name, GLuint binding) const
+const std::vector<UniformBlock>& Program::getBlocks() const
 {
-	GLuint index = glGetUniformBlockIndex(program, name.c_str());
-	glCheck(glUniformBlockBinding(program, index, binding));
+	return blocks;
 }
 
 /// Shader Class
-std::unordered_map<std::string, Program::Shader*>			 Program::Shader::shaders;
-std::unordered_map<std::string, Program::Shader*>::iterator   Program::Shader::it;
+std::unordered_map<std::string, Program::Shader*> Program::Shader::shaders;
 
-Program::Shader* Program::Shader::load(std::string& _shader)
+Program::Shader* Program::Shader::load(GLuint type, std::string& _shader)
 {
-	std::string extension = _shader.substr(_shader.size()-5);
-	GLuint shaderType;
-
-	if (extension == ".vert")
-		shaderType = GL_VERTEX_SHADER;
-	else if (extension == ".frag")
-		shaderType = GL_FRAGMENT_SHADER;
-	else
-		return nullptr;
-
 	std::ifstream file(("Shaders/" + _shader).c_str());
 
 	if(!file)
@@ -207,7 +224,7 @@ Program::Shader* Program::Shader::load(std::string& _shader)
 	}
 
 
-	GLuint shaderID = glCreateShader(shaderType);
+	GLuint shaderID = glCreateShader(type);
 
 	if(!shaderID)
 	{
@@ -217,39 +234,19 @@ Program::Shader* Program::Shader::load(std::string& _shader)
 
 	Shader* shader = new Shader(shaderID);
 
-
-	std::istringstream stream;
-
 	std::string line, sourceCode;
-	std::string type, varName;
-
 	while(getline(file, line))
-	{
 		sourceCode += line + '\n';
-
-		if (!line.size())  continue;
-
-		stream.clear();
-		stream.str(line);
-		stream >> type;
-
-		if (type == "uniform")
-		{
-			stream >> type >> varName;
-			shader->uniforms.push_back(shader->getVarName(varName));
-		}
-	}
 
 	const GLchar* charSource = sourceCode.c_str();
 
 	glCheck(glShaderSource(shaderID, 1, &charSource, nullptr));
-
 	glCheck(glCompileShader(shaderID));
 
-	GLint success(0);
+	GLint success;
 	glCheck(glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success));
 
-	if(success != GL_TRUE)
+	if (success != GL_TRUE)
 	{
 		GLint stringSize(0);
 		glCheck(glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &stringSize));
@@ -269,34 +266,22 @@ Program::Shader* Program::Shader::load(std::string& _shader)
 	}
 
 	shaders[_shader] = shader;
-
 	return shader;
 }
 
-Program::Shader* Program::Shader::get(std::string& _shader)
+Program::Shader* Program::Shader::get(GLuint type, std::string shader)
 {
-	if ((it = shaders.find(_shader)) == shaders.end())
-		return load(_shader);
+	auto it = shaders.find(shader);
+	if (it == shaders.end())
+		return load(type, shader);
 	else
 		return it->second;
 }
 
 void Program::Shader::clear()
 {
-	for (it = shaders.begin() ; it != shaders.end() ; ++it)
+	for (auto it = shaders.begin() ; it != shaders.end() ; ++it)
 		delete it->second;
 
 	shaders.clear();
-}
-
-
-
-std::string Program::Shader::getVarName(std::string str)
-{
-	std::size_t found = str.find("[");
-	if (found != std::string::npos)
-		return str.substr(0, found);
-
-	return str.substr(0, str.size()-1);
-
 }

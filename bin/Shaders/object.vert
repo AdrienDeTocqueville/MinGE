@@ -11,8 +11,11 @@ layout (std140) uniform Camera
 	vec4 cameraPosition;
 };
 
-uniform mat4 MATRIX_M;
-uniform mat3 MATRIX_N;
+layout (std140) uniform Object
+{
+	mat4 MATRIX_M;
+	mat4 MATRIX_N;
+};
 
 out VS_FS
 {
@@ -25,7 +28,7 @@ void main()
 {
 	vec4 vertex = MATRIX_M * vec4(in_Vertex, 1.0f);
 	vs_out.fragPos = vec3(vertex);
-	vs_out.normal = MATRIX_N * in_Normal;
+	vs_out.normal = mat3(MATRIX_N) * in_Normal;
 	vs_out.texCoord = in_TexCoord;
 
 	gl_Position = MATRIX_VP * vertex;

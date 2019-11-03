@@ -1,9 +1,9 @@
-#ifndef ANIMATOR_H
-#define ANIMATOR_H
+#pragma once
 
 #include "Components/Component.h"
 #include "Meshes/AnimatedModel.h"
 
+/*
 class Animator : public Component
 {
 	friend class Graphic;
@@ -45,5 +45,4 @@ class Animator : public Component
 
 			int root;
 };
-
-#endif // ANIMATOR_H
+*/
