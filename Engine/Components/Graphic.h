@@ -3,11 +3,14 @@
 #include "Components/Component.h"
 #include "Assets/Mesh.h"
 
+#include <initializer_list>
+
 class Graphic : public Component
 {
 public:
 	Graphic(Mesh* _mesh);
 	Graphic(Mesh* _mesh, std::vector<MaterialRef> _materials);
+	Graphic(Mesh* _mesh, std::initializer_list<MaterialRef> _materials);
 	virtual ~Graphic();
 
 	/// Methods (public)
@@ -18,6 +21,7 @@ public:
 	/// Setters
 	void setMesh(Mesh* _mesh);
 	void setMesh(Mesh* _mesh, std::vector<MaterialRef> _materials);
+	void setMesh(Mesh* _mesh, std::initializer_list<MaterialRef> _materials);
 
 	/// Getters
 	Mesh* getMesh() const;

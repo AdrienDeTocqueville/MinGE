@@ -76,6 +76,11 @@ Texture* Texture::get(std::string _path)
 		return it->second;
 }
 
+Texture* Texture::getDefault()
+{
+	return Texture::get("Textures/white.png");
+}
+
 void Texture::clear()
 {
 	for(auto& it: textures)

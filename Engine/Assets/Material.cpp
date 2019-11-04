@@ -24,42 +24,41 @@ static const std::vector<std::string> shader_builtins = {
 	"MATRIX_M", "MATRIX_N",
 };
 
-static const std::map<GLuint, uint32_t> uniform_type_size = {
-	{GL_FLOAT,	sizeof(float)},
-	{GL_FLOAT_VEC2, sizeof(vec2)},
-	{GL_FLOAT_VEC3, sizeof(vec3)},
-	{GL_FLOAT_VEC4, sizeof(vec4)},
-	{GL_FLOAT_MAT3, sizeof(mat3)},
-	{GL_FLOAT_MAT4, sizeof(mat4)},
-	{GL_SAMPLER_2D, sizeof(Texture*)},
-};
-
+const Material *Material::bound = nullptr;
 std::weak_ptr<Material> Material::basic;
 
 Material::Material(Program *_program):
 	program(_program)
 {
-	for (auto& u : program->getUniforms())
+	for (const auto& var : program->uniforms)
 	{
-		if (uniform_type_size.find(u.type) == uniform_type_size.end())
-			Error::add(USER_ERROR, "Unsupported uniform type");
+		const std::string& name = var.first;
+		const Uniform& u = var.second;
 
-
-		auto it = std::find(shader_builtins.begin(), shader_builtins.end(), u.name);
+		auto it = std::find(shader_builtins.begin(), shader_builtins.end(), name);
 		if (it != shader_builtins.end())
-			builtin_props.push_back({u.type, u.location, (size_t)(it - shader_builtins.begin())});
+			builtin_props.push_back({u.location, u.type, (size_t)(it - shader_builtins.begin())});
 		else
 		{
-			property_names[u.name] = properties.size();
-			properties.push_back({u.type, u.location, uniforms.size()});
-			uniforms.resize(uniforms.size() + uniform_type_size.at(u.type));
+			properties.push_back({u.location, u.type, uniforms.size()});
+			uniforms.resize(uniforms.size() + u.size);
+
+			if (u.type == GL_SAMPLER_2D)
+				set(properties.size() - 1, (Texture*)NULL);
 		}
 	}
 }
 
+Material::Material(const Material &material):
+	program(material.program),
+	builtin_props(material.builtin_props),
+	properties(material.properties),
+	uniforms(material.uniforms)
+{ }
+
 MaterialRef Material::clone() const
 {
-	return std::shared_ptr<Material>(new Material(program));
+	return std::shared_ptr<Material>(new Material(*this));
 }
 
 void Material::bind() const
@@ -99,6 +98,11 @@ void Material::bind() const
 		}
 	}
 
+	if (Material::bound == this)
+		return;
+	Material::bound = this;
+
+	int texture_slot = 0;
 	for (const Property& prop : properties)
 	{
 		const void *value = uniforms.data() + prop.offset;
@@ -107,8 +111,8 @@ void Material::bind() const
 		case GL_SAMPLER_2D:
 		{
 			Texture *t = *(Texture**)value;
-			t->use(0);
-			glCheck(glUniform1i(prop.location, 0));
+			t->use(texture_slot);
+			glCheck(glUniform1i(prop.location, texture_slot++));
 			break;
 		}
 		case GL_FLOAT:
@@ -142,14 +146,20 @@ MaterialRef Material::getDefault()
 {
 	if (auto shared = basic.lock())
 		return shared;
-	auto shared = std::shared_ptr<Material>(new Material(Program::getDefault()));
-	basic = shared;
 
+	auto shared = std::shared_ptr<Material>(new Material(Program::getDefault()));
+	shared->set("ambient", vec3(0.3f));
+	shared->set("diffuse", vec3(0.8f));
+	shared->set("specular", vec3(0.0f));
+	shared->set("exponent", 8.0f);
+
+	basic = shared;
 	return shared;
 }
 
 template<>
 void Material::set(uint32_t prop, Texture *value)
 {
+	if (value == NULL) value = Texture::getDefault();
 	*(Texture**)(uniforms.data() + properties[prop].offset) = value;
 }

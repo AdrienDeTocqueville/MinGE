@@ -6,9 +6,7 @@
 
 struct Uniform
 {
-	std::string name;
-	GLuint location;
-	GLuint type;
+	GLuint location, size, type;
 	GLint num;
 };
 
@@ -22,17 +20,13 @@ public:
 	static Program* getDefault();
 	static void clear();
 
-	/// Methods (public)
-	void use();
-
-	const std::vector<Uniform>& getUniforms() const;
-
 private:
 	/// Methods (private)
 	Program(std::string _name);
 	~Program();
 
 	void link();
+	void load_uniforms();
 
 	/// Attributes (static)
 	static std::map<std::string, Program*> programs;
@@ -44,7 +38,7 @@ private:
 	unsigned program;
 	std::string name;
 
-	std::vector<Uniform> uniforms;
+	std::map<std::string, Uniform> uniforms;
 
 
 	struct Shader

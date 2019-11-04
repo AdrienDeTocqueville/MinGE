@@ -16,6 +16,7 @@ class Texture
 
 		/// Methods (static)
 			static Texture* get(std::string _path);
+			static Texture* getDefault();
 			static void clear();
 
 		/// Getter

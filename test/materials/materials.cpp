@@ -22,23 +22,23 @@ void test_materials()
 
 	Mesh* cubeMesh = Mesh::createCube();
 
+	MaterialRef m = Material::getDefault();
 	Entity *cube = Entity::create("Cube", true)
 		->insert<Graphic>(cubeMesh);
 
 	for (int i(0); i < 41; i++)
 	for (int j(0); j < 21; j++)
 	for (int k(3); k >= 0; k--)
-		Entity::clone(cube, vec3(k, i-20.0f, j-10.0f), vec3(0.0f), vec3(0.5f));
+	{
+		auto e = Entity::clone(cube, vec3(k, i-20.0f, j-10.0f), vec3(0.0f), vec3(0.5f));
+
+		MaterialRef mat = m->clone();
+		mat->set("diffuse", vec3(Random::next<float>(), Random::next<float>(), Random::next<float>()));
+		e->find<Graphic>()->setMesh(cubeMesh, {mat});
+	}
 
 	// Camera
 	Entity::create("MainCamera", false, vec3(-25.0f, 0.0f, 0.0f))
 		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
 		->insert<CameraScript>(nullptr, 0.2f, 7.0f);
-
-	MaterialRef m = Material::getDefault();
-		m->set("ambient", vec4(0.3f));
-		m->set("diffuse", vec4(1.0f));
-		m->set("specular", vec4(0.0f));
-		m->set("exponent", 8.0f);
-		m->set("mainTexture", Texture::get("Textures/white.png"));
 }

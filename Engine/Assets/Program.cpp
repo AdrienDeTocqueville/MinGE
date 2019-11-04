@@ -70,7 +70,22 @@ void Program::link()
 		return;
 	}
 
-	// Parse uniforms
+	load_uniforms();
+}
+
+void Program::load_uniforms()
+{
+	static const std::map<GLuint, uint32_t> uniform_type_size = {
+		{GL_FLOAT,	sizeof(float)},
+		{GL_FLOAT_VEC2, sizeof(vec2)},
+		{GL_FLOAT_VEC3, sizeof(vec3)},
+		{GL_FLOAT_VEC4, sizeof(vec4)},
+		{GL_FLOAT_MAT3, sizeof(mat3)},
+		{GL_FLOAT_MAT4, sizeof(mat4)},
+		{GL_SAMPLER_2D, sizeof(void*)},
+	};
+
+	Uniform u;
 
 	GLint uniform_count = 0;
 	glCheck(glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &uniform_count));
@@ -81,21 +96,16 @@ void Program::link()
 
 	for (GLint i = 0; i < uniform_count; ++i)
 	{
-		uniforms.emplace_back();
-		Uniform& u = uniforms.back();
-
 		glCheck(glGetActiveUniform(program, i, name_len, &real_len, &u.num, &u.type, temp_name) );
 		u.location = glGetUniformLocation(program, temp_name);
-
-		if (u.location == -1)
-		{
-			uniforms.pop_back();
-			continue;
-		}
-
-		u.name = std::string(temp_name, real_len);
+		u.size = uniform_type_size.at(u.type);
 
 		// TODO: handle uniform arrays
+
+		if (u.location == -1)
+			continue;
+
+		uniforms.emplace(std::string(temp_name, real_len), u);
 	}
 
 	delete temp_name;
@@ -193,17 +203,6 @@ void Program::clear()
 		delete entry.second;
 
 	programs.clear();
-}
-
-/// Methods (public)
-void Program::use()
-{
-	GL::UseProgram(program);
-}
-
-const std::vector<Uniform>& Program::getUniforms() const
-{
-	return uniforms;
 }
 
 /// Shader Class

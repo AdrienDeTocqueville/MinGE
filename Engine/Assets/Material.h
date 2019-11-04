@@ -12,8 +12,7 @@ class Material
 {
 	struct Property
 	{
-		GLuint type;
-		GLuint location;
+		GLuint location, type;
 		size_t offset;
 	};
 
@@ -27,11 +26,15 @@ public:
 	void bind() const;
 
 	template <typename T>
-	inline void set(std::string name, T value)
+	void set(std::string name, T value)
 	{
-		auto it = property_names.find(name);
-		if (it != property_names.end())
-			set(it->second, value);
+		auto it = program->uniforms.find(name);
+		if (it != program->uniforms.end())
+		{
+			for (int i(0); i < properties.size(); i++)
+				if (properties[i].location == it->second.location)
+					set(i, value);
+		}
 		else
 			std::cout << "Unknown uniform: " << name << std::endl;
 	}
@@ -44,13 +47,14 @@ public:
 
 private:
 	Material(Program *_program);
+	Material(const Material &material);
 
 	Program *program;
 
-	std::map<std::string, uint32_t> property_names;
 	std::vector<Property> builtin_props, properties;
 	std::vector<uint8_t> uniforms;
 
+	static const Material *bound;
 	static std::weak_ptr<Material> basic;
 };
 

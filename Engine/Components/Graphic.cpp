@@ -12,6 +12,11 @@ Graphic::Graphic(Mesh* _mesh, std::vector<MaterialRef> _materials)
 	setMesh(_mesh, _materials);
 }
 
+Graphic::Graphic(Mesh* _mesh, std::initializer_list<MaterialRef> _materials)
+{
+	setMesh(_mesh, _materials);
+}
+
 Graphic::~Graphic()
 {
 }
@@ -53,6 +58,21 @@ void Graphic::setMesh(Mesh* _mesh)
 }
 
 void Graphic::setMesh(Mesh* _mesh, std::vector<MaterialRef> _materials)
+{
+	mesh = _mesh;
+	materials.clear();
+
+	if (mesh == nullptr)
+		return;
+
+	if (_materials.size() != mesh->submeshes.size())
+		Error::add(USER_ERROR, "Wrong material count");
+
+	for (auto mat : _materials)
+		materials.emplace_back(mat);
+}
+
+void Graphic::setMesh(Mesh* _mesh, std::initializer_list<MaterialRef> _materials)
 {
 	mesh = _mesh;
 	materials.clear();
