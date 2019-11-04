@@ -71,6 +71,8 @@ void Program::link()
 	}
 
 	load_uniforms();
+
+	//disass();
 }
 
 void Program::load_uniforms()
@@ -170,6 +172,19 @@ void Program::load_uniforms()
 		}
 	}
 	*/
+}
+
+void Program::disass() const
+{
+	GLint length;
+	glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, &length);
+
+	GLenum format;
+	std::vector<char> binary(length);
+	glGetProgramBinary(program, length, NULL, &format, binary.data());
+
+	std::ofstream binaryfile(name + ".bin");
+	binaryfile.write(binary.data(), length);
 }
 
 /// Methods (static)

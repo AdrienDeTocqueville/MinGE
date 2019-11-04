@@ -5,7 +5,7 @@
 void test_bvh()
 {
 	PhysicEngine::get()->setGravity(vec3(0.0f));
-	Mesh* cubeMesh = Mesh::createCube();
+	MeshRef cubeMesh = Mesh::createCube();
 
 	// Prototypes
 		Entity* cube = Entity::create("Cube", true)

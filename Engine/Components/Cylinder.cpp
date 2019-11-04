@@ -2,7 +2,7 @@
 #include "Components/RigidBody.h"
 #include "Components/Cylinder.h"
 
-Cylinder::Cylinder(float _radius, float _height, vec3 _center, PhysicMaterial* _material, bool _isTrigger):
+Cylinder::Cylinder(float _radius, float _height, vec3 _center, PhysicMaterialRef _material, bool _isTrigger):
 	Collider(_material, _isTrigger, _center),
 	radius(_radius), height(_height)
 { }

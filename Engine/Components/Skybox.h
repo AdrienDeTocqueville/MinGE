@@ -1,22 +1,18 @@
-#ifndef SKYBOX_H
-#define SKYBOX_H
+#pragma once
 
 #include "Components/Component.h"
 #include "Assets/Mesh.h"
 
 class Skybox : public Component
 {
-	public:
-		Skybox();
-		virtual ~Skybox();
+public:
+	Skybox();
 
-		/// Methods (public)
-			virtual Skybox* clone() const override;
+	/// Methods (public)
+	virtual Skybox* clone() const override;
 
-			void render();
+	void render() const;
 
-	private:
-		Mesh* sky;
+private:
+	MeshRef sky;
 };
-
-#endif // SKYBOX_H

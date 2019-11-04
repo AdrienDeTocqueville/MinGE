@@ -28,6 +28,8 @@ private:
 	void link();
 	void load_uniforms();
 
+	void disass() const;
+
 	/// Attributes (static)
 	static std::map<std::string, Program*> programs;
 

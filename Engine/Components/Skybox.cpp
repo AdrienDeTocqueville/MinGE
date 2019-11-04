@@ -7,18 +7,13 @@ Skybox::Skybox()
 	//sky = Mesh::createCube(new SkyboxMaterial("leCiel"));
 }
 
-Skybox::~Skybox()
-{
-	sky->destroy();
-}
-
 /// Methods (public)
 Skybox* Skybox::clone() const
 {
 	return new Skybox();
 }
 
-void Skybox::render()
+void Skybox::render() const
 {
 	glPushAttrib(GL_POLYGON_BIT);
 	glPushAttrib(GL_DEPTH_BUFFER_BIT);

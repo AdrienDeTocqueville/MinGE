@@ -6,7 +6,7 @@
 class Cone : public Collider
 {
 	public:
-		Cone(float _radius = 0.5f, float _height = 1.0f, vec3 _center = vec3(0.0f), PhysicMaterial* _material = PhysicMaterial::base, bool _isTrigger = false);
+		Cone(float _radius = 0.5f, float _height = 1.0f, vec3 _center = vec3(0.0f), PhysicMaterialRef _material = NULL, bool _isTrigger = false);
 		virtual ~Cone();
 
 		/// Methods (public)

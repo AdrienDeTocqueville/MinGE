@@ -5,8 +5,7 @@
 #include "Assets/Program.h"
 #include "Renderer/UBO.h"
 
-class Material;
-typedef std::shared_ptr<Material> MaterialRef;
+typedef std::shared_ptr<class Material> MaterialRef;
 
 class Material
 {

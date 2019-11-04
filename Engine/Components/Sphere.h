@@ -6,7 +6,7 @@
 class Sphere : public Collider
 {
 	public:
-		Sphere(float _radius = 0.5f, vec3 _center = vec3(0.0f), PhysicMaterial* _material = PhysicMaterial::base, bool _isTrigger = false);
+		Sphere(float _radius = 0.5f, vec3 _center = vec3(0.0f), PhysicMaterialRef _material = NULL, bool _isTrigger = false);
 		virtual ~Sphere();
 
 		/// Methods (public)

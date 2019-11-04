@@ -8,9 +8,9 @@
 class Graphic : public Component
 {
 public:
-	Graphic(Mesh* _mesh);
-	Graphic(Mesh* _mesh, std::vector<MaterialRef> _materials);
-	Graphic(Mesh* _mesh, std::initializer_list<MaterialRef> _materials);
+	Graphic(MeshRef _mesh);
+	Graphic(MeshRef _mesh, std::vector<MaterialRef> _materials);
+	Graphic(MeshRef _mesh, std::initializer_list<MaterialRef> _materials);
 	virtual ~Graphic();
 
 	/// Methods (public)
@@ -19,12 +19,12 @@ public:
 	void render();
 
 	/// Setters
-	void setMesh(Mesh* _mesh);
-	void setMesh(Mesh* _mesh, std::vector<MaterialRef> _materials);
-	void setMesh(Mesh* _mesh, std::initializer_list<MaterialRef> _materials);
+	void setMesh(MeshRef _mesh);
+	void setMesh(MeshRef _mesh, std::vector<MaterialRef> _materials);
+	void setMesh(MeshRef _mesh, std::initializer_list<MaterialRef> _materials);
 
 	/// Getters
-	Mesh* getMesh() const;
+	MeshRef getMesh() const;
 	AABB getAABB() const;
 
 	const std::vector<MaterialRef>& getMaterials() const;
@@ -35,6 +35,6 @@ private:
 	virtual void onDeregister() override;
 
 	/// Attributes
-	Mesh* mesh;
+	MeshRef mesh;
 	std::vector<MaterialRef> materials;
 };

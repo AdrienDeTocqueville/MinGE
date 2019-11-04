@@ -9,8 +9,8 @@ void test_physic()
 	Input::setCursorMode(CursorMode::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
-	Mesh* cubeMesh = Mesh::createCube();
-	Mesh* boule = Mesh::createSphere();
+	MeshRef cubeMesh = Mesh::createCube();
+	MeshRef boule = Mesh::createSphere();
 
 	// Prototypes
 		Entity* sphere = Entity::create("Ball", true)

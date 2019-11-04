@@ -2,17 +2,17 @@
 #include "Components/Animator.h"
 #include "Components/Transform.h"
 
-Graphic::Graphic(Mesh* _mesh)
+Graphic::Graphic(MeshRef _mesh)
 {
 	setMesh(_mesh);
 }
 
-Graphic::Graphic(Mesh* _mesh, std::vector<MaterialRef> _materials)
+Graphic::Graphic(MeshRef _mesh, std::vector<MaterialRef> _materials)
 {
 	setMesh(_mesh, _materials);
 }
 
-Graphic::Graphic(Mesh* _mesh, std::initializer_list<MaterialRef> _materials)
+Graphic::Graphic(MeshRef _mesh, std::initializer_list<MaterialRef> _materials)
 {
 	setMesh(_mesh, _materials);
 }
@@ -45,7 +45,7 @@ void Graphic::render()
 }
 
 /// Setters
-void Graphic::setMesh(Mesh* _mesh)
+void Graphic::setMesh(MeshRef _mesh)
 {
 	mesh = _mesh;
 	materials.clear();
@@ -57,7 +57,7 @@ void Graphic::setMesh(Mesh* _mesh)
 		materials.emplace_back(Material::getDefault());
 }
 
-void Graphic::setMesh(Mesh* _mesh, std::vector<MaterialRef> _materials)
+void Graphic::setMesh(MeshRef _mesh, std::vector<MaterialRef> _materials)
 {
 	mesh = _mesh;
 	materials.clear();
@@ -72,7 +72,7 @@ void Graphic::setMesh(Mesh* _mesh, std::vector<MaterialRef> _materials)
 		materials.emplace_back(mat);
 }
 
-void Graphic::setMesh(Mesh* _mesh, std::initializer_list<MaterialRef> _materials)
+void Graphic::setMesh(MeshRef _mesh, std::initializer_list<MaterialRef> _materials)
 {
 	mesh = _mesh;
 	materials.clear();
@@ -88,7 +88,7 @@ void Graphic::setMesh(Mesh* _mesh, std::initializer_list<MaterialRef> _materials
 }
 
 /// Getters
-Mesh* Graphic::getMesh() const
+MeshRef Graphic::getMesh() const
 {
 	return mesh;
 }

@@ -1,31 +1,21 @@
 #include "Assets/Mesh.h"
 
-std::list<Mesh*> Mesh::meshes;
-
 void Submesh::draw() const
 {
 	glCheck(glDrawArrays(mode, first, count));
+	//glCheck(glDrawElements(mode, count, GL_UNSIGNED_INT, NULL));
 }
 
 Mesh::Mesh(unsigned _dataFlags):
-	vbo(0), vao(0),
+	vbo(0), vao(0), //ebo(0),
 	dataFlags(_dataFlags)
-{
-	meshes.push_back(this);
-}
+{ }
 
 Mesh::~Mesh()
 {
 	glCheck(glDeleteBuffers(1, &vbo));
 	glCheck(glDeleteVertexArrays(1, &vao));
-}
-
-/// Methods (public)
-void Mesh::destroy()
-{
-	meshes.remove(this);
-
-	delete this;
+	//glCheck(glDeleteBuffers(1, &ebo));
 }
 
 /// Methods (protected)
@@ -67,6 +57,15 @@ void Mesh::loadBuffers()
 		if (hasTexcoords)
 			glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset[1], dataSize[2], &texCoords[0]));
 
+	/*
+	// EBO
+	glCheck(glDeleteBuffers(1, &ebo));
+	glCheck(glGenBuffers(1, &ebo));
+
+	glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+	glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uvec3), indices.data(), GL_STATIC_DRAW));
+	*/
+
 	/// VAO
 	glCheck(glDeleteVertexArrays(1, &vao));
 	glCheck(glGenVertexArrays(1, &vao));
@@ -93,7 +92,7 @@ void Mesh::loadBuffers()
 }
 
 /// Methods (static)
-Mesh* Mesh::createCube(unsigned _dataFlags, vec3 _halfExtent)
+MeshRef Mesh::createCube(unsigned _dataFlags, vec3 _halfExtent)
 {
 	const vec3& e = _halfExtent;
 	Mesh* m = new Mesh(_dataFlags);
@@ -138,10 +137,10 @@ Mesh* Mesh::createCube(unsigned _dataFlags, vec3 _halfExtent)
 
 	m->loadBuffers();
 
-	return m;
+	return MeshRef(m);
 }
 
-Mesh* Mesh::createQuad(unsigned _dataFlags, vec2 _halfExtent)
+MeshRef Mesh::createQuad(unsigned _dataFlags, vec2 _halfExtent)
 {
 	const vec2& e = _halfExtent;
 	Mesh* m = new Mesh(_dataFlags);
@@ -156,15 +155,65 @@ Mesh* Mesh::createQuad(unsigned _dataFlags, vec2 _halfExtent)
 
 	m->loadBuffers();
 
-	return m;
+	return MeshRef(m);
 }
 
-Mesh* Mesh::createSphere(unsigned _dataFlags, float _radius, unsigned _slices, unsigned _stacks)
+MeshRef Mesh::createSphere(unsigned _dataFlags, float _radius, unsigned _slices, unsigned _stacks)
 {
+	const float iStacks = 1.0f/(float)(_stacks-1);
+	const float iSlices = 1.0f/(float)(_slices-1);
 	Mesh* m = new Mesh(_dataFlags);
 
-		const float iStacks = 1.0f/(float)(_stacks-1);
-		const float iSlices = 1.0f/(float)(_slices-1);
+		/*
+		vec3 vertex;
+		float xy;
+
+		float slice_step = 2 * PI * iSlices;
+		float stack_step = PI * iStacks;
+		float slice_angle, stack_angle;
+
+		m->vertices.reserve(_slices * _stacks);
+		m->normals.reserve(_slices * _stacks);
+		m->texCoords.reserve(_slices * _stacks);
+		m->indices.reserve(_slices * _stacks);
+
+		for (int i = 0; i <= _stacks; ++i)
+		{
+			stack_angle = 0.5f * PI - i * stack_step;
+			xy = cosf(stack_angle);
+			vertex.z = sinf(stack_angle);
+
+			for (int j = 0; j <= _slices; ++j)
+			{
+				slice_angle = j * slice_step;
+
+				vertex.x = xy * cosf(slice_angle);
+				vertex.y = xy * sinf(slice_angle);
+
+				m->vertices.push_back(vertex * _radius);
+				m->normals.push_back(vertex);
+				m->texCoords.emplace_back(j*iSlices, i*iStacks);
+			}
+		}
+
+		uint32_t k1, k2;
+		for (int i = 0; i < _stacks; ++i)
+		{
+			k1 = i * (_slices + 1);
+			k2 = k1 + _slices + 1;
+
+			for (int j = 0; j < _slices; ++j, ++k1, ++k2)
+			{
+				if (i != 0)
+					m->indices.emplace_back(k1, k2, k1 + 1);
+
+				if (i != (_stacks-1))
+					m->indices.emplace_back(k1 + 1, k2, k2 + 1);
+			}
+		}
+
+		m->submeshes.push_back(Submesh(GL_TRIANGLES, 0, m->indices.size() * 3));
+		*/
 
 		std::vector<vec3> vertices(_slices * _stacks);
 		std::vector<vec3> normals(_slices * _stacks);
@@ -220,14 +269,13 @@ Mesh* Mesh::createSphere(unsigned _dataFlags, float _radius, unsigned _slices, u
 
 	m->loadBuffers();
 
-	return m;
+	return MeshRef(m);
 }
 
-Mesh* Mesh::createCylinder(unsigned _dataFlags, float _base, float _top, float _height, unsigned _slices)
+MeshRef Mesh::createCylinder(unsigned _dataFlags, float _base, float _top, float _height, unsigned _slices)
 {
+	const float iSlices = 1/((float)_slices);
 	Mesh* m = new Mesh(_dataFlags);
-
-		const float iSlices = 1/((float)_slices);
 
 		float b = (_base == _top)? 0.5f : 0.25f;
 		const vec3 base = vec3(0, 0, -_height * b);
@@ -311,5 +359,5 @@ Mesh* Mesh::createCylinder(unsigned _dataFlags, float _base, float _top, float _
 
 	m->loadBuffers();
 
-	return m;
+	return MeshRef(m);
 }

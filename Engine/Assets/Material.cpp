@@ -139,7 +139,7 @@ void Material::bind() const
 
 MaterialRef Material::create(std::string name)
 {
-	return std::shared_ptr<Material>(new Material(Program::get(name)));
+	return MaterialRef(new Material(Program::get(name)));
 }
 
 MaterialRef Material::getDefault()
@@ -147,7 +147,7 @@ MaterialRef Material::getDefault()
 	if (auto shared = basic.lock())
 		return shared;
 
-	auto shared = std::shared_ptr<Material>(new Material(Program::getDefault()));
+	auto shared = MaterialRef(new Material(Program::getDefault()));
 	shared->set("ambient", vec3(0.3f));
 	shared->set("diffuse", vec3(0.8f));
 	shared->set("specular", vec3(0.0f));

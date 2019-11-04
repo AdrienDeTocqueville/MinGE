@@ -20,7 +20,7 @@ class Collider : public Component
 	friend class RigidBody;
 
 	public:
-		Collider(PhysicMaterial* _material, bool _isTrigger, vec3 _center);
+		Collider(PhysicMaterialRef _material, bool _isTrigger, vec3 _center);
 		virtual ~Collider();
 
 		/// Methods (public)
@@ -54,7 +54,7 @@ class Collider : public Component
 			virtual void onDeregister() override;
 
 		/// Attributes (protected)
-			PhysicMaterial* material;
+			PhysicMaterialRef material;
 			bool isTrigger;
 
 			vec3 center;

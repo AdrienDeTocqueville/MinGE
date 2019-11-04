@@ -33,7 +33,7 @@ class TestPhysic : public Script
 		Entity* prot;
 		std::stack<DistanceConstraint*> constraints;
 
-		Mesh* shapes[4];
+		MeshRef shapes[4];
 		int current;
 
 		float fireRate = 0.75f, time = 0.0f;

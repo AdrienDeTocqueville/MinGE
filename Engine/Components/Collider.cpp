@@ -4,7 +4,7 @@
 #include "Systems/PhysicEngine.h"
 
 
-Collider::Collider(PhysicMaterial* _material, bool _isTrigger, vec3 _center):
+Collider::Collider(PhysicMaterialRef _material, bool _isTrigger, vec3 _center):
 	rigidBody(nullptr),
 	material(_material), isTrigger(_isTrigger),
 	center(_center), mass(0.0f), inertia(1.0f)

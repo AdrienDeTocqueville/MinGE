@@ -1,33 +1,28 @@
-#ifndef PHYSICMATERIAL_H
-#define PHYSICMATERIAL_H
+#pragma once
 
+#include <memory>
 #include "Utility/helpers.h"
+
+typedef std::shared_ptr<class PhysicMaterial> PhysicMaterialRef;
 
 class PhysicMaterial
 {
 	friend class Collider;
 
-	public:
-		PhysicMaterial(std::string _name, float _restitution = 0.2f, float _dF = 0.6f, float _sF = 0.6f);
+public:
+	/// Methods (static)
+	static PhysicMaterialRef create(float _restitution = 0.2f, float _dF = 0.6f, float _sF = 0.6f);
+	static PhysicMaterialRef getDefault();
 
-		/// Methods (static)
-			static PhysicMaterial* get(std::string _name);
-			static void clear();
+	/// Setter
+	void setRestitution(float _restitution);
 
-		/// Attributes (static)
-			static std::unordered_map<std::string, PhysicMaterial*> materials;
-			static PhysicMaterial* base;
+protected:
+	PhysicMaterial(float _restitution, float _dF, float _sF);
 
-		/// Setter
-			void setRestitution(float _restitution);
+	float restitution;
+	float dynamicFriction, staticFriction;
 
-	protected:
-		~PhysicMaterial() {}
-
-		std::string name;
-
-		float restitution;
-		float dynamicFriction, staticFriction;
+	/// Attributes (static)
+	static std::weak_ptr<PhysicMaterial> basic;
 };
-
-#endif // PHYSICMATERIAL_H

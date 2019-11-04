@@ -2,7 +2,7 @@
 #include "Components/RigidBody.h"
 #include "Components/Sphere.h"
 
-Sphere::Sphere(float _radius, vec3 _center, PhysicMaterial* _material, bool _isTrigger):
+Sphere::Sphere(float _radius, vec3 _center, PhysicMaterialRef _material, bool _isTrigger):
 	Collider(_material, _isTrigger, _center),
 	radius(_radius)
 { }

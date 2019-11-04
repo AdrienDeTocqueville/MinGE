@@ -1,10 +1,8 @@
 #include "Engine.h"
 #include "Entity.h"
 
-#include "Assets/PhysicMaterial.h"
 #include "Assets/Texture.h"
 #include "Assets/Program.h"
-#include "Assets/Mesh.h"
 
 #include "Utility/Time.h"
 #include "Utility/Debug.h"
@@ -162,16 +160,10 @@ void Engine::clear()
 	std::cout << "Entities: "; Entity::clear();
 	std::cout << "done" << std::endl;
 
-	std::cout << "Meshes: "; Mesh::clear();
-	std::cout << "done" << std::endl;
-
 	std::cout << "Programs: "; Program::clear();
 	std::cout << "done" << std::endl;
 
 	std::cout << "Textures: "; Texture::clear();
-	std::cout << "done" << std::endl;
-
-	std::cout << "Physic materials: "; PhysicMaterial::clear();
 	std::cout << "done" << std::endl;
 
 	GraphicEngine::get()->clear();
