@@ -189,72 +189,65 @@ void GraphicEngine::computeMVP()
 void GraphicEngine::render()
 {
 	//glEnable(GL_SCISSOR_TEST);
-	//glBindVertexArray(0);
 	
-	struct light
-	{
-		vec4 lightPosition;
-		vec4 diffuseColor;
-		float ambientCoefficient;
+	/*
+	light l;
+	   Light* src = GraphicEngine::get()->getLight();
+	   if (src)
+	   {
+		  l.lightPosition = vec4(src->getPosition(), 0.0f);
+		  l.diffuseColor = vec4(src->getDiffuseColor(), 0.0f);
+		  l.ambientCoefficient = src->getAmbientCoefficient();
+		  l.attenuation = src->getAttenuation();
+	   }
+	cam c;
+	   c.vp = GraphicEngine::get()->getMatrix(GE_VP);
+	   c.clipplane = camera->getClipPlane();
+	   c.pos = vec4(camera->getPosition(), 0.0f);
 
-		vec3 attenuation;
-	};
-	struct cam
-	{
-		mat4 vp;
-		vec4 clipplane;
-		vec4 pos;
-	};
+	p->send(0, GraphicEngine::get()->getMatrix(GE_MODEL));
+	p->send(1, mat3(transpose(inverse(GraphicEngine::get()->getMatrix(GE_MODEL)))));
+	*/
 
-	static UBO c_block;
-	if (c_block.res == 0)
-	{
-		light l;
-		   Light* src = GraphicEngine::get()->getLight();
-		   if (src)
-		   {
-			  l.lightPosition = vec4(src->getPosition(), 0.0f);
-			  l.diffuseColor = vec4(src->getDiffuseColor(), 0.0f);
-			  l.ambientCoefficient = src->getAmbientCoefficient();
-			  l.attenuation = src->getAttenuation();
-		   }
+	// 2 buckets:
+	//  - shadow
+	// 	key ( view | depth [front-back] | material )
+	//  - display
+	// 	key ( view | layer | translucency | material | depth [front-back] )
+	//
+	// view:
+	//	viewport, scissor, camera settings...
+	// layer:
+	//	world, skybox, hud
+	// transflucency:
+	//	normal, additive
 
+	// foreach shadow_light
+	//	submit_to(shadow_bucket, shadow_light.state)
 
-		c_block = UBO::create(0, sizeof(cam));
-		c_block.bind();
+	// foreach camera
+	//	submit_to(display_bucket, camera.state)
 
-		UBO l_block = UBO::create(1, sizeof(light));
-		l_block.bind();
-		memcpy(l_block.data, &l, sizeof(light));
-	}
+	// foreach graphic
+	//	if cast_shadows
+	//		foreach shadow_light
+	//			submit_to(shadow_bucket, graphic.drawcall_depth)
+	//	foreach camera
+	//		submit_to(display_bucket, graphic.drawcall_color_depth)
+	//
+	//
+	// sort(shadow_bucket)
+	// sort(display_bucket)
+	//
+	// submit(shadow_bucket)
+	// submit(display_bucket)
 
 	for (Camera* camera: cameras)
 	{
 		camera->use();
-		cam c;
-		   c.vp = GraphicEngine::get()->getMatrix(GE_VP);
-		   c.clipplane = camera->getClipPlane();
-		   c.pos = vec4(camera->getPosition(), 0.0f);
-
-		GL::BindUniformBuffer(c_block.res);
-		memcpy(c_block.data, &c, sizeof(cam));
 
 		for (Graphic* graphic: graphics)
-		{
-			/*
-			{
-				graphic->find<Transform>()->use();
-				p->send(0, GraphicEngine::get()->getMatrix(GE_MODEL));
-				p->send(1, mat3(transpose(inverse(GraphicEngine::get()->getMatrix(GE_MODEL)))));
-
-				//p->send(2, Camera::current->find<Transform>()->getToWorldSpace(vec3(0.0f)));
-
-				p->send(2, 0);  // Texture
-			}
-			*/
 			graphic->render();
-			glFinish();
-		}
 	}
 
 #ifdef DRAWAABB
@@ -268,7 +261,6 @@ void GraphicEngine::render()
 	Debug::update();
 #endif
 
-	//GL::BindVertexBuffer(0);
 	GL::BindVertexArray(0);
 	//glDisable(GL_SCISSOR_TEST);
 }

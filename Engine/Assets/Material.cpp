@@ -1,6 +1,29 @@
 #include "Assets/Material.h"
 #include "Utility/Error.h"
 
+#include "Systems/GraphicEngine.h"
+#include "Components/Light.h"
+#include "Components/Camera.h"
+
+enum ShaderBuiltins
+{
+	// Camera
+	MATRIX_VP, CLIP_PLANE, CAMERA_POS,
+	// Light
+	LIGHT_POS, LIGHT_DIFF, LIGHT_AMBIENT, LIGHT_CONST, LIGHT_LINEAR, LIGHT_QUADRATIC,
+	// Model
+	MATRIX_M, MATRIX_N,
+};
+
+static const std::vector<std::string> shader_builtins = {
+	// Camera
+	"MATRIX_VP", "clipPlane", "cameraPosition",
+	// Light
+	"lightPosition", "diffuseColor", "ambientCoefficient", "aConstant", "aLinear", "aQuadratic",
+	// Model
+	"MATRIX_M", "MATRIX_N",
+};
+
 static const std::map<GLuint, uint32_t> uniform_type_size = {
 	{GL_FLOAT,	sizeof(float)},
 	{GL_FLOAT_VEC2, sizeof(vec2)},
@@ -19,11 +42,18 @@ Material::Material(Program *_program):
 	for (auto& u : program->getUniforms())
 	{
 		if (uniform_type_size.find(u.type) == uniform_type_size.end())
-			Error::add(USER_ERROR, "Unsupprted uniform type");
+			Error::add(USER_ERROR, "Unsupported uniform type");
 
-		property_names[u.name] = properties.size();
-		properties.push_back({u.type, u.location, uniforms.size()});
-		uniforms.resize(uniforms.size() + uniform_type_size.at(u.type));
+
+		auto it = std::find(shader_builtins.begin(), shader_builtins.end(), u.name);
+		if (it != shader_builtins.end())
+			builtin_props.push_back({u.type, u.location, (size_t)(it - shader_builtins.begin())});
+		else
+		{
+			property_names[u.name] = properties.size();
+			properties.push_back({u.type, u.location, uniforms.size()});
+			uniforms.resize(uniforms.size() + uniform_type_size.at(u.type));
+		}
 	}
 }
 
@@ -35,6 +65,40 @@ MaterialRef Material::clone() const
 void Material::bind() const
 {
 	GL::UseProgram(program->program);
+
+	Camera *camera = Camera::current;
+	Light *light = GraphicEngine::get()->getLight();
+	for (const Property& prop : builtin_props)
+	{
+		switch (prop.offset)
+		{
+		case MATRIX_VP:
+			set_uniform(prop.location, GraphicEngine::get()->getMatrix(GE_VP)); break;
+		case CLIP_PLANE:
+			set_uniform(prop.location, camera->getClipPlane()); break;
+		case CAMERA_POS:
+			set_uniform(prop.location, camera->getPosition()); break;
+
+		case LIGHT_POS:
+			set_uniform(prop.location, light->getPosition()); break;
+		case LIGHT_DIFF:
+			set_uniform(prop.location, light->getDiffuseColor()); break;
+		case LIGHT_AMBIENT:
+			set_uniform(prop.location, light->getAmbientCoefficient()); break;
+		case LIGHT_CONST:
+			set_uniform(prop.location, light->getAttenuation().x); break;
+		case LIGHT_LINEAR:
+			set_uniform(prop.location, light->getAttenuation().y); break;
+		case LIGHT_QUADRATIC:
+			set_uniform(prop.location, light->getAttenuation().z); break;
+
+		case MATRIX_M:
+			set_uniform(prop.location, GraphicEngine::get()->getMatrix(GE_MODEL)); break;
+		case MATRIX_N:
+			set_uniform(prop.location, GraphicEngine::get()->getMatrix(GE_MODEL)); break;
+		}
+	}
+
 	for (const Property& prop : properties)
 	{
 		const void *value = uniforms.data() + prop.offset;

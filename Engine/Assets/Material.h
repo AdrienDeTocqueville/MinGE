@@ -48,7 +48,7 @@ private:
 	Program *program;
 
 	std::map<std::string, uint32_t> property_names;
-	std::vector<Property> properties;
+	std::vector<Property> builtin_props, properties;
 	std::vector<uint8_t> uniforms;
 
 	static std::weak_ptr<Material> basic;

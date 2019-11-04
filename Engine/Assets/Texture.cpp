@@ -49,13 +49,12 @@ Texture::Texture(unsigned _width, unsigned _height):
 Texture::~Texture()
 {
 	glDeleteTextures(1, &texture);
-	texture = 0;
 }
 
 /// Methods (public)
 void Texture::use(unsigned _active) const
 {
-	glActiveTexture(GL_TEXTURE0 + _active);
+	GL::ActiveTexture(GL_TEXTURE0 + _active);
 	glBindTexture(GL_TEXTURE_2D, texture);
 }
 

@@ -86,6 +86,13 @@ void Program::link()
 
 		glCheck(glGetActiveUniform(program, i, name_len, &real_len, &u.num, &u.type, temp_name) );
 		u.location = glGetUniformLocation(program, temp_name);
+
+		if (u.location == -1)
+		{
+			uniforms.pop_back();
+			continue;
+		}
+
 		u.name = std::string(temp_name, real_len);
 
 		// TODO: handle uniform arrays

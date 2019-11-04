@@ -7,11 +7,10 @@ GL::GLState GL::state;
 // https://github.com/SFML/SFML/blob/master/src/SFML/Graphics/GLCheck.cpp
 void glCheckError(const char* file, unsigned int line, const char* expression)
 {
-    // Get the last error
-    GLenum errorCode = glGetError();
+	GLenum errorCode = glGetError();
+	if (errorCode == GL_NO_ERROR)
+		return;
 
-    if (errorCode != GL_NO_ERROR)
-    {
         std::string fileString = file;
         std::string error = "Unknown error";
         std::string description  = "No description";
@@ -75,6 +74,5 @@ void glCheckError(const char* file, unsigned int line, const char* expression)
         	  << "\nExpression:\n   " << expression
         	  << "\nError description:\n   " << error << "\n   " << description << "\n"
         	  << std::endl;
-    }
 }
 #endif

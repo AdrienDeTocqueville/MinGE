@@ -54,7 +54,6 @@ void Debug::update()
 	if (!points.size() && !lines.size())
 		return;
 
-	material->set("MATRIX_VP", GraphicEngine::get()->getMatrix(GE_VP));
 	material->bind();
 
 	glPushAttrib(GL_DEPTH_BUFFER_BIT);

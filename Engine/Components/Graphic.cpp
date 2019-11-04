@@ -35,8 +35,6 @@ void Graphic::render()
 
 		tr->use();
 		material->bind();
-		material->set("MATRIX_M", tr->toWorldSpace);
-		material->set("MATRIX_N", tr->toWorldSpace);
 		submesh.draw();
 	}
 }

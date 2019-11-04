@@ -90,4 +90,13 @@ public:
 		else if (state.vbo == buf)
 			state.vbo = 0;
 	}
+
+	static void ActiveTexture(GLuint slot)
+	{
+		if (slot != state.texture_unit)
+		{
+			glActiveTexture(slot);
+			state.texture_unit = slot;
+		}
+	}
 };
