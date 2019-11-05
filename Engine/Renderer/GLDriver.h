@@ -17,7 +17,7 @@ class GL
 {
 	struct GLState
 	{
-		GLuint ubo, vbo, vao, fbo;
+		GLuint ubo, vbo, ebo, vao, fbo;
 		GLuint program;
 		GLuint texture_unit;
 
@@ -52,6 +52,15 @@ public:
 		{
 			glCheck(glBindBuffer(GL_ARRAY_BUFFER, buf));
 			state.vbo = buf;
+		}
+	}
+
+	static void BindElementBuffer(GLuint buf)
+	{
+		if (buf != state.ebo)
+		{
+			glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buf));
+			state.ebo = buf;
 		}
 	}
 

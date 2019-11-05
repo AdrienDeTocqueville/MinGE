@@ -26,19 +26,10 @@ bool AABB::collide(AABB* a, AABB* b)
 	return true;
 }
 
-void AABB::compute(const std::vector<vec3>& points)
+void AABB::init(vec3 _min, vec3 _max)
 {
-	vec3 b0(points[0]), b1(points[0]);
-
-	for (size_t i = 1; i < points.size(); i++)
-	{
-		b0 = min(b0, points[i]);
-		b1 = max(b1, points[i]);
-	}
-
-	bounds[0] = b0;
-	bounds[1] = b1;
-
+	bounds[0] = _min;
+	bounds[1] = _max;
 
 #ifdef DRAWAABB
 	color = default_color = vec3(0.9f, 0.1f, 0.0f);

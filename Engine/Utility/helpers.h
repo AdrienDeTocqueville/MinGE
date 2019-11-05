@@ -11,6 +11,9 @@
 #include <list>
 #include <map>
 
+//#define GLM_FORCE_SSE2 // or GLM_FORCE_SSE42 if your processor supports it
+//#define GLM_FORCE_ALIGNED
+
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/epsilon.hpp>

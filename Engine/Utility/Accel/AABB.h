@@ -7,7 +7,7 @@ struct AABB
 	static bool collide(AABB* a, AABB* b);
 	bool operator==(const AABB& box);
 
-	void compute(const std::vector<vec3>& points);
+	void init(vec3 _min, vec3 _max);
 	void extend(const AABB& box);
 
 	vec3	center()	const { return 0.5f * (bounds[0] + bounds[1]); }

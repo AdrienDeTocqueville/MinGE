@@ -4,6 +4,7 @@ CFLAGS = #-Wall -Wextra -Werror
 
 
 LDFLAGS := -lGLEW -lGLU -lGL
+LDFLAGS += -lassimp
 LDFLAGS += -lsfml-audio -lsfml-graphics -lsfml-window -lsfml-network -lsfml-system
 
 IPATH = -I. -IEngine

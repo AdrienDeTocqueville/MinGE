@@ -20,6 +20,7 @@ void test_materials()
 	Input::setCursorMode(CursorMode::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
+	MeshRef model = Mesh::load("WarGreymon/WarGreymon.obj");
 	MeshRef mesh = Mesh::createCube();
 
 	MaterialRef m = Material::getDefault();

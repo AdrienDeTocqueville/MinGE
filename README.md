@@ -6,32 +6,15 @@ Experimental 3D game engine
 * [SFML GCC 4.9.2 TDM (SJLJ) - 32-bit](https://www.sfml-dev.org/download/sfml/2.4.2/index-fr.php)
 * [GLEW](http://glew.sourceforge.net/index.html)
 * [GLM](https://github.com/g-truc/glm/releases/)
+* [Assimp](http://assimp.org/index.php/)
 
-## Build options
+## Build on Linux
 
-### Link libraries
-* opengl32
-* glu32
+```bash
+pacman -S sfml glew glm assimp
+make
+```
 
-* release: 
--lsfml-audio-s
--lopenal32
--lflac
--lvorbisenc
--lvorbisfile
--lvorbis
--logg
--lsfml-graphics-s
--lfreetype
--ljpeg
--lsfml-window-s
--lopengl32
--lgdi32
--lsfml-network-s
--lws2_32
--lsfml-system-s
--lwinmm
+## Build on Windows
 
-### Defines
-* GLEW_STATIC
-* SFML_STATIC
+Use codeblocks project file

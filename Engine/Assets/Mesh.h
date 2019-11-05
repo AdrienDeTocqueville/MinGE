@@ -34,11 +34,6 @@ public:
 	virtual ~Mesh();
 
 	/// Getters
-	std::vector<vec3>* getVertices()
-	{ return &vertices; }
-	std::vector<vec3>* getNormals()
-	{ return &normals; }
-
 	AABB getAABB() const
 	{ return aabb; }
 
@@ -48,6 +43,8 @@ public:
 	static MeshRef createSphere(unsigned _dataFlags = ALLFLAGS, float _radius = 0.5f, unsigned _slices = 20, unsigned _stacks = 10);
 	static MeshRef createCylinder(unsigned _dataFlags = ALLFLAGS, float _base = 0.5f, float _top = 0.5f, float _height = 1.0f, unsigned _slices = 20);
 
+	static MeshRef load(std::string _file);
+
 protected:
 	/// Methods (protected)
 	Mesh(unsigned _dataFlags = ALLFLAGS);
@@ -56,14 +53,16 @@ protected:
 	/// Attributes (protected)
 	std::vector<Submesh> submeshes;
 
-	std::vector<vec3> vertices;
-	std::vector<vec3> normals;
-	std::vector<vec2> texCoords;
-	//std::vector<uvec3> indices;
+	struct Vertex
+	{
+		vec3 pos;
+		vec3 normal;
+		vec2 texCoord;
+	};
+	std::vector<Vertex> vertices;
+	std::vector<unsigned short> indices;
 
-	unsigned vbo;
-	unsigned vao;
-	//unsigned ebo;
+	unsigned vao, vbo, ebo;
 
 	unsigned dataFlags;
 	AABB aabb;

@@ -6,6 +6,7 @@
 Terrain::Terrain(std::string _file):
 	file(_file)
 {
+	/*
 	tree = new QuadTree();
 
 	if (loadArrays())
@@ -16,6 +17,7 @@ Terrain::Terrain(std::string _file):
 		tree->setLowest(5);
 		tree->update( vec2(0.0f) );
 	}
+	*/
 }
 
 Terrain::~Terrain()
@@ -147,6 +149,7 @@ bool Terrain::loadArrays()
 
 void Terrain::generateNormals()
 {
+	/*
 	normals.resize(side*side);
 
 	for (unsigned y(0) ; y < side ; y++)
@@ -159,10 +162,12 @@ void Terrain::generateNormals()
 
 		normals[x +y*side] = normalize(cross(u, v));
 	}
+	*/
 }
 
 void Terrain::generateTexCoord()
 {
+	/*
 	texCoords.resize(side*side);
 
 	unsigned i(0);
@@ -170,4 +175,5 @@ void Terrain::generateTexCoord()
 	for (float x(0) ; x < side ; x++)
 	for (float y(0) ; y < side ; y++)
 		texCoords[i++] = vec2(x/side, y/side);
+	*/
 }
