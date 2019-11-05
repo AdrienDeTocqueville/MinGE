@@ -24,6 +24,13 @@ struct Submesh
 	unsigned first, count;
 };
 
+struct Vertex
+{
+	vec3 pos;
+	vec3 normal;
+	vec2 texCoords;
+};
+
 typedef std::shared_ptr<class Mesh> MeshRef;
 
 class Mesh
@@ -31,7 +38,8 @@ class Mesh
 	friend class Graphic;
 
 public:
-	virtual ~Mesh();
+	Mesh(class aiMesh *mesh);
+	~Mesh();
 
 	/// Getters
 	AABB getAABB() const
@@ -53,14 +61,8 @@ protected:
 	/// Attributes (protected)
 	std::vector<Submesh> submeshes;
 
-	struct Vertex
-	{
-		vec3 pos;
-		vec3 normal;
-		vec2 texCoord;
-	};
 	std::vector<Vertex> vertices;
-	std::vector<unsigned short> indices;
+	std::vector<uint16_t> indices;
 
 	unsigned vao, vbo, ebo;
 

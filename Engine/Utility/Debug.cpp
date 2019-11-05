@@ -39,14 +39,14 @@ void Debug::init()
 {
 	material = Material::create("debug");
 
-	glCheck(glGenBuffers(1, &vbo));
-	glCheck(glGenVertexArrays(1, &vao));
+	vao = GL::GenVertexArray();
+	vbo = GL::GenBuffer();
 }
 
 void Debug::destroy()
 {
-	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);
+	GL::DeleteVertexArray(vao);
+	GL::DeleteBuffer(vbo);
 }
 
 void Debug::update()
@@ -100,7 +100,7 @@ void Debug::drawPoints()
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char*)nullptr + (offset[0])));
 
 
-		glDrawArrays(GL_POINTS, 0, points.size());
+	glDrawArrays(GL_POINTS, 0, points.size());
 }
 
 void Debug::drawLines()

@@ -31,6 +31,41 @@ class GL
 	static GLState state;
 
 public:
+	// Creation
+	static GLuint GenBuffer()
+	{
+		GLuint buf;
+		glCheck(glGenBuffers(1, &buf));
+		return buf;
+	}
+
+	static GLuint GenVertexArray()
+	{
+		GLuint vao;
+		glCheck(glGenVertexArrays(1, &vao));
+		return vao;
+	}
+
+	// Deletion
+	static void DeleteBuffer(GLuint buf)
+	{
+		glCheck(glDeleteBuffers(1, &buf));
+		if (state.ubo == buf)
+			state.ubo = 0;
+		else if (state.vbo == buf)
+			state.vbo = 0;
+		else if (state.ebo == buf)
+			state.ebo = 0;
+	}
+
+	static void DeleteVertexArray(GLuint vao)
+	{
+		glCheck(glDeleteVertexArrays(1, &vao));
+		if (state.vao == vao)
+			state.vao = 0;
+	}
+
+	// Binding
 	static void BindUniformBuffer(GLuint buf)
 	{
 		if (buf != state.ubo)
@@ -89,15 +124,6 @@ public:
 			glCheck(glUseProgram(prog));
 			state.program = prog;
 		}
-	}
-
-	static void DeleteBuffer(GLuint buf)
-	{
-		glCheck(glDeleteBuffers(1, &buf));
-		if (state.ubo == buf)
-			state.ubo = 0;
-		else if (state.vbo == buf)
-			state.vbo = 0;
 	}
 
 	static void ActiveTexture(GLuint slot)

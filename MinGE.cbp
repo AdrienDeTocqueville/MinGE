@@ -141,12 +141,6 @@
 		<Unit filename="Engine/Engine.h" />
 		<Unit filename="Engine/Entity.cpp" />
 		<Unit filename="Engine/Entity.h" />
-		<Unit filename="Engine/Meshes/AnimatedModel.cpp" />
-		<Unit filename="Engine/Meshes/AnimatedModel.h" />
-		<Unit filename="Engine/Meshes/Model.cpp" />
-		<Unit filename="Engine/Meshes/Model.h" />
-		<Unit filename="Engine/Meshes/Terrain.cpp" />
-		<Unit filename="Engine/Meshes/Terrain.h" />
 		<Unit filename="Engine/MinGE.h" />
 		<Unit filename="Engine/Physic/CollisionDetection.cpp" />
 		<Unit filename="Engine/Physic/CollisionDetection.h" />
@@ -156,6 +150,10 @@
 		<Unit filename="Engine/Physic/ContactConstraint.h" />
 		<Unit filename="Engine/Physic/DistanceConstraint.cpp" />
 		<Unit filename="Engine/Physic/DistanceConstraint.h" />
+		<Unit filename="Engine/Renderer/GLDriver.cpp" />
+		<Unit filename="Engine/Renderer/GLDriver.h" />
+		<Unit filename="Engine/Renderer/UBO.cpp" />
+		<Unit filename="Engine/Renderer/UBO.h" />
 		<Unit filename="Engine/Systems/GraphicEngine.cpp" />
 		<Unit filename="Engine/Systems/GraphicEngine.h" />
 		<Unit filename="Engine/Systems/PhysicEngine.cpp" />
@@ -171,6 +169,7 @@
 		<Unit filename="Engine/Utility/Debug.cpp" />
 		<Unit filename="Engine/Utility/Debug.h" />
 		<Unit filename="Engine/Utility/Error.cpp" />
+		<Unit filename="Engine/Utility/Error.h" />
 		<Unit filename="Engine/Utility/IO/IOFile.cpp" />
 		<Unit filename="Engine/Utility/IO/IOFile.h" />
 		<Unit filename="Engine/Utility/IO/Input.cpp" />
@@ -183,18 +182,21 @@
 		<Unit filename="Engine/Utility/Tag.h" />
 		<Unit filename="Engine/Utility/Time.cpp" />
 		<Unit filename="Engine/Utility/Time.h" />
+		<Unit filename="Engine/Utility/helpers.cpp" />
+		<Unit filename="Engine/Utility/helpers.h" />
 		<Unit filename="Engine/Utility/tinyxml2.cpp" />
 		<Unit filename="Engine/Utility/tinyxml2.h" />
 		<Unit filename="Engine/glew.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="Engine/includes.h" />
 		<Unit filename="test/CameraScript.h" />
 		<Unit filename="test/PlayerScript.cpp" />
 		<Unit filename="test/PlayerScript.h" />
 		<Unit filename="test/bvh/bvh.cpp" />
 		<Unit filename="test/bvh/bvh.h" />
 		<Unit filename="test/main.cpp" />
+		<Unit filename="test/materials/materials.cpp" />
+		<Unit filename="test/materials/materials.h" />
 		<Unit filename="test/physic/physic.cpp" />
 		<Unit filename="test/physic/physic.h" />
 		<Extensions>

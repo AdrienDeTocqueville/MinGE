@@ -14,9 +14,9 @@ Mesh::Mesh(unsigned _dataFlags):
 
 Mesh::~Mesh()
 {
-	glCheck(glDeleteVertexArrays(1, &vao));
-	glCheck(glDeleteBuffers(1, &vbo));
-	glCheck(glDeleteBuffers(1, &ebo));
+	GL::DeleteVertexArray(vao);
+	GL::DeleteBuffer(vbo);
+	GL::DeleteBuffer(ebo);
 }
 
 /// Methods (protected)
@@ -41,16 +41,9 @@ void Mesh::loadBuffers()
 	*/
 
 	/// VAO
-	glCheck(glDeleteVertexArrays(1, &vao));
-	glCheck(glGenVertexArrays(1, &vao));
-
-	/// VBO
-	glCheck(glDeleteBuffers(1, &vbo));
-	glCheck(glGenBuffers(1, &vbo));
-
-	// EBO
-	glCheck(glDeleteBuffers(1, &ebo));
-	glCheck(glGenBuffers(1, &ebo));
+	vao = GL::GenVertexArray();
+	vbo = GL::GenBuffer();
+	ebo = GL::GenBuffer();
 
 	GL::BindVertexArray(vao);
 	GL::BindVertexBuffer(vbo);
@@ -69,7 +62,7 @@ void Mesh::loadBuffers()
 		glCheck(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), BUFFER_OFFSET(2*sizeof(vec3))));
 
 		// EBO
-		glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), indices.data(), GL_STATIC_DRAW));
+		glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint16_t), indices.data(), GL_STATIC_DRAW));
 		glCheck(glVertexArrayElementBuffer(vao, ebo));
 	}
 	GL::BindVertexArray(0);
@@ -166,7 +159,7 @@ MeshRef Mesh::createCube(unsigned _dataFlags, vec3 _halfExtent)
 			20, 21, 22, 20, 22, 23,
 		};
 
-		m->submeshes.push_back(Submesh(GL_TRIANGLES, 0, m->indices.size()));
+		m->submeshes.emplace_back(GL_TRIANGLES, 0, m->indices.size());
 
 	m->loadBuffers();
 
@@ -187,7 +180,7 @@ MeshRef Mesh::createQuad(unsigned _dataFlags, vec2 _halfExtent)
 
 		m->indices = {0, 1, 2, 0, 2, 3};
 
-		m->submeshes.push_back(Submesh(GL_TRIANGLES, 0, m->indices.size()));
+		m->submeshes.emplace_back(GL_TRIANGLES, 0, m->indices.size());
 
 	m->loadBuffers();
 
@@ -407,99 +400,73 @@ MeshRef Mesh::createCylinder(unsigned _dataFlags, float _base, float _top, float
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-static MeshRef processMesh(aiMesh *mesh, const aiScene *scene)
+Mesh::Mesh(aiMesh *mesh)
 {
-	Mesh *res = new Mesh(ALLFLAGS);
-
-	// data to fill
-	vector<Vertex> vertices;
-	vector<unsigned int> indices;
-	vector<Texture> textures;
-
-	// Walk through each of the mesh's vertices
-	for(unsigned int i = 0; i < mesh->mNumVertices; i++)
+	unsigned numVertices = mesh->mNumVertices;
+	for (unsigned i = 0; i < numVertices; i++)
 	{
 		Vertex vertex;
-		glm::vec3 vector; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
-		// positions
-		vector.x = mesh->mVertices[i].x;
-		vector.y = mesh->mVertices[i].y;
-		vector.z = mesh->mVertices[i].z;
-		vertex.Position = vector;
-		// normals
-		vector.x = mesh->mNormals[i].x;
-		vector.y = mesh->mNormals[i].y;
-		vector.z = mesh->mNormals[i].z;
-		vertex.Normal = vector;
-		// texture coordinates
-		if(mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
+
+		vertex.pos = vec3(
+			mesh->mVertices[i].x,
+			mesh->mVertices[i].y,
+			mesh->mVertices[i].z
+		);
+		vertex.normal = vec3(
+			mesh->mNormals[i].x,
+			mesh->mNormals[i].y,
+			mesh->mNormals[i].z
+		);
+		if (mesh->HasTextureCoords(0))
 		{
-			glm::vec2 vec;
-			// a vertex can contain up to 8 different texture coordinates. We thus make the assumption that we won't
-			// use models where a vertex can have multiple texture coordinates so we always take the first set (0).
-			vec.x = mesh->mTextureCoords[0][i].x;
-			vec.y = mesh->mTextureCoords[0][i].y;
-			vertex.TexCoords = vec;
+			vertex.texCoords = vec2(
+				mesh->mTextureCoords[0][i].x,
+				mesh->mTextureCoords[0][i].y
+			);
 		}
-		else
-			vertex.TexCoords = glm::vec2(0.0f, 0.0f);
-		// tangent
-		vector.x = mesh->mTangents[i].x;
-		vector.y = mesh->mTangents[i].y;
-		vector.z = mesh->mTangents[i].z;
-		vertex.Tangent = vector;
-		// bitangent
-		vector.x = mesh->mBitangents[i].x;
-		vector.y = mesh->mBitangents[i].y;
-		vector.z = mesh->mBitangents[i].z;
-		vertex.Bitangent = vector;
+		else vertex.texCoords = vec2(0.0f);
+
+		/*
+		vertex.tangent = vec3(
+			mesh->mTangents[i].x,
+			mesh->mTangents[i].y,
+			mesh->mTangents[i].z
+		);
+
+		vertex.bitangent = vec3(
+			mesh->mBitangents[i].x,
+			mesh->mBitangents[i].y,
+			mesh->mBitangents[i].z
+		);
+		*/
+
 		vertices.push_back(vertex);
 	}
-	// now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
-	for(unsigned int i = 0; i < mesh->mNumFaces; i++)
+
+	unsigned numFaces = mesh->mNumFaces;
+	for (unsigned i = 0; i < numFaces; i++)
 	{
-		aiFace face = mesh->mFaces[i];
-		// retrieve all indices of the face and store them in the indices vector
-		for(unsigned int j = 0; j < face.mNumIndices; j++)
+		aiFace &face = mesh->mFaces[i];
+		for (unsigned j = 0; j < face.mNumIndices; j++)
 			indices.push_back(face.mIndices[j]);
 	}
-	// process materials
-	aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-	// we assume a convention for sampler names in the shaders. Each diffuse texture should be named
-	// as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER.
-	// Same applies to other texture as the following list summarizes:
-	// diffuse: texture_diffuseN
-	// specular: texture_specularN
-	// normal: texture_normalN
 
-	// 1. diffuse maps
-	vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-	textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-	// 2. specular maps
-	vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-	textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-	// 3. normal maps
-	std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
-	textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-	// 4. height maps
-	std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
-	textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+	// Must be GL_TRIANGLES since we used triangulate
+	submeshes.emplace_back(GL_TRIANGLES, 0, indices.size());
 
-	// return a mesh object created from the extracted mesh data
-	return MeshRef(res);
+	loadBuffers();
 }
 
-static MeshRef processNode(aiNode *node, const aiScene *scene)
+static Mesh *processNode(aiNode *node, const aiScene *scene)
 {
 	// process each mesh located at the current node
 	for(unsigned int i = 0; i < node->mNumMeshes; i++)
-		return processMesh(scene->mMeshes[node->mMeshes[i]], scene);
+		return new Mesh(scene->mMeshes[node->mMeshes[i]]);
 
 	// after we've processed all of the meshes (if any) we then recursively process each of the children nodes
 	for(unsigned int i = 0; i < node->mNumChildren; i++)
 	{
-		MeshRef mesh = processNode(node->mChildren[i], scene);
-		if (mesh)
+		if (Mesh *mesh = processNode(node->mChildren[i], scene))
 			return mesh;
 	}
 	return nullptr;
@@ -509,17 +476,17 @@ MeshRef Mesh::load(std::string _file)
 {
 	std::string path = "Resources/" + _file;
 
-       // read file via ASSIMP
-        Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	// read file via ASSIMP
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 
-        // check for errors
-        if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
-        {
+	// check for errors
+	if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
+	{
 		Error::add(FILE_NOT_FOUND, "Mesh::load() -> " + path);
 		return nullptr;
-        }
+	}
 
 	// Load first mesh
-        return processNode(scene->mRootNode, scene);
+	return MeshRef(processNode(scene->mRootNode, scene));
 }
