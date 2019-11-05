@@ -94,6 +94,7 @@ void Material::bind() const
 		case MATRIX_M:
 			set_uniform(prop.location, GraphicEngine::get()->getMatrix(GE_MODEL)); break;
 		case MATRIX_N:
+			//mat3(transpose(inverse(GraphicEngine::get()->getMatrix(GE_MODEL))))
 			set_uniform(prop.location, GraphicEngine::get()->getMatrix(GE_MODEL)); break;
 		}
 	}

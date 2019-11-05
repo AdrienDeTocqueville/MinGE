@@ -24,10 +24,12 @@ class Camera : public Component
 			void use();
 
 		/// Setters
+			void setRenderingOrder(unsigned _order);
 			void setRenderTexture(RenderTexture* _renderTexture);
 			void setClipPlane(vec4 _clipPlane);
 
 		/// Getters
+			unsigned getRenderingOrder() const; // 0 is rendered last
 			Texture* getColorBuffer() const;
 			RenderBuffer* getDepthBuffer() const;
 
@@ -40,7 +42,6 @@ class Camera : public Component
 			float getAspectRatio() const;
 
 		/// Attributes (static)
-			static Camera* main;
 			static Camera* current;
 
 	private:
@@ -54,6 +55,7 @@ class Camera : public Component
 
 		/// Attributes
 			float FOV, zNear, zFar, FPS;
+			unsigned order;
 
 			vec3 clearColor;
 			unsigned clearFlags;

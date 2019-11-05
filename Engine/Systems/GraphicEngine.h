@@ -38,10 +38,9 @@ class GraphicEngine
 			void removeCamera(Camera* _camera);
 			void removeLight(Light* _light);
 
+			void updateCamerasOrder();
 			void toggleWireframe();
-
 			void computeMVP();
-
 			void render();
 
 		/// Setters
@@ -53,12 +52,9 @@ class GraphicEngine
 
 		/// Getters
 			mat4 getMatrix(const MatrixType _type) const;
-
 			Light* getLight() const;
 
-//			vec3 getViewPosition() const;
-
-			bool getLock() const;
+			//vec3 getViewPosition() const;
 
 		/// Attributes (static)
 			static unsigned renderTarget;

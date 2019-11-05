@@ -12,7 +12,7 @@ void PlayerScript::update()
 	float realSpeed = Input::getKeyDown(sf::Keyboard::LShift) ? alt_speed: speed;
 	float force = 50.0f * rb->getMass() * Time::deltaTime * realSpeed;
 
-	vec3 direction = CameraScript::getMovement(Camera::main->getDirection());
+	vec3 direction = CameraScript::getMovement(cam->getDirection());
 	rb->applyForceToCOM(force * direction);
 
 	if (Input::getKeyDown(sf::Keyboard::P))

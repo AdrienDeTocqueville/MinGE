@@ -51,9 +51,6 @@ void GraphicEngine::clear()
 	graphics.clear();
 	cameras.clear();
 	lights.clear();
-
-	Camera::main = nullptr;
-	Camera::current = nullptr;
 }
 
 /// Methods (static)
@@ -101,21 +98,8 @@ void GraphicEngine::addGraphic(Graphic* _graphic)
 
 void GraphicEngine::addCamera(Camera* _camera)
 {
-	if (_camera)
-	{
-		if (Camera::main)
-		{
-			cameras.back() = _camera;
-			cameras.push_back(Camera::main);
-		}
-		else
-		{
-			cameras.push_back(_camera);
-
-			if (_camera->getEntity()->tag == "MainCamera")
-			Camera::main = _camera;
-		}
-	}
+	cameras.push_back(_camera);
+	updateCamerasOrder();
 }
 
 void GraphicEngine::addLight(Light* _light)
@@ -131,44 +115,20 @@ void GraphicEngine::removeGraphic(Graphic* _graphic)
 
 void GraphicEngine::removeCamera(Camera* _camera)
 {
-	// Replace if it was the main camera
-	if (_camera == Camera::main)
-	{
-		cameras.pop_back();
-
-		Camera::main = nullptr;
-
-		auto _cameras = Entity::findAllByTag("MainCamera");
-
-		for (Entity* _c: _cameras)
-		{
-			if (_c->find<Camera>() != _camera)
-			{
-				Camera::main = _c->find<Camera>();
-				break;
-			}
-		}
-
-		if (Camera::main == nullptr || cameras.size() == 1)
-			return;
-
-		for (auto it(cameras.begin()) ; it != cameras.end() ; it++)
-		{
-			if (*it == Camera::main)
-			{
-				*it = cameras.back();
-				cameras.back() = Camera::main;
-				break;
-			}
-		}
-	}
-	else
-		cameras.remove(_camera);
+	cameras.remove(_camera);
+	updateCamerasOrder();
 }
 
 void GraphicEngine::removeLight(Light* _light)
 {
 	lights.remove(_light);
+}
+
+void GraphicEngine::updateCamerasOrder()
+{
+	cameras.sort([](Camera *a, Camera *b) {
+		return a->getRenderingOrder() > b->getRenderingOrder();
+	});
 }
 
 void GraphicEngine::toggleWireframe()
@@ -189,38 +149,42 @@ void GraphicEngine::computeMVP()
 void GraphicEngine::render()
 {
 	//glEnable(GL_SCISSOR_TEST);
-	
+
 	/*
-	light l;
-	   Light* src = GraphicEngine::get()->getLight();
-	   if (src)
-	   {
-		  l.lightPosition = vec4(src->getPosition(), 0.0f);
-		  l.diffuseColor = vec4(src->getDiffuseColor(), 0.0f);
-		  l.ambientCoefficient = src->getAmbientCoefficient();
-		  l.attenuation = src->getAttenuation();
-	   }
-	cam c;
-	   c.vp = GraphicEngine::get()->getMatrix(GE_VP);
-	   c.clipplane = camera->getClipPlane();
-	   c.pos = vec4(camera->getPosition(), 0.0f);
+	2 buckets:
+	  - shadow
+	 	key ( view | depth [front-back] | material )
+	  - display
+	 	key ( view | layer | translucency | material | depth [front-back] )
+	  - post-processing?
+	  - hud ?
+	
+	view:
+		viewport, scissor, camera settings...
+	layer:
+		world, skybox, hud
+	transflucency:
+		normal, additive
 
-	p->send(0, GraphicEngine::get()->getMatrix(GE_MODEL));
-	p->send(1, mat3(transpose(inverse(GraphicEngine::get()->getMatrix(GE_MODEL)))));
+	OR
+	remove the view from the key since its always there and always first (note: how about CSM ?)
+	embed it in the command bucket
+	create one bucket for each view
+	-> more buckets = better multithreading i guess
+	 + sorting might be faster with smaller buckets
 	*/
+	/*
+	typedef ShadowKey uint16_t;
+	typedef DisplayKey uint64_t;
 
-	// 2 buckets:
-	//  - shadow
-	// 	key ( view | depth [front-back] | material )
-	//  - display
-	// 	key ( view | layer | translucency | material | depth [front-back] )
-	//
-	// view:
-	//	viewport, scissor, camera settings...
-	// layer:
-	//	world, skybox, hud
-	// transflucency:
-	//	normal, additive
+	template <typename Key>
+	class CommandBucket
+	{
+	};
+
+	CommandBucket<ShadowKey> shadow_bucket;
+	CommandBucket<DisplayKey> display_bucket;
+	*/
 
 	// foreach shadow_light
 	//	submit_to(shadow_bucket, shadow_light.state)
@@ -238,6 +202,8 @@ void GraphicEngine::render()
 	//
 	// sort(shadow_bucket)
 	// sort(display_bucket)
+	//
+	// <threads join>
 	//
 	// submit(shadow_bucket)
 	// submit(display_bucket)
@@ -273,7 +239,8 @@ void GraphicEngine::setMatrix(const MatrixType _type, mat4 _value)
 
 void GraphicEngine::updateCameraViewPort() const
 {
-	Camera::main->computeViewPort();
+	for (Camera* c : cameras)
+		c->computeViewPort();
 }
 
 /// Getters
@@ -290,12 +257,14 @@ Light* GraphicEngine::getLight() const
 	return nullptr;
 }
 
-//vec3 GraphicEngine::getViewPosition() const
-//{
-//	mat3 rotMat(matrices[GE_VIEW]);
-//	vec3 d(matrices[GE_VIEW][3]);
-//
-//	vec3 pos = -d * rotMat;
-//
-//	return pos;
-//}
+/*
+vec3 GraphicEngine::getViewPosition() const
+{
+	mat3 rotMat(matrices[GE_VIEW]);
+	vec3 d(matrices[GE_VIEW][3]);
+
+	vec3 pos = -d * rotMat;
+
+	return pos;
+}
+*/

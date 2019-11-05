@@ -4,11 +4,11 @@
 
 #include "Utility/IO/Input.h"
 
-Camera* Camera::main = nullptr;
 Camera* Camera::current = nullptr;
 
 Camera::Camera(float _FOV, float _zNear, float _zFar, vec3 _color, RenderTexture* _renderTexture, bool _orthographic, vec4 _viewport, unsigned _flags):
 	FOV(_FOV), zNear(_zNear), zFar(_zFar),
+	order(0),
 	clearColor(_color), clearFlags(_flags),
 	orthographic(_orthographic),
 	relViewport(_viewport),
@@ -65,6 +65,12 @@ void Camera::use()
 }
 
 /// Setters
+void Camera::setRenderingOrder(unsigned _order)
+{
+	order = _order;
+	GraphicEngine::get()->updateCamerasOrder();
+}
+
 void Camera::setRenderTexture(RenderTexture* _renderTexture)
 {
 	delete renderTexture;
@@ -82,6 +88,11 @@ void Camera::setClipPlane(vec4 _clipPlane)
 }
 
 /// Getters
+unsigned Camera::getRenderingOrder() const
+{
+	return order;
+}
+
 Texture* Camera::getColorBuffer() const
 {
 	if (renderTexture)

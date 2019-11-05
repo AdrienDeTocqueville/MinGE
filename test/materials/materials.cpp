@@ -20,7 +20,7 @@ void test_materials()
 	Input::setCursorMode(CursorMode::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
-	MeshRef mesh = Mesh::createSphere();
+	MeshRef mesh = Mesh::createCube();
 
 	MaterialRef m = Material::getDefault();
 	Entity *object = Entity::create("Object", true)
@@ -32,9 +32,9 @@ void test_materials()
 	{
 		auto e = Entity::clone(object, vec3(k, i-20.0f, j-10.0f), vec3(0.0f), vec3(0.5f));
 
-		MaterialRef mat = m->clone();
-		mat->set("diffuse", vec3(Random::next<float>(), Random::next<float>(), Random::next<float>()));
-		e->find<Graphic>()->setMesh(mesh, {mat});
+		//MaterialRef mat = m->clone();
+		//mat->set("diffuse", vec3(Random::next<float>(), Random::next<float>(), Random::next<float>()));
+		//e->find<Graphic>()->setMesh(mesh, {mat});
 	}
 
 	// Camera
