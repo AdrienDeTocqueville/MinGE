@@ -5,24 +5,28 @@
 #include "Assets/Program.h"
 #include "Renderer/UBO.h"
 
+enum RenderPass
+{
+	ShadowMap,
+	Forward,
+	Additive
+};
+
+
 typedef std::shared_ptr<class Material> MaterialRef;
 
 class Material
 {
-	struct Property
-	{
-		GLuint location, type;
-		size_t offset;
-	};
-
 public:
 	/// Methods (static)
 	static MaterialRef create(std::string name);
 	static MaterialRef getDefault();
 
 	/// Methods (public)
-	MaterialRef clone() const;
 	void bind() const;
+	bool hasRenderPass(RenderPass pass) const;
+
+	MaterialRef clone() const;
 
 	template <typename T>
 	void set(std::string name, T value)
@@ -50,8 +54,16 @@ private:
 
 	Program *program;
 
+
+	struct Property
+	{
+		GLuint location, type;
+		size_t offset;
+	};
+
 	std::vector<Property> builtin_props, properties;
 	std::vector<uint8_t> uniforms;
+
 
 	static const Material *bound;
 	static std::weak_ptr<Material> basic;

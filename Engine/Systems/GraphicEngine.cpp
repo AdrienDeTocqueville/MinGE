@@ -1,5 +1,6 @@
 #include "Systems/GraphicEngine.h"
 #include "Renderer/UBO.h"
+#include "Utility/Debug.h"
 
 #include "Components/Graphic.h"
 #include "Components/Camera.h"
@@ -10,7 +11,6 @@
 #include <cstring>
 
 GraphicEngine* GraphicEngine::instance = nullptr;
-unsigned GraphicEngine::renderTarget = GE_DEPTH_COLOR;
 
 /// Methods (private)
 GraphicEngine::GraphicEngine()
@@ -129,6 +129,13 @@ void GraphicEngine::updateCamerasOrder()
 	cameras.sort([](Camera *a, Camera *b) {
 		return a->getRenderingOrder() > b->getRenderingOrder();
 	});
+
+	buckets.clear();
+	for (Camera* camera: cameras)
+	{
+		for (CommandBucket &bucket : camera->buckets)
+			buckets.push_back(&bucket);
+	}
 }
 
 void GraphicEngine::toggleWireframe()
@@ -178,7 +185,7 @@ void GraphicEngine::render()
 	typedef DisplayKey uint64_t;
 
 	template <typename Key>
-	class CommandBucket
+	struct CommandBucket
 	{
 	};
 
@@ -207,6 +214,15 @@ void GraphicEngine::render()
 	//
 	// submit(shadow_bucket)
 	// submit(display_bucket)
+
+	/*
+	for (Camera* camera: cameras)
+		camera->update();
+
+	for (Graphic* graphic: graphics)
+		for (CommandBucket *bucket : buckets)
+			graphic->add(bucket);
+	*/
 
 	for (Camera* camera: cameras)
 	{

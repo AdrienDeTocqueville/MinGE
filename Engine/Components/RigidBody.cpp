@@ -58,7 +58,7 @@ void RigidBody::computeMass()
 		if (inertia != mat3(0.0f))
 			iILocal = inverse(inertia);
 
-		iI = tr->getToWorldSpace(iILocal);
+		iI = tr->toWorld(iILocal);
 }
 
 void RigidBody::integrateForces(float _dt)
@@ -106,19 +106,19 @@ void RigidBody::integrateVelocities(float _dt)
 	}
 
 	// Integrate linear velocity
-		tr->position += linearVelocity * _dt;
+	tr->position += linearVelocity * _dt;
 
 	// Integrate angular velocity
-		tr->rotation += 0.5f *_dt * quat(0.0f, angularVelocity) * tr->rotation;
-		if (tr->rotation != quat(0.0f, 0.0f, 0.0f, 0.0f))
-			tr->rotation = normalize(tr->rotation);
+	tr->rotation += 0.5f *_dt * quat(0.0f, angularVelocity) * tr->rotation;
+	if (tr->rotation != quat(0.0f, 0.0f, 0.0f, 0.0f))
+		tr->rotation = normalize(tr->rotation);
 
 	// Update transformation matrices
-		tr->toMatrix();
+	tr->toMatrix();
 
 
 	// Compute inertia matrix in world space
-		iI = tr->getToWorldSpace(iILocal);
+	iI = tr->toWorld(iILocal);
 }
 
 void RigidBody::applyImpulse(vec3 _J0, vec3 _J1, float _lambda)
@@ -167,7 +167,7 @@ void RigidBody::setDensity(float _density)
 /// Getter
 vec3 RigidBody::getCOM() const
 {
-	return tr->getToWorldSpace(COM);
+	return tr->toWorld(COM);
 }
 
 vec3 RigidBody::getLinearVelocity() const

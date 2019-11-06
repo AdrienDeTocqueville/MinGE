@@ -33,7 +33,7 @@ class CameraScript : public Script
 
 			if (target == nullptr) /// FPS
 			{
-				vec3 dir = getMovement(tr->getVectorToWorldSpace(vec3(1, 0, 0)));
+				vec3 dir = getMovement(tr->vectorToWorld(vec3(1, 0, 0)));
 				if (dir == vec3(0.0f) && Input::getMouseDelta() == vec2(0.0f))
 					return;
 
@@ -45,10 +45,10 @@ class CameraScript : public Script
 
 			else /// TPS
 			{
-				tr->position = target->getToWorldSpace(offset) -
+				tr->position = target->toWorld(offset) -
 					quat(vec3(0.0f, angles.y, angles.x)) *
 					vec3(distance, 0.0f, 0.0f);
-				tr->lookAt(target->getToWorldSpace(offset));
+				tr->lookAt(target->toWorld(offset));
 			}
 
 

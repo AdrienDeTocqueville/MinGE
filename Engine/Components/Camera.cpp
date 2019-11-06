@@ -2,14 +2,16 @@
 #include "Components/Skybox.h"
 #include "Components/Transform.h"
 
+#include "Systems/GraphicEngine.h"
+#include "Renderer/CommandBucket.h"
 #include "Utility/IO/Input.h"
 
 Camera* Camera::current = nullptr;
 
-Camera::Camera(float _FOV, float _zNear, float _zFar, vec3 _color, RenderTexture* _renderTexture, bool _orthographic, vec4 _viewport, unsigned _flags):
+Camera::Camera(float _FOV, float _zNear, float _zFar, vec3 _clearColor, RenderTexture* _renderTexture, bool _orthographic, vec4 _viewport, unsigned _clearFlags):
 	FOV(_FOV), zNear(_zNear), zFar(_zFar),
 	order(0),
-	clearColor(_color), clearFlags(_flags),
+	clearColor(_clearColor), clearFlags(_clearFlags),
 	orthographic(_orthographic),
 	relViewport(_viewport),
 	clipPlane(0, 0, 0, 1000),
@@ -18,6 +20,12 @@ Camera::Camera(float _FOV, float _zNear, float _zFar, vec3 _color, RenderTexture
 	computeViewPort();
 
 	createFramebuffer();
+
+	buckets.push_back({
+		viewport, fbo, mat4(1.0f),
+		vec4(clearColor, 0.0f), clearFlags,
+		RenderPass::Forward
+	});
 }
 
 Camera::~Camera()
@@ -43,9 +51,8 @@ void Camera::use()
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 
-	view = glm::lookAt(tr->getToWorldSpace(vec3(0.0f)),
-			tr->getToWorldSpace(vec3(1, 0, 0)),
-			vec3(0, 0, 1));
+	static const vec3 up(0, 0, 1);
+	const mat4 view = glm::lookAt(getPosition(), getPosition() + getDirection(), up);
 
 	mat4 vp;
 	simd_mul(projection, view, vp);
@@ -116,12 +123,12 @@ vec4 Camera::getClipPlane() const
 
 vec3 Camera::getPosition() const
 {
-	return tr->getToWorldSpace(vec3(0, 0, 0));
+	return tr->getPosition();
 }
 
 vec3 Camera::getDirection() const
 {
-	return tr->getVectorToWorldSpace(vec3(1, 0, 0));
+	return tr->getDirection();
 }
 
 float Camera::getFOV() const
@@ -145,6 +152,15 @@ void Camera::onDeregister()
 	GraphicEngine::get()->removeCamera(this);
 }
 
+void Camera::update()
+{
+	static const vec3 up(0, 0, 1);
+	const mat4 view = glm::lookAt(getPosition(), getPosition() + getDirection(), up);
+
+	// Update VP
+	simd_mul(projection, view, buckets[0].vp);
+}
+
 void Camera::computeViewPort()
 {
 	vec2 ws;
@@ -154,11 +170,11 @@ void Camera::computeViewPort()
 		ws = Input::getWindowSize();
 
 	viewport = vec4((int)(relViewport.x * ws.x),
-					(int)(relViewport.y * ws.y),
-					(int)(relViewport.z * ws.x),
-					(int)(relViewport.w * ws.y));
+			(int)(relViewport.y * ws.y),
+			(int)(relViewport.z * ws.x),
+			(int)(relViewport.w * ws.y));
 
-	float aspectRatio = viewport.z/viewport.w;
+	float aspectRatio = getAspectRatio();
 
 	if (orthographic)
 		projection = ortho(-FOV*0.5f, FOV*0.5f, -FOV*0.5f/aspectRatio, FOV*0.5f/aspectRatio, zNear, zFar);

@@ -18,10 +18,10 @@ DistanceConstraint::DistanceConstraint(RigidBody* _a, vec3 _anchorPointA, RigidB
 bool DistanceConstraint::positionConstraint()
 {
 	// Détermination du vecteur allant du CDG au point d’attache sur les solides A et B
-	qA = bodies[0]->find<Transform>()->getVectorToWorldSpace(anchorPointA);
+	qA = bodies[0]->find<Transform>()->vectorToWorld(anchorPointA);
 		pointA = bodies[0]->getCOM() + qA;
 
-	qB = bodies[1]->find<Transform>()->getVectorToWorldSpace(anchorPointB);
+	qB = bodies[1]->find<Transform>()->vectorToWorld(anchorPointB);
 		pointB = bodies[1]->getCOM() + qB;
 
 

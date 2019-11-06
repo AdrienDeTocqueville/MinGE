@@ -15,6 +15,7 @@ bool Input::focus = true;
 bool Input::closed = false;
 
 int Input::mouseIndex = 0, Input::keyboardIndex = 0;
+bool Input::mouseCleared = false, Input::keyboardCleared = false;
 
 std::bitset<sf::Mouse::ButtonCount> Input::mouseState[2];
 std::bitset<sf::Keyboard::KeyCount> Input::keyboardState[2];
@@ -25,6 +26,7 @@ sf::Uint32 Input::unicode;
 void Input::init(sf::RenderWindow* _window)
 {
 	window = _window;
+	window->setKeyRepeatEnabled(false);
 
 	dim = toVec2(window->getSize());
 	center = ivec2(0.5f*dim);
@@ -93,6 +95,7 @@ void Input::update()
 		case sf::Event::MouseButtonReleased:
 			if (!mouseEvent) {
 				mouseEvent = true;
+				mouseCleared = false;
 				mouseIndex = 1-mouseIndex;
 				mouseState[mouseIndex] = mouseState[1-mouseIndex];
 			}
@@ -101,8 +104,11 @@ void Input::update()
 
 		case sf::Event::KeyPressed:
 		case sf::Event::KeyReleased:
+			if (event.key.code == sf::Keyboard::Unknown)
+				break;
 			if (!keyboardEvent) {
 				keyboardEvent = true;
+				keyboardCleared = false;
 				keyboardIndex = 1-keyboardIndex;
 				keyboardState[keyboardIndex] = keyboardState[1-keyboardIndex];
 			}
@@ -112,6 +118,18 @@ void Input::update()
 		default: break;
 		}
 	}
+
+	if (!mouseCleared && !mouseEvent)
+	{
+		mouseCleared = true;
+		mouseState[1-mouseIndex] = mouseState[mouseIndex];
+	}
+	if (!keyboardCleared && !keyboardEvent)
+	{
+		keyboardCleared = true;
+		keyboardState[1-keyboardIndex] = keyboardState[keyboardIndex];
+	}
+
 
 	/// Mouse move
 	delta = mousePos - prevMousePos;

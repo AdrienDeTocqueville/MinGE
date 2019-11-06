@@ -1,16 +1,12 @@
 #pragma once
 
 #include "Renderer/GLDriver.h"
+#include "Renderer/CommandBucket.h"
 
 #include "Utility/helpers.h"
-#include "Utility/Debug.h"
 
 
 #define BUFFER_OFFSET(offset) ((char*)nullptr + (offset))
-
-#define GE_DEPTH_COLOR 0
-#define GE_DEPTH 1
-#define GE_COLOR 2
 
 enum MatrixType {GE_MODEL, GE_MVP, GE_VP};
 
@@ -56,9 +52,6 @@ class GraphicEngine
 
 			//vec3 getViewPosition() const;
 
-		/// Attributes (static)
-			static unsigned renderTarget;
-
 	private:
 		/// Methods (private)
 			GraphicEngine();
@@ -73,6 +66,8 @@ class GraphicEngine
 			std::list<Graphic*> graphics;
 			std::list<Camera*> cameras;
 			std::list<Light*> lights;
+
+			std::vector<CommandBucket*> buckets;
 
 			mat4 matrices[3];
 			Light* light = nullptr;

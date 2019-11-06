@@ -25,14 +25,14 @@ void Transform::toMatrix()
 {
 	validWorld = validLocal = false;
 
-	computeLocalSpaceMatrix();
+	computeLocalMatrix();
 }
 
-void Transform::use() const
+void Transform::use()
 {
-	computeWorldSpaceMatrix();
+	computeWorldMatrix();
 
-	GraphicEngine::get()->setMatrix(GE_MODEL, toWorldSpace);
+	GraphicEngine::get()->setMatrix(GE_MODEL, world);
 	GraphicEngine::get()->computeMVP();
 }
 
@@ -117,53 +117,63 @@ vec3 Transform::getPosition() const
 	return position;
 }
 
-vec3 Transform::getDirection() const
+vec3 Transform::getDirection()
 {
-	return getVectorToWorldSpace(vec3(1, 0, 0));
+	return vectorToWorld(vec3(1, 0, 0));
 }
 
-vec3 Transform::getToLocalSpace(vec3 _point) const
+const mat4 &Transform::getToWorld()
 {
-	computeLocalSpaceMatrix();
-
-	return vec3(toLocalSpace * vec4(_point, 1.0f));
+	return world;
 }
 
-mat4 Transform::getToLocalSpace(const mat4& _matrix) const
+const mat4 &Transform::getToLocal()
 {
-	computeLocalSpaceMatrix();
-
-	return toLocalSpace * _matrix;
+	return local;
 }
 
-vec3 Transform::getVectorToLocalSpace(vec3 _vector) const
+vec3 Transform::toLocal(vec3 _point)
 {
-	return getToLocalSpace(_vector + position);
+	computeLocalMatrix();
+
+	return vec3(local * vec4(_point, 1.0f));
 }
 
-vec3 Transform::getToWorldSpace(vec3 _point) const
+mat4 Transform::toLocal(const mat4& _matrix)
 {
-	computeWorldSpaceMatrix();
+	computeLocalMatrix();
 
-	return vec3(toWorldSpace * vec4(_point, 1.0f));
+	return local * _matrix;
 }
 
-mat3 Transform::getToWorldSpace(const mat3& _matrix) const
+vec3 Transform::vectorToLocal(vec3 _vector)
+{
+	return toLocal(_vector + position);
+}
+
+vec3 Transform::toWorld(vec3 _point)
+{
+	computeWorldMatrix();
+
+	return vec3(world * vec4(_point, 1.0f));
+}
+
+mat3 Transform::toWorld(const mat3& _matrix)
 {
 	mat3 m = toMat3(rotation);
 	return m * _matrix * transpose(m);
 }
 
-mat4 Transform::getToWorldSpace(const mat4& _matrix) const
+mat4 Transform::toWorld(const mat4& _matrix)
 {
-	computeWorldSpaceMatrix();
+	computeWorldMatrix();
 
-	return toWorldSpace * _matrix;
+	return world * _matrix;
 }
 
-vec3 Transform::getVectorToWorldSpace(vec3 _vector) const
+vec3 Transform::vectorToWorld(vec3 _vector)
 {
-	return getToWorldSpace(_vector) - position;
+	return toWorld(_vector) - position;
 }
 
 /// Methods (private)
@@ -172,21 +182,21 @@ void Transform::setRoot(Transform* _root) // private
 	root = _root;
 }
 
-void Transform::computeWorldSpaceMatrix() const
+void Transform::computeWorldMatrix()
 {
 	if (!validWorld)
 	{
 		/*
 		 * TODO: Multiply matrix with parent matrix
 		if (parent != nullptr)
-			toWorldSpace = parent->toWorldSpace;
+			world = parent->world;
 		else
-			toWorldSpace = mat4(1.0f);
+			world = mat4(1.0f);
 		*/
 
-		toWorldSpace = glm::translate(position);
-		simd_mul(toWorldSpace, toMat4(rotation), toWorldSpace);
-		simd_mul(toWorldSpace, glm::scale(scale), toWorldSpace);
+		world = glm::translate(position);
+		simd_mul(world, toMat4(rotation), world);
+		simd_mul(world, glm::scale(scale), world);
 
 		validWorld = true;
 		validLocal = false;
@@ -198,14 +208,13 @@ void Transform::computeWorldSpaceMatrix() const
 	}
 }
 
-void Transform::computeLocalSpaceMatrix() const
+void Transform::computeLocalMatrix()
 {
-	computeWorldSpaceMatrix();
+	computeWorldMatrix();
 
 	if (!validLocal)
 	{
-		toLocalSpace = inverse(toWorldSpace);
-
+		local = inverse(world);
 		validLocal = true;
 	}
 }

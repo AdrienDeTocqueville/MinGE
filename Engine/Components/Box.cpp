@@ -35,22 +35,22 @@ void Box::computeAABB()
 
 	// On cherche le point le plus bas
 	// 1ere iteration: 2 premiers points
-	vec3 lowest = tr->getToWorldSpace(center - hdim);
+	vec3 lowest = tr->toWorld(center - hdim);
 
 	hdim.z *= -1;
-	lowest = min(lowest, tr->getToWorldSpace(center - hdim));
+	lowest = min(lowest, tr->toWorld(center - hdim));
 
 	// les 6 autres points du cube (2 par iteration)
 	for (int i: {0, 1, 0})
 	{
 		hdim[i] *= -1;
 
-		lowest = min(lowest, tr->getToWorldSpace(center - hdim));
+		lowest = min(lowest, tr->toWorld(center - hdim));
 		hdim.z *= -1;
-		lowest = min(lowest, tr->getToWorldSpace(center - hdim));
+		lowest = min(lowest, tr->toWorld(center - hdim));
 	}
 
-	vec3 offset = tr->getToWorldSpace(center);
+	vec3 offset = tr->toWorld(center);
 
 	aabb.bounds[0] = lowest;
 	aabb.bounds[1] = offset + offset - lowest;
@@ -65,8 +65,8 @@ RayHit Box::raycast(vec3 _o, vec3 _d)
 	if (dot(OC, _d) < 0)
 		return r;
 
-	vec3 o = tr->getToLocalSpace(_o);
-	vec3 d = tr->getVectorToLocalSpace(_d);
+	vec3 o = tr->toLocal(_o);
+	vec3 d = tr->vectorToLocal(_d);
 
 	// https://tavianator.com/fast-branchless-raybounding-box-intersections/
 	float tmin = FLT_MIN, tmax = FLT_MAX;
@@ -93,10 +93,10 @@ RayHit Box::raycast(vec3 _o, vec3 _d)
 		return r;
 
 	r.collider = this;
-	r.point = tr->getToWorldSpace(o + tmin*d);
+	r.point = tr->toWorld(o + tmin*d);
 
 	r.normal[axis] = 2 * (0.0f < o[axis]) - 1.0f;
-	r.normal = normalize(tr->getVectorToWorldSpace(r.normal));
+	r.normal = normalize(tr->vectorToWorld(r.normal));
 
 	r.distance = tmin;
 
@@ -112,7 +112,7 @@ void Box::setHalfExtent(vec3 _halfExtent)
 /// Getters
 vec3 Box::getSupport(vec3 _axis)
 {
-	_axis = tr->getVectorToLocalSpace(_axis);
+	_axis = tr->vectorToLocal(_axis);
 
 	vec3 support(halfExtent);
 
@@ -120,7 +120,7 @@ vec3 Box::getSupport(vec3 _axis)
 		if (_axis[i] < 0.0f)
 			support[i] *= -1.0f;
 
-	return tr->getToWorldSpace(support + center);
+	return tr->toWorld(support + center);
 }
 
 vec3 Box::getHalfExtent() const

@@ -21,7 +21,7 @@ Light* Light::clone() const
 /// Getters
 vec3 Light::getPosition() const
 {
-	return tr->getToWorldSpace(position);
+	return tr->toWorld(position);
 }
 
 vec3 Light::getDiffuseColor() const

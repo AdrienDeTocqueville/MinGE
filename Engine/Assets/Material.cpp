@@ -56,11 +56,6 @@ Material::Material(const Material &material):
 	uniforms(material.uniforms)
 { }
 
-MaterialRef Material::clone() const
-{
-	return std::shared_ptr<Material>(new Material(*this));
-}
-
 void Material::bind() const
 {
 	GL::UseProgram(program->program);
@@ -136,6 +131,17 @@ void Material::bind() const
 			break;
 		}
 	}
+}
+
+bool Material::hasRenderPass(RenderPass pass) const
+{
+	// place holder
+	return (pass == RenderPass::Forward);
+}
+
+MaterialRef Material::clone() const
+{
+	return std::shared_ptr<Material>(new Material(*this));
 }
 
 MaterialRef Material::create(std::string name)

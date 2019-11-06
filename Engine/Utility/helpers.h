@@ -11,21 +11,10 @@
 #include <list>
 #include <map>
 
-//#define GLM_FORCE_SSE2 // or GLM_FORCE_SSE42 if your processor supports it
-//#define GLM_FORCE_ALIGNED
-
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/epsilon.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtx/matrix_operation.hpp>
-
+#include "Utility/glm.h"
 
 const float PI = 3.14159265358979323846f;
 const float EPSILON = 0.0001f;
-
-using namespace glm;
 
 template <typename T>
 std::string toString(T _number)

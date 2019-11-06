@@ -81,6 +81,7 @@ class Input
 			static bool closed;
 
 			static int mouseIndex, keyboardIndex;
+			static bool mouseCleared, keyboardCleared;
 
 			static std::bitset<sf::Mouse::ButtonCount> mouseState[2];
 			static std::bitset<sf::Keyboard::KeyCount> keyboardState[2];

@@ -1,10 +1,11 @@
 #include "Assets/Mesh.h"
+
+#include "Systems/GraphicEngine.h"
 #include "Utility/Error.h"
 
 void Submesh::draw() const
 {
-	//glCheck(glDrawArrays(mode, first, count));
-	glCheck(glDrawElements(mode, count, GL_UNSIGNED_SHORT, NULL));
+	glCheck(glDrawElements(mode, count, GL_UNSIGNED_SHORT, offset));
 }
 
 Mesh::Mesh(unsigned _dataFlags):
@@ -74,44 +75,6 @@ MeshRef Mesh::createCube(unsigned _dataFlags, vec3 _halfExtent)
 	const vec3& e = _halfExtent;
 	Mesh* m = new Mesh(_dataFlags);
 
-	/*
-		m->vertices =
-		{
-			vec3( e.x, -e.y, -e.z), vec3( e.x,  e.y, -e.z), vec3( e.x,  e.y,  e.z), vec3( e.x, -e.y,  e.z), // Front
-			vec3(-e.x, -e.y,  e.z), vec3(-e.x,  e.y,  e.z), vec3(-e.x,  e.y, -e.z), vec3(-e.x, -e.y, -e.z), // Back
-
-			vec3( e.x,  e.y, -e.z), vec3(-e.x,  e.y, -e.z), vec3(-e.x,  e.y,  e.z), vec3( e.x,  e.y,  e.z), // Right
-			vec3(-e.x, -e.y, -e.z), vec3( e.x, -e.y, -e.z), vec3( e.x, -e.y,  e.z), vec3(-e.x, -e.y,  e.z), // Left
-
-			vec3( e.x, -e.y,  e.z), vec3( e.x,  e.y,  e.z), vec3(-e.x,  e.y,  e.z), vec3(-e.x, -e.y,  e.z), // Top
-			vec3(-e.x, -e.y, -e.z), vec3(-e.x,  e.y, -e.z), vec3( e.x,  e.y, -e.z), vec3( e.x, -e.y, -e.z)  // Bottom
-		};
-
-		m->normals =
-		{
-			vec3( 1,  0,  0), vec3( 1,  0,  0), vec3( 1,  0,  0), vec3( 1,  0,  0),
-			vec3(-1,  0,  0), vec3(-1,  0,  0), vec3(-1,  0,  0), vec3(-1,  0,  0),
-
-			vec3( 0,  1,  0), vec3( 0,  1,  0), vec3( 0,  1,  0), vec3( 0,  1,  0),
-			vec3( 0, -1,  0), vec3( 0, -1,  0), vec3( 0, -1,  0), vec3( 0, -1,  0),
-
-			vec3( 0,  0,  1), vec3( 0,  0,  1), vec3( 0,  0,  1), vec3( 0,  0,  1),
-			vec3( 0,  0, -1), vec3( 0,  0, -1), vec3( 0,  0, -1), vec3( 0,  0, -1)
-		};
-
-		m->texCoords =
-		{
-			vec2(1, 0), vec2(0, 0), vec2(0, 1), vec2(1, 1),
-			vec2(0, 1), vec2(1, 1), vec2(1, 0), vec2(0, 0),
-
-			vec2(1, 0), vec2(0, 0), vec2(0, 1), vec2(1, 1),
-			vec2(1, 0), vec2(0, 0), vec2(0, 1), vec2(1, 1),
-
-			vec2(1, 1), vec2(0, 1), vec2(0, 0), vec2(1, 0),
-			vec2(1, 0), vec2(0, 0), vec2(0, 1), vec2(1, 1)
-		};
-		*/
-
 		m->vertices = {
 			// Front Face
 			{vec3( e.x, -e.y, -e.z), vec3( 1,  0,  0), vec2(0, 0)},
@@ -159,7 +122,7 @@ MeshRef Mesh::createCube(unsigned _dataFlags, vec3 _halfExtent)
 			20, 21, 22, 20, 22, 23,
 		};
 
-		m->submeshes.emplace_back(GL_TRIANGLES, 0, m->indices.size());
+		m->submeshes.emplace_back(GL_TRIANGLES, m->indices.size());
 
 	m->loadBuffers();
 
@@ -180,7 +143,7 @@ MeshRef Mesh::createQuad(unsigned _dataFlags, vec2 _halfExtent)
 
 		m->indices = {0, 1, 2, 0, 2, 3};
 
-		m->submeshes.emplace_back(GL_TRIANGLES, 0, m->indices.size());
+		m->submeshes.emplace_back(GL_TRIANGLES, m->indices.size());
 
 	m->loadBuffers();
 
@@ -193,7 +156,6 @@ MeshRef Mesh::createSphere(unsigned _dataFlags, float _radius, unsigned _slices,
 	const float iSlices = 1.0f/(float)(_slices-1);
 	Mesh* m = new Mesh(_dataFlags);
 
-		/*
 		vec3 vertex;
 		float xy;
 
@@ -201,11 +163,8 @@ MeshRef Mesh::createSphere(unsigned _dataFlags, float _radius, unsigned _slices,
 		float stack_step = PI * iStacks;
 		float slice_angle, stack_angle;
 
+		// Generate vertices
 		m->vertices.reserve(_slices * _stacks);
-		m->normals.reserve(_slices * _stacks);
-		m->texCoords.reserve(_slices * _stacks);
-		m->indices.reserve(_slices * _stacks);
-
 		for (int i = 0; i <= _stacks; ++i)
 		{
 			stack_angle = 0.5f * PI - i * stack_step;
@@ -219,82 +178,38 @@ MeshRef Mesh::createSphere(unsigned _dataFlags, float _radius, unsigned _slices,
 				vertex.x = xy * cosf(slice_angle);
 				vertex.y = xy * sinf(slice_angle);
 
-				m->vertices.push_back(vertex * _radius);
-				m->normals.push_back(vertex);
-				m->texCoords.emplace_back(j*iSlices, i*iStacks);
+				m->vertices.push_back({
+					vertex * _radius,
+					vertex,
+					vec2(j*iSlices, i*iStacks)
+				});
 			}
 		}
 
-		uint32_t k1, k2;
+		// Generate indices
+		m->indices.reserve(_slices * _stacks);
 		for (int i = 0; i < _stacks; ++i)
 		{
-			k1 = i * (_slices + 1);
-			k2 = k1 + _slices + 1;
+			uint16_t k1 = i * (_slices + 1);
+			uint16_t k2 = k1 + _slices + 1;
 
 			for (int j = 0; j < _slices; ++j, ++k1, ++k2)
 			{
-				if (i != 0)
-					m->indices.emplace_back(k1, k2, k1 + 1);
+				if (i != 0) {
+					m->indices.push_back(k1);
+					m->indices.push_back(k2);
+					m->indices.push_back(k1 + 1);
+				}
 
-				if (i != (_stacks-1))
-					m->indices.emplace_back(k1 + 1, k2, k2 + 1);
+				if (i != (_stacks-1)) {
+					m->indices.push_back(k1 + 1);
+					m->indices.push_back(k2);
+					m->indices.push_back(k2 + 1);
+				}
 			}
 		}
 
-		m->submeshes.push_back(Submesh(GL_TRIANGLES, 0, m->indices.size() * 3));
-
-		std::vector<vec3> vertices(_slices * _stacks);
-		std::vector<vec3> normals(_slices * _stacks);
-		std::vector<vec2> texCoords(_slices * _stacks);
-
-		unsigned i(0);
-
-		for(unsigned r(0) ; r < _stacks ; r++)
-		{
-			for(unsigned s(0) ; s < _slices ; s++)
-			{
-				float const x = cos(2.0f*PI * s * iSlices) * sin( PI * r * iStacks );
-				float const y = sin(2.0f*PI * s * iSlices) * sin( PI * r * iStacks );
-				float const z = sin( -PI*0.5f + PI * r * iStacks );
-
-				texCoords[i] = vec2(s*iSlices, r*iStacks);
-				vertices[i]  = _radius * vec3(x, y, z);
-				normals[i]   = vec3(x, y, z);
-
-				i++;
-			}
-		}
-
-		i = 0;
-		m->vertices.resize(4*vertices.size());
-		m->normals.resize(4*normals.size());
-		m->texCoords.resize(4*texCoords.size());
-
-		for(unsigned r(0) ; r < _stacks-1 ; r++)
-		{
-			for(unsigned s(0) ; s < _slices-1 ; s++)
-			{
-				m->vertices[i]   = vertices[r * _slices + s];
-				m->vertices[i+1] = vertices[r * _slices + s+1];
-				m->vertices[i+2] = vertices[(r+1) * _slices + s+1];
-				m->vertices[i+3] = vertices[(r+1) * _slices + s];
-
-				m->normals[i]   = normals[r * _slices + s];
-				m->normals[i+1] = normals[r * _slices + s+1];
-				m->normals[i+2] = normals[(r+1) * _slices + s+1];
-				m->normals[i+3] = normals[(r+1) * _slices + s];
-
-				m->texCoords[i]   = texCoords[r * _slices + s];
-				m->texCoords[i+1] = texCoords[r * _slices + s+1];
-				m->texCoords[i+2] = texCoords[(r+1) * _slices + s+1];
-				m->texCoords[i+3] = texCoords[(r+1) * _slices + s];
-
-				i += 4;
-			}
-		}
-
-		m->submeshes.push_back(Submesh(GL_QUADS, 0, m->vertices.size()));
-		*/
+		m->submeshes.push_back(Submesh(GL_TRIANGLES, m->indices.size()));
 
 	m->loadBuffers();
 
@@ -303,10 +218,11 @@ MeshRef Mesh::createSphere(unsigned _dataFlags, float _radius, unsigned _slices,
 
 MeshRef Mesh::createCylinder(unsigned _dataFlags, float _base, float _top, float _height, unsigned _slices)
 {
+	return nullptr;
+	/*
 	const float iSlices = 1/((float)_slices);
 	Mesh* m = new Mesh(_dataFlags);
 
-	/*
 		float b = (_base == _top)? 0.5f : 0.25f;
 		const vec3 base = vec3(0, 0, -_height * b);
 		const vec3 top  = vec3(0, 0,  _height * (1.0f - b));
@@ -386,11 +302,11 @@ MeshRef Mesh::createCylinder(unsigned _dataFlags, float _base, float _top, float
 		}
 
 		m->submeshes.push_back(Submesh(GL_TRIANGLES, 0, m->vertices.size()));
-		*/
 
 	m->loadBuffers();
 
 	return MeshRef(m);
+	*/
 }
 
 // Model Loader from:
@@ -452,7 +368,7 @@ Mesh::Mesh(aiMesh *mesh)
 	}
 
 	// Must be GL_TRIANGLES since we used triangulate
-	submeshes.emplace_back(GL_TRIANGLES, 0, indices.size());
+	submeshes.emplace_back(GL_TRIANGLES, indices.size());
 
 	loadBuffers();
 }
@@ -478,7 +394,7 @@ MeshRef Mesh::load(std::string _file)
 
 	// read file via ASSIMP
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
 
 	// check for errors
 	if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero

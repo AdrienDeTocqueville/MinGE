@@ -3,6 +3,7 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <GL/glew.h>
 
+#include "Utility/glm.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -21,11 +22,7 @@ class GL
 		GLuint program;
 		GLuint texture_unit;
 
-		/*
-		 * scissor
-		 * viewport
-		 * every gl state ...
-		 */
+		vec4 view, scissor, clearColor;
 	};
 
 	static GLState state;
@@ -126,12 +123,41 @@ public:
 		}
 	}
 
+	// Change state
 	static void ActiveTexture(GLuint slot)
 	{
 		if (slot != state.texture_unit)
 		{
 			glActiveTexture(slot);
 			state.texture_unit = slot;
+		}
+	}
+
+	static void Viewport(const vec4 &view)
+	{
+		if (view != state.view)
+		{
+			glViewport(view.x, view.y, view.z, view.w);
+			state.view = view;
+		}
+	}
+
+	static void Scissor(const vec4 &scissor)
+	{
+		if (scissor != state.scissor)
+		{
+			glScissor(scissor.x, scissor.y, scissor.z, scissor.w);
+			state.scissor = scissor;
+		}
+	}
+
+
+	static void ClearColor(const vec4 &color)
+	{
+		if (color != state.clearColor)
+		{
+			glClearColor(color.r, color.g, color.b, color.a);
+			state.clearColor = color;
 		}
 	}
 };

@@ -17,7 +17,7 @@ class Transform : public Component
 			virtual Transform* clone() const override;
 
 			void toMatrix();
-			void use() const;
+			void use();
 
 			void lookAt(vec3 _target);
 
@@ -38,21 +38,23 @@ class Transform : public Component
 			std::list<Transform*> getChildren() const;
 
 			vec3 getPosition() const;
-			vec3 getDirection() const;
+			vec3 getDirection();
 
-			vec3 getToLocalSpace(vec3 _point) const;
-			mat4 getToLocalSpace(const mat4& _matrix) const;
-			vec3 getVectorToLocalSpace(vec3 _vector) const;
+			const mat4 &getToWorld();
+			const mat4 &getToLocal();
 
-			vec3 getToWorldSpace(vec3 _point) const;
-			mat3 getToWorldSpace(const mat3& _matrix) const;
-			mat4 getToWorldSpace(const mat4& _matrix) const;
-			vec3 getVectorToWorldSpace(vec3 _vector) const;
+		// Transform helpers
+			vec3 toLocal(vec3 _point);
+			mat4 toLocal(const mat4& _matrix);
+			vec3 vectorToLocal(vec3 _vector);
+
+			vec3 toWorld(vec3 _point);
+			mat3 toWorld(const mat3& _matrix);
+			mat4 toWorld(const mat4& _matrix);
+			vec3 vectorToWorld(vec3 _vector);
 
 		// TODO: make them private
 		/// Attributes (public)
-			mutable mat4 toWorldSpace; mutable bool validWorld;
-			mutable mat4 toLocalSpace; mutable bool validLocal;
 
 			vec3 position;
 			quat rotation;
@@ -62,12 +64,15 @@ class Transform : public Component
 		/// Methods (private)
 			void setRoot(Transform* _root);
 
-			void computeWorldSpaceMatrix() const;
-			void computeLocalSpaceMatrix() const;
+			void computeWorldMatrix();
+			void computeLocalMatrix();
 
 		/// Attributes (private)
 			Transform *root, *parent;
 			std::list<Transform*> children;
+
+			mat4 world; bool validWorld;
+			mat4 local; bool validLocal;
 };
 
 #endif // TRANSFORM_H

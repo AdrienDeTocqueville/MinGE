@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Systems/GraphicEngine.h"
-#include "Assets/Material.h"
+#include <memory>
+
+#include "Utility/helpers.h"
 #include "Utility/Accel/AABB.h"
 
 #define VERTICES  1
@@ -14,14 +15,14 @@ class Transform;
 
 struct Submesh
 {
-	Submesh() { }
-	Submesh(GLdouble _mode, unsigned _first, unsigned _count):
-		mode(_mode), first(_first), count(_count) { }
+	Submesh(uint32_t _mode, unsigned _count, size_t _first_index = 0):
+		mode(_mode), count(_count), offset((void*)(_first_index * sizeof(uint16_t))) { }
 
 	void draw() const;
 
-	GLdouble mode;
-	unsigned first, count;
+	const uint32_t mode;
+	const unsigned count;
+	const void *offset;
 };
 
 struct Vertex

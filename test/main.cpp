@@ -53,7 +53,6 @@ int main()
 		Engine* engine = new Engine(&window, 60);
 		std::cout << "Seed: " << Random::getSeed() << std::endl;
 
-
 	/// Init scene
 		start_scene(engine, scene);
 

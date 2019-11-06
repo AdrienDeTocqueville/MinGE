@@ -18,13 +18,14 @@
 #include "Engine.h"
 #include "Entity.h"
 
+#include "Assets/PhysicMaterial.h"
 #include "Assets/Material.h"
 #include "Assets/Program.h"
 #include "Assets/Texture.h"
+#include "Assets/Mesh.h"
 
 #include "Components/Transform.h"
 #include "Components/RigidBody.h"
-#include "Components/Animator.h"
 #include "Components/Graphic.h"
 #include "Components/Camera.h"
 #include "Components/Skybox.h"
@@ -35,10 +36,6 @@
 #include "Components/Sphere.h"
 #include "Components/Cone.h"
 #include "Components/Box.h"
-
-#include "Meshes/AnimatedModel.h"
-#include "Meshes/Terrain.h"
-#include "Meshes/Model.h"
 
 #include "Physic/DistanceConstraint.h"
 #include "Physic/ContactConstraint.h"

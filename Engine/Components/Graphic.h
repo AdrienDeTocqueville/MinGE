@@ -16,7 +16,8 @@ public:
 	/// Methods (public)
 	virtual Graphic* clone() const override;
 
-	void render();
+	void render(struct CommandBucket *bucket) const;
+	void render() const;
 
 	/// Setters
 	void setMesh(MeshRef _mesh);
@@ -31,6 +32,8 @@ public:
 
 private:
 	/// Methods (private)
+	void updateMesh(MeshRef _mesh);
+
 	virtual void onRegister() override;
 	virtual void onDeregister() override;
 

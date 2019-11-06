@@ -1,25 +1,29 @@
 #include "Components/Graphic.h"
-#include "Components/Animator.h"
 #include "Components/Transform.h"
+
+#include "Systems/GraphicEngine.h"
+#include "Renderer/CommandBucket.h"
 
 Graphic::Graphic(MeshRef _mesh)
 {
+	mesh = _mesh;
 	setMesh(_mesh);
 }
 
 Graphic::Graphic(MeshRef _mesh, std::vector<MaterialRef> _materials)
 {
+	mesh = _mesh;
 	setMesh(_mesh, _materials);
 }
 
 Graphic::Graphic(MeshRef _mesh, std::initializer_list<MaterialRef> _materials)
 {
+	mesh = _mesh;
 	setMesh(_mesh, _materials);
 }
 
 Graphic::~Graphic()
-{
-}
+{ }
 
 /// Methods (public)
 Graphic* Graphic::clone() const
@@ -27,11 +31,24 @@ Graphic* Graphic::clone() const
 	return new Graphic(mesh, materials);
 }
 
-void Graphic::render()
+void Graphic::render(CommandBucket *bucket) const
 {
-	if (mesh == nullptr)
-		return;
+	const mat4 &model = tr->getToWorld();
 
+	vec4 pos = bucket->vp * vec4(tr->position, 1.0f);
+	float depth = pos.z / pos.w;
+
+	for (int i(0); i < materials.size(); i++)
+	{
+		if (!materials[i]->hasRenderPass(bucket->pass))
+			continue;
+		bucket->add<DrawCmd>(mesh.get(), i,
+			materials[i].get(), depth, model);
+	}
+}
+
+void Graphic::render() const
+{
 	GL::BindVertexArray(mesh->vao);
 	for (int i(0); i < materials.size(); i++)
 	{
@@ -47,8 +64,7 @@ void Graphic::render()
 /// Setters
 void Graphic::setMesh(MeshRef _mesh)
 {
-	mesh = _mesh;
-	materials.clear();
+	updateMesh(_mesh);
 
 	if (mesh == nullptr)
 		return;
@@ -59,8 +75,7 @@ void Graphic::setMesh(MeshRef _mesh)
 
 void Graphic::setMesh(MeshRef _mesh, std::vector<MaterialRef> _materials)
 {
-	mesh = _mesh;
-	materials.clear();
+	updateMesh(_mesh);
 
 	if (mesh == nullptr)
 		return;
@@ -74,8 +89,7 @@ void Graphic::setMesh(MeshRef _mesh, std::vector<MaterialRef> _materials)
 
 void Graphic::setMesh(MeshRef _mesh, std::initializer_list<MaterialRef> _materials)
 {
-	mesh = _mesh;
-	materials.clear();
+	updateMesh(_mesh);
 
 	if (mesh == nullptr)
 		return;
@@ -101,22 +115,22 @@ AABB Graphic::getAABB() const
 
 	// On cherche le point le plus bas
 	// 1ere iteration
-	vec3 lowest = tr->getToWorldSpace(center - hdim);
+	vec3 lowest = tr->toWorld(center - hdim);
 
 	hdim.z *= -1;
-	lowest = min(lowest, tr->getToWorldSpace(center - hdim));
+	lowest = min(lowest, tr->toWorld(center - hdim));
 
 	// les 6 autres points du cube
 	for (int i: {0, 1, 0})
 	{
 		hdim[i] *= -1;
 
-		lowest = min(lowest, tr->getToWorldSpace(center - hdim));
+		lowest = min(lowest, tr->toWorld(center - hdim));
 		hdim.z *= -1;
-		lowest = min(lowest, tr->getToWorldSpace(center - hdim));
+		lowest = min(lowest, tr->toWorld(center - hdim));
 	}
 
-	center = tr->getToWorldSpace(center);
+	center = tr->toWorld(center);
 
 	box.bounds[0] = lowest;
 	box.bounds[1] = center + center - lowest;
@@ -129,6 +143,16 @@ const std::vector<MaterialRef>& Graphic::getMaterials() const
 }
 
 /// Methods (private)
+void Graphic::updateMesh(MeshRef _mesh)
+{
+	if (mesh && !_mesh)
+		GraphicEngine::get()->removeGraphic(this);
+	else if (!mesh && _mesh)
+		GraphicEngine::get()->addGraphic(this);
+	mesh = _mesh;
+	materials.clear();
+}
+
 void Graphic::onRegister()
 {
 	/*
@@ -137,7 +161,8 @@ void Graphic::onRegister()
 		a->setGraphic(this);
 	*/
 
-	GraphicEngine::get()->addGraphic(this);
+	if (mesh)
+		GraphicEngine::get()->addGraphic(this);
 }
 
 void Graphic::onDeregister()
@@ -148,5 +173,6 @@ void Graphic::onDeregister()
 		a->setGraphic(nullptr);
 	*/
 
-	GraphicEngine::get()->removeGraphic(this);
+	if (mesh)
+		GraphicEngine::get()->removeGraphic(this);
 }

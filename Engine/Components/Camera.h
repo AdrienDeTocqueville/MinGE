@@ -14,8 +14,9 @@ class Camera : public Component
 	friend class GraphicEngine;
 
 	public:
-		Camera(float _FOV, float _zNear, float _zFar, vec3 _color = vec3(0.0f), RenderTexture* _renderTexture = nullptr, bool _orthographic = false,
-			   vec4 _viewport = vec4(0.0f,0.0f,1.0f,1.0f), unsigned _flags = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		Camera(float _FOV, float _zNear, float _zFar, vec3 _clearColor = vec3(0.0f), RenderTexture* _renderTexture = nullptr,
+			bool _orthographic = false, vec4 _viewport = vec4(0.0f,0.0f,1.0f,1.0f),
+			unsigned _clearFlags = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		virtual ~Camera();
 
 		/// Methods (public)
@@ -49,6 +50,7 @@ class Camera : public Component
 			virtual void onRegister() override;
 			virtual void onDeregister() override;
 
+			void update();
 			void computeViewPort();
 
 			void createFramebuffer();
@@ -67,7 +69,9 @@ class Camera : public Component
 
 			vec4 clipPlane;
 
-			mat4 view, projection;
+			mat4 projection;
+
+			std::vector<struct CommandBucket> buckets;
 
 			// Framebuffer
 			unsigned fbo;

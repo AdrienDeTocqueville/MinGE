@@ -28,7 +28,7 @@ void Sphere::computeAABB()
 {
 	vec3 r = vec3(radius) * tr->scale;
 
-	vec3 _center = tr->getToWorldSpace(center);
+	vec3 _center = tr->toWorld(center);
 	vec3 _dim = r;
 
 	aabb.bounds[0] = _center - _dim;

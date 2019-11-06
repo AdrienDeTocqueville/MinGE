@@ -1,7 +1,5 @@
 #pragma once
 
-#define REPORTFPS
-
 #include "Systems/GraphicEngine.h"
 #include "Systems/PhysicEngine.h"
 #include "Systems/ScriptEngine.h"

@@ -32,7 +32,7 @@ void Cylinder::computeAABB()
 {
 	float m = length( vec3(getRadius(), 0.0f, 0.5f * getHeight()) );
 
-	vec3 _center = tr->getToWorldSpace(center);
+	vec3 _center = tr->toWorld(center);
 	vec3 _dim = vec3(m);
 
 	aabb.bounds[0] = _center - _dim;
@@ -42,7 +42,7 @@ void Cylinder::computeAABB()
 /// Getters
 vec3 Cylinder::getSupport(vec3 _axis)
 {
-	_axis = tr->getVectorToLocalSpace(_axis);
+	_axis = tr->vectorToLocal(_axis);
 
 	float halfHeight = height * 0.5f;
 	float axisDistanceSquared = _axis.x * _axis.x + _axis.y * _axis.y;
@@ -57,7 +57,7 @@ vec3 Cylinder::getSupport(vec3 _axis)
 		support =  vec3(rOnDist * _axis.x , rOnDist * _axis.y, support.z);
 	}
 
-	return tr->getToWorldSpace(support + center);
+	return tr->toWorld(support + center);
 }
 
 float Cylinder::getRadius() const
