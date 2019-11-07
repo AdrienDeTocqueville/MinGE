@@ -1,9 +1,24 @@
 #include "Assets/Program.h"
+#include "Assets/Texture.h"
+
 #include "Utility/Error.h"
 
 #include <fstream>
 
+std::map<std::string, size_t> Program::builtins_names;
+std::vector<uint8_t> Program::builtins;
+
 std::map<std::string, Program*> Program::programs;
+
+static const std::map<GLuint, uint8_t> uniform_type_size = {
+	{GL_FLOAT,	sizeof(float)},
+	{GL_FLOAT_VEC2, sizeof(vec2)},
+	{GL_FLOAT_VEC3, sizeof(vec3)},
+	{GL_FLOAT_VEC4, sizeof(vec4)},
+	{GL_FLOAT_MAT3, sizeof(mat3)},
+	{GL_FLOAT_MAT4, sizeof(mat4)},
+	{GL_SAMPLER_2D, sizeof(Texture*)},
+};
 
 
 Program::Program(std::string _name):
@@ -24,6 +39,29 @@ Program::Program(std::string _name):
 Program::~Program()
 {
 	glCheck(glDeleteProgram(program));
+}
+
+/// Method (public)
+void Program::updateBuiltins()
+{
+	GL::UseProgram(program);
+
+	for (Builtin &var : builtins_used)
+	{
+		uint8_t *b = builtins.data() + var.offset;
+
+		uint8_t update_idx = *b;
+		if (var.update_idx == update_idx)
+			continue;
+		var.update_idx = update_idx;
+
+		b += sizeof(uint8_t);
+		GLuint type = *(GLuint*)b;
+
+		b += sizeof(GLuint);
+
+		set_uniform(var.location, type, b);
+	}
 }
 
 /// Methods (private)
@@ -77,17 +115,8 @@ void Program::link()
 
 void Program::load_uniforms()
 {
-	static const std::map<GLuint, uint32_t> uniform_type_size = {
-		{GL_FLOAT,	sizeof(float)},
-		{GL_FLOAT_VEC2, sizeof(vec2)},
-		{GL_FLOAT_VEC3, sizeof(vec3)},
-		{GL_FLOAT_VEC4, sizeof(vec4)},
-		{GL_FLOAT_MAT3, sizeof(mat3)},
-		{GL_FLOAT_MAT4, sizeof(mat4)},
-		{GL_SAMPLER_2D, sizeof(void*)},
-	};
-
 	Uniform u;
+	u.size = u.offset = 0;
 
 	GLint uniform_count = 0;
 	glCheck(glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &uniform_count));
@@ -98,16 +127,29 @@ void Program::load_uniforms()
 
 	for (GLint i = 0; i < uniform_count; ++i)
 	{
-		glCheck(glGetActiveUniform(program, i, name_len, &real_len, &u.num, &u.type, temp_name) );
-		u.location = glGetUniformLocation(program, temp_name);
-		u.size = uniform_type_size.at(u.type);
-
 		// TODO: handle uniform arrays
+		GLint num_unused;
+
+		glCheck(glGetActiveUniform(program, i, name_len, &real_len, &num_unused, &u.type, temp_name));
+		u.location = glGetUniformLocation(program, temp_name);
 
 		if (u.location == -1)
 			continue;
 
-		uniforms.emplace(std::string(temp_name, real_len), u);
+		std::string name(temp_name, real_len);
+		auto it = builtins_names.find(name);
+
+		// If builtin or not
+		if (it != builtins_names.end())
+			builtins_used.push_back({u.location, 0, it->second});
+		else
+		{
+			u.offset += u.size;
+			u.size = uniform_type_size.at(u.type);
+
+			uniforms_names.emplace(std::move(name), uniforms.size());
+			uniforms.push_back(u);
+		}
 	}
 
 	delete temp_name;
@@ -208,6 +250,51 @@ Program* Program::get(std::string _name)
 Program* Program::getDefault()
 {
 	return Program::get("object");
+}
+
+
+void Program::init()
+{
+	builtins_names.clear();
+	builtins.clear();
+
+	// Camera
+	addBuiltin("MATRIX_VP", GL_FLOAT_MAT4);
+	addBuiltin("clipPlane", GL_FLOAT_VEC4);
+	addBuiltin("cameraPosition", GL_FLOAT_VEC3);
+
+	// Light
+	addBuiltin("lightPosition", GL_FLOAT_VEC3);
+	addBuiltin("diffuseColor", GL_FLOAT_VEC3);
+	addBuiltin("ambientCoefficient", GL_FLOAT);
+	addBuiltin("aConstant", GL_FLOAT);
+	addBuiltin("aLinear", GL_FLOAT);
+	addBuiltin("aQuadratic", GL_FLOAT);
+
+	// Model
+	addBuiltin("MATRIX_M", GL_FLOAT_MAT4);
+	addBuiltin("MATRIX_N", GL_FLOAT_MAT4);
+
+}
+
+void Program::addBuiltin(std::string name, GLuint type)
+{
+	size_t offset = builtins.size();
+	uint8_t size = uniform_type_size.at(type);
+
+	builtins_names[name] = offset;
+
+	/*
+	 * Builtin structure
+	 * uint8_t update_idx;
+	 * GLuint type;
+	 * uint8_t data[size];
+	 */
+	builtins.resize(builtins.size() + sizeof(uint8_t) + sizeof(GLuint) + size);
+
+	uint8_t *start = builtins.data() + offset;
+	*start = 0; start += sizeof(uint8_t);
+	*(GLuint *)start = type;
 }
 
 void Program::clear()

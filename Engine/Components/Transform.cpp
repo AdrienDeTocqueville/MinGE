@@ -1,7 +1,5 @@
 #include "Components/Transform.h"
 
-#include "Systems/GraphicEngine.h"
-
 Transform::Transform(vec3 _position, quat _rotation, vec3 _scale):
 	validWorld(false), validLocal(false),
 	position(_position), rotation(_rotation), scale(_scale),
@@ -26,14 +24,6 @@ void Transform::toMatrix()
 	validWorld = validLocal = false;
 
 	computeLocalMatrix();
-}
-
-void Transform::use()
-{
-	computeWorldMatrix();
-
-	GraphicEngine::get()->setMatrix(GE_MODEL, world);
-	GraphicEngine::get()->computeMVP();
 }
 
 void Transform::lookAt(vec3 _target)
@@ -124,11 +114,13 @@ vec3 Transform::getDirection()
 
 const mat4 &Transform::getToWorld()
 {
+	computeWorldMatrix();
 	return world;
 }
 
 const mat4 &Transform::getToLocal()
 {
+	computeLocalMatrix();
 	return local;
 }
 

@@ -1,6 +1,7 @@
 #include "Components/Graphic.h"
 #include "Components/Transform.h"
 
+#include "Assets/Program.h"
 #include "Systems/GraphicEngine.h"
 #include "Renderer/CommandBucket.h"
 
@@ -55,7 +56,10 @@ void Graphic::render() const
 		const MaterialRef& material = materials[i];
 		const Submesh& submesh = mesh->submeshes[i];
 
-		tr->use();
+		Program::setBuiltin("MATRIX_M", tr->getToWorld());
+		Program::setBuiltin("MATRIX_N", tr->getToWorld());
+		//mat3(transpose(inverse(tr->getToWorld())))
+
 		material->bind();
 		submesh.draw();
 	}

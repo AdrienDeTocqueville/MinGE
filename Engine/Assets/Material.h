@@ -2,8 +2,6 @@
 
 #include <memory>
 #include "Assets/Texture.h"
-#include "Assets/Program.h"
-#include "Renderer/UBO.h"
 
 enum RenderPass
 {
@@ -26,43 +24,28 @@ public:
 	void bind() const;
 	bool hasRenderPass(RenderPass pass) const;
 
+	size_t getProperty(const std::string &name) const;
+
 	MaterialRef clone() const;
 
 	template <typename T>
-	void set(std::string name, T value)
+	inline void set(std::string name, T value)
 	{
-		auto it = program->uniforms.find(name);
-		if (it != program->uniforms.end())
-		{
-			for (int i(0); i < properties.size(); i++)
-				if (properties[i].location == it->second.location)
-					set(i, value);
-		}
-		else
-			std::cout << "Unknown uniform: " << name << std::endl;
+		set(getProperty(name), value);
 	}
 
 	template <typename T>
-	inline void set(uint32_t prop, T value)
+	inline void set(size_t prop, T value)
 	{
-		memcpy(uniforms.data() + properties[prop].offset, &value, sizeof(T));
+		memcpy(uniforms.data() + prop, &value, sizeof(T));
 	}
 
 private:
-	Material(Program *_program);
+	Material(class Program *_program);
 	Material(const Material &material);
 
-	Program *program;
-
-
-	struct Property
-	{
-		GLuint location, type;
-		size_t offset;
-	};
-
-	std::vector<Property> builtin_props, properties;
-	std::vector<uint8_t> uniforms;
+	class Program *program;
+	std::vector<uint8_t> uniforms; // Contains < data > sequenced for each uniform
 
 
 	static const Material *bound;
@@ -70,4 +53,4 @@ private:
 };
 
 template<>
-void Material::set(uint32_t prop, Texture *value);
+void Material::set(size_t prop, Texture *value);

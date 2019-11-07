@@ -27,7 +27,7 @@ OBJ := $(addprefix $(OBJDIR)/, $(SRC:.cpp=.o))
 #all: $(NAME)
 all: debug
 
-debug: CFLAGS += -DDEBUG -g3 -ggdb
+debug: CFLAGS += -DREPORTFPS -DDEBUG -g3 -ggdb
 debug: $(NAME)
 
 run: debug

@@ -17,7 +17,6 @@ class Transform : public Component
 			virtual Transform* clone() const override;
 
 			void toMatrix();
-			void use();
 
 			void lookAt(vec3 _target);
 
@@ -55,7 +54,6 @@ class Transform : public Component
 
 		// TODO: make them private
 		/// Attributes (public)
-
 			vec3 position;
 			quat rotation;
 			vec3 scale;

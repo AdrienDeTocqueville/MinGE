@@ -2,8 +2,10 @@
 #include "Components/Skybox.h"
 #include "Components/Transform.h"
 
+#include "Assets/Program.h"
 #include "Systems/GraphicEngine.h"
 #include "Renderer/CommandBucket.h"
+
 #include "Utility/IO/Input.h"
 
 Camera* Camera::current = nullptr;
@@ -14,11 +16,10 @@ Camera::Camera(float _FOV, float _zNear, float _zFar, vec3 _clearColor, RenderTe
 	clearColor(_clearColor), clearFlags(_clearFlags),
 	orthographic(_orthographic),
 	relViewport(_viewport),
-	clipPlane(0, 0, 0, 1000),
 	fbo(0), renderTexture(_renderTexture)
 {
+	setClipPlane(vec4(0, 0, 0, 1.0f));
 	computeViewPort();
-
 	createFramebuffer();
 
 	buckets.push_back({
@@ -56,7 +57,9 @@ void Camera::use()
 
 	mat4 vp;
 	simd_mul(projection, view, vp);
-	GraphicEngine::get()->setMatrix(GE_VP, vp);
+
+	Program::setBuiltin("MATRIX_VP", vp);
+	Program::setBuiltin("cameraPosition", getPosition());
 
 
 	// Background
@@ -92,6 +95,7 @@ void Camera::setRenderTexture(RenderTexture* _renderTexture)
 void Camera::setClipPlane(vec4 _clipPlane)
 {
 	clipPlane = _clipPlane;
+	Program::setBuiltin("clipPlane", clipPlane);
 }
 
 /// Getters

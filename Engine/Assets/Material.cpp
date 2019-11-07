@@ -1,28 +1,5 @@
 #include "Assets/Material.h"
-#include "Utility/Error.h"
-
-#include "Systems/GraphicEngine.h"
-#include "Components/Light.h"
-#include "Components/Camera.h"
-
-enum ShaderBuiltins
-{
-	// Camera
-	MATRIX_VP, CLIP_PLANE, CAMERA_POS,
-	// Light
-	LIGHT_POS, LIGHT_DIFF, LIGHT_AMBIENT, LIGHT_CONST, LIGHT_LINEAR, LIGHT_QUADRATIC,
-	// Model
-	MATRIX_M, MATRIX_N,
-};
-
-static const std::vector<std::string> shader_builtins = {
-	// Camera
-	"MATRIX_VP", "clipPlane", "cameraPosition",
-	// Light
-	"lightPosition", "diffuseColor", "ambientCoefficient", "aConstant", "aLinear", "aQuadratic",
-	// Model
-	"MATRIX_M", "MATRIX_N",
-};
+#include "Assets/Program.h"
 
 const Material *Material::bound = nullptr;
 std::weak_ptr<Material> Material::basic;
@@ -30,106 +7,40 @@ std::weak_ptr<Material> Material::basic;
 Material::Material(Program *_program):
 	program(_program)
 {
-	for (const auto& var : program->uniforms)
+	for (const auto& u : program->uniforms)
 	{
-		const std::string& name = var.first;
-		const Uniform& u = var.second;
+		uniforms.resize(uniforms.size() + u.size);
 
-		auto it = std::find(shader_builtins.begin(), shader_builtins.end(), name);
-		if (it != shader_builtins.end())
-			builtin_props.push_back({u.location, u.type, (size_t)(it - shader_builtins.begin())});
-		else
-		{
-			properties.push_back({u.location, u.type, uniforms.size()});
-			uniforms.resize(uniforms.size() + u.size);
-
-			if (u.type == GL_SAMPLER_2D)
-				set(properties.size() - 1, (Texture*)NULL);
-		}
+		if (u.type == GL_SAMPLER_2D)
+			set(uniforms.size() - u.size, (Texture*)NULL);
 	}
 }
 
 Material::Material(const Material &material):
-	program(material.program),
-	builtin_props(material.builtin_props),
-	properties(material.properties),
-	uniforms(material.uniforms)
+	program(material.program), uniforms(material.uniforms)
 { }
 
 void Material::bind() const
 {
-	GL::UseProgram(program->program);
-
-	Camera *camera = Camera::current;
-	Light *light = GraphicEngine::get()->getLight();
-	for (const Property& prop : builtin_props)
-	{
-		switch (prop.offset)
-		{
-		case MATRIX_VP:
-			set_uniform(prop.location, GraphicEngine::get()->getMatrix(GE_VP)); break;
-		case CLIP_PLANE:
-			set_uniform(prop.location, camera->getClipPlane()); break;
-		case CAMERA_POS:
-			set_uniform(prop.location, camera->getPosition()); break;
-
-		case LIGHT_POS:
-			set_uniform(prop.location, light->getPosition()); break;
-		case LIGHT_DIFF:
-			set_uniform(prop.location, light->getDiffuseColor()); break;
-		case LIGHT_AMBIENT:
-			set_uniform(prop.location, light->getAmbientCoefficient()); break;
-		case LIGHT_CONST:
-			set_uniform(prop.location, light->getAttenuation().x); break;
-		case LIGHT_LINEAR:
-			set_uniform(prop.location, light->getAttenuation().y); break;
-		case LIGHT_QUADRATIC:
-			set_uniform(prop.location, light->getAttenuation().z); break;
-
-		case MATRIX_M:
-			set_uniform(prop.location, GraphicEngine::get()->getMatrix(GE_MODEL)); break;
-		case MATRIX_N:
-			//mat3(transpose(inverse(GraphicEngine::get()->getMatrix(GE_MODEL))))
-			set_uniform(prop.location, GraphicEngine::get()->getMatrix(GE_MODEL)); break;
-		}
-	}
+	program->updateBuiltins();
 
 	if (Material::bound == this)
 		return;
 	Material::bound = this;
 
 	int texture_slot = 0;
-	for (const Property& prop : properties)
+	for (const Program::Uniform& uniform : program->uniforms)
 	{
-		const void *value = uniforms.data() + prop.offset;
-		switch (prop.type)
+		const void *data = uniforms.data() + uniform.offset;
+
+		if (uniform.type == GL_SAMPLER_2D)
 		{
-		case GL_SAMPLER_2D:
-		{
-			Texture *t = *(Texture**)value;
+			Texture *t = *(Texture**)data;
 			t->use(texture_slot);
-			glCheck(glUniform1i(prop.location, texture_slot++));
-			break;
+			glCheck(glUniform1i(uniform.location, texture_slot++));
 		}
-		case GL_FLOAT:
-			glCheck(glUniform1f(prop.location, *(float*)value));
-			break;
-		case GL_FLOAT_VEC2:
-			glCheck(glUniform2fv(prop.location, 1, (float*)value));
-			break;
-		case GL_FLOAT_VEC3:
-			glCheck(glUniform3fv(prop.location, 1, (float*)value));
-			break;
-		case GL_FLOAT_VEC4:
-			glCheck(glUniform4fv(prop.location, 1, (float*)value));
-			break;
-		case GL_FLOAT_MAT3:
-			glCheck(glUniformMatrix3fv(prop.location, 1, GL_FALSE, (float*)value));
-			break;
-		case GL_FLOAT_MAT4:
-			glCheck(glUniformMatrix4fv(prop.location, 1, GL_FALSE, (float*)value));
-			break;
-		}
+		else
+			set_uniform(uniform.location, uniform.type, data);
 	}
 }
 
@@ -137,6 +48,16 @@ bool Material::hasRenderPass(RenderPass pass) const
 {
 	// place holder
 	return (pass == RenderPass::Forward);
+}
+
+size_t Material::getProperty(const std::string &name) const
+{
+	auto it = program->uniforms_names.find(name);
+	if (it != program->uniforms_names.end())
+		return program->uniforms[it->second].offset;
+
+	std::cout << "Unknown uniform: " << name << std::endl;
+	return -1;
 }
 
 MaterialRef Material::clone() const
@@ -165,8 +86,8 @@ MaterialRef Material::getDefault()
 }
 
 template<>
-void Material::set(uint32_t prop, Texture *value)
+void Material::set(size_t prop, Texture *value)
 {
 	if (value == NULL) value = Texture::getDefault();
-	*(Texture**)(uniforms.data() + properties[prop].offset) = value;
+	*(Texture**)(uniforms.data() + prop) = value;
 }

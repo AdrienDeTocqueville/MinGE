@@ -8,8 +8,6 @@
 
 #define BUFFER_OFFSET(offset) ((char*)nullptr + (offset))
 
-enum MatrixType {GE_MODEL, GE_MVP, GE_VP};
-
 class Entity;
 class Graphic;
 class Camera;
@@ -36,18 +34,12 @@ class GraphicEngine
 
 			void updateCamerasOrder();
 			void toggleWireframe();
-			void computeMVP();
 			void render();
 
 		/// Setters
-			void setMatrix(const MatrixType _type, mat4 _value = mat4(1.0f));
-
 			void updateCameraViewPort() const;
 
-			void setLock(bool _lock);
-
 		/// Getters
-			mat4 getMatrix(const MatrixType _type) const;
 			Light* getLight() const;
 
 			//vec3 getViewPosition() const;
@@ -68,9 +60,6 @@ class GraphicEngine
 			std::list<Light*> lights;
 
 			std::vector<CommandBucket*> buckets;
-
-			mat4 matrices[3];
-			Light* light = nullptr;
 
 			bool wireframe = false;
 

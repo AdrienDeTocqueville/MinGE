@@ -1,6 +1,7 @@
 #include "Systems/GraphicEngine.h"
 #include "Renderer/UBO.h"
 #include "Utility/Debug.h"
+#include "Assets/Program.h"
 
 #include "Components/Graphic.h"
 #include "Components/Camera.h"
@@ -41,6 +42,7 @@ GraphicEngine::GraphicEngine()
 	glLineWidth(3);
 
 	UBO::setupPool();
+	Program::init();
 }
 
 GraphicEngine::~GraphicEngine()
@@ -77,13 +79,12 @@ void GraphicEngine::editBuffer(GLenum _target, unsigned _size, const void* _data
 {
 	void* adress = glMapBuffer(_target, GL_WRITE_ONLY);
 
-	if(adress == nullptr)
+	if (adress == nullptr)
 	{
 		Error::add(OPENGL_ERROR, "GraphicEngine::editBuffer() -> glMapBuffer() returns nullptr");
 		return;
 	}
 
-//	std::copy(data, data+size, adress);
 	memcpy(adress, _data, _size);
 
 	glUnmapBuffer(_target);
@@ -145,14 +146,6 @@ void GraphicEngine::toggleWireframe()
 	glPolygonMode(GL_FRONT_AND_BACK, wireframe? GL_LINE: GL_FILL);
 }
 
-void GraphicEngine::computeMVP()
-{
-	//if no simd
-	//matrices[GE_MVP] = matrices[GE_VP]*matrices[GE_MODEL];
-	simd_mul(matrices[GE_VP], matrices[GE_MODEL], matrices[GE_MVP]);
-}
-
-#include "Components/Transform.h"
 void GraphicEngine::render()
 {
 	//glEnable(GL_SCISSOR_TEST);
@@ -224,6 +217,16 @@ void GraphicEngine::render()
 			graphic->add(bucket);
 	*/
 
+	{
+		Light *source = GraphicEngine::get()->getLight();
+		Program::setBuiltin("lightPosition", source->getPosition());
+		Program::setBuiltin("diffuseColor", source->getDiffuseColor());
+		Program::setBuiltin("ambientCoefficient", source->getAmbientCoefficient());
+		Program::setBuiltin("aConstant", source->getAttenuation().x);
+		Program::setBuiltin("aLinear", source->getAttenuation().y);
+		Program::setBuiltin("aQuadratic", source->getAttenuation().z);
+	}
+
 	for (Camera* camera: cameras)
 	{
 		camera->use();
@@ -248,11 +251,6 @@ void GraphicEngine::render()
 }
 
 /// Setters
-void GraphicEngine::setMatrix(const MatrixType _type, mat4 _value)
-{
-	matrices[_type] = _value;
-}
-
 void GraphicEngine::updateCameraViewPort() const
 {
 	for (Camera* c : cameras)
@@ -260,11 +258,6 @@ void GraphicEngine::updateCameraViewPort() const
 }
 
 /// Getters
-mat4 GraphicEngine::getMatrix(const MatrixType _type) const
-{
-	return matrices[_type];
-}
-
 Light* GraphicEngine::getLight() const
 {
 	if (!lights.empty())
