@@ -22,7 +22,7 @@ void CommandBucket::submit()
 	GL::Viewport(viewport);
 	GL::Scissor (viewport);
 
-	GL::BindFramebuffer(fbo);
+	//GL::BindFramebuffer(fbo);
 
 	GL::ClearColor(clearColor);
 	glClear(clearFlags);
@@ -33,4 +33,10 @@ void CommandBucket::submit()
 }
 
 void CommandBucket::clear()
-{}
+{
+	for (int i(0); i < current_index; i++)
+	{
+		free(commands[i].packet);
+	}
+	current_index = 0;
+}

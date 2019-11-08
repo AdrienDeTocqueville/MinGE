@@ -197,7 +197,6 @@ void Engine::togglePause()
 void Engine::setWindowSize(vec2 _newSize)
 {
 	Input::setWindowSize(_newSize);
-	GraphicEngine::get()->updateCameraViewPort();
 }
 
 /// Getters

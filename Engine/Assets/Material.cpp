@@ -75,7 +75,7 @@ MaterialRef Material::getDefault()
 	if (auto shared = basic.lock())
 		return shared;
 
-	auto shared = MaterialRef(new Material(Program::getDefault()));
+	MaterialRef shared(new Material(Program::getDefault()));
 	shared->set("ambient", vec3(0.3f));
 	shared->set("diffuse", vec3(0.8f));
 	shared->set("specular", vec3(0.0f));

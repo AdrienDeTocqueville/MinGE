@@ -152,7 +152,7 @@ void Program::load_uniforms()
 		}
 	}
 
-	delete temp_name;
+	delete[] temp_name;
 
 
 	/*
@@ -260,7 +260,6 @@ void Program::init()
 
 	// Camera
 	addBuiltin("MATRIX_VP", GL_FLOAT_MAT4);
-	addBuiltin("clipPlane", GL_FLOAT_VEC4);
 	addBuiltin("cameraPosition", GL_FLOAT_VEC3);
 
 	// Light

@@ -34,6 +34,7 @@ Graphic* Graphic::clone() const
 
 void Graphic::render(CommandBucket *bucket) const
 {
+	/*
 	const mat4 &model = tr->getToWorld();
 
 	vec4 pos = bucket->vp * vec4(tr->position, 1.0f);
@@ -46,6 +47,7 @@ void Graphic::render(CommandBucket *bucket) const
 		bucket->add<DrawCmd>(mesh.get(), i,
 			materials[i].get(), depth, model);
 	}
+	*/
 }
 
 void Graphic::render() const

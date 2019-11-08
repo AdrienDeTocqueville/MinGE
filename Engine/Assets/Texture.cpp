@@ -34,21 +34,20 @@ Texture::Texture(std::string _path):
 	textures[path] = this;
 }
 
-Texture::Texture(unsigned _width, unsigned _height):
-	texture(0)
+Texture::~Texture()
+{
+	glDeleteTextures(1, &texture);
+}
+
+void Texture::create(uvec2 _size)
 {
 	glGenTextures(1, &texture);
 
 	glBindTexture(GL_TEXTURE_2D, texture);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _size.x, _size.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-}
-
-Texture::~Texture()
-{
-	glDeleteTextures(1, &texture);
 }
 
 /// Methods (public)
@@ -90,24 +89,18 @@ void Texture::clear()
 }
 
 
-RenderBuffer::RenderBuffer(unsigned _width, unsigned _height, GLenum _format):
-	width(_width), height(_height),
-	renderBuffer(0), format(_format)
+void RenderBuffer::create(uvec2 _size, GLenum _format)
 {
+	size = _size;
 	glGenRenderbuffers(1, &renderBuffer);
 
 	glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
-		glRenderbufferStorage(GL_RENDERBUFFER, _format, width, height);
+	glRenderbufferStorage(GL_RENDERBUFFER, _format, size.x, size.y);
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
 
 RenderBuffer::~RenderBuffer()
 {
-	glDeleteRenderbuffers(1, &renderBuffer);
-}
-
-/// Methods (public)
-void RenderBuffer::destroy()
-{
-	delete this;
+	if (renderBuffer)
+		glDeleteRenderbuffers(1, &renderBuffer);
 }

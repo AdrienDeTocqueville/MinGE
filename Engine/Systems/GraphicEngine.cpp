@@ -100,7 +100,6 @@ void GraphicEngine::addGraphic(Graphic* _graphic)
 void GraphicEngine::addCamera(Camera* _camera)
 {
 	cameras.push_back(_camera);
-	updateCamerasOrder();
 }
 
 void GraphicEngine::addLight(Light* _light)
@@ -117,7 +116,6 @@ void GraphicEngine::removeGraphic(Graphic* _graphic)
 void GraphicEngine::removeCamera(Camera* _camera)
 {
 	cameras.remove(_camera);
-	updateCamerasOrder();
 }
 
 void GraphicEngine::removeLight(Light* _light)
@@ -125,18 +123,11 @@ void GraphicEngine::removeLight(Light* _light)
 	lights.remove(_light);
 }
 
-void GraphicEngine::updateCamerasOrder()
+void GraphicEngine::sortCameras()
 {
 	cameras.sort([](Camera *a, Camera *b) {
-		return a->getRenderingOrder() > b->getRenderingOrder();
+		return a->getRenderTarget()->getPriority() > b->getRenderTarget()->getPriority();
 	});
-
-	buckets.clear();
-	for (Camera* camera: cameras)
-	{
-		for (CommandBucket &bucket : camera->buckets)
-			buckets.push_back(&bucket);
-	}
 }
 
 void GraphicEngine::toggleWireframe()
@@ -248,13 +239,6 @@ void GraphicEngine::render()
 
 	GL::BindVertexArray(0);
 	//glDisable(GL_SCISSOR_TEST);
-}
-
-/// Setters
-void GraphicEngine::updateCameraViewPort() const
-{
-	for (Camera* c : cameras)
-		c->computeViewPort();
 }
 
 /// Getters

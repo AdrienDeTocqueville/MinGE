@@ -6,7 +6,6 @@ layout(location = 2) in vec2 in_TexCoord;
 
 // Camera
 uniform mat4 MATRIX_VP;
-uniform vec4 clipPlane;
 
 // Model
 uniform mat4 MATRIX_M;
@@ -28,5 +27,4 @@ void main()
 	vs_out.texCoord = in_TexCoord;
 
 	gl_Position = MATRIX_VP * pos;
-	gl_ClipDistance[0] = (dot(vec4(vs_out.fragPos, 1.0f), clipPlane));
 }

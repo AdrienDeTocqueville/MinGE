@@ -7,12 +7,12 @@
 class Texture
 {
 	public:
-		Texture(unsigned _width, unsigned _height);
+		Texture();
+		~Texture();
 
-		/// Method (public)
-			void use(unsigned _active = 0) const;
-
-			void destroy();
+		void create(uvec2 _size);
+		void use(unsigned _active = 0) const;
+		void destroy();
 
 		/// Methods (static)
 			static Texture* get(std::string _path);
@@ -24,11 +24,7 @@ class Texture
 
 	private:
 		/// Constructors
-			Texture();
 			Texture(std::string _path);
-
-		/// Destructor
-			~Texture();
 
 		/// Operator
 			Texture operator=(Texture _original) = delete;
@@ -43,27 +39,17 @@ class Texture
 
 class RenderBuffer
 {
-	public:
-		RenderBuffer(unsigned _width, unsigned _height, GLenum _format);
+public:
+	void create(uvec2 _size, GLenum _format);
+	unsigned getId() const { return renderBuffer; }
 
-		/// Method (public)
-			void destroy();
+	~RenderBuffer();
+private:
+	RenderBuffer operator=(RenderBuffer _original) = delete;
 
-		/// Getter
-			unsigned getId() const { return renderBuffer; }
-
-	private:
-		/// Destructor
-			~RenderBuffer();
-
-		/// Operator
-			RenderBuffer operator=(RenderBuffer _original) = delete;
-
-		/// Attributes (private)
-			unsigned width, height;
-
-			unsigned renderBuffer;
-			GLenum format;
+	/// Attributes (private)
+	uvec2 size;
+	unsigned renderBuffer = 0;
 };
 
 #endif // TEXTURE_H

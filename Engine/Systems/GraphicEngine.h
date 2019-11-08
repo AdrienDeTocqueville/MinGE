@@ -32,12 +32,9 @@ class GraphicEngine
 			void removeCamera(Camera* _camera);
 			void removeLight(Light* _light);
 
-			void updateCamerasOrder();
+			void sortCameras();
 			void toggleWireframe();
 			void render();
-
-		/// Setters
-			void updateCameraViewPort() const;
 
 		/// Getters
 			Light* getLight() const;
@@ -58,8 +55,6 @@ class GraphicEngine
 			std::list<Graphic*> graphics;
 			std::list<Camera*> cameras;
 			std::list<Light*> lights;
-
-			std::vector<CommandBucket*> buckets;
 
 			bool wireframe = false;
 

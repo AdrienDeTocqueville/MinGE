@@ -84,7 +84,7 @@ void Input::update()
 
 			if (mode == CursorMode::Capture)
 				prevMousePos = center;
-			GraphicEngine::get()->updateCameraViewPort();
+			RenderTarget::getDefault()->resize(dim);
 			break;
 
 		case sf::Event::TextEntered:
