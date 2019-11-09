@@ -137,6 +137,10 @@ void GraphicEngine::sortBuckets()
 		if (targets.find(target) == targets.end())
 			buckets.push_back(&(target->bucket));
 	}
+
+	std::sort(buckets.begin(), buckets.end(), [] (CommandBucket *&a, CommandBucket *&b) {
+		return (a->target->getPriority() > b->target->getPriority());
+	});
 }
 
 void GraphicEngine::toggleWireframe()
@@ -208,15 +212,6 @@ void GraphicEngine::render()
 	// submit(shadow_bucket)
 	// submit(display_bucket)
 
-	/*
-	for (Camera* camera: cameras)
-		camera->update();
-
-	for (Graphic* graphic: graphics)
-		for (CommandBucket *bucket : buckets)
-			graphic->add(bucket);
-	*/
-
 	{
 		Light *source = GraphicEngine::get()->getLight();
 		Program::setBuiltin("lightPosition", source->getPosition());
@@ -228,12 +223,30 @@ void GraphicEngine::render()
 	}
 
 	for (Camera* camera: cameras)
+		camera->update();
+
+	for (Graphic* graphic: graphics)
+		for (CommandBucket *bucket : buckets)
+			graphic->render(bucket);
+
+	for (CommandBucket *bucket : buckets)
+		bucket->sort();
+
+	for (CommandBucket *bucket : buckets)
+		bucket->submit();
+
+	for (CommandBucket *bucket : buckets)
+		bucket->clear();
+
+	/*
+	for (Camera* camera: cameras)
 	{
 		camera->use();
 
 		for (Graphic* graphic: graphics)
 			graphic->render();
 	}
+	*/
 
 #ifdef DRAWAABB
 	for(Graphic* g: graphics)

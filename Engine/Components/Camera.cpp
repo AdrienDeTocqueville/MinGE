@@ -2,9 +2,10 @@
 #include "Components/Skybox.h"
 #include "Components/Transform.h"
 
-#include "Assets/Program.h"
 #include "Systems/GraphicEngine.h"
-#include "Renderer/CommandBucket.h"
+#include "Renderer/CommandKey.h"
+
+#include "Assets/Program.h"
 
 Camera::Camera(float _FOV, float _zNear, float _zFar, vec3 _clearColor, RenderTargetRef _target, bool _orthographic, vec4 _viewport, unsigned _clearFlags):
 	FOV(_FOV), zNear(_zNear), zFar(_zFar),

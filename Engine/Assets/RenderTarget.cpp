@@ -50,11 +50,16 @@ RenderTargetRef RenderTarget::getDefault()
 
 RenderTarget::RenderTarget(uvec2 _size):
 	size(_size), fbo(0), priority(0)
-{ }
+{
+	bucket.target = this;
+}
 
 RenderTarget::RenderTarget(uvec2 _size, unsigned _fbo, Texture &&_color, RenderBuffer &&_depth, unsigned _priority):
 	size(_size), fbo(_fbo), colorBuffer(_color), depthBuffer(_depth), priority(_priority)
-{ }
+{
+	bucket.target = this;
+}
+
 
 RenderTarget::~RenderTarget()
 {

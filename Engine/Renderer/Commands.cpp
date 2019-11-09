@@ -1,5 +1,5 @@
 #include "Renderer/Commands.h"
-#include "Renderer/CommandBucket.h"
+#include "Renderer/CommandKey.h"
 
 #include "Assets/Program.h"
 
@@ -12,7 +12,7 @@ void DrawElements::submit(uint64_t key, const void *_cmd)
 
 	auto pass = CommandKey::decodeRenderPass(key);
 	auto material = CommandKey::decodeMaterial(key);
-	material->bind(pass);
+	Material::get(material)->bind(pass);
 
 	GL::BindVertexArray(cmd->vao);
 	glCheck(glDrawElements(cmd->mode, cmd->count, GL_UNSIGNED_SHORT, cmd->offset));

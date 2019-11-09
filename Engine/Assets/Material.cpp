@@ -3,9 +3,10 @@
 
 const Material *Material::bound = nullptr;
 std::weak_ptr<Material> Material::basic;
+std::vector<std::weak_ptr<Material>> Material::materials;
 
 Material::Material(Program *_program):
-	program(_program)
+	program(_program), id(materials.size())
 {
 	for (const auto& u : program->uniforms)
 	{
@@ -17,8 +18,20 @@ Material::Material(Program *_program):
 }
 
 Material::Material(const Material &material):
-	program(material.program), uniforms(material.uniforms)
+	program(material.program), uniforms(material.uniforms),
+	id(materials.size())
 { }
+
+Material::~Material()
+{
+	// Swap with last
+	std::weak_ptr<Material> last = materials.back();
+	auto shared = last.lock();
+
+	shared->id = id;
+	materials[id] = last;
+	materials.pop_back();
+}
 
 void Material::bind(RenderPass pass) const
 {
@@ -63,12 +76,18 @@ size_t Material::getLocation(const std::string &name) const
 
 MaterialRef Material::clone() const
 {
-	return std::shared_ptr<Material>(new Material(*this));
+	auto shared = MaterialRef(new Material(*this));
+	materials.push_back(shared);
+	
+	return shared;
 }
 
 MaterialRef Material::create(std::string name)
 {
-	return MaterialRef(new Material(Program::get(name)));
+	auto shared = MaterialRef(new Material(Program::get(name)));
+	materials.push_back(shared);
+	
+	return shared;
 }
 
 MaterialRef Material::getDefault()
@@ -83,7 +102,13 @@ MaterialRef Material::getDefault()
 	shared->set("exponent", 8.0f);
 
 	basic = shared;
+	materials.push_back(basic);
 	return shared;
+}
+
+MaterialRef Material::get(uint32_t id)
+{
+	return materials[id].lock();
 }
 
 template<>

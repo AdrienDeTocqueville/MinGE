@@ -1,9 +1,10 @@
 #include "Components/Graphic.h"
 #include "Components/Transform.h"
 
-#include "Assets/Program.h"
 #include "Systems/GraphicEngine.h"
-#include "Renderer/CommandBucket.h"
+#include "Renderer/CommandKey.h"
+
+#include "Assets/Program.h"
 
 Graphic::Graphic(MeshRef _mesh)
 {

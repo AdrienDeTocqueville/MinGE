@@ -1,10 +1,16 @@
+#include <algorithm>
+
 #include "Renderer/CommandBucket.h"
 #include "Renderer/CommandKey.h"
 
 #include "Assets/RenderTarget.h"
 
 void CommandBucket::sort()
-{}
+{
+	std::sort(commands, commands + current_cmd, [](const CommandPair &a, const CommandPair &b) {
+		return (a.key < b.key);
+	});
+}
 
 void CommandBucket::submit()
 {
