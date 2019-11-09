@@ -5,12 +5,12 @@
 
 #include <fstream>
 
-std::map<std::string, size_t> Program::builtins_names;
+std::unordered_map<std::string, size_t> Program::builtins_names;
 std::vector<uint8_t> Program::builtins;
 
-std::map<std::string, Program*> Program::programs;
+std::unordered_map<std::string, Program*> Program::programs;
 
-static const std::map<GLuint, uint8_t> uniform_type_size = {
+static const std::unordered_map<GLuint, uint8_t> uniform_type_size = {
 	{GL_FLOAT,	sizeof(float)},
 	{GL_FLOAT_VEC2, sizeof(vec2)},
 	{GL_FLOAT_VEC3, sizeof(vec3)},
@@ -62,6 +62,16 @@ void Program::updateBuiltins()
 
 		set_uniform(var.location, type, b);
 	}
+}
+
+size_t Program::getLocation(const std::string &name)
+{
+	auto it = builtins_names.find(name);
+	if (it != builtins_names.end())
+		return it->second;
+
+	std::cout << "Unknown builtin: " << name << std::endl;
+	return -1;
 }
 
 /// Methods (private)
@@ -169,7 +179,7 @@ void Program::load_uniforms()
 		std::string name(c_name, name_len);
 
 		// Find binding slot
-		static const std::map<std::string, unsigned> bindings = {
+		static const std::unordered_map<std::string, unsigned> bindings = {
 			{"Camera", 0},
 			{"Light", 1},
 		};

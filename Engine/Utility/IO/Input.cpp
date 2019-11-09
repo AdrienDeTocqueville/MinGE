@@ -1,5 +1,5 @@
 #include "Input.h"
-#include "Systems/GraphicEngine.h"
+#include "Assets/RenderTarget.h"
 
 sf::RenderWindow* Input::window = nullptr;
 

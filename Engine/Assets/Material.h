@@ -21,23 +21,24 @@ public:
 	static MaterialRef getDefault();
 
 	/// Methods (public)
-	void bind() const;
+	void bind(RenderPass pass = RenderPass::Forward) const; // TODO: remove default value
 	bool hasRenderPass(RenderPass pass) const;
 
-	size_t getProperty(const std::string &name) const;
+	unsigned getId() const { return 0; } // TODO: do actually something
+	size_t getLocation(const std::string &name) const;
 
 	MaterialRef clone() const;
 
 	template <typename T>
 	inline void set(std::string name, T value)
 	{
-		set(getProperty(name), value);
+		set(getLocation(name), value);
 	}
 
 	template <typename T>
-	inline void set(size_t prop, T value)
+	inline void set(size_t location, T value)
 	{
-		memcpy(uniforms.data() + prop, &value, sizeof(T));
+		memcpy(uniforms.data() + location, &value, sizeof(T));
 	}
 
 private:
@@ -53,4 +54,4 @@ private:
 };
 
 template<>
-void Material::set(size_t prop, Texture *value);
+void Material::set(size_t location, Texture *value);

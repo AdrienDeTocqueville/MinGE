@@ -34,20 +34,35 @@ Graphic* Graphic::clone() const
 
 void Graphic::render(CommandBucket *bucket) const
 {
-	/*
-	const mat4 &model = tr->getToWorld();
-
-	vec4 pos = bucket->vp * vec4(tr->position, 1.0f);
-	float depth = pos.z / pos.w;
-
-	for (int i(0); i < materials.size(); i++)
+	for (uint32_t view_id(0) ; view_id < bucket->current_view; ++view_id)
 	{
-		if (!materials[i]->hasRenderPass(bucket->pass))
+		CommandBucket::View *view = bucket->get_view(view_id);
+		if (!(view->passes & (1 << RenderPass::Forward)))
 			continue;
-		bucket->add<DrawCmd>(mesh.get(), i,
-			materials[i].get(), depth, model);
+
+		const mat4 &model = tr->getToWorld();
+
+		vec4 pos = view->vp * vec4(tr->position, 1.0f);
+		float depth = pos.z / pos.w;
+
+		unsigned vao = mesh->vao;
+
+		for (int i(0); i < materials.size(); i++)
+		{
+			if (!materials[i]->hasRenderPass(RenderPass::Forward))
+				continue;
+
+			Submesh *submesh = mesh->submeshes.data() + i;
+
+			uint64_t key = CommandKey::encode(view_id, RenderPass::Forward, materials[i]->getId(), depth);
+			DrawElements *cmd = bucket->add<DrawElements>(key);
+			cmd->model = model;
+			cmd->vao = vao;
+			cmd->mode = submesh->mode;
+			cmd->count = submesh->count;
+			cmd->offset = submesh->offset;
+		}
 	}
-	*/
 }
 
 void Graphic::render() const

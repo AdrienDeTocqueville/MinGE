@@ -61,6 +61,11 @@ RenderTarget::~RenderTarget()
 	glDeleteFramebuffers(1, &fbo);
 }
 
+void RenderTarget::bind() const
+{
+	GL::BindFramebuffer(fbo);
+}
+
 void RenderTarget::resize(uvec2 _size)
 {
 	std::cout << "unimplemented" << std::endl;

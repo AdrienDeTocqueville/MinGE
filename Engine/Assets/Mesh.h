@@ -20,9 +20,9 @@ struct Submesh
 
 	void draw() const;
 
-	const uint32_t mode;
-	const unsigned count;
-	const void *offset;
+	uint32_t const mode;
+	unsigned const count;
+	void * const offset;
 };
 
 struct Vertex

@@ -10,6 +10,7 @@
 #include "Entity.h"
 
 #include <cstring>
+#include <unordered_set>
 
 GraphicEngine* GraphicEngine::instance = nullptr;
 
@@ -100,6 +101,7 @@ void GraphicEngine::addGraphic(Graphic* _graphic)
 void GraphicEngine::addCamera(Camera* _camera)
 {
 	cameras.push_back(_camera);
+	sortBuckets();
 }
 
 void GraphicEngine::addLight(Light* _light)
@@ -116,6 +118,7 @@ void GraphicEngine::removeGraphic(Graphic* _graphic)
 void GraphicEngine::removeCamera(Camera* _camera)
 {
 	cameras.remove(_camera);
+	sortBuckets();
 }
 
 void GraphicEngine::removeLight(Light* _light)
@@ -123,11 +126,17 @@ void GraphicEngine::removeLight(Light* _light)
 	lights.remove(_light);
 }
 
-void GraphicEngine::sortCameras()
+void GraphicEngine::sortBuckets()
 {
-	cameras.sort([](Camera *a, Camera *b) {
-		return a->getRenderTarget()->getPriority() > b->getRenderTarget()->getPriority();
-	});
+	std::unordered_set<RenderTarget*> targets;
+
+	buckets.clear();
+	for (Camera *camera : cameras)
+	{
+		RenderTarget *target = camera->getRenderTarget().get();
+		if (targets.find(target) == targets.end())
+			buckets.push_back(&(target->bucket));
+	}
 }
 
 void GraphicEngine::toggleWireframe()

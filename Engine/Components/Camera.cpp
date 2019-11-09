@@ -14,14 +14,6 @@ Camera::Camera(float _FOV, float _zNear, float _zFar, vec3 _clearColor, RenderTa
 	renderTarget(_target ? _target : RenderTarget::getDefault())
 {
 	computeViewPort();
-
-	/*
-	buckets.push_back({
-		viewport, renderTarget, mat4(1.0f),
-		vec4(clearColor, 0.0f), clearFlags,
-		RenderPass::Forward
-	});
-	*/
 }
 
 /// Methods (public)
@@ -32,6 +24,7 @@ Camera* Camera::clone() const
 
 void Camera::use()
 {
+	// TODO remove
 	GL::Viewport(viewport);
 	GL::Scissor (viewport);
 
@@ -99,14 +92,29 @@ void Camera::onDeregister()
 
 void Camera::update()
 {
+	CommandBucket *bucket = &renderTarget->bucket;
+
+	unsigned view_id= bucket->add_view();
+	CommandBucket::View *view = bucket->get_view(view_id);
+
+	view->passes = (1<<RenderPass::Forward);// | (1<<RenderPass::Additive);
+
+	view->viewport = viewport;
+	view->clearColor = vec4(clearColor, 0.0f);
+	view->clearFlags = clearFlags;
+
+	// Compute new VP
 	static const vec3 up(0, 0, 1);
-	const mat4 view = glm::lookAt(getPosition(), getPosition() + getDirection(), up);
+	const mat4 view_matrix = glm::lookAt(getPosition(), getPosition() + getDirection(), up);
+	simd_mul(projection, view_matrix, view->vp);
 
-	// Update VP
-	//simd_mul(projection, view, buckets[0].vp);
+	uint64_t key = CommandKey::encode(view_id, RenderPass::Forward);
+	SetupView *setup = bucket->add<SetupView>(key);
+	setup->view = view;
 
-	//Program::setBuiltin("MATRIX_VP", vp);
-	//Program::setBuiltin("cameraPosition", getPosition());
+
+	// TODO: find a solution for that
+	Program::setBuiltin("cameraPosition", getPosition());
 }
 
 void Camera::computeViewPort()

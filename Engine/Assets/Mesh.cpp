@@ -5,6 +5,7 @@
 
 void Submesh::draw() const
 {
+	//TODO remove
 	glCheck(glDrawElements(mode, count, GL_UNSIGNED_SHORT, offset));
 }
 

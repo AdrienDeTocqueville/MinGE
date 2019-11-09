@@ -10,7 +10,6 @@ class Transform;
 class Collider;
 class Script;
 
-// TODO: use unique_ptr<Component>
 typedef std::unordered_map<std::type_index, std::vector<Component*>> ComponentMap;
 typedef std::unordered_map<std::type_index, std::size_t> SizeMap;
 

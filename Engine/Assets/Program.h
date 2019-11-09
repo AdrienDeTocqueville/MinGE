@@ -10,27 +10,6 @@ class Program
 
 public:
 	/// Method (public)
-	template <typename T>
-	static void setBuiltin(std::string name, T value)
-	{
-		auto it = builtins_names.find(name);
-		if (it != builtins_names.end())
-			set(it->second, value);
-		else
-			std::cout << "Unknown builtin: " << name << std::endl;
-	}
-
-	template <typename T>
-	static inline void set(size_t builtin, T value)
-	{
-		uint8_t *b = builtins.data() + builtin;
-		(*b)++; // Bump update index;
-
-		b += sizeof(uint8_t) + sizeof(GLuint);
-
-		memcpy(b, &value, sizeof(T));
-	}
-
 	void updateBuiltins();
 
 	/// Methods (static)
@@ -38,6 +17,25 @@ public:
 	static Program* getDefault();
 	static void init();
 	static void clear();
+
+	static size_t getLocation(const std::string &name);
+
+	template <typename T>
+	static void setBuiltin(std::string name, T value)
+	{
+		set(getLocation(name), value);
+	}
+
+	template <typename T>
+	static inline void set(size_t location, T value)
+	{
+		uint8_t *b = builtins.data() + location;
+		(*b)++; // Bump update index;
+
+		b += sizeof(uint8_t) + sizeof(GLuint);
+
+		memcpy(b, &value, sizeof(T));
+	}
 
 private:
 	/// Methods (private)
@@ -50,7 +48,7 @@ private:
 	void disass() const;
 
 	/// Attributes (static)
-	static std::map<std::string, Program*> programs;
+	static std::unordered_map<std::string, Program*> programs;
 
 	/// Attributes
 	struct Shader;
@@ -73,12 +71,12 @@ private:
 	};
 
 	std::vector<Uniform> uniforms;
-	std::map<std::string, size_t> uniforms_names;
+	std::unordered_map<std::string, size_t> uniforms_names;
 
 	std::vector<Builtin> builtins_used;
 
 	static std::vector<uint8_t> builtins; // Contains < update_idx | type | data > sequenced for each builtin
-	static std::map<std::string, size_t> builtins_names;
+	static std::unordered_map<std::string, size_t> builtins_names;
 	static void addBuiltin(std::string name, GLuint type);
 
 

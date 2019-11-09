@@ -20,8 +20,9 @@ Material::Material(const Material &material):
 	program(material.program), uniforms(material.uniforms)
 { }
 
-void Material::bind() const
+void Material::bind(RenderPass pass) const
 {
+	// TODO: handle multipass
 	program->updateBuiltins();
 
 	if (Material::bound == this)
@@ -50,7 +51,7 @@ bool Material::hasRenderPass(RenderPass pass) const
 	return (pass == RenderPass::Forward);
 }
 
-size_t Material::getProperty(const std::string &name) const
+size_t Material::getLocation(const std::string &name) const
 {
 	auto it = program->uniforms_names.find(name);
 	if (it != program->uniforms_names.end())
@@ -86,8 +87,8 @@ MaterialRef Material::getDefault()
 }
 
 template<>
-void Material::set(size_t prop, Texture *value)
+void Material::set(size_t location, Texture *value)
 {
 	if (value == NULL) value = Texture::getDefault();
-	*(Texture**)(uniforms.data() + prop) = value;
+	*(Texture**)(uniforms.data() + location) = value;
 }
