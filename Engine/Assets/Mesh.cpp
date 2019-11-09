@@ -3,12 +3,6 @@
 #include "Systems/GraphicEngine.h"
 #include "Utility/Error.h"
 
-void Submesh::draw() const
-{
-	//TODO remove
-	glCheck(glDrawElements(mode, count, GL_UNSIGNED_SHORT, offset));
-}
-
 Mesh::Mesh(unsigned _dataFlags):
 	vao(0), vbo(0), ebo(0),
 	dataFlags(_dataFlags)

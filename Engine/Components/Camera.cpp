@@ -23,37 +23,6 @@ Camera* Camera::clone() const
 	return new Camera(FOV, zNear, zFar, clearColor, renderTarget, orthographic, relViewport, clearFlags);
 }
 
-void Camera::use()
-{
-	// TODO remove
-	GL::Viewport(viewport);
-	GL::Scissor (viewport);
-
-	GL::BindFramebuffer(renderTarget->fbo);
-
-
-	static const vec3 up(0, 0, 1);
-	const mat4 view = glm::lookAt(getPosition(), getPosition() + getDirection(), up);
-
-	mat4 vp;
-	simd_mul(projection, view, vp);
-
-	Program::setBuiltin("MATRIX_VP", vp);
-	Program::setBuiltin("cameraPosition", getPosition());
-
-
-	// Background
-	glClearColor(clearColor.r, clearColor.g, clearColor.b, 0.0f);
-
-	glClear(clearFlags);
-
-	Skybox* sky = find<Skybox>();
-
-	if (sky)
-		sky->render();
-
-}
-
 /// Getters
 RenderTargetRef Camera::getRenderTarget() const
 {
@@ -113,6 +82,9 @@ void Camera::update()
 	SetupView *setup = bucket->add<SetupView>(key);
 	setup->view = view;
 
+
+	if (Skybox* sky = find<Skybox>())
+		sky->render();
 
 	// TODO: find a solution for that
 	Program::setBuiltin("cameraPosition", getPosition());

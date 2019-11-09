@@ -48,7 +48,7 @@ struct CommandKey
 			((uint64_t(pass)     << PASS_SHIFT)	& PASS_MASK)	|
 			((uint64_t(1)        << CMD_SHIFT)	& CMD_MASK)	|
 			((uint64_t(material) << MATERIAL_SHIFT)	& MATERIAL_MASK)|
-			((uint64_t(depth)    << DEPTH_SHIFT)	& DEPTH_MASK);
+			((uint64_t(depth_i)    << DEPTH_SHIFT)	& DEPTH_MASK);
 	}
 
 	// Decode

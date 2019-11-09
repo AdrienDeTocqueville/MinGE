@@ -18,8 +18,6 @@ struct Submesh
 	Submesh(uint32_t _mode, unsigned _count, size_t _first_index = 0):
 		mode(_mode), count(_count), offset((void*)(_first_index * sizeof(uint16_t))) { }
 
-	void draw() const;
-
 	uint32_t const mode;
 	unsigned const count;
 	void * const offset;

@@ -30,9 +30,8 @@ void test_materials()
 
 	MaterialRef m = Material::getDefault();
 	Entity *object = Entity::create("Object", true)
-		->insert<Graphic>(mesh);
+		->insert<Graphic>(nullptr);
 
-	/*
 	Random::setSeed(42);
 	MaterialRef mats[3] = {m->clone(), m->clone(), m->clone()};
 		mats[0]->set("diffuse", vec3(Random::next<float>(), Random::next<float>(), Random::next<float>()));
@@ -47,11 +46,6 @@ void test_materials()
 
 		e->find<Graphic>()->setMesh(mesh, {mats[Random::next<int>(0, 3)]});
 	}
-	*/
-
-	Entity::clone(object, vec3(-10, 1.0f, 0.0f), vec3(0.0f), vec3(0.5f));
-	Entity::clone(object, vec3(-5, 0.0f, 0.0f), vec3(0.0f), vec3(0.5f));
-	Entity::clone(object, vec3(-10, -1.0f, 0.0f), vec3(0.0f), vec3(0.5f));
 
 	// Camera
 	Entity::create("MainCamera", false, vec3(-25.0f, 0.0f, 0.0f))

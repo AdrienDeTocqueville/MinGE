@@ -66,23 +66,6 @@ void Graphic::render(CommandBucket *bucket) const
 	}
 }
 
-void Graphic::render() const
-{
-	GL::BindVertexArray(mesh->vao);
-	for (int i(0); i < materials.size(); i++)
-	{
-		const MaterialRef& material = materials[i];
-		const Submesh& submesh = mesh->submeshes[i];
-
-		Program::setBuiltin("MATRIX_M", tr->getToWorld());
-		Program::setBuiltin("MATRIX_N", tr->getToWorld());
-		//mat3(transpose(inverse(tr->getToWorld())))
-
-		material->bind();
-		submesh.draw();
-	}
-}
-
 /// Setters
 void Graphic::setMesh(MeshRef _mesh)
 {

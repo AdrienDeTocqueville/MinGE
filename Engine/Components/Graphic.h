@@ -17,7 +17,6 @@ public:
 	virtual Graphic* clone() const override;
 
 	void render(struct CommandBucket *bucket) const;
-	void render() const;
 
 	/// Setters
 	void setMesh(MeshRef _mesh);

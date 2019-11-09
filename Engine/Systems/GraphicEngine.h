@@ -33,6 +33,7 @@ class GraphicEngine
 			void removeLight(Light* _light);
 
 			void sortBuckets();
+			void onResize(RenderTarget *target);
 			void toggleWireframe();
 			void render();
 

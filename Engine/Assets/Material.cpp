@@ -24,12 +24,15 @@ Material::Material(const Material &material):
 
 Material::~Material()
 {
-	// Swap with last
-	std::weak_ptr<Material> last = materials.back();
-	auto shared = last.lock();
+	if (id != materials.size() - 1)
+	{
+		// Swap with last
+		std::weak_ptr<Material> last = materials.back();
+		auto shared = last.lock();
 
-	shared->id = id;
-	materials[id] = last;
+		shared->id = id;
+		materials[id] = last;
+	}
 	materials.pop_back();
 }
 

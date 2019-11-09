@@ -1,4 +1,6 @@
 #include "Assets/RenderTarget.h"
+#include "Systems/GraphicEngine.h"
+
 #include "Utility/IO/Input.h"
 #include "Utility/Error.h"
 
@@ -73,7 +75,8 @@ void RenderTarget::bind() const
 
 void RenderTarget::resize(uvec2 _size)
 {
-	std::cout << "unimplemented" << std::endl;
+	// TODO: resize attachments
+	GraphicEngine::get()->onResize(this);
 }
 
 const Texture* RenderTarget::getColorBuffer() const

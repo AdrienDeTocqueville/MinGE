@@ -20,8 +20,6 @@ public:
 	/// Methods (public)
 	virtual Camera* clone() const override;
 
-	void use();
-
 	/// Getters
 	RenderTargetRef getRenderTarget() const;
 

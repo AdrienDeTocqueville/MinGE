@@ -143,6 +143,13 @@ void GraphicEngine::sortBuckets()
 	});
 }
 
+void GraphicEngine::onResize(RenderTarget *target)
+{
+	for (Camera *camera : cameras)
+		if (camera->getRenderTarget().get() == target)
+			camera->computeViewPort();
+}
+
 void GraphicEngine::toggleWireframe()
 {
 	wireframe = !wireframe;
@@ -154,64 +161,7 @@ void GraphicEngine::render()
 {
 	//glEnable(GL_SCISSOR_TEST);
 
-	/*
-	2 buckets:
-	  - shadow
-	 	key ( view | depth [front-back] | material )
-	  - display
-	 	key ( view | layer | translucency | material | depth [front-back] )
-	  - post-processing?
-	  - hud ?
-	
-	view:
-		viewport, scissor, camera settings...
-	layer:
-		world, skybox, hud
-	transflucency:
-		normal, additive
-
-	OR
-	remove the view from the key since its always there and always first (note: how about CSM ?)
-	embed it in the command bucket
-	create one bucket for each view
-	-> more buckets = better multithreading i guess
-	 + sorting might be faster with smaller buckets
-	*/
-	/*
-	typedef ShadowKey uint16_t;
-	typedef DisplayKey uint64_t;
-
-	template <typename Key>
-	struct CommandBucket
-	{
-	};
-
-	CommandBucket<ShadowKey> shadow_bucket;
-	CommandBucket<DisplayKey> display_bucket;
-	*/
-
-	// foreach shadow_light
-	//	submit_to(shadow_bucket, shadow_light.state)
-
-	// foreach camera
-	//	submit_to(display_bucket, camera.state)
-
-	// foreach graphic
-	//	if cast_shadows
-	//		foreach shadow_light
-	//			submit_to(shadow_bucket, graphic.drawcall_depth)
-	//	foreach camera
-	//		submit_to(display_bucket, graphic.drawcall_color_depth)
-	//
-	//
-	// sort(shadow_bucket)
-	// sort(display_bucket)
-	//
-	// <threads join>
-	//
-	// submit(shadow_bucket)
-	// submit(display_bucket)
-
+	// TODO : find a solution for that
 	{
 		Light *source = GraphicEngine::get()->getLight();
 		Program::setBuiltin("lightPosition", source->getPosition());
@@ -233,20 +183,10 @@ void GraphicEngine::render()
 		bucket->sort();
 
 	for (CommandBucket *bucket : buckets)
-		bucket->submit();
-
-	for (CommandBucket *bucket : buckets)
-		bucket->clear();
-
-	/*
-	for (Camera* camera: cameras)
 	{
-		camera->use();
-
-		for (Graphic* graphic: graphics)
-			graphic->render();
+		bucket->submit();
+		bucket->clear();
 	}
-	*/
 
 #ifdef DRAWAABB
 	for(Graphic* g: graphics)
@@ -259,7 +199,6 @@ void GraphicEngine::render()
 	Debug::update();
 #endif
 
-	GL::BindVertexArray(0);
 	//glDisable(GL_SCISSOR_TEST);
 }
 
