@@ -1,6 +1,6 @@
 #pragma once
 
-//#define GLM_FORCE_SSE42
+//#define GLM_FORCE_AVX2
 //#define GLM_FORCE_ALIGNED
 
 #include <glm/glm.hpp>

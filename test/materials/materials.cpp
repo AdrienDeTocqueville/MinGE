@@ -19,32 +19,37 @@
 // 3 materials, 41*21*4 spheres
 // old renderer :  ~5ms
 // new renderer, no sort, 1 thread :  ~5.5ms
+// new renderer, sort, 4 thread :  ~5.2ms
 
 void test_materials()
 {
+	Random::setSeed(42);
+
 	Input::setCursorMode(CursorMode::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
 	//MeshRef model = Mesh::load("WarGreymon/WarGreymon.obj");
-	MeshRef mesh = Mesh::createSphere();
+	MeshRef mesh = Mesh::createCube();
 
 	MaterialRef m = Material::getDefault();
 	Entity *object = Entity::create("Object", true)
 		->insert<Graphic>(nullptr);
 
-	Random::setSeed(42);
-	MaterialRef mats[3] = {m->clone(), m->clone(), m->clone()};
-		mats[0]->set("diffuse", vec3(Random::next<float>(), Random::next<float>(), Random::next<float>()));
-		mats[1]->set("diffuse", vec3(Random::next<float>(), Random::next<float>(), Random::next<float>()));
-		mats[2]->set("diffuse", vec3(Random::next<float>(), Random::next<float>(), Random::next<float>()));
+	const int NUM_MATS = 8;
+	MaterialRef mats[NUM_MATS];
+	for (int i(0); i < NUM_MATS; i++)
+	{
+		mats[i] = m->clone();
+		mats[i]->set("diffuse", vec3(Random::next<float>(), Random::next<float>(), Random::next<float>()));
+	}
 
 	for (int i(0); i < 41; i++)
 	for (int j(0); j < 21; j++)
-	for (int k(3); k >= 0; k--)
+	for (int k(10); k >= 0; k--)
 	{
 		auto e = Entity::clone(object, vec3(k, i-20.0f, j-10.0f), vec3(0.0f), vec3(0.5f));
 
-		e->find<Graphic>()->setMesh(mesh, {mats[Random::next<int>(0, 3)]});
+		e->find<Graphic>()->setMesh(mesh, {mats[Random::next<int>(0, NUM_MATS)]});
 	}
 
 	// Camera

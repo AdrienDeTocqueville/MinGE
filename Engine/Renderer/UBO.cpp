@@ -1,13 +1,9 @@
 #include "Renderer/UBO.h"
+#include "Utility/Memory/Memory.h"
 
 #ifdef DEBUG
 #include <iostream>
 #endif
-
-static inline uint32_t align(uint32_t val, uint32_t alignment)
-{
-	return ((val + alignment - 1) / alignment ) * alignment;
-}
 
 static GLint ubo_alignment = 0;
 static uint32_t buf_size = 1024*1024*16;

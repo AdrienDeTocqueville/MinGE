@@ -3,7 +3,7 @@ CC = g++
 CFLAGS = #-Wall -Wextra -Werror
 
 
-LDFLAGS := -lGLEW -lGLU -lGL
+LDFLAGS := -lGLEW -lGLU -lGL -lpthread
 LDFLAGS += -lassimp
 LDFLAGS += -lsfml-audio -lsfml-graphics -lsfml-window -lsfml-network -lsfml-system
 
@@ -23,9 +23,9 @@ OBJDIR = obj
 OBJ := $(addprefix $(OBJDIR)/, $(SRC:.cpp=.o))
 
 
-#all: CFLAGS += -O3 -DREPORTFPS
-#all: $(NAME)
-all: debug
+all: CFLAGS += -O3 -DREPORTFPS
+all: $(NAME)
+#all: debug
 
 debug: CFLAGS += -DREPORTFPS -DDEBUG -g3 -ggdb
 debug: $(NAME)

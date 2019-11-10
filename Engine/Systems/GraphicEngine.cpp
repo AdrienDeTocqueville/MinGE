@@ -9,6 +9,7 @@
 
 #include "Entity.h"
 
+#include <thread>
 #include <cstring>
 #include <unordered_set>
 
@@ -112,7 +113,12 @@ void GraphicEngine::addLight(Light* _light)
 
 void GraphicEngine::removeGraphic(Graphic* _graphic)
 {
-	graphics.remove(_graphic);
+	auto it = std::find(graphics.begin(), graphics.end(), _graphic);
+	if (it != graphics.end())
+	{
+		*it = graphics.back();
+		graphics.pop_back();
+	}
 }
 
 void GraphicEngine::removeCamera(Camera* _camera)
@@ -175,13 +181,40 @@ void GraphicEngine::render()
 	for (Camera* camera: cameras)
 		camera->update();
 
+	auto queue_commands = [=](int i, int last)
+	{
+		while (i < last)
+		{
+			for (CommandBucket *bucket : buckets)
+				graphics[i]->render(bucket);
+			i++;
+		}
+	};
+
+
+	/*
+	int NUM_THREADS = 4;
+	int curr = 0, step = graphics.size() / NUM_THREADS;
+	std::thread threads[NUM_THREADS];
+	for (int i = 0; i < NUM_THREADS-1; i++)
+	{
+		threads[i] = std::thread(queue_commands, curr, curr + step);
+		curr += step;
+	}
+	threads[NUM_THREADS-1] = std::thread(queue_commands, curr, graphics.size());
+
+	for (auto& th : threads) th.join();
+	*/
+
 	for (Graphic* graphic: graphics)
 		for (CommandBucket *bucket : buckets)
 			graphic->render(bucket);
 
+	// Sort
 	for (CommandBucket *bucket : buckets)
 		bucket->sort();
 
+	// Submit to backend
 	for (CommandBucket *bucket : buckets)
 	{
 		bucket->submit();

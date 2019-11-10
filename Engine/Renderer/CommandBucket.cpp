@@ -7,7 +7,9 @@
 
 void CommandBucket::sort()
 {
-	std::sort(commands, commands + current_cmd, [](const CommandPair &a, const CommandPair &b) {
+	CommandPair *first = (CommandPair*)commands.getStart();
+	CommandPair *last = (CommandPair*)(commands.getStart() + commands.getSize());
+	std::sort(first, last, [](const CommandPair &a, const CommandPair &b) {
 		return (a.key < b.key);
 	});
 }
@@ -16,10 +18,13 @@ void CommandBucket::submit()
 {
 	target->bind();
 
-	for (unsigned i(0); i < current_cmd; ++i)
+	uint8_t *first = commands.getStart();
+	size_t count = commands.getSize();
+	for (size_t i(0); i < count; i += sizeof(CommandPair))
 	{
-		uint64_t key = commands[i].key;
-		void *packet = commands[i].packet;
+		CommandPair *pair = (CommandPair*)(first + i);
+		uint64_t key = pair->key;
+		void *packet = pair->packet;
 
 		CommandPacket::submit(key, packet);
 	}
@@ -27,10 +32,8 @@ void CommandBucket::submit()
 
 void CommandBucket::clear()
 {
-	for (int i(0); i < current_cmd; i++)
-	{
-		free(commands[i].packet);
-	}
 	current_view = 0;
-	current_cmd = 0;
+
+	commands.clear();
+	packets.clear();
 }

@@ -53,7 +53,7 @@ class GraphicEngine
 			static void destroy();
 
 		/// Attributes (private)
-			std::list<Graphic*> graphics;
+			std::vector<Graphic*> graphics;
 			std::list<Camera*> cameras;
 			std::list<Light*> lights;
 

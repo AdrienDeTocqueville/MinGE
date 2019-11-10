@@ -5,6 +5,7 @@
 #include "Assets/Material.h"
 #include "Assets/Mesh.h"
 
+class RenderTarget;
 struct CommandBucket
 {
 	struct View
@@ -23,19 +24,25 @@ struct CommandBucket
 		void *packet;
 	};
 
+	CommandBucket(RenderTarget *_target, size_t _size = (1<<20)):
+		target(_target), commands(_size), packets(_size)
+	{ }
+
+	// Thread safe
 	template<typename Cmd>
 	Cmd *add(uint64_t key)
 	{
-		void *packet = CommandPacket::create<Cmd>();
-
-		uint32_t index = current_cmd++;
-		commands[index].key = key;
-		commands[index].packet = packet;
-
+		void *packet = CommandPacket::create<Cmd>(packets);
 		CommandPacket::setSubmitCallback(packet, Cmd::submit);
+
+		CommandPair *command = (CommandPair*)commands.alloc(sizeof(CommandPair));
+		command->key = key;
+		command->packet = packet;
+
 		return CommandPacket::getCommand<Cmd>(packet);
 	}
 
+	// Not thread safe
 	uint32_t add_view() { return current_view++; }
 	View *get_view(uint32_t index) { return views + index; }
 
@@ -44,20 +51,13 @@ struct CommandBucket
 	void clear();
 
 //private:
-	class RenderTarget *target;
-
+	RenderTarget *target;
 
 	static const size_t MAX_VIEWS = 8;
 	uint32_t current_view = 0;
 	View views[MAX_VIEWS];
 
-	static const size_t MAX_COMMANDS = (64 << 10); // from bgfx, quite big but i guess its necessary
-	uint32_t current_cmd = 0;
-        CommandPair commands[MAX_COMMANDS];
-
-	// TODO: use this for multithreaded counters
-	// (and use an allocator instead of malloc/free for packets)
-        //std::atomic<uint32_t> current_cmd;
+        LinearAllocator commands, packets;
 };
 
 struct DrawElements
@@ -66,10 +66,10 @@ struct DrawElements
 
 	mat4 model;
 
-	unsigned vao;
-	GLdouble mode;
-	unsigned count;
-	void *offset;
+	uint32_t vao;
+	uint32_t mode;
+	uint32_t count;
+	uint32_t offset;
 };
 
 struct SetupView

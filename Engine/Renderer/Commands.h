@@ -3,15 +3,16 @@
 #include <cstdint>
 #include <cstdlib>
 
+#include "Utility/Memory/LinearAllocator.h"
+
 struct CommandPacket
 {
 	typedef void (*submitCallback)(uint64_t, const void*);
 
 	template <typename T>
-	static void *create()
+	inline static void *create(LinearAllocator &allocator)
 	{
-		// TODO: use a linear allocator
-		return malloc(sizeof(submitCallback) + sizeof(T));
+		return allocator.alloc(sizeof(submitCallback) + sizeof(T));
 	}
 
 	static void submit(uint64_t key, void *packet)
@@ -20,13 +21,13 @@ struct CommandPacket
 		callback(key, reinterpret_cast<uint8_t*>(packet) + sizeof(submitCallback));
 	}
 
-	static void setSubmitCallback(void *packet, submitCallback callback)
+	inline static void setSubmitCallback(void *packet, submitCallback callback)
 	{
 		*reinterpret_cast<submitCallback*>(packet) = callback;
 	}
 
 	template <typename T>
-	static T *getCommand(void *packet)
+	inline static T *getCommand(void *packet)
 	{
 		return reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(packet) + sizeof(submitCallback));
 	}

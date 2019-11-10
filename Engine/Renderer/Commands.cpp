@@ -15,7 +15,7 @@ void DrawElements::submit(uint64_t key, const void *_cmd)
 	Material::get(material)->bind(pass);
 
 	GL::BindVertexArray(cmd->vao);
-	glCheck(glDrawElements(cmd->mode, cmd->count, GL_UNSIGNED_SHORT, cmd->offset));
+	glCheck(glDrawElements(cmd->mode, cmd->count, GL_UNSIGNED_SHORT, (void*)(uint64_t)cmd->offset));
 }
 
 void SetupView::submit(uint64_t, const void *_cmd)
