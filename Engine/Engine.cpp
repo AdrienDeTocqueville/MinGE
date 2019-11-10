@@ -146,12 +146,14 @@ bool Engine::update()
 	else
 		frames++;
 
+	/*
 	GL::BindVertexBuffer(0);
 	GL::BindVertexArray(0);
 	GL::UseProgram(0);
 	Input::window->pushGLStates();
 		Input::window->draw(text);
 	Input::window->popGLStates();
+	*/
 #endif
 
 	return true;

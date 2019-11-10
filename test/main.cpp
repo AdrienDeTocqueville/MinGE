@@ -3,6 +3,7 @@
 #include "physic/physic.h"
 #include "bvh/bvh.h"
 #include "materials/materials.h"
+#include "animations/animations.h"
 
 
 const auto desktop = sf::VideoMode::getDesktopMode();
@@ -15,8 +16,8 @@ const auto video_mode = desktop;
 const auto style = sf::Style::Fullscreen;
 #endif
 
-int scene = 2;
-std::vector<void (*)()> setups = {test_physic, test_bvh, test_materials};
+int scene = 3;
+std::vector<void (*)()> setups = {test_physic, test_bvh, test_materials, test_animations};
 std::vector<std::string> names = {"physic", "bvh", "materials"};
 
 void start_scene(Engine *engine, int _scene)
@@ -31,7 +32,7 @@ void start_scene(Engine *engine, int _scene)
 
 	Entity::create("Light", false, vec3(-5, 0, 0))
 		//->insert<Graphic>(Mesh::createSphere(ALLFLAGS, 0.25f), {bright})
-		->insert<Light>(GE_POINT_LIGHT, vec3(0.0f), vec3(0.9f), 1.0f);
+		->insert<Light>(GE_POINT_LIGHT);
 
 	scene = _scene % setups.size();
 	Input::getWindow()->setTitle("MinGE (test " + names[scene] + ")");

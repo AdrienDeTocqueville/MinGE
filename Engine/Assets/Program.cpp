@@ -274,11 +274,7 @@ void Program::init()
 
 	// Light
 	addBuiltin("lightPosition", GL_FLOAT_VEC3);
-	addBuiltin("diffuseColor", GL_FLOAT_VEC3);
-	addBuiltin("ambientCoefficient", GL_FLOAT);
-	addBuiltin("aConstant", GL_FLOAT);
-	addBuiltin("aLinear", GL_FLOAT);
-	addBuiltin("aQuadratic", GL_FLOAT);
+	addBuiltin("lightColor", GL_FLOAT_VEC3);
 
 	// Model
 	addBuiltin("MATRIX_M", GL_FLOAT_MAT4);

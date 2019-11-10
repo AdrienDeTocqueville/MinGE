@@ -171,11 +171,7 @@ void GraphicEngine::render()
 	{
 		Light *source = GraphicEngine::get()->getLight();
 		Program::setBuiltin("lightPosition", source->getPosition());
-		Program::setBuiltin("diffuseColor", source->getDiffuseColor());
-		Program::setBuiltin("ambientCoefficient", source->getAmbientCoefficient());
-		Program::setBuiltin("aConstant", source->getAttenuation().x);
-		Program::setBuiltin("aLinear", source->getAttenuation().y);
-		Program::setBuiltin("aQuadratic", source->getAttenuation().z);
+		Program::setBuiltin("lightColor", source->getColor());
 	}
 
 	for (Camera* camera: cameras)

@@ -99,10 +99,10 @@ MaterialRef Material::getDefault()
 		return shared;
 
 	MaterialRef shared(new Material(Program::getDefault()));
-	shared->set("ambient", vec3(0.3f));
-	shared->set("diffuse", vec3(0.8f));
-	shared->set("specular", vec3(0.0f));
-	shared->set("exponent", 8.0f);
+	//shared->set("ambient", vec3(0.3f));
+	//shared->set("diffuse", vec3(0.8f));
+	//shared->set("specular", vec3(0.0f));
+	//shared->set("exponent", 8.0f);
 
 	basic = shared;
 	materials.push_back(basic);

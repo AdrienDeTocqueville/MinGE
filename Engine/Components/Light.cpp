@@ -3,10 +3,8 @@
 
 #include "Systems/GraphicEngine.h"
 
-Light::Light(LightType _type, vec3 _offset, vec3 _diffuse, float _ambient, float _constant, float _linear, float _quadratic):
-	type(_type),
-	position(_offset), diffuse(_diffuse), ambient(_ambient),
-	attenuation(_constant, _linear, _quadratic)
+Light::Light(LightType _type, vec3 _offset, vec3 _color):
+	type(_type), offset(_offset), color(_color)
 { }
 
 Light::~Light()
@@ -15,28 +13,18 @@ Light::~Light()
 /// Methods (public)
 Light* Light::clone() const
 {
-	return new Light(type);
+	return new Light(type, offset, color);
 }
 
 /// Getters
 vec3 Light::getPosition() const
 {
-	return tr->toWorld(position);
+	return tr->toWorld(offset);
 }
 
-vec3 Light::getDiffuseColor() const
+vec3 Light::getColor() const
 {
-	return diffuse;
-}
-
-float Light::getAmbientCoefficient() const
-{
-	return ambient;
-}
-
-vec3 Light::getAttenuation() const
-{
-	return attenuation;
+	return color;
 }
 
 /// Methods (private)

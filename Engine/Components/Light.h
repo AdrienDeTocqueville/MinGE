@@ -10,7 +10,8 @@ class Light : public Component
 	friend class Entity;
 
 	public:
-		Light(LightType _type = GE_POINT_LIGHT, vec3 _offset = vec3(0.0f), vec3 _diffuse = vec3(1.0f), float _ambient = 0.2f, float _constant = 1.0f, float _linear = 0.0f, float _quadratic = 0.005f);
+		Light(LightType _type = GE_POINT_LIGHT, vec3 _offset = vec3(0.0f),
+				vec3 _color = vec3(150.0f / 255.0f));
 		virtual ~Light();
 
 		/// Methods (public)
@@ -18,11 +19,7 @@ class Light : public Component
 
 		/// Getters
 			vec3 getPosition() const;
-
-			vec3 getDiffuseColor() const;
-			float getAmbientCoefficient() const;
-
-			vec3 getAttenuation() const;
+			vec3 getColor() const;
 
 	private:
 		/// Methods (private)
@@ -32,12 +29,7 @@ class Light : public Component
 		/// Attributes (private)
 			LightType type;
 
-			vec3 position;
-
-			vec3 diffuse;
-			float ambient;
-
-			vec3 attenuation;
+			vec3 offset, color;
 };
 
 #endif // LIGHT_H
