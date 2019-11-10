@@ -7,6 +7,7 @@
 
 void CommandBucket::sort()
 {
+	// TODO: parallel sort
 	CommandPair *first = (CommandPair*)commands.getStart();
 	CommandPair *last = (CommandPair*)(commands.getStart() + commands.getSize());
 	std::sort(first, last, [](const CommandPair &a, const CommandPair &b) {

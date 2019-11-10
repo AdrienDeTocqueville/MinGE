@@ -14,8 +14,9 @@ void DrawElements::submit(uint64_t key, const void *_cmd)
 	auto material = CommandKey::decodeMaterial(key);
 	Material::get(material)->bind(pass);
 
+	const Submesh &submesh = cmd->submesh;
 	GL::BindVertexArray(cmd->vao);
-	glCheck(glDrawElements(cmd->mode, cmd->count, GL_UNSIGNED_SHORT, (void*)(uint64_t)cmd->offset));
+	glCheck(glDrawElements(submesh.mode, submesh.count, GL_UNSIGNED_SHORT, (void*)(uint64_t)submesh.offset));
 }
 
 void SetupView::submit(uint64_t, const void *_cmd)
@@ -29,5 +30,13 @@ void SetupView::submit(uint64_t, const void *_cmd)
 	GL::ClearColor(view->clearColor);
 	glClear(view->clearFlags);
 
+	glEnable(GL_CULL_FACE);
+	glDepthFunc(GL_LEQUAL);
+
 	Program::setBuiltin("MATRIX_VP", view->vp);
+}
+
+void SetupSkybox::submit(uint64_t, const void *)
+{
+	glDisable(GL_CULL_FACE);
 }

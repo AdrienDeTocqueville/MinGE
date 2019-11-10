@@ -36,7 +36,7 @@ Material::~Material()
 	materials.pop_back();
 }
 
-void Material::bind(RenderPass pass) const
+void Material::bind(RenderPass::Type pass) const
 {
 	// TODO: handle multipass
 	program->updateBuiltins();
@@ -61,7 +61,7 @@ void Material::bind(RenderPass pass) const
 	}
 }
 
-bool Material::hasRenderPass(RenderPass pass) const
+bool Material::hasRenderPass(RenderPass::Type pass) const
 {
 	// place holder
 	return (pass == RenderPass::Forward);

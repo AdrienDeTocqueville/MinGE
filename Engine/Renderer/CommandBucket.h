@@ -67,9 +67,7 @@ struct DrawElements
 	mat4 model;
 
 	uint32_t vao;
-	uint32_t mode;
-	uint32_t count;
-	uint32_t offset;
+	Submesh submesh;
 };
 
 struct SetupView
@@ -77,6 +75,11 @@ struct SetupView
 	static void submit(uint64_t key, const void *_cmd);
 
 	CommandBucket::View *view;
+};
+
+struct SetupSkybox
+{
+	static void submit(uint64_t key, const void *_cmd);
 };
 
 /*

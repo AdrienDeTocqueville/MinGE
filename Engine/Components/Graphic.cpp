@@ -4,8 +4,6 @@
 #include "Systems/GraphicEngine.h"
 #include "Renderer/CommandKey.h"
 
-#include "Assets/Program.h"
-
 Graphic::Graphic(MeshRef _mesh)
 {
 	mesh = _mesh;
@@ -46,22 +44,19 @@ void Graphic::render(CommandBucket *bucket) const
 		vec4 pos = view->vp * vec4(tr->position, 1.0f);
 		float depth = pos.z / pos.w;
 
-		unsigned vao = mesh->vao;
+		unsigned vao = mesh->getVAO();
+		const Submesh *submeshes = mesh->getSubmeshes().data();
 
 		for (int i(0); i < materials.size(); i++)
 		{
 			if (!materials[i]->hasRenderPass(RenderPass::Forward))
 				continue;
 
-			Submesh *submesh = mesh->submeshes.data() + i;
-
 			uint64_t key = CommandKey::encode(view_id, RenderPass::Forward, materials[i]->getId(), depth);
 			DrawElements *cmd = bucket->add<DrawElements>(key);
 			cmd->model = model;
 			cmd->vao = vao;
-			cmd->mode = submesh->mode;
-			cmd->count = submesh->count;
-			cmd->offset = submesh->offset;
+			memcpy(&(cmd->submesh), submeshes + i, sizeof(Submesh));
 		}
 	}
 }
@@ -74,7 +69,7 @@ void Graphic::setMesh(MeshRef _mesh)
 	if (mesh == nullptr)
 		return;
 
-	for (int i(0); i < mesh->submeshes.size(); i++)
+	for (int i(0); i < mesh->getSubmeshes().size(); i++)
 		materials.emplace_back(Material::getDefault());
 }
 
@@ -85,7 +80,7 @@ void Graphic::setMesh(MeshRef _mesh, std::vector<MaterialRef> _materials)
 	if (mesh == nullptr)
 		return;
 
-	if (_materials.size() != mesh->submeshes.size())
+	if (_materials.size() != mesh->getSubmeshes().size())
 		Error::add(USER_ERROR, "Wrong material count");
 
 	for (auto mat : _materials)
@@ -99,7 +94,7 @@ void Graphic::setMesh(MeshRef _mesh, std::initializer_list<MaterialRef> _materia
 	if (mesh == nullptr)
 		return;
 
-	if (_materials.size() != mesh->submeshes.size())
+	if (_materials.size() != mesh->getSubmeshes().size())
 		Error::add(USER_ERROR, "Wrong material count");
 
 	for (auto mat : _materials)

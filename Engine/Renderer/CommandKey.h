@@ -33,14 +33,14 @@ struct CommandKey
 	static_assert(64 == VIEW_NUM_BITS + PASS_NUM_BITS + CMD_NUM_BITS + MATERIAL_NUM_BITS + DEPTH_NUM_BITS);
 
 	// Encode
-	static uint64_t encode(uint32_t view, RenderPass pass, uint32_t priority = 0)
+	static uint64_t encode(uint32_t view, RenderPass::Type pass, uint32_t priority = 0)
 	{
 		return	((uint64_t(view)     << VIEW_SHIFT)	& VIEW_MASK)	|
 			((uint64_t(pass)     << PASS_SHIFT)	& PASS_MASK)	|
 			((uint64_t(0)        << CMD_SHIFT)	& CMD_MASK)	|
 			((uint64_t(priority)));
 	}
-	static uint64_t encode(uint32_t view, RenderPass pass, uint32_t material, float depth)
+	static uint64_t encode(uint32_t view, RenderPass::Type pass, uint32_t material, float depth)
 	{
 		uint32_t depth_i = depth * std::numeric_limits<uint32_t>::max();
 
@@ -52,9 +52,9 @@ struct CommandKey
 	}
 
 	// Decode
-	inline static RenderPass decodeRenderPass(uint64_t key)
+	inline static RenderPass::Type decodeRenderPass(uint64_t key)
 	{
-		return RenderPass((key & PASS_MASK) >> PASS_SHIFT);
+		return RenderPass::Type((key & PASS_MASK) >> PASS_SHIFT);
 	}
 	inline static uint32_t decodeMaterial(uint64_t key)
 	{

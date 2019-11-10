@@ -64,10 +64,10 @@ void Camera::update()
 {
 	CommandBucket *bucket = &renderTarget->bucket;
 
-	unsigned view_id= bucket->add_view();
+	unsigned view_id = bucket->add_view();
 	CommandBucket::View *view = bucket->get_view(view_id);
 
-	view->passes = (1<<RenderPass::Forward);// | (1<<RenderPass::Additive);
+	view->passes = (1<<RenderPass::Forward) | (1<<RenderPass::Skybox);
 
 	view->viewport = viewport;
 	view->clearColor = vec4(clearColor, 0.0f);
@@ -78,13 +78,17 @@ void Camera::update()
 	const mat4 view_matrix = glm::lookAt(getPosition(), getPosition() + getDirection(), up);
 	simd_mul(projection, view_matrix, view->vp);
 
+	// Setup forward pass
 	uint64_t key = CommandKey::encode(view_id, RenderPass::Forward);
-	SetupView *setup = bucket->add<SetupView>(key);
-	setup->view = view;
+	bucket->add<SetupView>(key)->view = view;
+
+	// Setup skybox pass
+	key = CommandKey::encode(view_id, RenderPass::Skybox);
+	bucket->add<SetupSkybox>(key);
 
 
 	if (Skybox* sky = find<Skybox>())
-		sky->render();
+		sky->render(bucket, view_id);
 
 	// TODO: find a solution for that
 	Program::setBuiltin("cameraPosition", getPosition());

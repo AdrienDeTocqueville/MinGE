@@ -35,10 +35,10 @@ GraphicEngine::GraphicEngine()
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_SCISSOR_TEST);
 
-//	glEnable(GL_BLEND);
-//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glEnable(GL_CLIP_DISTANCE0);
+	//glEnable(GL_CLIP_DISTANCE0);
 
 	glPointSize(7);
 	glLineWidth(3);
@@ -181,6 +181,8 @@ void GraphicEngine::render()
 	for (Camera* camera: cameras)
 		camera->update();
 
+//#define ENQUEUE_THREAD
+#ifdef ENQUEUE_THREAD
 	auto queue_commands = [=](int i, int last)
 	{
 		while (i < last)
@@ -191,24 +193,22 @@ void GraphicEngine::render()
 		}
 	};
 
-
-	/*
-	int NUM_THREADS = 4;
-	int curr = 0, step = graphics.size() / NUM_THREADS;
+	int NUM_THREADS = 3;
+	int curr = 0, step = graphics.size() / (NUM_THREADS + 1);
 	std::thread threads[NUM_THREADS];
-	for (int i = 0; i < NUM_THREADS-1; i++)
+	for (int i = 0; i < NUM_THREADS; i++)
 	{
 		threads[i] = std::thread(queue_commands, curr, curr + step);
 		curr += step;
 	}
-	threads[NUM_THREADS-1] = std::thread(queue_commands, curr, graphics.size());
+	queue_commands(curr, graphics.size());
 
 	for (auto& th : threads) th.join();
-	*/
-
+#else
 	for (Graphic* graphic: graphics)
 		for (CommandBucket *bucket : buckets)
 			graphic->render(bucket);
+#endif
 
 	// Sort
 	for (CommandBucket *bucket : buckets)

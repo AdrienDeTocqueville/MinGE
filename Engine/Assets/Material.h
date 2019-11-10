@@ -3,12 +3,15 @@
 #include <memory>
 #include "Assets/Texture.h"
 
-enum RenderPass
+struct RenderPass
 {
-	ShadowMap,
-	Forward,
-	Additive,
-	Count
+	enum Type {
+		ShadowMap,
+		Forward,
+		Additive,
+		Skybox,
+		Count
+	};
 };
 
 
@@ -23,8 +26,8 @@ public:
 	static MaterialRef get(uint32_t id);
 
 	/// Methods (public)
-	void bind(RenderPass pass = RenderPass::Forward) const; // TODO: remove default value
-	bool hasRenderPass(RenderPass pass) const;
+	void bind(RenderPass::Type pass = RenderPass::Forward) const; // TODO: remove default value
+	bool hasRenderPass(RenderPass::Type pass) const;
 
 	inline uint32_t getId() const { return id; }
 	size_t getLocation(const std::string &name) const;

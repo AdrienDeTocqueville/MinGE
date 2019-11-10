@@ -34,8 +34,6 @@ typedef std::shared_ptr<class Mesh> MeshRef;
 
 class Mesh
 {
-	friend class Graphic;
-
 public:
 	Mesh(class aiMesh *mesh);
 	~Mesh();
@@ -43,6 +41,10 @@ public:
 	/// Getters
 	AABB getAABB() const
 	{ return aabb; }
+	unsigned getVAO() const
+	{ return vao; }
+	const std::vector<Submesh> &getSubmeshes() const
+	{ return submeshes; }
 
 	/// Methods (static)
 	static MeshRef createCube(unsigned _dataFlags = ALLFLAGS, vec3 _halfExtent = vec3(0.5f));
