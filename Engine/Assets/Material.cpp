@@ -10,10 +10,10 @@ Material::Material(Program *_program):
 {
 	for (const auto& u : program->uniforms)
 	{
-		uniforms.resize(uniforms.size() + u.size);
+		uniforms.resize(uniforms.size() + u.size * u.num);
 
 		if (u.type == GL_SAMPLER_2D)
-			set(uniforms.size() - u.size, (Texture*)NULL);
+			set(u.offset, (Texture*)NULL);
 	}
 }
 
@@ -57,7 +57,7 @@ void Material::bind(RenderPass::Type pass) const
 			glCheck(glUniform1i(uniform.location, texture_slot++));
 		}
 		else
-			set_uniform(uniform.location, uniform.type, data);
+			set_uniform(uniform.location, uniform.type, uniform.num, data);
 	}
 }
 
@@ -99,10 +99,6 @@ MaterialRef Material::getDefault()
 		return shared;
 
 	MaterialRef shared(new Material(Program::getDefault()));
-	//shared->set("ambient", vec3(0.3f));
-	//shared->set("diffuse", vec3(0.8f));
-	//shared->set("specular", vec3(0.0f));
-	//shared->set("exponent", 8.0f);
 
 	basic = shared;
 	materials.push_back(basic);

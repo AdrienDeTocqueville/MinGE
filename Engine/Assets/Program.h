@@ -61,6 +61,7 @@ private:
 	struct Uniform
 	{
 		GLuint location, type, size;
+		GLsizei num;
 		size_t offset; // offset in the array 'uniforms' of each Material
 	};
 	struct Builtin
@@ -131,7 +132,7 @@ inline void set_uniform(unsigned _location, const std::vector<mat4>& _values)
 	glCheck(glUniformMatrix4fv(_location, _values.size(), GL_FALSE, value_ptr(_values[0])));
 }
 
-inline void set_uniform(unsigned location, GLuint type, const void *data)
+inline void set_uniform(unsigned location, GLuint type, GLsizei num, const void *data)
 {
 	switch (type)
 	{
@@ -139,19 +140,19 @@ inline void set_uniform(unsigned location, GLuint type, const void *data)
 		glCheck(glUniform1f(location, *(const float*)data));
 		break;
 	case GL_FLOAT_VEC2:
-		glCheck(glUniform2fv(location, 1, (float*)data));
+		glCheck(glUniform2fv(location, num, (float*)data));
 		break;
 	case GL_FLOAT_VEC3:
-		glCheck(glUniform3fv(location, 1, (float*)data));
+		glCheck(glUniform3fv(location, num, (float*)data));
 		break;
 	case GL_FLOAT_VEC4:
-		glCheck(glUniform4fv(location, 1, (float*)data));
+		glCheck(glUniform4fv(location, num, (float*)data));
 		break;
 	case GL_FLOAT_MAT3:
-		glCheck(glUniformMatrix3fv(location, 1, GL_FALSE, (float*)data));
+		glCheck(glUniformMatrix3fv(location, num, GL_FALSE, (float*)data));
 		break;
 	case GL_FLOAT_MAT4:
-		glCheck(glUniformMatrix4fv(location, 1, GL_FALSE, (float*)data));
+		glCheck(glUniformMatrix4fv(location, num, GL_FALSE, (float*)data));
 		break;
 	}
 }

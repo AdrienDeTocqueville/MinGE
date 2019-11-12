@@ -77,9 +77,8 @@ void main()
 
 	vec3 Lo = vec3(0.0f);
 	{
-		vec3 L = lightPosition - fs_in.fragPos;
-		float distance = length(L);
-		L /= distance;
+		//vec3 L = normalize(lightPosition - fs_in.fragPos); // Point
+		vec3 L = lightPosition; // Directional
 		vec3 H = normalize(V + L);
 
 		// Compute radiance

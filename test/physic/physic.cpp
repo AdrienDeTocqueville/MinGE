@@ -92,7 +92,7 @@ void TestPhysic::start()
 {
 	shapes[0] = Mesh::createCube();
 	shapes[1] = Mesh::createCylinder();
-	shapes[2] = Mesh::createCylinder(ALLFLAGS, 0.5f, 0.0f);
+	shapes[2] = Mesh::createCylinder(MeshData::Basic, 0.5f, 0.0f);
 	shapes[3] = Mesh::createSphere();
 
 	current = -1;

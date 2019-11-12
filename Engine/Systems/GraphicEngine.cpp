@@ -235,7 +235,7 @@ void GraphicEngine::render()
 Light* GraphicEngine::getLight() const
 {
 	if (!lights.empty())
-		return lights.front();
+		return lights.back();
 
 	return nullptr;
 }

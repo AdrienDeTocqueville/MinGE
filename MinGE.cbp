@@ -184,8 +184,6 @@
 		<Unit filename="Engine/Utility/Time.h" />
 		<Unit filename="Engine/Utility/helpers.cpp" />
 		<Unit filename="Engine/Utility/helpers.h" />
-		<Unit filename="Engine/Utility/tinyxml2.cpp" />
-		<Unit filename="Engine/Utility/tinyxml2.h" />
 		<Unit filename="Engine/glew.c">
 			<Option compilerVar="CC" />
 		</Unit>

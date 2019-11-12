@@ -37,13 +37,29 @@ public:
 	template <typename T>
 	inline void set(std::string name, T value)
 	{
-		set(getLocation(name), value);
+		size_t loc = getLocation(name);
+		if (loc != -1)
+			set(loc, value);
 	}
 
 	template <typename T>
 	inline void set(size_t location, T value)
 	{
 		memcpy(uniforms.data() + location, &value, sizeof(T));
+	}
+
+	template <typename T>
+	inline void set(std::string name, T *values, uint32_t num)
+	{
+		size_t loc = getLocation(name);
+		if (loc != -1)
+			set(loc, values, num);
+	}
+
+	template <typename T>
+	inline void set(size_t location, T *values, uint32_t num)
+	{
+		memcpy(uniforms.data() + location, values, sizeof(T) * num);
 	}
 
 	~Material();

@@ -60,7 +60,7 @@ void Program::updateBuiltins()
 
 		b += sizeof(GLuint);
 
-		set_uniform(var.location, type, b);
+		set_uniform(var.location, type, 1, b);
 	}
 }
 
@@ -126,7 +126,7 @@ void Program::link()
 void Program::load_uniforms()
 {
 	Uniform u;
-	u.size = u.offset = 0;
+	u.offset = 0;
 
 	GLint uniform_count = 0;
 	glCheck(glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &uniform_count));
@@ -137,14 +137,18 @@ void Program::load_uniforms()
 
 	for (GLint i = 0; i < uniform_count; ++i)
 	{
-		// TODO: handle uniform arrays
-		GLint num_unused;
-
-		glCheck(glGetActiveUniform(program, i, name_len, &real_len, &num_unused, &u.type, temp_name));
+		GLint num;
+		glCheck(glGetActiveUniform(program, i, name_len, &real_len, &num, &u.type, temp_name));
 		u.location = glGetUniformLocation(program, temp_name);
 
 		if (u.location == -1)
 			continue;
+
+		// Remove postfix from array uniforms
+		if (num != 1)
+		{
+			real_len = strchr(temp_name, '[') - temp_name;
+		}
 
 		std::string name(temp_name, real_len);
 		auto it = builtins_names.find(name);
@@ -154,11 +158,14 @@ void Program::load_uniforms()
 			builtins_used.push_back({u.location, 0, it->second});
 		else
 		{
-			u.offset += u.size;
 			u.size = uniform_type_size.at(u.type);
+			u.num = num;
 
 			uniforms_names.emplace(std::move(name), uniforms.size());
 			uniforms.push_back(u);
+
+			// add offset for next iteration
+			u.offset += u.size * u.num;
 		}
 	}
 

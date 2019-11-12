@@ -10,6 +10,12 @@ class CameraScript : public Script
 			sensivity(_sensivity), distance(_distance), offset(_offset)
 		{ }
 
+		void start() override
+		{
+			if (!target)
+				lookAt(offset);
+		}
+
 		/// Methods (public)
 		void update() override
 		{
@@ -22,7 +28,7 @@ class CameraScript : public Script
 			angles += radians(Input::getMouseDelta() * sensivity);
 			angles.y = clamp(angles.y, clampAngleY.x, clampAngleY.y);
 
-			distance = max(0.01f, distance - 0.2f*Input::getMouseWheelDelta());
+			distance = max(0.01f, distance + (target ? -1 : 1) * 0.2f*Input::getMouseWheelDelta());
 		}
 
 		void lateUpdate() override
@@ -37,7 +43,7 @@ class CameraScript : public Script
 				if (dir == vec3(0.0f) && Input::getMouseDelta() == vec2(0.0f))
 					return;
 
-				float speed = (Input::getKeyDown(sf::Keyboard::LShift)?5.0f:12.0f) * Time::deltaTime;
+				float speed = (Input::getKeyDown(sf::Keyboard::LShift)?0.5f:1.0f) * distance * Time::deltaTime;
 
 				tr->position += dir * speed;
 				tr->rotation = quat(vec3(0.0f, angles.y, angles.x));

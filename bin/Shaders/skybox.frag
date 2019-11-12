@@ -1,32 +1,35 @@
 #version 150 core
 
-in vec3 point;
+in VS_FS {
+	vec3 skyColor, viewDir;
+};
 
 out vec4 outColor;
 
-vec3 bezier(float t);
+uniform vec3 lightPosition;
 
-uniform vec3 c0;
-uniform vec3 c1;
+uniform float sunSize;
+uniform float sunBloom;
+
+vec3 toGamma(vec3 _rgb)
+{
+	return pow(abs(_rgb), vec3(1.0/2.2));
+}
 
 void main()
 {
-	if (point.z < 0.0f)
-		discard;
-		
-	float height = normalize(point).z;
-					
-	outColor = vec4(bezier(height), 1.0f);
-}
+	float size2 = sunSize * sunSize;
 
-float f(float x)
-{
-    return 0.47f * exp(-4*x);
-}
+	vec3 lightDir = vec3(
+		lightPosition.x,
+		lightPosition.z,
+		lightPosition.y
+	);
+	float dist = 2.0 * (1.0 - dot(normalize(viewDir), lightDir));
+	float sun  = exp(-dist/ sunBloom / size2) + step(dist, size2);
+	float sun2 = min(sun * sun, 1.0);
+	vec3 color = skyColor + sun2;
+	color = toGamma(color);
 
-vec3 bezier(float t)
-{
-	vec3 t0 = vec3(0, 0, 1);
-	vec3 t1 = vec3(0.5, 0.5, 0);
-    return (2*t*t*t - 3*t*t + 1)*c0 + (t*t*t - 2*t*t + t)*t0 + (-2*t*t*t + 3*t*t)*c1 + (t*t*t - t*t)*t1;
+	gl_FragColor = vec4(color, 1.0);
 }

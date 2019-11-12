@@ -24,8 +24,8 @@ struct CommandBucket
 		void *packet;
 	};
 
-	CommandBucket(RenderTarget *_target, size_t _size = (1<<20)):
-		target(_target), commands(_size), packets(_size)
+	CommandBucket(RenderTarget *_target, size_t _size = (64<<10)):
+		target(_target), commands(_size), packets(_size * 20)
 	{ }
 
 	// Thread safe

@@ -3,7 +3,7 @@
 
 #include "Systems/GraphicEngine.h"
 
-Light::Light(LightType _type, vec3 _offset, vec3 _color):
+Light::Light(Light::Type _type, vec3 _offset, vec3 _color):
 	type(_type), offset(_offset), color(_color)
 { }
 
@@ -19,6 +19,8 @@ Light* Light::clone() const
 /// Getters
 vec3 Light::getPosition() const
 {
+	if (type == Light::Directional)
+		return tr->getDirection();
 	return tr->toWorld(offset);
 }
 

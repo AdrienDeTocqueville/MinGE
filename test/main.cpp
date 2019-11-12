@@ -4,6 +4,7 @@
 #include "bvh/bvh.h"
 #include "materials/materials.h"
 #include "animations/animations.h"
+#include "sky/sky.h"
 
 
 const auto desktop = sf::VideoMode::getDesktopMode();
@@ -16,25 +17,19 @@ const auto video_mode = desktop;
 const auto style = sf::Style::Fullscreen;
 #endif
 
-int scene = 3;
-std::vector<void (*)()> setups = {test_physic, test_bvh, test_materials, test_animations};
-std::vector<std::string> names = {"physic", "bvh", "materials"};
+int scene = 4;
+std::vector<void (*)()> setups = {test_physic, test_bvh, test_materials, test_animations, test_sky};
+std::vector<std::string> names = {"physic", "bvh", "materials", "animations", "sky"};
 
-void start_scene(Engine *engine, int _scene)
+void load_scene(Engine *engine)
 {
-	// Light source
-	//MaterialRef bright = Material::getDefault();
-	//	bright->set("ambient", vec3(2.0f));
-	//	bright->set("diffuse", vec3(0.0f));
-	//	bright->set("specular", vec3(0.0f));
-	//	bright->set("exponent", 0.0f);
-	//	bright->set("mainTexture", Texture::get("Textures/white.png");
+	if (scene < 0) scene = setups.size()-1;
+	if (scene >= setups.size()) scene = 0;
 
-	Entity::create("Light", false, vec3(-5, 0, 0))
-		//->insert<Graphic>(Mesh::createSphere(ALLFLAGS, 0.25f), {bright})
-		->insert<Light>(GE_POINT_LIGHT);
+	auto sun = Entity::create("Light", false, vec3(0))
+		->insert<Light>(Light::Directional);
+	sun->find<Transform>()->lookAt(vec3(-0.23171, 0.91854, 0.32032));
 
-	scene = _scene % setups.size();
 	Input::getWindow()->setTitle("MinGE (test " + names[scene] + ")");
 	setups[scene]();
 	engine->start();
@@ -55,7 +50,7 @@ int main()
 		std::cout << "Seed: " << Random::getSeed() << std::endl;
 
 	/// Init scene
-		start_scene(engine, scene);
+		load_scene(engine);
 
 	/// Main loop
 		while ( Input::isOpen() )
@@ -83,7 +78,11 @@ int main()
 				if (Input::getKeyReleased(sf::Keyboard::Tab))
 				{
 					engine->clear();
-					start_scene(engine, scene + 1);
+					if (Input::getKeyDown(sf::Keyboard::LShift))
+						scene--;
+					else
+						scene++;
+					load_scene(engine);
 				}
 
 			/// Render

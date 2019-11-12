@@ -22,6 +22,7 @@
 #include "Assets/Material.h"
 #include "Assets/Program.h"
 #include "Assets/Texture.h"
+#include "Assets/Scene.h"
 #include "Assets/Mesh.h"
 
 #include "Components/Transform.h"

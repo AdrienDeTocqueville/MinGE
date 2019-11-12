@@ -17,5 +17,5 @@ public:
 
 private:
 	MaterialRef sky;
-	MeshRef cube;
+	MeshRef mesh;
 };
