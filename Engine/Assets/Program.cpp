@@ -135,6 +135,10 @@ void Program::load_uniforms()
 	glCheck(glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &name_len));
 	char *temp_name = new char[name_len];
 
+	uniforms.clear();
+	uniforms_names.clear();
+	builtins_used.clear();
+
 	for (GLint i = 0; i < uniform_count; ++i)
 	{
 		GLint num;
@@ -144,11 +148,9 @@ void Program::load_uniforms()
 		if (u.location == -1)
 			continue;
 
-		// Remove postfix from array uniforms
+		// Remove '[...]' from variable name if its an array
 		if (num != 1)
-		{
 			real_len = strchr(temp_name, '[') - temp_name;
-		}
 
 		std::string name(temp_name, real_len);
 		auto it = builtins_names.find(name);
@@ -231,6 +233,25 @@ void Program::load_uniforms()
 		}
 	}
 	*/
+}
+
+void Program::reload()
+{
+	delete vertex;
+	if (!(vertex = Shader::load(GL_VERTEX_SHADER, name + ".vert")))
+		return;
+
+	delete fragment;
+	if (!(fragment = Shader::load(GL_FRAGMENT_SHADER, name + ".frag")))
+		return;
+
+	unsigned saved = program;
+	link();
+
+	if (program)
+		glCheck(glDeleteProgram(saved));
+	else
+		program = saved;
 }
 
 void Program::disass() const
@@ -322,7 +343,7 @@ void Program::clear()
 /// Shader Class
 std::unordered_map<std::string, Program::Shader*> Program::Shader::shaders;
 
-Program::Shader* Program::Shader::load(GLuint type, std::string& _shader)
+Program::Shader* Program::Shader::load(GLuint type, const std::string& _shader)
 {
 	std::ifstream file(("Shaders/" + _shader).c_str());
 

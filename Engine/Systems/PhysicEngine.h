@@ -49,13 +49,13 @@ class PhysicEngine
 			static void destroy();
 
 		/// Attributes (private)
-			std::list<RigidBody* > bodies;
-			std::list<Collider*  > colliders;
-			std::list<Constraint*> constraints;
+			std::vector<RigidBody* > bodies;
+			std::vector<Collider*  > colliders;
+			std::vector<Constraint*> constraints;
 
-			std::list<Constraint*> activeConstraints;
-			std::list<ContactConstraint*> triggers;
-			std::list<ContactConstraint*> collisions;
+			std::vector<Constraint*> activeConstraints;
+			std::vector<ContactConstraint*> triggers;
+			std::vector<ContactConstraint*> collisions;
 
 			vec3 gravity;
 			float gravityValue;

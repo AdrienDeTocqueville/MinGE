@@ -2,12 +2,36 @@
 #include "../PlayerScript.h"
 #include "../CameraScript.h"
 
+class Printer : public Script
+{
+	void draw(Transform *t)
+	{
+		Debug::drawPoint(t->getPosition());
+		for (Transform *c : t->getChildren())
+		{
+			Debug::drawLine(t->getPosition(), c->getPosition(), vec3(0.0f, 1.0f, 0.0f));
+			draw(c);
+		}
+	}
+	void update()
+	{
+		draw(tr);
+	}
+};
+
 void test_animations()
 {
 	Input::setCursorMode(CursorMode::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
-	Entity *root = Scene::import("Knight/knight.dae");
+
+
+	//Entity *root = Scene::import("Knight/knight.dae");
+	Entity *root = Scene::import("Bob/bob_lamp_update.md5mesh");
+	root->insert<Printer>();
+
+	auto skin = root->find<SkinnedGraphic>();
+
 
 	MaterialRef m = Material::getDefault();
 	m->set("albedoMap", Texture::get("Iron/albedo.png"));
@@ -22,12 +46,14 @@ void test_animations()
 	Entity *object = Entity::create("Object", true)
 		->insert<Graphic>(mesh);
 
+	/*
 	for (vec3 pos : {vec3(1, 0, 0), vec3(-1, 0, 0), vec3(1, 0, 1), vec3(-1, 0, 1)})
 		object = Entity::clone(object, pos+vec3(0,0,0.5f), vec3(0.0f, 0.0f, Random::next<float>()));
+	*/
 
 	// Camera
 	Entity::create("MainCamera", false, vec3(0.0f, 2.0f, 2.0f))
 		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
 		->insert<Skybox>()
-		->insert<CameraScript>(nullptr, 0.2f, 1.0f);
+		->insert<CameraScript>(nullptr, 0.2f, 5.0f);
 }

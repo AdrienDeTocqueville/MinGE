@@ -19,12 +19,14 @@
 #include "Entity.h"
 
 #include "Assets/PhysicMaterial.h"
+#include "Assets/Animation.h"
 #include "Assets/Material.h"
 #include "Assets/Program.h"
 #include "Assets/Texture.h"
 #include "Assets/Scene.h"
 #include "Assets/Mesh.h"
 
+#include "Components/SkinnedGraphic.h"
 #include "Components/Transform.h"
 #include "Components/RigidBody.h"
 #include "Components/Graphic.h"

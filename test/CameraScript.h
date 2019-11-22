@@ -19,16 +19,24 @@ class CameraScript : public Script
 		/// Methods (public)
 		void update() override
 		{
+			angles += radians(Input::getMouseDelta() * sensivity);
+			angles.y = clamp(angles.y, clampAngleY.x, clampAngleY.y);
+
+			distance = max(0.01f, distance + (target ? -1 : 1) * 0.2f*Input::getMouseWheelDelta());
+
+			if (Input::getKeyPressed(sf::Keyboard::F5))
+			{
+				auto *g = Entity::findByTag("Bob")->find<SkinnedGraphic>();
+				for (MaterialRef m : g->getMaterials())
+					m->reload();
+			}
+
 #ifdef DEBUG
 			Debug::drawVector(vec3(0.0f), vec3(1, 0, 0), vec3(1, 0, 0));
 			Debug::drawVector(vec3(0.0f), vec3(0, 1, 0), vec3(0, 1, 0));
 			Debug::drawVector(vec3(0.0f), vec3(0, 0, 1), vec3(0, 0, 1));
 #endif
 
-			angles += radians(Input::getMouseDelta() * sensivity);
-			angles.y = clamp(angles.y, clampAngleY.x, clampAngleY.y);
-
-			distance = max(0.01f, distance + (target ? -1 : 1) * 0.2f*Input::getMouseWheelDelta());
 		}
 
 		void lateUpdate() override

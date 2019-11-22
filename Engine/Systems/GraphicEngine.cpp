@@ -3,6 +3,7 @@
 #include "Utility/Debug.h"
 #include "Assets/Program.h"
 
+#include "Components/SkinnedGraphic.h"
 #include "Components/Graphic.h"
 #include "Components/Camera.h"
 #include "Components/Light.h"
@@ -52,6 +53,7 @@ GraphicEngine::~GraphicEngine()
 
 void GraphicEngine::clear()
 {
+	skinned.clear();
 	graphics.clear();
 	cameras.clear();
 	lights.clear();
@@ -93,10 +95,14 @@ void GraphicEngine::editBuffer(GLenum _target, unsigned _size, const void* _data
 }
 
 /// Methods (public)
+void GraphicEngine::addSkinnedGraphic(SkinnedGraphic* _skinned)
+{
+	skinned.push_back(_skinned);
+}
+
 void GraphicEngine::addGraphic(Graphic* _graphic)
 {
-	if (_graphic != nullptr)
-		graphics.push_back(_graphic);
+	graphics.push_back(_graphic);
 }
 
 void GraphicEngine::addCamera(Camera* _camera)
@@ -107,8 +113,17 @@ void GraphicEngine::addCamera(Camera* _camera)
 
 void GraphicEngine::addLight(Light* _light)
 {
-	if (_light != nullptr)
-		lights.push_back(_light);
+	lights.push_back(_light);
+}
+
+void GraphicEngine::removeSkinnedGraphic(SkinnedGraphic* _skinned)
+{
+	auto it = std::find(skinned.begin(), skinned.end(), _skinned);
+	if (it != skinned.end())
+	{
+		*it = skinned.back();
+		skinned.pop_back();
+	}
 }
 
 void GraphicEngine::removeGraphic(Graphic* _graphic)
@@ -123,13 +138,24 @@ void GraphicEngine::removeGraphic(Graphic* _graphic)
 
 void GraphicEngine::removeCamera(Camera* _camera)
 {
-	cameras.remove(_camera);
+	auto it = std::find(cameras.begin(), cameras.end(), _camera);
+	if (it != cameras.end())
+	{
+		*it = cameras.back();
+		cameras.pop_back();
+	}
+
 	sortBuckets();
 }
 
 void GraphicEngine::removeLight(Light* _light)
 {
-	lights.remove(_light);
+	auto it = std::find(lights.begin(), lights.end(), _light);
+	if (it != lights.end())
+	{
+		*it = lights.back();
+		lights.pop_back();
+	}
 }
 
 void GraphicEngine::sortBuckets()
@@ -201,6 +227,12 @@ void GraphicEngine::render()
 
 	for (auto& th : threads) th.join();
 #else
+	for (SkinnedGraphic* graphic: skinned)
+	{
+		graphic->animate();
+		for (CommandBucket *bucket : buckets)
+			graphic->render(bucket);
+	}
 	for (Graphic* graphic: graphics)
 		for (CommandBucket *bucket : buckets)
 			graphic->render(bucket);
@@ -218,6 +250,8 @@ void GraphicEngine::render()
 	}
 
 #ifdef DRAWAABB
+	for(SkinnedGraphic* g: skinned)
+		g->getAABB().prepare();
 	for(Graphic* g: graphics)
 		g->getAABB().prepare();
 

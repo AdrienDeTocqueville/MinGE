@@ -1,10 +1,11 @@
 #include "Utility/Debug.h"
-#include "Assets/Program.h"
 #include "Systems/GraphicEngine.h"
+
+#include "Assets/Program.h"
+#include "Assets/Material.h"
 
 std::vector<Debug::Vertex> Debug::points, Debug::lines;
 
-MaterialRef Debug::material;
 bool Debug::linesDepthTest = true;
 
 /// Methods (public)
@@ -25,7 +26,9 @@ void Debug::drawVector(vec3 _point, vec3 _vector, vec3 _color)
 }
 
 /// Methods (private)
+static MaterialRef material = NULL;
 static unsigned vbo = 0, vao = 0;
+
 void Debug::init()
 {
 	material = Material::create("debug");
@@ -47,7 +50,7 @@ void Debug::update()
 	if (!points.size() && !lines.size())
 		return;
 
-	material->bind();
+	material->bind(RenderPass::Forward);
 
 	glPushAttrib(GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);

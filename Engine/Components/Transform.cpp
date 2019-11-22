@@ -23,14 +23,14 @@ void Transform::toMatrix()
 {
 	validWorld = validLocal = false;
 
-	computeLocalMatrix();
+	for (Transform *child : children)
+		child->updateChildren();
 }
 
 void Transform::lookAt(vec3 _target)
 {
 	rotation = glm::rotation(vec3(1, 0, 0), normalize(_target - position));
-
-	validLocal = validWorld = false;
+	toMatrix();
 }
 
 bool Transform::isChildOf(Transform* _tr) const
@@ -42,41 +42,39 @@ bool Transform::isChildOf(Transform* _tr) const
 void Transform::setParent(Transform* _parent)
 {
 	if (parent != nullptr)
-		parent->children.remove(this);
+	{
+		auto it = std::find(parent->children.begin(), parent->children.end(), this);
+		*it = parent->children.back();
+		parent->children.pop_back();
+	}
 
 	parent = _parent;
 
 	if (_parent != nullptr)
 	{
 		parent->children.push_back(this);
-		root = parent->root;
+		setRoot(parent->root);
 	}
 	else
-		root = this;
-
-	for (Transform* child: children)
-		child->setRoot(root);
+		setRoot(this);
 }
 
 void Transform::setPosition(vec3 _position)
 {
 	position = _position;
-
-	validLocal = validWorld = false;
+	toMatrix();
 }
 
 void Transform::setRotation(vec3 _rotation)
 {
 	rotation = quat(_rotation);
-
-	validLocal = validWorld = false;
+	toMatrix();
 }
 
 void Transform::setScale(vec3 _scale)
 {
 	scale = _scale;
-
-	validLocal = validWorld = false;
+	toMatrix();
 }
 
 void Transform::setDirection(vec3 _direction)
@@ -97,14 +95,17 @@ Transform* Transform::getRoot() const
 	return root;
 }
 
-std::list<Transform*> Transform::getChildren() const
+std::vector<Transform*> Transform::getChildren() const
 {
 	return children;
 }
 
-vec3 Transform::getPosition() const
+vec3 Transform::getPosition()
 {
-	return position;
+	if (parent)
+		return toWorld(vec3(0.0f));
+	else
+		return position;
 }
 
 vec3 Transform::getDirection()
@@ -169,34 +170,39 @@ vec3 Transform::vectorToWorld(vec3 _vector)
 }
 
 /// Methods (private)
-void Transform::setRoot(Transform* _root) // private
+void Transform::setRoot(Transform* _root)
 {
+	validWorld = validLocal = false;
+
 	root = _root;
+	for (Transform* child: children)
+		child->setRoot(root);
+}
+
+void Transform::updateChildren()
+{
+	if (!validWorld) // means validLocal if false too
+		return; // already dirty, no need to tell children
+
+	validWorld = validLocal = false;
+	for (Transform *child : children)
+		child->updateChildren();
 }
 
 void Transform::computeWorldMatrix()
 {
 	if (!validWorld)
 	{
-		/*
-		 * TODO: Multiply matrix with parent matrix
 		if (parent != nullptr)
-			world = parent->world;
+			simd_mul(parent->getToWorld(), glm::translate(position), world);
 		else
-			world = mat4(1.0f);
-		*/
+			world = glm::translate(position);
 
-		world = glm::translate(position);
 		simd_mul(world, toMat4(rotation), world);
 		simd_mul(world, glm::scale(scale), world);
 
 		validWorld = true;
 		validLocal = false;
-
-		/*
-		for (Transform* child: children)
-			child->toMatrix();
-		*/
 	}
 }
 

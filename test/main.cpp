@@ -17,7 +17,7 @@ const auto video_mode = desktop;
 const auto style = sf::Style::Fullscreen;
 #endif
 
-int scene = 4;
+int scene = 3;
 std::vector<void (*)()> setups = {test_physic, test_bvh, test_materials, test_animations, test_sky};
 std::vector<std::string> names = {"physic", "bvh", "materials", "animations", "sky"};
 

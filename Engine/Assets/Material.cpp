@@ -8,13 +8,7 @@ std::vector<std::weak_ptr<Material>> Material::materials;
 Material::Material(Program *_program):
 	program(_program), id(materials.size())
 {
-	for (const auto& u : program->uniforms)
-	{
-		uniforms.resize(uniforms.size() + u.size * u.num);
-
-		if (u.type == GL_SAMPLER_2D)
-			set(u.offset, (Texture*)NULL);
-	}
+	load_uniforms();
 }
 
 Material::Material(const Material &material):
@@ -67,6 +61,13 @@ bool Material::hasRenderPass(RenderPass::Type pass) const
 	return (pass == RenderPass::Forward);
 }
 
+void Material::reload()
+{
+	uniforms.clear();
+	program->reload();
+	//load_uniforms();
+}
+
 size_t Material::getLocation(const std::string &name) const
 {
 	auto it = program->uniforms_names.find(name);
@@ -108,6 +109,17 @@ MaterialRef Material::getDefault()
 MaterialRef Material::get(uint32_t id)
 {
 	return materials[id].lock();
+}
+
+void Material::load_uniforms()
+{
+	for (const auto& u : program->uniforms)
+	{
+		uniforms.resize(uniforms.size() + u.size * u.num);
+
+		if (u.type == GL_SAMPLER_2D)
+			set(u.offset, (Texture*)NULL);
+	}
 }
 
 template<>

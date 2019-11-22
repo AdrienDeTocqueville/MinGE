@@ -81,17 +81,32 @@ void PhysicEngine::addConstraint(Constraint* _constraint)
 
 void PhysicEngine::removeRigidBody(RigidBody* _body)
 {
-	bodies.remove(_body);
+	auto it = std::find(bodies.begin(), bodies.end(), _body);
+	if (it != bodies.end())
+	{
+		*it = bodies.back();
+		bodies.pop_back();
+	}
 }
 
 void PhysicEngine::removeCollider(Collider* _collider)
 {
-	colliders.remove(_collider);
+	auto it = std::find(colliders.begin(), colliders.end(), _collider);
+	if (it != colliders.end())
+	{
+		*it = colliders.back();
+		colliders.pop_back();
+	}
 }
 
 void PhysicEngine::removeConstraint(Constraint* _constraint)
 {
-	constraints.remove(_constraint);
+	auto it = std::find(constraints.begin(), constraints.end(), _constraint);
+	if (it != constraints.end())
+	{
+		*it = constraints.back();
+		constraints.pop_back();
+	}
 }
 
 void PhysicEngine::simulate()
@@ -226,7 +241,7 @@ void PhysicEngine::sendAndFreeData()
 {
 	activeConstraints.clear();
 
-	// Send to scripts and clear lists
+	// Send to scripts and clear arrays
 	for (ContactConstraint* trigger: triggers)
 	{
 		trigger->sendData();

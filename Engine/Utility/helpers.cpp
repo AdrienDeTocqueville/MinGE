@@ -26,10 +26,20 @@ vec3 vecClamp(vec3 v)
 	return v;
 }
 
-void write(vec3 _vec, bool ret)
+void write(const vec3 &x, bool ret)
 {
-	std::cout << _vec.x << ", " << _vec.y << ", " << _vec.z;
-	if (ret) std::cout << std::endl;
+	printf("(%f, %f, %f)", x[0], x[1], x[2], x[3]);
+	if (ret) putchar('\n');
+}
+
+void write(const mat4 &x, bool ret)
+{
+	printf("((%f, %f, %f, %f)\n (%f, %f, %f, %f)\n (%f, %f, %f, %f)\n (%f, %f, %f, %f))",
+		(x[0][0]), (x[0][1]), (x[0][2]), (x[0][3]),
+		(x[1][0]), (x[1][1]), (x[1][2]), (x[1][3]),
+		(x[2][0]), (x[2][1]), (x[2][2]), (x[2][3]),
+		(x[3][0]), (x[3][1]), (x[3][2]), (x[3][3]));
+	if (ret) putchar('\n');
 }
 
 bool epsilonEqual(const vec3& a, const vec3& b, float epsilon)

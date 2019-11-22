@@ -32,7 +32,8 @@ sf::Vector2u toSFVec2u(vec2 v);
 
 vec3 vecClamp(vec3 v);
 
-void write(vec3 _vec, bool ret = true);
+void write(const vec3 &x, bool ret = true);
+void write(const mat4 &x, bool ret = true);
 
 bool epsilonEqual(const vec3& a, const vec3& b, float epsilon = EPSILON);
 bool epsilonEqual(const quat& a, const quat& b, float epsilon = EPSILON);

@@ -44,6 +44,11 @@ Entity* Entity::create(const Tag& _tag, bool _prototype, vec3 _position, vec3 _r
 	return (new Entity(_tag, _prototype))->insert<Transform>(_position, _rotation, _scale);
 }
 
+Entity* Entity::create(const Tag& _tag, bool _prototype, vec3 _position, quat _rotation, vec3 _scale)
+{
+	return (new Entity(_tag, _prototype))->insert<Transform>(_position, _rotation, _scale);
+}
+
 Entity* Entity::clone(Entity* _entity, vec3 _position, vec3 _rotation, vec3 _scale)
 {
 	Entity* e = Entity::create(_entity->tag, false, _position, _rotation, _scale);
@@ -200,18 +205,6 @@ std::type_index Entity::getScriptTypeIndex()
 //
 //	return this;
 //}
-
-template <>
-void Entity::remove<Transform>()
-{
-	Error::add(USER_ERROR, "Impossible to remove the Transform component");
-}
-
-template <>
-Transform* Entity::find<Transform>()
-{
-	return tr;
-}
 
 template <>
 void Entity::removeAll<Collider>()

@@ -44,6 +44,7 @@ private:
 
 	void link();
 	void load_uniforms();
+	void reload();
 
 	void disass() const;
 
@@ -84,7 +85,7 @@ private:
 	struct Shader
 	{
 		static Shader* get(GLuint type, std::string shader);
-		static Shader* load(GLuint type, std::string& _shader);
+		static Shader* load(GLuint type, const std::string& _shader);
 		static void clear();
 
 		Shader(unsigned _shader): shader(_shader)

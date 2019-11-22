@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Components/Component.h"
+
 #include "Assets/Mesh.h"
+#include "Assets/Material.h"
 
 #include <initializer_list>
 

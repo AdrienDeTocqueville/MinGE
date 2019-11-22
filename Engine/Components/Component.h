@@ -18,27 +18,27 @@ class Component
 		/// Getters
 			Entity*	getEntity() const	{ return entity; }
 
-			template <typename T> bool has() const
+			template <typename T> inline bool has() const
 			{
 				return entity->has<T>();
 			}
 
-			template <typename T> void insert() const
+			template <typename T> inline void insert() const
 			{
 				entity->insert<T>();
 			}
 
-			template <typename T> void remove() const
+			template <typename T> inline void remove() const
 			{
 				entity->remove<T>();
 			}
 
-			template <typename T> T* find() const
+			template <typename T> inline T* find() const
 			{
 				return entity->find<T>();
 			}
 
-			template <typename T> std::vector<T*> findAll() const
+			template <typename T> inline std::vector<T*> findAll() const
 			{
 				return entity->findAll<T>();
 			}

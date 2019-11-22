@@ -26,8 +26,9 @@ public:
 	static MaterialRef get(uint32_t id);
 
 	/// Methods (public)
-	void bind(RenderPass::Type pass = RenderPass::Forward) const; // TODO: remove default value
+	void bind(RenderPass::Type pass) const;
 	bool hasRenderPass(RenderPass::Type pass) const;
+	void reload();
 
 	inline uint32_t getId() const { return id; }
 	size_t getLocation(const std::string &name) const;
@@ -67,6 +68,8 @@ public:
 private:
 	Material(class Program *_program);
 	Material(const Material &material);
+
+	void load_uniforms();
 
 	class Program *program;
 	std::vector<uint8_t> uniforms; // Contains < data > sequenced for each uniform

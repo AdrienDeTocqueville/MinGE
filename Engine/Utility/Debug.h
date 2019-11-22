@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Utility/helpers.h"
-#include "Assets/Material.h"
 
 class Debug
 {
@@ -31,6 +30,5 @@ private:
 	};
 	static std::vector<Vertex> points, lines;
 
-	static MaterialRef material;
 	static bool linesDepthTest;
 };

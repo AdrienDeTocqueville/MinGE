@@ -34,9 +34,9 @@ class Transform : public Component
 		/// Getters
 			Transform* getParent() const;
 			Transform* getRoot() const;
-			std::list<Transform*> getChildren() const;
+			std::vector<Transform*> getChildren() const;
 
-			vec3 getPosition() const;
+			vec3 getPosition();
 			vec3 getDirection();
 
 			const mat4 &getToWorld();
@@ -61,16 +61,17 @@ class Transform : public Component
 	private:
 		/// Methods (private)
 			void setRoot(Transform* _root);
+			void updateChildren();
 
 			void computeWorldMatrix();
 			void computeLocalMatrix();
 
 		/// Attributes (private)
 			Transform *root, *parent;
-			std::list<Transform*> children;
+			std::vector<Transform*> children;
 
-			mat4 world; bool validWorld;
-			mat4 local; bool validLocal;
+			mat4 world, local;
+			bool validWorld, validLocal;
 };
 
 #endif // TRANSFORM_H

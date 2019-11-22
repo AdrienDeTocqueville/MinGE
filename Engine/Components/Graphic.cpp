@@ -155,24 +155,12 @@ void Graphic::updateMesh(MeshRef _mesh)
 
 void Graphic::onRegister()
 {
-	/*
-	Animator* a = find<Animator>();
-	if (a != nullptr)
-		a->setGraphic(this);
-	*/
-
 	if (mesh)
 		GraphicEngine::get()->addGraphic(this);
 }
 
 void Graphic::onDeregister()
 {
-	/*
-	Animator* a = find<Animator>();
-	if (a != nullptr)
-		a->setGraphic(nullptr);
-	*/
-
 	if (mesh)
 		GraphicEngine::get()->removeGraphic(this);
 }
