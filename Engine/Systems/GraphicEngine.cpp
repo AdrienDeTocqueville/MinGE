@@ -3,7 +3,7 @@
 #include "Utility/Debug.h"
 #include "Assets/Program.h"
 
-#include "Components/SkinnedGraphic.h"
+#include "Components/Animator.h"
 #include "Components/Graphic.h"
 #include "Components/Camera.h"
 #include "Components/Light.h"
@@ -53,7 +53,7 @@ GraphicEngine::~GraphicEngine()
 
 void GraphicEngine::clear()
 {
-	skinned.clear();
+	animators.clear();
 	graphics.clear();
 	cameras.clear();
 	lights.clear();
@@ -95,9 +95,9 @@ void GraphicEngine::editBuffer(GLenum _target, unsigned _size, const void* _data
 }
 
 /// Methods (public)
-void GraphicEngine::addSkinnedGraphic(SkinnedGraphic* _skinned)
+void GraphicEngine::addAnimator(Animator* _animator)
 {
-	skinned.push_back(_skinned);
+	animators.push_back(_animator);
 }
 
 void GraphicEngine::addGraphic(Graphic* _graphic)
@@ -116,13 +116,13 @@ void GraphicEngine::addLight(Light* _light)
 	lights.push_back(_light);
 }
 
-void GraphicEngine::removeSkinnedGraphic(SkinnedGraphic* _skinned)
+void GraphicEngine::removeAnimator(Animator* _animator)
 {
-	auto it = std::find(skinned.begin(), skinned.end(), _skinned);
-	if (it != skinned.end())
+	auto it = std::find(animators.begin(), animators.end(), _animator);
+	if (it != animators.end())
 	{
-		*it = skinned.back();
-		skinned.pop_back();
+		*it = animators.back();
+		animators.pop_back();
 	}
 }
 
@@ -203,6 +203,9 @@ void GraphicEngine::render()
 	for (Camera* camera: cameras)
 		camera->update();
 
+	for (Animator* animator: animators)
+		animator->animate();
+
 //#define ENQUEUE_THREAD
 #ifdef ENQUEUE_THREAD
 	auto queue_commands = [=](int i, int last)
@@ -227,12 +230,6 @@ void GraphicEngine::render()
 
 	for (auto& th : threads) th.join();
 #else
-	for (SkinnedGraphic* graphic: skinned)
-	{
-		graphic->animate();
-		for (CommandBucket *bucket : buckets)
-			graphic->render(bucket);
-	}
 	for (Graphic* graphic: graphics)
 		for (CommandBucket *bucket : buckets)
 			graphic->render(bucket);
@@ -250,8 +247,6 @@ void GraphicEngine::render()
 	}
 
 #ifdef DRAWAABB
-	for(SkinnedGraphic* g: skinned)
-		g->getAABB().prepare();
 	for(Graphic* g: graphics)
 		g->getAABB().prepare();
 

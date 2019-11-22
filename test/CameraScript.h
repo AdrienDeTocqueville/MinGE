@@ -26,7 +26,7 @@ class CameraScript : public Script
 
 			if (Input::getKeyPressed(sf::Keyboard::F5))
 			{
-				auto *g = Entity::findByTag("Bob")->find<SkinnedGraphic>();
+				auto *g = Entity::findByTag("Bob")->find<Graphic>();
 				for (MaterialRef m : g->getMaterials())
 					m->reload();
 			}

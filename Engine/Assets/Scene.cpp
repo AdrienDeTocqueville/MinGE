@@ -39,12 +39,12 @@ static mat4 assimp_glm(const aiMatrix4x4 &from)
 
 static vec3 assimp_glm(const aiVector3D &from)
 {
-	return vec3(from.x, from.y, from.z);
+	return vec3(from.x, -from.z, from.y);
 }
 
 static quat assimp_glm(const aiQuaternion &from)
 {
-	return quat(from.w, from.x, from.y, from.z);
+	return quat(from.w, from.x, -from.z, from.y);
 }
 
 static void swap_yz(mat4 &mat)
@@ -54,12 +54,6 @@ static void swap_yz(mat4 &mat)
 	t[2][2] = 0.0f;
 	t[2][1] = -1.0f;
 	t[1][2] = 1.0f;
-
-	mat4 i(1.0f);
-	i[1][1] = 0.0f;
-	i[2][2] = 0.0f;
-	i[2][1] = 1.0f;
-	i[1][2] = -1.0f;
 
 	mat = t * mat;
 }
@@ -246,7 +240,7 @@ static std::vector<AnimationRef> import_animations(const aiScene *scene, Skeleto
 	for (unsigned i = 0; i < scene->mNumAnimations; i++)
 	{
 		aiAnimation *aiAnim = scene->mAnimations[i];
-		Animation *anim = new Animation(aiAnim->mName.C_Str(), aiAnim->mDuration / aiAnim->mTicksPerSecond);
+		Animation *anim = new Animation(aiAnim->mName.C_Str(), aiAnim->mDuration / aiAnim->mTicksPerSecond, true);
 
 		anim->channels.reserve(aiAnim->mNumChannels);
 		for (unsigned j = 0; j < aiAnim->mNumChannels; j++)
@@ -261,14 +255,14 @@ static std::vector<AnimationRef> import_animations(const aiScene *scene, Skeleto
 				Error::add(USER_ERROR, "import_animations(): invalid data");
 
 			unsigned key_count = node->mNumPositionKeys;
-			Animation::BoneTrack track; track.reserve(key_count);
+			Animation::Track track(it->second, key_count);
 
 			for (unsigned key = 0; key < key_count; key++)
 			{
 				if (node->mPositionKeys[key].mTime != node->mRotationKeys[key].mTime)
 					Error::add(USER_ERROR, "import_animations(): unsupported key");
 
-				track.emplace_back(
+				track.keys.emplace_back(
 					node->mPositionKeys[key].mTime,
 					assimp_glm(node->mPositionKeys[key].mValue),
 					assimp_glm(node->mRotationKeys[key].mValue)
@@ -343,6 +337,7 @@ Entity *Scene::import(const std::string &file)
 	auto materials = import_materials(scene, base + '/');
 	auto animations = import_animations(scene, skeleton);
 
-	e->insert<SkinnedGraphic>(skeleton, mesh, materials, animations);
+	e->insert<Graphic>(mesh, materials);
+	e->insert<Animator>(skeleton, animations);
 	return e;
 }

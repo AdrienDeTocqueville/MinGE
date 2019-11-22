@@ -9,7 +9,8 @@
 #define BUFFER_OFFSET(offset) ((char*)nullptr + (offset))
 
 class Entity;
-class SkinnedGraphic;
+
+class Animator;
 class Graphic;
 class Camera;
 class Light;
@@ -25,12 +26,12 @@ class GraphicEngine
 			static void editBuffer(GLenum _target, unsigned _size, const void* _data);
 
 		/// Methods (public)
-			void addSkinnedGraphic(SkinnedGraphic* _graphic);
+			void addAnimator(Animator* _animator);
 			void addGraphic(Graphic* _graphic);
 			void addCamera(Camera* _camera);
 			void addLight(Light* _light);
 
-			void removeSkinnedGraphic(SkinnedGraphic* _graphic);
+			void removeAnimator(Animator* _animator);
 			void removeGraphic(Graphic* _graphic);
 			void removeCamera(Camera* _camera);
 			void removeLight(Light* _light);
@@ -56,7 +57,7 @@ class GraphicEngine
 			static void destroy();
 
 		/// Attributes (private)
-			std::vector<SkinnedGraphic*> skinned;
+			std::vector<Animator*> animators;
 			std::vector<Graphic*> graphics;
 			std::vector<Camera*> cameras;
 			std::vector<Light*> lights;

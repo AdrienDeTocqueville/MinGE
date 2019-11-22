@@ -10,12 +10,13 @@ typedef std::shared_ptr<class Animation> AnimationRef;
 class Animation
 {
 public:
-	Animation(std::string _name, float _duration):
-		name(_name), duration(_duration)
+	Animation(std::string _name, float _duration, bool _loop):
+		name(_name), duration(_duration), loop(_loop)
 	{ }
 
 	std::string name;
 	float duration;
+	bool loop;
 
 
 	struct Key
@@ -29,7 +30,15 @@ public:
 		quat rot;
 	};
 
-	typedef std::vector<Key> BoneTrack;
+	struct Track
+	{
+		Track(size_t i, size_t n):
+			bone_index(i)
+		{ keys.reserve(n); }
 
-	std::vector<BoneTrack> channels;
+		size_t bone_index;
+		std::vector<Key> keys;
+	};
+
+	std::vector<Track> channels;
 };

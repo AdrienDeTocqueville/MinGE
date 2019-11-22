@@ -12,6 +12,9 @@ class Printer : public Script
 			Debug::drawLine(t->getPosition(), c->getPosition(), vec3(0.0f, 1.0f, 0.0f));
 			draw(c);
 		}
+
+		if (Input::getKeyDown(sf::Keyboard::A))
+			find<Animator>()->play(0);
 	}
 	void update()
 	{
@@ -29,8 +32,6 @@ void test_animations()
 	//Entity *root = Scene::import("Knight/knight.dae");
 	Entity *root = Scene::import("Bob/bob_lamp_update.md5mesh");
 	root->insert<Printer>();
-
-	auto skin = root->find<SkinnedGraphic>();
 
 
 	MaterialRef m = Material::getDefault();
