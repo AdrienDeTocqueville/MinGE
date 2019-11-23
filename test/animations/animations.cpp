@@ -19,17 +19,19 @@ class Printer : public Script
 			tr->setScale(vec3(scale));
 		}
 		setState(0);
+
+		/*
 		auto anim = find<Animator>()->getAnimations()[2];
 		auto skel = find<Animator>()->getSkeleton();
-
 		Animation::Track &t = anim->channels[skel.bone_index["shoulder.L"]];
+
 		std::cout << t.loop << "  " << t.bone_index << "  " << t.keys.size() << std::endl;
 		for (auto &key : t.keys)
 		{
 			std::cout << key.time << "\t";
 			write(glm::eulerAngles(key.rot));
 		}
-
+		*/
 	}
 	void draw(Transform *t)
 	{
@@ -119,5 +121,6 @@ void test_animations()
 	Entity::create("MainCamera", false, vec3(0.0f, 2.0f, 2.0f))
 		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
 		->insert<Skybox>()
+		//->insert<CameraScript>(nullptr, 0.2f, 0.0f);
 		->insert<CameraScript>(root->find<Transform>(), 0.2f, 5.0f, vec3(0,0,1/0.0025f));
 }

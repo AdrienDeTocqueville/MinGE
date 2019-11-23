@@ -58,7 +58,6 @@ void Animator::play(int index)
 	}
 
 	anim = index;
-	accumulator = 0.0f;
 
 	keyframes.clear();
 	keyframes.resize(animations[anim]->channels.size());
@@ -69,43 +68,43 @@ void Animator::animate()
 	if (anim == -1)
 		return;
 
-	if (accumulator >= animations[anim]->duration)
+	for (size_t i(0) ; i < keyframes.size(); i++)
 	{
-		accumulator -= animations[anim]->duration;
-		keyframes.clear();
-		keyframes.resize(animations[anim]->channels.size());
-	}
-
-	int i = 0;
-	for (Animation::Track &track : animations[anim]->channels)
-	{
-		while ((keyframes[i] + 1 < track.keys.size()) && 
-			(accumulator >= track.keys[keyframes[i] + 1].time))
-			keyframes[i]++;
+		Animation::Track &track = animations[anim]->channels[i];
 
 		Transform *t = bones[track.bone_index];
 
-		size_t keyframe = keyframes[i++];
-		Animation::Key &curr = track.keys[keyframe];
+		while ((keyframes[i].frame + 1 < track.keys.size()) &&
+			(keyframes[i].time >= track.keys[keyframes[i].frame + 1].time))
+			keyframes[i].frame++;
 
-		bool reached_end = (keyframe + 1 == track.keys.size());
-		if (reached_end && !track.loop)
+		if (keyframes[i].frame + 1 == track.keys.size())
 		{
-			t->position = curr.pos;
-			t->rotation = curr.rot;
-			continue;
+			Animation::Key &last = track.keys[keyframes[i].frame];
+			if (track.loop)
+			{
+				keyframes[i].time -= last.time;
+				keyframes[i].frame = 0;
+			}
+			if (!track.loop || track.keys.size() == 1)
+			{
+				t->position = last.pos;
+				t->rotation = last.rot;
+				continue;
+			}
 		}
 
-		size_t next_key = reached_end ? 0 : keyframe + 1;
-		Animation::Key &next = track.keys[next_key];
+		size_t curr_key = keyframes[i].frame;
 
-		float alpha = (accumulator - curr.time) / (next.time - curr.time);
+		Animation::Key &curr = track.keys[curr_key];
+		Animation::Key &next = track.keys[curr_key + 1];
+
+		float alpha = (keyframes[i].time - curr.time) / (next.time - curr.time);
+		keyframes[i].time += Time::deltaTime;
 
 		t->position = mix(curr.pos, next.pos, alpha);
 		t->rotation = slerp(curr.rot, next.rot, alpha);
 	}
-
-	accumulator += Time::deltaTime;
 
 	upload();
 }

@@ -43,7 +43,12 @@ private:
 	mat4 *matrices;
 
 	size_t anim;
-	float accumulator;
 
-	std::vector<size_t> keyframes;
+	struct BoneFrame
+	{
+		float time;
+		size_t frame;
+	};
+
+	std::vector<BoneFrame> keyframes;
 };
