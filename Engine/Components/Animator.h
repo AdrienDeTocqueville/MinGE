@@ -7,7 +7,6 @@ struct Skeleton
 {
 	std::unordered_map<std::string, unsigned> bone_index;
 	std::vector<mat4> offsets;
-	std::vector<Transform*> nodes;
 };
 
 class Animator : public Component
@@ -19,32 +18,32 @@ public:
 	/// Methods (public)
 	virtual Animator* clone() const override;
 
-	void play(int _index);
+	void addAnimation(AnimationRef animation);
 
+	void play(int index);
 	void animate();
 
 	/// Getter
-	Transform* getBone(unsigned _index);
-	Transform* getBone(std::string _name);
+	Transform* getBone(unsigned index) const;
+	Transform* getBone(std::string name) const;
+
+	const Skeleton &getSkeleton() const;
+	const std::vector<AnimationRef> &getAnimations() const;
 
 private:
 	/// Methods (private)
 	virtual void onRegister() override;
+	void upload();
 
 	/// Attributes (private)
 	Skeleton skeleton;
 	std::vector<AnimationRef> animations;
 
+	Transform **bones;
 	mat4 *matrices;
-	size_t current;
-	/*
+
+	size_t anim;
 	float accumulator;
 
-	std::vector<unsigned> trKeys;
-	std::vector<unsigned> roKeys;
-
-	std::vector<Transform*> bones;
-
-	int root;
-	*/
+	std::vector<size_t> keyframes;
 };

@@ -88,58 +88,70 @@ static void import_node(aiNode *node, Transform *parent, Skeleton &skeleton)
 	Transform *curr = e->find<Transform>();
 	curr->setParent(parent);
 
-	skeleton.bone_index[name] = skeleton.nodes.size();
-	skeleton.nodes.push_back(curr);
+	skeleton.bone_index[name] = skeleton.offsets.size();
 	skeleton.offsets.emplace_back(1.0f);
 
 	for (unsigned int i = 0; i < node->mNumChildren; i++)
 		import_node(node->mChildren[i], curr, skeleton);
 }
 
-static inline Skeleton import_skeleton(const aiScene *scene, Entity *e)
+static MeshRef import_mesh(const aiScene *scene, Transform *root, Skeleton &skeleton, std::vector<unsigned> &materials)
 {
-	Skeleton skeleton;
-
-	import_node(scene->mRootNode, e->find<Transform>(), skeleton);
-	return skeleton;
-}
-
-static MeshRef import_mesh(const aiScene *scene, Skeleton &skeleton)
-{
-	bool has_bones = true;
+	// 1 - Determine what data is needed and sort by materials
+	bool has_pos = true, has_normal = true, has_uv = true;
 	int vertex_count = 0, index_count = 0, bone_count = 0;
 
 	std::vector<Submesh> submeshes;
 	submeshes.reserve(scene->mNumMeshes);
 
+	std::vector<aiMesh*> meshes;
 	for (unsigned i = 0; i < scene->mNumMeshes; i++)
 	{
 		aiMesh *submesh = scene->mMeshes[i];
+		meshes.push_back(submesh);
 
-		unsigned numVertices = submesh->mNumVertices;
-		unsigned numIndices = submesh->mNumFaces * 3;
-		unsigned numBones = submesh->mNumBones;
+		if (!submesh->HasPositions()) has_pos = false;
+		if (!submesh->HasNormals()) has_normal = false;
+		if (!submesh->HasTextureCoords(0)) has_uv = false;
 
-		submeshes.emplace_back(GL_TRIANGLES, numIndices, index_count);
-		if (numBones == 0)
-			has_bones = false;
-
-		vertex_count += numVertices;
-		index_count += numIndices;
-		bone_count += numBones;
+		vertex_count += submesh->mNumVertices;
+		index_count += submesh->mNumFaces * 3;
+		bone_count += submesh->mNumBones;
 	}
 
-	MeshData::Flags flags = has_bones ? MeshData::Full : MeshData::Basic;
+	std::sort(meshes.begin(), meshes.end(), [] (aiMesh *&a, aiMesh *&b) {
+		return a->mMaterialIndex < b->mMaterialIndex;
+	});
+
+	// 2 - Allocate necessary space
+	MeshData::Flags flags = MeshData::Empty;
+	if (has_pos)	flags = (MeshData::Flags)(flags | MeshData::Points);
+	if (has_normal)	flags = (MeshData::Flags)(flags | MeshData::Normals);
+	if (has_uv)	flags = (MeshData::Flags)(flags | MeshData::UVs);
+	if (bone_count)	flags = (MeshData::Flags)(flags | MeshData::Bones);
+
 	MeshData data(vertex_count, index_count, flags);
 
 	if (flags & MeshData::Bones)
-		memset(data.bones, 0, sizeof(*data.bones) * data.vertex_count);
-
-	// Read data
-	vertex_count = index_count = bone_count = 0;
-	for (unsigned sub = 0; sub < scene->mNumMeshes; sub++)
 	{
-		aiMesh *submesh = scene->mMeshes[sub];
+		memset(data.bones, 0, sizeof(*data.bones) * data.vertex_count);
+		for (unsigned int i = 0; i < scene->mRootNode->mNumChildren; i++)
+			import_node(scene->mRootNode->mChildren[i], root, skeleton);
+	}
+
+	// 3 - Read data
+	unsigned prev_mat = scene->mNumMaterials;
+	vertex_count = index_count = bone_count = 0;
+	for (aiMesh *submesh : meshes)
+	{
+		if (submesh->mMaterialIndex == prev_mat)
+			submeshes.back().count += submesh->mNumFaces * 3;
+		else
+		{
+			prev_mat = submesh->mMaterialIndex;
+			submeshes.emplace_back(GL_TRIANGLES, submesh->mNumFaces * 3, index_count);
+			materials.push_back(prev_mat);
+		}
 
 		// Read vertices
 		unsigned numVertices = submesh->mNumVertices;
@@ -147,24 +159,25 @@ static MeshRef import_mesh(const aiScene *scene, Skeleton &skeleton)
 		{
 			size_t v = vertex_count + i;
 
-			data.points[v] = vec3(
-				submesh->mVertices[i].x,
-				submesh->mVertices[i].y,
-				submesh->mVertices[i].z
-			);
-			data.normals[v] = vec3(
-				submesh->mNormals[i].x,
-				submesh->mNormals[i].y,
-				submesh->mNormals[i].z
-			);
-			if (submesh->HasTextureCoords(0))
-			{
+			if (flags & MeshData::Points)
+				data.points[v] = vec3(
+					submesh->mVertices[i].x,
+					submesh->mVertices[i].y,
+					submesh->mVertices[i].z
+				);
+
+			if (flags & MeshData::Normals)
+				data.normals[v] = vec3(
+					submesh->mNormals[i].x,
+					submesh->mNormals[i].y,
+					submesh->mNormals[i].z
+				);
+
+			if (flags & MeshData::UVs)
 				data.uvs[v] = vec2(
 					submesh->mTextureCoords[0][i].x,
 					submesh->mTextureCoords[0][i].y
 				);
-			}
-			else data.uvs[v] = vec2(0.0f);
 		}
 
 		// Read indices
@@ -177,27 +190,30 @@ static MeshRef import_mesh(const aiScene *scene, Skeleton &skeleton)
 		}
 
 		// Read bones
-		unsigned numBones = submesh->mNumBones;
-		for (unsigned i = 0; i < numBones; i++)
+		if (flags & MeshData::Bones)
 		{
-			aiBone *bone = submesh->mBones[i];
-			std::string name(bone->mName.C_Str());
-
-			auto it = skeleton.bone_index.find(name);
-			if (it == skeleton.bone_index.end())
-				Error::add(USER_ERROR, "import_mesh(): invalid data");
-
-			unsigned bone_index = it->second;
-
-			skeleton.offsets[bone_index] = assimp_glm(bone->mOffsetMatrix);
-			swap_yz(skeleton.offsets[bone_index]);
-
-			for (unsigned j = 0; j < bone->mNumWeights; j++)
+			unsigned numBones = submesh->mNumBones;
+			for (unsigned i = 0; i < numBones; i++)
 			{
-				unsigned index = vertex_count + bone->mWeights[j].mVertexId;
-				unsigned k = argmin_weight(data.bones[index].weights);
-				data.bones[index].bones[k] = bone_index;
-				data.bones[index].weights[k] = bone->mWeights[j].mWeight;
+				aiBone *bone = submesh->mBones[i];
+				std::string name(bone->mName.C_Str());
+
+				auto it = skeleton.bone_index.find(name);
+				if (it == skeleton.bone_index.end())
+					Error::add(USER_ERROR, "import_mesh(): invalid data");
+
+				unsigned bone_index = it->second;
+
+				skeleton.offsets[bone_index] = assimp_glm(bone->mOffsetMatrix);
+				swap_yz(skeleton.offsets[bone_index]);
+
+				for (unsigned j = 0; j < bone->mNumWeights; j++)
+				{
+					unsigned index = vertex_count + bone->mWeights[j].mVertexId;
+					unsigned k = argmin_weight(data.bones[index].weights);
+					data.bones[index].bones[k] = bone_index;
+					data.bones[index].weights[k] = bone->mWeights[j].mWeight;
+				}
 			}
 		}
 
@@ -207,8 +223,10 @@ static MeshRef import_mesh(const aiScene *scene, Skeleton &skeleton)
 	return MeshRef(new Mesh(std::move(data), submeshes));
 }
 
-static std::vector<MaterialRef> import_materials(const aiScene *scene, const std::string &base_path)
+static std::vector<MaterialRef> import_materials(const aiScene *scene, const std::vector<unsigned> &material_indices, bool skinned, const std::string &base_path)
 {
+	MaterialRef base = Material::create(skinned ? "skinned" : "object");
+
 	std::vector<MaterialRef> materials;
 	for (unsigned i = 0; i < scene->mNumMaterials; i++)
 	{
@@ -218,29 +236,31 @@ static std::vector<MaterialRef> import_materials(const aiScene *scene, const std
 		mat->GetTexture(aiTextureType_DIFFUSE, 0, &path);
 		std::string texture_path(path.C_Str());
 
-		MaterialRef m = Material::create("skinned");
-		m->set("albedoMap", Texture::get(base_path + texture_path));
+		MaterialRef m = base->clone();
+		//m->set("albedoMap", Texture::get(base_path + texture_path));
 		//m->set("metallicMap", Texture::get("Knight/metallic_" + diff));
 		//m->set("roughnessMap", Texture::get("Knight/roughness_" + diff));
 		materials.push_back(m);
 	}
 
 	std::vector<MaterialRef> mesh_materials;
-	for (unsigned i = 0; i < scene->mNumMeshes; i++)
-		mesh_materials.push_back(materials[scene->mMeshes[i]->mMaterialIndex]);
+	for (unsigned index : material_indices)
+		mesh_materials.push_back(materials[index]);
 
 	return mesh_materials;
 }
 
 // Ignores scaling
-static std::vector<AnimationRef> import_animations(const aiScene *scene, Skeleton &skeleton)
+static std::vector<AnimationRef> import_animations(const aiScene *scene, const Skeleton &skeleton)
 {
 	std::vector<AnimationRef> animations; animations.reserve(scene->mNumAnimations);
 
 	for (unsigned i = 0; i < scene->mNumAnimations; i++)
 	{
 		aiAnimation *aiAnim = scene->mAnimations[i];
-		Animation *anim = new Animation(aiAnim->mName.C_Str(), aiAnim->mDuration / aiAnim->mTicksPerSecond, true);
+		float rate = 1.0f / aiAnim->mTicksPerSecond;
+
+		Animation *anim = new Animation(aiAnim->mName.C_Str(), aiAnim->mDuration * rate);
 
 		anim->channels.reserve(aiAnim->mNumChannels);
 		for (unsigned j = 0; j < aiAnim->mNumChannels; j++)
@@ -255,7 +275,7 @@ static std::vector<AnimationRef> import_animations(const aiScene *scene, Skeleto
 				Error::add(USER_ERROR, "import_animations(): invalid data");
 
 			unsigned key_count = node->mNumPositionKeys;
-			Animation::Track track(it->second, key_count);
+			Animation::Track track(it->second, key_count, node->mPostState == aiAnimBehaviour_REPEAT);
 
 			for (unsigned key = 0; key < key_count; key++)
 			{
@@ -263,7 +283,7 @@ static std::vector<AnimationRef> import_animations(const aiScene *scene, Skeleto
 					Error::add(USER_ERROR, "import_animations(): unsupported key");
 
 				track.keys.emplace_back(
-					node->mPositionKeys[key].mTime,
+					node->mPositionKeys[key].mTime * rate,
 					assimp_glm(node->mPositionKeys[key].mValue),
 					assimp_glm(node->mRotationKeys[key].mValue)
 				);
@@ -287,9 +307,22 @@ static void dump_node(aiNode *node, int recur = 0)
 		dump_node(node->mChildren[i], recur + 1);
 }
 
-static inline void dump_mesh(aiMesh *mesh)
+static inline void dump_meshes(const aiScene *scene)
 {
-	printf(" - %s (%d faces) (%d bones)\n", mesh->mName.C_Str(), mesh->mNumFaces, mesh->mNumBones);
+	for (size_t i(0); i < scene->mNumMeshes; i++)
+	{
+		aiMesh *mesh = scene->mMeshes[i];
+		printf(" - %s (%d faces) (%d bones) (material %d)\n", mesh->mName.C_Str(), mesh->mNumFaces, mesh->mNumBones, mesh->mMaterialIndex);
+	}
+}
+
+static inline void dump_animations(const aiScene *scene)
+{
+	for (size_t i(0); i < scene->mNumAnimations; i++)
+	{
+		aiAnimation *anim = scene->mAnimations[i];
+		printf(" - %s\n", anim->mName.C_Str());
+	}
 }
 
 static void dump(const aiScene *scene)
@@ -302,9 +335,15 @@ static void dump(const aiScene *scene)
 	printf("\n\n");
 
 	printf("> Meshes\n");
-	for (int i(0); i < scene->mNumMeshes; i++)
-		dump_mesh(scene->mMeshes[i]);
+	dump_meshes(scene);
 	printf("\n\n");
+
+	if (scene->HasAnimations())
+	{
+		printf("> Animations\n");
+		dump_animations(scene);
+		printf("\n\n");
+	}
 }
 
 Entity *Scene::import(const std::string &file)
@@ -318,9 +357,55 @@ Entity *Scene::import(const std::string &file)
 			aiProcess_GenNormals);
 
 	// check for errors
-	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	if (!scene || !scene->mRootNode)
 	{
 		Error::add(FILE_NOT_FOUND, "Scene::import() -> " + path);
+		return nullptr;
+	}
+	if (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE)
+		Error::add(WARNING, "Scene::import() -> Incomplete scene :" + path);
+
+#ifdef DEBUG
+	dump(scene);
+#endif
+
+	//Entity *e = Entity::create(base, true);
+	Entity *e = Entity::create(base, false);
+
+	Skeleton skeleton;
+	std::vector<unsigned> material_indices;
+
+	auto mesh = import_mesh(scene, e->find<Transform>(), skeleton, material_indices);
+	auto materials = import_materials(scene, material_indices, skeleton.offsets.size(), base + '/');
+	e->insert<Graphic>(mesh, materials);
+
+	if (skeleton.offsets.size())
+	{
+		auto animations = import_animations(scene, skeleton);
+		e->insert<Animator>(skeleton, animations);
+	}
+
+	return e;
+}
+
+AnimationRef Scene::import_animation(const std::string &file, const Skeleton &skeleton)
+{
+	std::string path = "Resources/" + file;
+	std::string base = file.substr(0, file.find_last_of("/\\"));
+
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile(path, 0);
+
+	// check for errors
+	if (!scene || !scene->mRootNode)
+	{
+		Error::add(FILE_NOT_FOUND, "Scene::import() -> " + path);
+		return nullptr;
+	}
+
+	if (!scene->HasAnimations())
+	{
+		Error::add(WARNING, "Scene::import() -> Scene has no animations :" + path);
 		return nullptr;
 	}
 
@@ -328,16 +413,5 @@ Entity *Scene::import(const std::string &file)
 	dump(scene);
 #endif
 
-	//Entity *e = Entity::create(base, true);
-	//Entity *e = Entity::create(base, false);
-	Entity *e = Entity::create(base, false, vec3(0.0f), vec3(0,0,3.14f), vec3(0.4f));
-
-	auto skeleton = import_skeleton(scene, e);
-	auto mesh = import_mesh(scene, skeleton);
-	auto materials = import_materials(scene, base + '/');
-	auto animations = import_animations(scene, skeleton);
-
-	e->insert<Graphic>(mesh, materials);
-	e->insert<Animator>(skeleton, animations);
-	return e;
+	return import_animations(scene, skeleton)[0];
 }

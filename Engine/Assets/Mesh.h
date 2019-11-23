@@ -12,9 +12,9 @@ struct Submesh
 	Submesh(uint32_t _mode, uint32_t _count, uint32_t _first_index = 0):
 		mode(_mode), count(_count), offset(_first_index * sizeof(uint16_t)) { }
 
-	const uint32_t mode;
-	const uint32_t count;
-	const uint32_t offset;
+	uint32_t mode;
+	uint32_t count;
+	uint32_t offset;
 };
 
 struct BoneWeight
@@ -32,6 +32,7 @@ struct MeshData
 		UVs = 4,
 		Bones = 8,
 
+		Empty = 0,
 		Basic = (Points | Normals | UVs),
 		Full = (Points | Normals | UVs | Bones),
 	};

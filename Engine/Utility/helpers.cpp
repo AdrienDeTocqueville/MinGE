@@ -28,7 +28,7 @@ vec3 vecClamp(vec3 v)
 
 void write(const vec3 &x, bool ret)
 {
-	printf("(%f, %f, %f)", x[0], x[1], x[2], x[3]);
+	printf("(%f, %f, %f)", x[0], x[1], x[2]);
 	if (ret) putchar('\n');
 }
 

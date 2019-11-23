@@ -6,19 +6,36 @@
 #include "Systems/GraphicEngine.h"
 #include "Utility/Time.h"
 
+static bool isnan(const mat4 &m)
+{
+	for (unsigned i(0) ; i < 4 ; i++)
+	for (unsigned j(0) ; j < 4 ; j++)
+		if (std::isnan(m[i][j]))
+			return true;
+	return false;
+}
+
+static void get_bones(Transform *t, Transform **bones, int &offset)
+{
+	for (Transform *c : t->getChildren())
+	{
+		bones[offset++] = c;
+		get_bones(c, bones, offset);
+	}
+}
+
 Animator::Animator(Skeleton _skeleton, std::vector<AnimationRef> _animations):
 	skeleton(_skeleton), animations(_animations),
-	matrices(NULL), current(-1)
+	matrices(NULL), anim(-1)
 {
-	// Init in bind pose
-	matrices = new mat4[skeleton.nodes.size()];
-	for (int i=0; i < skeleton.nodes.size(); i++)
-		simd_mul(skeleton.nodes[i]->getToWorld(), skeleton.offsets[i], matrices[i]);
+	bones = new Transform*[skeleton.offsets.size()];
+	matrices = new mat4[skeleton.offsets.size()];
 }
 
 Animator::~Animator()
 {
 	delete[] matrices;
+	delete[] bones;
 }
 
 /// Methods (public)
@@ -27,121 +44,130 @@ Animator* Animator::clone() const
 	return new Animator(skeleton, animations);
 }
 
-void Animator::play(int _index)
+void Animator::addAnimation(AnimationRef animation)
 {
-	current = _index;
-	/*
-	current = &(model->animations[_index]);
-	accumulator = 0.0f;
-	loop = _repeat;
+	animations.push_back(animation);
+}
 
-	trKeys.clear(); roKeys.clear();
-	trKeys.resize(current->tracks.size(), 0);
-	roKeys.resize(current->tracks.size(), 0);
-	*/
+void Animator::play(int index)
+{
+	if (index == -1 || index >= animations.size())
+	{
+		anim = -1;
+		return;
+	}
+
+	anim = index;
+	accumulator = 0.0f;
+
+	keyframes.clear();
+	keyframes.resize(animations[anim]->channels.size());
 }
 
 void Animator::animate()
 {
-	if (current == -1)
+	if (anim == -1)
 		return;
 
-	for (Animation::Track &track : animations[current]->channels)
+	if (accumulator >= animations[anim]->duration)
 	{
-		Transform *t = skeleton.nodes[track.bone_index];
-		t->position = track.keys[0].pos;
-		t->rotation = track.keys[0].rot;
+		accumulator -= animations[anim]->duration;
+		keyframes.clear();
+		keyframes.resize(animations[anim]->channels.size());
 	}
 
-	tr->toMatrix(); // Updates all hierarchy
-	for (int i=0; i < skeleton.nodes.size(); i++)
-		simd_mul(skeleton.nodes[i]->getToWorld(), skeleton.offsets[i], matrices[i]);
-
-	if (Graphic *g = find<Graphic>())
+	int i = 0;
+	for (Animation::Track &track : animations[anim]->channels)
 	{
-		for (auto mat : g->getMaterials())
-			mat->set("bones", matrices, skeleton.nodes.size());
+		while ((keyframes[i] + 1 < track.keys.size()) && 
+			(accumulator >= track.keys[keyframes[i] + 1].time))
+			keyframes[i]++;
+
+		Transform *t = bones[track.bone_index];
+
+		size_t keyframe = keyframes[i++];
+		Animation::Key &curr = track.keys[keyframe];
+
+		bool reached_end = (keyframe + 1 == track.keys.size());
+		if (reached_end && !track.loop)
+		{
+			t->position = curr.pos;
+			t->rotation = curr.rot;
+			continue;
+		}
+
+		size_t next_key = reached_end ? 0 : keyframe + 1;
+		Animation::Key &next = track.keys[next_key];
+
+		float alpha = (accumulator - curr.time) / (next.time - curr.time);
+
+		t->position = mix(curr.pos, next.pos, alpha);
+		t->rotation = slerp(curr.rot, next.rot, alpha);
 	}
 
-	/*
 	accumulator += Time::deltaTime;
 
-	if (accumulator >= current->duration)
-	{
-		if (loop)
-		{
-			trKeys.clear(); roKeys.clear();
-			trKeys.resize(current->tracks.size(), 0);
-			roKeys.resize(current->tracks.size(), 0);
-
-			accumulator -= current->duration;
-		}
-		else
-		{
-			current = nullptr;
-			return;
-		}
-	}
-
-	for (unsigned t(0) ; t < current->tracks.size() ; t++)
-	{
-		AnimatedModel::Track& track = current->tracks[t];
-		unsigned id = track.boneId;
-
-		// Translations
-		auto& trs = track.translations;
-
-		for (; trKeys[t] < trs.size() ; trKeys[t]++)
-			if (trs[trKeys[t]].first >= accumulator)
-				break;
-
-		float coefT = (accumulator-trs[trKeys[t]-1].first) / (trs[trKeys[t]].first-trs[trKeys[t]-1].first);
-		bones[id]->position = model->bones[id].position + mix(trs[trKeys[t]-1].second, trs[trKeys[t]].second, coefT);
-
-		// Rotations
-		auto& ros = track.rotations;
-
-		for (; roKeys[t] < ros.size() ; roKeys[t]++)
-			if (ros[roKeys[t]].first >= accumulator)
-				break;
-
-		float coefR = (accumulator-ros[roKeys[t]-1].first) / (ros[roKeys[t]].first-ros[roKeys[t]-1].first);
-		bones[id]->rotation = model->bones[id].rotation * mix(ros[roKeys[t]-1].second, ros[roKeys[t]].second, coefR);
-	}
-
-	tr->toMatrix();
-
-
-	for (unsigned i(0) ; i < bones.size() ; i++)
-		matrices[i] = bones[i]->toWorldSpace * model->bones[i].inverseBindMatrix;
-	*/
+	upload();
 }
 
 /// Getter
-Transform* Animator::getBone(unsigned _index)
+Transform* Animator::getBone(unsigned index) const
 {
-	return skeleton.nodes[_index];
+	return bones[index];
 }
 
-Transform* Animator::getBone(std::string _name)
+Transform* Animator::getBone(std::string name) const
 {
-	auto it = skeleton.bone_index.find(_name);
+	auto it = skeleton.bone_index.find(name);
 	if (it != skeleton.bone_index.end())
-		return skeleton.nodes[it->second];
+		return bones[it->second];
 
 	return nullptr;
+}
+
+const Skeleton &Animator::getSkeleton() const
+{
+	return skeleton;
+}
+
+const std::vector<AnimationRef> &Animator::getAnimations() const
+{
+	return animations;
 }
 
 /// Private
 void Animator::onRegister()
 {
+	int offset = 0;
+	get_bones(tr, bones, offset);
+
 	if (Graphic *g = find<Graphic>())
 	{
-		for (auto mat : g->getMaterials())
-			mat->set("bones", matrices, skeleton.nodes.size());
-
+		upload();
 		GraphicEngine::get()->addAnimator(this);
 	}
 	else
 		Error::add(USER_ERROR, "Add a graphic before animator");
+}
+
+void Animator::upload()
+{
+	tr->toMatrix(); // Updates all hierarchy
+	for (int i=0; i < skeleton.offsets.size(); i++)
+	{
+		simd_mul(bones[i]->getToWorld(), skeleton.offsets[i], matrices[i]);
+		simd_mul(tr->getToLocal(), matrices[i], matrices[i]);
+
+		// * offset : transform to bone space
+		// * bones[i]->world : transform to root world space
+		// * tr->local : transform to entity local space so that
+		//		 if entity moves, the model can be moved without
+		//		 recomputing all bones
+	}
+
+	if (Graphic *g = find<Graphic>())
+	{
+		for (MaterialRef mat : g->getMaterials())
+			mat->set("bones", matrices, skeleton.offsets.size());
+	}
 }

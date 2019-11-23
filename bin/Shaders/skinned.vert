@@ -25,11 +25,11 @@ out VS_FS {
 
 void main()
 {
-	mat4 MATRIX_B =
+	mat4 MATRIX_B = MATRIX_M * (
 		bones[in_Bones.x] * in_Weights.x +
 		bones[in_Bones.y] * in_Weights.y +
 		bones[in_Bones.z] * in_Weights.z +
-		bones[in_Bones.w] * in_Weights.w;
+		bones[in_Bones.w] * in_Weights.w);
 
 	vec4 pos = MATRIX_B * vec4(in_Position, 1.0f);
 
