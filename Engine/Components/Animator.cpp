@@ -6,15 +6,6 @@
 #include "Systems/GraphicEngine.h"
 #include "Utility/Time.h"
 
-static bool isnan(const mat4 &m)
-{
-	for (unsigned i(0) ; i < 4 ; i++)
-	for (unsigned j(0) ; j < 4 ; j++)
-		if (std::isnan(m[i][j]))
-			return true;
-	return false;
-}
-
 static void get_bones(Transform *t, Transform **bones, int &offset)
 {
 	for (Transform *c : t->getChildren())
@@ -25,8 +16,7 @@ static void get_bones(Transform *t, Transform **bones, int &offset)
 }
 
 Animator::Animator(Skeleton _skeleton, std::vector<AnimationRef> _animations):
-	skeleton(_skeleton), animations(_animations),
-	matrices(NULL), anim(-1)
+	skeleton(_skeleton), animations(_animations)
 {
 	bones = new Transform*[skeleton.offsets.size()];
 	matrices = new mat4[skeleton.offsets.size()];
@@ -52,59 +42,25 @@ void Animator::addAnimation(AnimationRef animation)
 void Animator::play(int index)
 {
 	if (index == -1 || index >= animations.size())
-	{
-		anim = -1;
 		return;
-	}
 
-	anim = index;
-
-	keyframes.clear();
-	keyframes.resize(animations[anim]->channels.size());
+	motions[0].reset(animations[1].get());
+	motions[1].reset(animations[2].get());
 }
 
 void Animator::animate()
 {
-	if (anim == -1)
+	if (!motions[0].anim || !motions[1].anim)
 		return;
 
-	for (size_t i(0) ; i < keyframes.size(); i++)
+	for (int i(0); i < skeleton.offsets.size(); i++)
 	{
-		Animation::Track &track = animations[anim]->channels[i];
-
-		Transform *t = bones[track.bone_index];
-
-		while ((keyframes[i].frame + 1 < track.keys.size()) &&
-			(keyframes[i].time >= track.keys[keyframes[i].frame + 1].time))
-			keyframes[i].frame++;
-
-		if (keyframes[i].frame + 1 == track.keys.size())
-		{
-			Animation::Key &last = track.keys[keyframes[i].frame];
-			if (track.loop)
-			{
-				keyframes[i].time -= last.time;
-				keyframes[i].frame = 0;
-			}
-			if (!track.loop || track.keys.size() == 1)
-			{
-				t->position = last.pos;
-				t->rotation = last.rot;
-				continue;
-			}
-		}
-
-		size_t curr_key = keyframes[i].frame;
-
-		Animation::Key &curr = track.keys[curr_key];
-		Animation::Key &next = track.keys[curr_key + 1];
-
-		float alpha = (keyframes[i].time - curr.time) / (next.time - curr.time);
-		keyframes[i].time += Time::deltaTime;
-
-		t->position = mix(curr.pos, next.pos, alpha);
-		t->rotation = slerp(curr.rot, next.rot, alpha);
+		bones[i]->position = vec3(0.0f);
+		bones[i]->rotation = glm::identity<quat>();
 	}
+
+	motions[0].update(bones, 1.0f);
+	//motions[1].update(bones, 0.5f);
 
 	upload();
 }
@@ -155,6 +111,7 @@ void Animator::upload()
 	for (int i=0; i < skeleton.offsets.size(); i++)
 	{
 		simd_mul(bones[i]->getToWorld(), skeleton.offsets[i], matrices[i]);
+		//simd_mul(bones[0]->getToLocal(), matrices[i], matrices[i]);
 		simd_mul(tr->getToLocal(), matrices[i], matrices[i]);
 
 		// * offset : transform to bone space
@@ -168,5 +125,59 @@ void Animator::upload()
 	{
 		for (MaterialRef mat : g->getMaterials())
 			mat->set("bones", matrices, skeleton.offsets.size());
+	}
+}
+
+bool Animator::BoneFrame::advance(const Animation::Track &track)
+{
+	while ((frame + 1 < track.keys.size()) &&
+		(time >= track.keys[frame + 1].time))
+		frame++;
+
+	// If we reached end of track
+	if (frame + 1 == track.keys.size())
+	{
+		if (!track.loop || track.keys.size() == 1)
+			return false;
+
+		// Loop
+		time -= track.keys.back().time;
+		frame = 0;
+	}
+	return true;
+}
+
+void Animator::Motion::reset(Animation *a)
+{
+	anim = a;
+	keyframes.clear();
+	keyframes.resize(a->channels.size());
+}
+
+void Animator::Motion::update(Transform **bones, float weight)
+{
+	for (size_t i(0) ; i < keyframes.size(); i++)
+	{
+		const Animation::Track &track = anim->channels[i];
+		Transform *t = bones[track.bone_index];
+
+		if (!keyframes[i].advance(track))
+		{
+			const Animation::Key &last = track.keys.back();
+			t->position = last.pos;
+			t->rotation = last.rot;
+			continue;
+		}
+
+		const size_t curr_key = keyframes[i].frame;
+
+		const Animation::Key &curr = track.keys[curr_key];
+		const Animation::Key &next = track.keys[curr_key + 1];
+
+		const float alpha = (keyframes[i].time - curr.time) / (next.time - curr.time);
+		keyframes[i].time += Time::deltaTime;
+
+		t->position += weight * mix(curr.pos, next.pos, alpha);
+		t->rotation += weight * slerp(curr.rot, next.rot, alpha);
 	}
 }

@@ -85,8 +85,9 @@ void test_animations()
 
 	//Entity *root = Scene::import("Knight/knight.dae");
 	//Entity *root = Scene::import("Bob/bob_lamp_update.md5mesh");
-	Entity *root = Scene::import("Model/model.fbx");
 
+
+	Entity *root = Scene::import("Model/model.fbx");
 	if (root)
 	{
 		const Skeleton &skeleton = root->find<Animator>()->getSkeleton();
@@ -97,6 +98,16 @@ void test_animations()
 		root->find<Animator>()->addAnimation(Scene::import_animation("Model/right.fbx", skeleton));
 		root->insert<Printer>();
 	}
+
+	/*
+	Entity *root = Scene::import("pers/walking.dae");
+	if (root)
+	{
+		const Skeleton &skeleton = root->find<Animator>()->getSkeleton();
+		root->find<Animator>()->addAnimation(Scene::import_animation("pers/idle.dae", skeleton));
+		root->insert<Printer>();
+	}
+	*/
 
 
 	MaterialRef m = Material::getDefault();
@@ -123,4 +134,5 @@ void test_animations()
 		->insert<Skybox>()
 		//->insert<CameraScript>(nullptr, 0.2f, 0.0f);
 		->insert<CameraScript>(root->find<Transform>(), 0.2f, 5.0f, vec3(0,0,1/0.0025f));
+		//->insert<CameraScript>(root->find<Transform>(), 0.2f, 5.0f);
 }

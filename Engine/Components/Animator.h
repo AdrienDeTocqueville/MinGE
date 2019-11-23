@@ -42,13 +42,22 @@ private:
 	Transform **bones;
 	mat4 *matrices;
 
-	size_t anim;
-
 	struct BoneFrame
 	{
 		float time;
 		size_t frame;
+
+		bool advance(const Animation::Track &track);
 	};
 
-	std::vector<BoneFrame> keyframes;
+	struct Motion
+	{
+		Animation *anim;
+		std::vector<BoneFrame> keyframes;
+
+		void reset(Animation *a);
+		void update(Transform **bones, float weight);
+	};
+
+	Motion motions[2];
 };
