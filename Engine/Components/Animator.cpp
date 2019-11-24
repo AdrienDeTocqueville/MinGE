@@ -6,6 +6,8 @@
 #include "Systems/GraphicEngine.h"
 #include "Utility/Time.h"
 
+static const float threshold = 0.01f;
+
 static void get_bones(Transform *t, Transform **bones, int &offset)
 {
 	for (Transform *c : t->getChildren())
@@ -15,8 +17,8 @@ static void get_bones(Transform *t, Transform **bones, int &offset)
 	}
 }
 
-Animator::Animator(Skeleton _skeleton, std::vector<AnimationRef> _animations):
-	skeleton(_skeleton), animations(_animations)
+Animator::Animator(Skeleton _skeleton):
+	skeleton(_skeleton)
 {
 	bones = new Transform*[skeleton.offsets.size()];
 	matrices = new mat4[skeleton.offsets.size()];
@@ -31,36 +33,46 @@ Animator::~Animator()
 /// Methods (public)
 Animator* Animator::clone() const
 {
-	return new Animator(skeleton, animations);
+	return new Animator(skeleton);
 }
 
-void Animator::addAnimation(AnimationRef animation)
+void Animator::setMotion(vec2 pos)
 {
-	animations.push_back(animation);
-}
+	float total_weights = 0.0f;
+	for (auto &motion : blender.motions)
+	{
+		float eps = 4.0f;
+		float d = length(pos - motion.position) * eps;
+		motion.weight = exp(-d*d);
+		total_weights += motion.weight;
+	}
 
-void Animator::play(int index)
-{
-	if (index == -1 || index >= animations.size())
-		return;
-
-	motions[0].reset(animations[1].get());
-	motions[1].reset(animations[2].get());
+	float scale = 1.0f / total_weights;
+	for (auto &motion : blender.motions)
+		motion.weight *= scale;
 }
 
 void Animator::animate()
 {
-	if (!motions[0].anim || !motions[1].anim)
-		return;
+	for (auto &motion : blender.motions)
+		motion.update();
 
-	for (int i(0); i < skeleton.offsets.size(); i++)
+	for (int i = 0; i < skeleton.offsets.size(); i++)
 	{
 		bones[i]->position = vec3(0.0f);
-		bones[i]->rotation = glm::identity<quat>();
-	}
+		bones[i]->rotation = quat(0,0,0,0);
 
-	motions[0].update(bones, 1.0f);
-	//motions[1].update(bones, 0.5f);
+		for (const auto &motion : blender.motions)
+		{
+			if (motion.weight <= threshold)
+				continue;
+
+			bones[i]->position += motion.pos[i] * motion.weight;
+
+			const float sign = dot(bones[i]->rotation, motion.rot[i]) > 0.0f ? 1.0f : -1.0f;
+			bones[i]->rotation += motion.rot[i] * sign * motion.weight;
+		}
+	}
 
 	upload();
 }
@@ -85,9 +97,21 @@ const Skeleton &Animator::getSkeleton() const
 	return skeleton;
 }
 
-const std::vector<AnimationRef> &Animator::getAnimations() const
+void Animator::setMotionBlender(MotionBlender &&_blender)
 {
-	return animations;
+	blender = std::move(_blender);
+
+	for (auto &m : blender.motions)
+	{
+		m.time = 0.0f;
+		m.pos.resize(skeleton.offsets.size());
+		m.rot.resize(skeleton.offsets.size());
+		for (int i = 0; i < skeleton.offsets.size(); i++)
+		{
+			m.pos[i] = bones[i]->position;
+			m.rot[i] = bones[i]->rotation;
+		}
+	}
 }
 
 /// Private
@@ -128,7 +152,7 @@ void Animator::upload()
 	}
 }
 
-bool Animator::BoneFrame::advance(const Animation::Track &track)
+bool MotionBlender::BoneFrame::advance(const Animation::Track &track, float time)
 {
 	while ((frame + 1 < track.keys.size()) &&
 		(time >= track.keys[frame + 1].time))
@@ -136,36 +160,23 @@ bool Animator::BoneFrame::advance(const Animation::Track &track)
 
 	// If we reached end of track
 	if (frame + 1 == track.keys.size())
-	{
-		if (!track.loop || track.keys.size() == 1)
-			return false;
+		return false;
 
-		// Loop
-		time -= track.keys.back().time;
-		frame = 0;
-	}
 	return true;
 }
 
-void Animator::Motion::reset(Animation *a)
+void MotionBlender::Motion::update()
 {
-	anim = a;
-	keyframes.clear();
-	keyframes.resize(a->channels.size());
-}
-
-void Animator::Motion::update(Transform **bones, float weight)
-{
+	if (weight > threshold)
 	for (size_t i(0) ; i < keyframes.size(); i++)
 	{
 		const Animation::Track &track = anim->channels[i];
-		Transform *t = bones[track.bone_index];
 
-		if (!keyframes[i].advance(track))
+		if (!keyframes[i].advance(track, time))
 		{
 			const Animation::Key &last = track.keys.back();
-			t->position = last.pos;
-			t->rotation = last.rot;
+			pos[track.bone_index] = last.pos;
+			rot[track.bone_index] = last.rot;
 			continue;
 		}
 
@@ -174,10 +185,16 @@ void Animator::Motion::update(Transform **bones, float weight)
 		const Animation::Key &curr = track.keys[curr_key];
 		const Animation::Key &next = track.keys[curr_key + 1];
 
-		const float alpha = (keyframes[i].time - curr.time) / (next.time - curr.time);
-		keyframes[i].time += Time::deltaTime;
+		const float alpha = (time - curr.time) / (next.time - curr.time);
 
-		t->position += weight * mix(curr.pos, next.pos, alpha);
-		t->rotation += weight * slerp(curr.rot, next.rot, alpha);
+		pos[track.bone_index] = mix(curr.pos, next.pos, alpha);
+		rot[track.bone_index] = slerp(curr.rot, next.rot, alpha);
+	}
+
+	time += Time::deltaTime;
+	if (time >= anim->duration)
+	{
+		time -= anim->duration;
+		memset(keyframes.data(), 0, keyframes.size() * sizeof(BoneFrame));
 	}
 }

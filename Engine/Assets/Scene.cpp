@@ -74,22 +74,29 @@ static void swap_yz(vec3 &pos, quat &rot)
 
 static void import_node(aiNode *node, Transform *parent, Skeleton &skeleton)
 {
-	std::string name = node->mName.C_Str();
-	mat4 matrix = assimp_glm(node->mTransformation);
+	Transform *curr;
 
-	glm::vec3 pos, scale, skew;
-	glm::quat rotation;
-	glm::vec4 perspective;
-	glm::decompose(matrix, scale, rotation, pos, skew, perspective);
+	if (node->mNumMeshes)
+		curr = parent;
+	else
+	{
+		std::string name = node->mName.C_Str();
+		mat4 matrix = assimp_glm(node->mTransformation);
 
-	swap_yz(pos, rotation);
+		glm::vec3 pos, scale, skew;
+		glm::quat rotation;
+		glm::vec4 perspective;
+		glm::decompose(matrix, scale, rotation, pos, skew, perspective);
 
-	Entity *e = Entity::create(name, false, pos, rotation, scale);
-	Transform *curr = e->find<Transform>();
-	curr->setParent(parent);
+		swap_yz(pos, rotation);
 
-	skeleton.bone_index[name] = skeleton.offsets.size();
-	skeleton.offsets.emplace_back(1.0f);
+		Entity *e = Entity::create(name, false, pos, rotation, scale);
+		curr = e->find<Transform>();
+		curr->setParent(parent);
+
+		skeleton.bone_index[name] = skeleton.offsets.size();
+		skeleton.offsets.emplace_back(1.0f);
+	}
 
 	for (unsigned int i = 0; i < node->mNumChildren; i++)
 		import_node(node->mChildren[i], curr, skeleton);
@@ -275,7 +282,7 @@ static std::vector<AnimationRef> import_animations(const aiScene *scene, const S
 				Error::add(USER_ERROR, "import_animations(): invalid data");
 
 			unsigned key_count = node->mNumPositionKeys;
-			Animation::Track track(it->second, key_count, node->mPostState == aiAnimBehaviour_REPEAT);
+			Animation::Track track(it->second, key_count);
 
 			for (unsigned key = 0; key < key_count; key++)
 			{
@@ -380,10 +387,7 @@ Entity *Scene::import(const std::string &file)
 	e->insert<Graphic>(mesh, materials);
 
 	if (skeleton.offsets.size())
-	{
-		auto animations = import_animations(scene, skeleton);
-		e->insert<Animator>(skeleton, animations);
-	}
+		e->insert<Animator>(skeleton);
 
 	return e;
 }

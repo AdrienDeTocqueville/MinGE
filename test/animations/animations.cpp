@@ -18,20 +18,7 @@ class Printer : public Script
 			scale = 0.0025f;
 			tr->setScale(vec3(scale));
 		}
-		setState(0);
-
-		/*
-		auto anim = find<Animator>()->getAnimations()[2];
-		auto skel = find<Animator>()->getSkeleton();
-		Animation::Track &t = anim->channels[skel.bone_index["shoulder.L"]];
-
-		std::cout << t.loop << "  " << t.bone_index << "  " << t.keys.size() << std::endl;
-		for (auto &key : t.keys)
-		{
-			std::cout << key.time << "\t";
-			write(glm::eulerAngles(key.rot));
-		}
-		*/
+		speed = vec2(0.0f);
 	}
 	void draw(Transform *t)
 	{
@@ -50,29 +37,23 @@ class Printer : public Script
 		if (Input::getKeyPressed(sf::Keyboard::L))
 			draw_skel = !draw_skel;
 
-		if (Input::getKeyDown(sf::Keyboard::Space))
-			setState(2);
-		else
-		{
-			if (Input::getKeyDown(sf::Keyboard::Z))
-				setState(1);
-			else if (Input::getKeyDown(sf::Keyboard::Q))
-				setState(3);
-			else if (Input::getKeyDown(sf::Keyboard::D))
-				setState(4);
-			else
-				setState(0);
-		}
+		float delta = 0.5f * Time::deltaTime;
+
+		if (Input::getKeyDown(sf::Keyboard::Z))
+			speed.y = min(1.0f, speed.y + delta);
+		else if (Input::getKeyDown(sf::Keyboard::S))
+			speed.y = max(0.0f, speed.y - delta);
+
+		if (Input::getKeyDown(sf::Keyboard::Q))
+			speed.x = max(-1.0f, speed.x - delta);
+		else if (Input::getKeyDown(sf::Keyboard::D))
+			speed.x = min(1.0f, speed.x + delta);
+
+		Debug::drawVector(vec3(0.0f), vec3(-speed.x, -speed.y, 0.0f), vec3(193,23,182)/255.0f);
+		find<Animator>()->setMotion(speed);
 	}
 
-	void setState(int _state)
-	{
-		if (state != _state)
-			find<Animator>()->play(_state);
-		state = _state;
-	}
-
-	int state = -1;
+	vec2 speed;
 	bool draw_skel = false;
 };
 
@@ -91,23 +72,19 @@ void test_animations()
 	if (root)
 	{
 		const Skeleton &skeleton = root->find<Animator>()->getSkeleton();
-		root->find<Animator>()->addAnimation(Scene::import_animation("Model/idle.fbx", skeleton));
-		root->find<Animator>()->addAnimation(Scene::import_animation("Model/walking.fbx", skeleton));
-		root->find<Animator>()->addAnimation(Scene::import_animation("Model/jump.fbx", skeleton));
-		root->find<Animator>()->addAnimation(Scene::import_animation("Model/left.fbx", skeleton));
-		root->find<Animator>()->addAnimation(Scene::import_animation("Model/right.fbx", skeleton));
-		root->insert<Printer>();
-	}
+		root->find<Animator>()->setMotionBlender({
+			{vec2( 0, 1.0f), Scene::import_animation("Model/run.fbx", skeleton)},
+			{vec2( 0, 0.5f), Scene::import_animation("Model/walk.fbx", skeleton)},
+			{vec2( 0, 0.0f), Scene::import_animation("Model/idle.fbx", skeleton)},
 
-	/*
-	Entity *root = Scene::import("pers/walking.dae");
-	if (root)
-	{
-		const Skeleton &skeleton = root->find<Animator>()->getSkeleton();
-		root->find<Animator>()->addAnimation(Scene::import_animation("pers/idle.dae", skeleton));
+			{vec2(-1.0f, 0), Scene::import_animation("Model/left_run.fbx", skeleton)},
+			{vec2(-0.5f, 0), Scene::import_animation("Model/left.fbx", skeleton)},
+
+			{vec2( 1.0f, 0), Scene::import_animation("Model/right_run.fbx", skeleton)},
+			{vec2( 0.5f, 0), Scene::import_animation("Model/right.fbx", skeleton)},
+		});
 		root->insert<Printer>();
 	}
-	*/
 
 
 	MaterialRef m = Material::getDefault();

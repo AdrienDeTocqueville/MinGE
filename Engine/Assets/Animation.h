@@ -31,13 +31,12 @@ public:
 
 	struct Track
 	{
-		Track(size_t i, size_t n, bool l):
-			bone_index(i), loop(l)
+		Track(size_t i, size_t n):
+			bone_index(i)
 		{ keys.reserve(n); }
 
 		size_t bone_index;
 		std::vector<Key> keys;
-		bool loop;
 	};
 
 	std::vector<Track> channels;
