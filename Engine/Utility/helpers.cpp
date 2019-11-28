@@ -42,15 +42,6 @@ void write(const mat4 &x, bool ret)
 	if (ret) putchar('\n');
 }
 
-bool epsilonEqual(const vec3& a, const vec3& b, float epsilon)
-{
-	for (unsigned i(0) ; i < 3 ; i++)
-	if (!epsilonEqual(a[i], b[i], epsilon))
-		return false;
-
-	return true;
-}
-
 bool epsilonEqual(const quat& a, const quat& b, float epsilon)
 {
 	for (unsigned i(0) ; i < 4 ; i++)

@@ -6,8 +6,6 @@
 #include "Systems/GraphicEngine.h"
 #include "Utility/Time.h"
 
-static const float threshold = 0.01f;
-
 static void get_bones(Transform *t, Transform **bones, int &offset)
 {
 	for (Transform *c : t->getChildren())
@@ -36,18 +34,28 @@ Animator* Animator::clone() const
 	return new Animator(skeleton);
 }
 
-void Animator::setMotion(vec2 pos)
+void Animator::setMotion(vec2 _pos)
 {
+	static const float threshold = 0.01f;
+	static const float eps = 1.0f;
+
+	if (epsilonEqual(pos, _pos))
+		return;
+	pos = _pos;
+
 	float total_weights = 0.0f;
 	for (auto &motion : blender.motions)
 	{
-		float eps = 4.0f;
-		float d = length(pos - motion.position) * eps;
-		motion.weight = exp(-d*d);
+		float d = length(pos - motion.position);
+		motion.weight = 1.0f - eps * d;
+
+		if (motion.weight < threshold)
+			motion.weight = 0.0f;
+
 		total_weights += motion.weight;
 	}
 
-	float scale = 1.0f / total_weights;
+	float scale = (total_weights == 0.0f) ? 0.0f : 1.0f / total_weights;
 	for (auto &motion : blender.motions)
 		motion.weight *= scale;
 }
@@ -64,7 +72,7 @@ void Animator::animate()
 
 		for (const auto &motion : blender.motions)
 		{
-			if (motion.weight <= threshold)
+			if (motion.weight == 0.0f)
 				continue;
 
 			bones[i]->position += motion.pos[i] * motion.weight;
@@ -112,6 +120,9 @@ void Animator::setMotionBlender(MotionBlender &&_blender)
 			m.rot[i] = bones[i]->rotation;
 		}
 	}
+
+	pos = vec2(-1.0f);
+	setMotion(vec2(0.0f));
 }
 
 /// Private
@@ -167,7 +178,7 @@ bool MotionBlender::BoneFrame::advance(const Animation::Track &track, float time
 
 void MotionBlender::Motion::update()
 {
-	if (weight > threshold)
+	if (weight != 0.0f)
 	for (size_t i(0) ; i < keyframes.size(); i++)
 	{
 		const Animation::Track &track = anim->channels[i];

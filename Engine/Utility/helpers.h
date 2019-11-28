@@ -35,7 +35,21 @@ vec3 vecClamp(vec3 v);
 void write(const vec3 &x, bool ret = true);
 void write(const mat4 &x, bool ret = true);
 
-bool epsilonEqual(const vec3& a, const vec3& b, float epsilon = EPSILON);
+inline bool epsilonEqual(const float& a, const float& b)
+{
+	return epsilonEqual(a, b, EPSILON);
+}
+
+template<length_t L, typename T, qualifier Q>
+inline bool epsilonEqual(vec<L, T, Q> const& a, vec<L, T, Q> const& b, T const& epsilon = EPSILON)
+{
+	for (unsigned i(0) ; i < L ; ++i)
+	if (!epsilonEqual(a[i], b[i], epsilon))
+		return false;
+
+	return true;
+}
+
 bool epsilonEqual(const quat& a, const quat& b, float epsilon = EPSILON);
 
 

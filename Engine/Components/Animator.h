@@ -50,7 +50,7 @@ public:
 	/// Methods (public)
 	virtual Animator* clone() const override;
 
-	void setMotion(vec2 pos);
+	void setMotion(vec2 _pos);
 	void animate();
 
 	/// Getters
@@ -70,6 +70,7 @@ private:
 	/// Attributes (private)
 	Skeleton skeleton;
 	MotionBlender blender;
+	vec2 pos;
 
 	Transform **bones;
 	mat4 *matrices;

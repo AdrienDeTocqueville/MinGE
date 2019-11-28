@@ -38,17 +38,20 @@ class Printer : public Script
 			draw_skel = !draw_skel;
 
 		float delta = 0.5f * Time::deltaTime;
+		float max_s = 1.0f;
 
 		if (Input::getKeyDown(sf::Keyboard::Z))
-			speed.y = min(1.0f, speed.y + delta);
+			speed.y = min(max_s, speed.y + delta);
 		else if (Input::getKeyDown(sf::Keyboard::S))
 			speed.y = max(0.0f, speed.y - delta);
 
 		if (Input::getKeyDown(sf::Keyboard::Q))
-			speed.x = max(-1.0f, speed.x - delta);
+			speed.x = max(-max_s, speed.x - delta);
 		else if (Input::getKeyDown(sf::Keyboard::D))
-			speed.x = min(1.0f, speed.x + delta);
+			speed.x = min(max_s, speed.x + delta);
 
+		if (length(speed) > 1.0f)
+		speed = normalize(speed);
 		Debug::drawVector(vec3(0.0f), vec3(-speed.x, -speed.y, 0.0f), vec3(193,23,182)/255.0f);
 		find<Animator>()->setMotion(speed);
 	}
@@ -73,15 +76,15 @@ void test_animations()
 	{
 		const Skeleton &skeleton = root->find<Animator>()->getSkeleton();
 		root->find<Animator>()->setMotionBlender({
-			{vec2( 0, 1.0f), Scene::import_animation("Model/run.fbx", skeleton)},
-			{vec2( 0, 0.5f), Scene::import_animation("Model/walk.fbx", skeleton)},
+			//{vec2( 0, 1.0f), Scene::import_animation("Model/run.fbx", skeleton)},
+			{vec2( 0, 1.0f), Scene::import_animation("Model/walk.fbx", skeleton)},
 			{vec2( 0, 0.0f), Scene::import_animation("Model/idle.fbx", skeleton)},
 
-			{vec2(-1.0f, 0), Scene::import_animation("Model/left_run.fbx", skeleton)},
-			{vec2(-0.5f, 0), Scene::import_animation("Model/left.fbx", skeleton)},
+			//{vec2(-1.0f, 0), Scene::import_animation("Model/left_run.fbx", skeleton)},
+			{vec2(-1.0f, 0), Scene::import_animation("Model/left.fbx", skeleton)},
 
-			{vec2( 1.0f, 0), Scene::import_animation("Model/right_run.fbx", skeleton)},
-			{vec2( 0.5f, 0), Scene::import_animation("Model/right.fbx", skeleton)},
+			//{vec2( 1.0f, 0), Scene::import_animation("Model/right_run.fbx", skeleton)},
+			{vec2( 1.0f, 0), Scene::import_animation("Model/right.fbx", skeleton)},
 		});
 		root->insert<Printer>();
 	}
