@@ -3,6 +3,8 @@
 #include "Components/Script.h"
 #include "Entity.h"
 
+#include "Profiler/profiler.h"
+
 ScriptEngine* ScriptEngine::instance = nullptr;
 
 /// Methods (private)
@@ -70,6 +72,8 @@ void ScriptEngine::removeComponent(const Script* _script)
 
 void ScriptEngine::start()
 {
+	MICROPROFILE_SCOPEI("SYSTEM_SCRIPTS", "start");
+
 	if (started.empty())
 		return;
 
@@ -85,12 +89,16 @@ void ScriptEngine::start()
 
 void ScriptEngine::update()
 {
+	MICROPROFILE_SCOPEI("SYSTEM_SCRIPTS", "update");
+
 	for (unsigned i(0) ; i < components.size() ; i++)
 		components[i]->update();
 }
 
 void ScriptEngine::lateUpdate() const
 {
+	MICROPROFILE_SCOPEI("SYSTEM_SCRIPTS", "lateUpdate");
+
 	for (unsigned i(0) ; i < components.size() ; i++)
 		components[i]->lateUpdate();
 }

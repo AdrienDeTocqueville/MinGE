@@ -1,0 +1,14 @@
+#pragma once
+
+#ifdef PROFILE
+# define MICROPROFILE_ENABLED 1
+# define MICROPROFILE_WEBSERVER  1
+# define MICROPROFILE_UI         0
+# define MICROPROFILE_GPU_TIMERS 0
+# define MICROPROFILE_CONTEXT_SWITCH_TRACE 0
+# define MICROPROFILE_WEBSERVER_MAXFRAMES 10
+#else
+# define MICROPROFILE_ENABLED 0
+#endif
+
+#include "Profiler/microprofile.h"

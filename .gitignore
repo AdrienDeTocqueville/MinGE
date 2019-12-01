@@ -8,3 +8,7 @@ cscope*
 
 obj/
 *.exe
+
+bin/debug
+bin/dev
+bin/release

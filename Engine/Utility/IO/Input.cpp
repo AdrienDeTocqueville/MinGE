@@ -1,6 +1,8 @@
 #include "Input.h"
 #include "Assets/RenderTarget.h"
 
+#include "Profiler/profiler.h"
+
 sf::RenderWindow* Input::window = nullptr;
 
 vec2 Input::dim(0.0f), Input::center(0.0f);
@@ -48,6 +50,8 @@ void Input::destroy()
 
 void Input::update()
 {
+	MICROPROFILE_SCOPEI("IO_INPUT", "update");
+
 	bool mouseEvent = false, keyboardEvent = false;
 
 	wheelDelta = 0;
@@ -56,6 +60,8 @@ void Input::update()
 	sf::Event event;
 	while (window->pollEvent(event))
 	{
+		MICROPROFILE_SCOPEI("IO_INPUT", "poll");
+
 		switch (event.type)
 		{
 		case sf::Event::Closed:

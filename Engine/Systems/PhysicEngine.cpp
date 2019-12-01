@@ -10,6 +10,8 @@
 
 #include "Utility/Time.h"
 
+#include "Profiler/profiler.h"
+
 bool sortDistance(const RayHit& _a, const RayHit& _b);
 
 PhysicEngine* PhysicEngine::instance = nullptr;
@@ -111,6 +113,8 @@ void PhysicEngine::removeConstraint(Constraint* _constraint)
 
 void PhysicEngine::simulate()
 {
+	MICROPROFILE_SCOPEI("SYSTEM_PHYSIC", "simulate");
+
 	accumulator += Time::deltaTime;
 
 	// main loop
@@ -123,6 +127,8 @@ void PhysicEngine::simulate()
 
 void PhysicEngine::update()
 {
+	MICROPROFILE_SCOPEI("SYSTEM_PHYSIC", "update");
+
 	// Generate collision informations
 	for (auto i(colliders.begin()) ; i != colliders.end() ; ++i)
 		for (auto j(std::next(i)) ; j != colliders.end() ; ++j)

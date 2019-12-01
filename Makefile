@@ -1,7 +1,9 @@
-NAME = bin/minge
+BINDIR = bin
+OBJDIR = obj
+
+LD = g++
 CC = g++
 CFLAGS = #-Wall -Wextra -Werror
-
 
 LDFLAGS := -lGLEW -lGLU -lGL -lpthread
 LDFLAGS += -lassimp
@@ -18,32 +20,39 @@ INC = $(shell find test -name '*.h')
 SRC += $(shell find Engine -name '*.cpp')
 INC += $(shell find Engine -name '*.h')
 
+TARGETS		:= debug dev release
+CFLAGS_debug	:= -DPROFILE -DDEBUG -g3 -ggdb
+CFLAGS_dev	:= -DPROFILE -DDEBUG -O2 -g -ggdb
+CFLAGS_release	:= -O3
 
-OBJDIR = obj
-OBJ := $(addprefix $(OBJDIR)/, $(SRC:.cpp=.o))
-
-
-#all: CFLAGS += -O3 -DREPORTFPS
-#all: $(NAME)
-all: debug
-
-debug: CFLAGS += -DREPORTFPS -DDEBUG -g3 -ggdb
-debug: $(NAME)
-
-run: debug
-	cd bin && ./minge
+dev: #default target
+all: $(TARGETS)
 
 
-$(NAME): $(OBJ)
-	$(CC) $(OBJ) -o $@ $(LPATH) $(LDFLAGS)
+define Template
+OBJ_$(1) := $(addprefix $(OBJDIR)/$(1)/, $(SRC:.cpp=.o))
 
-$(OBJDIR)/%.o: %.cpp $(INC)
-	$(CC) $(CFLAGS) $(IPATH) -c $< -o $@
+$$(CFLAGS_$(1)) += $$(CFLAGS)
 
-$(OBJ): | $(OBJDIR)
+$(1): $(BINDIR)/$(1)
 
-$(OBJDIR):
-	mkdir -p $(dir $(OBJ))
+$(BINDIR)/$(1): $$(OBJ_$(1))
+	$(LD) $$(OBJ_$(1)) -o $$@ $(LPATH) $(LDFLAGS)
+
+$(OBJDIR)/$(1)/%.o: %.cpp $(INC)
+	$(CC) $$(CFLAGS_$(1)) $(IPATH) -c $$< -o $$@
+
+$$(OBJ_$(1)): | $(OBJDIR)/$(1)
+
+$(OBJDIR)/$(1):
+	mkdir -p $$(dir $$(OBJ_$(1)))
+
+clean_$(1):
+	rm -rf $(OBJDIR)/$(1)
+endef
+
+$(foreach target,$(TARGETS),$(eval $(call Template,$(target))))
+
 
 clean:
 	rm -rf $(OBJDIR)

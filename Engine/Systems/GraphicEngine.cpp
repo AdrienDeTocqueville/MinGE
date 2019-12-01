@@ -8,6 +8,8 @@
 #include "Components/Camera.h"
 #include "Components/Light.h"
 
+#include "Profiler/profiler.h"
+
 #include "Entity.h"
 
 #include <thread>
@@ -191,6 +193,15 @@ void GraphicEngine::toggleWireframe()
 
 void GraphicEngine::render()
 {
+	MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "render");
+
+	// Animate skeletal meshes
+	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "animate");
+	for (Animator* animator: animators)
+		animator->animate();
+	}
+
+
 	//glEnable(GL_SCISSOR_TEST);
 
 	// TODO : find a solution for that
@@ -203,47 +214,26 @@ void GraphicEngine::render()
 	for (Camera* camera: cameras)
 		camera->update();
 
-	for (Animator* animator: animators)
-		animator->animate();
-
-//#define ENQUEUE_THREAD
-#ifdef ENQUEUE_THREAD
-	auto queue_commands = [=](int i, int last)
-	{
-		while (i < last)
-		{
-			for (CommandBucket *bucket : buckets)
-				graphics[i]->render(bucket);
-			i++;
-		}
-	};
-
-	int NUM_THREADS = 3;
-	int curr = 0, step = graphics.size() / (NUM_THREADS + 1);
-	std::thread threads[NUM_THREADS];
-	for (int i = 0; i < NUM_THREADS; i++)
-	{
-		threads[i] = std::thread(queue_commands, curr, curr + step);
-		curr += step;
-	}
-	queue_commands(curr, graphics.size());
-
-	for (auto& th : threads) th.join();
-#else
+	// Create commands
+	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "create commands");
 	for (Graphic* graphic: graphics)
 		for (CommandBucket *bucket : buckets)
 			graphic->render(bucket);
-#endif
+	}
 
 	// Sort
+	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "sort commands");
 	for (CommandBucket *bucket : buckets)
 		bucket->sort();
+	}
 
 	// Submit to backend
+	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "submit commands");
 	for (CommandBucket *bucket : buckets)
 	{
 		bucket->submit();
 		bucket->clear();
+	}
 	}
 
 #ifdef DRAWAABB

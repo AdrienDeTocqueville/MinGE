@@ -8,6 +8,10 @@
 #include "Utility/Debug.h"
 #include "Utility/IO/Input.h"
 
+#define MICROPROFILE_MAX_FRAME_HISTORY (2<<10)
+#define MICROPROFILE_IMPL
+#include "Profiler/profiler.h"
+
 #ifdef DEBUG
 #include "Components/Component.h"
 #endif
@@ -21,25 +25,22 @@ Engine::Engine(sf::RenderWindow* _window, unsigned _FPS):
 
 	_window->setFramerateLimit(_FPS);
 
+#ifdef PROFILE
+	MicroProfileOnThreadCreate("Main");
+
+	MicroProfileSetForceEnable(true);
+	MicroProfileSetEnableAllGroups(true);
+	MicroProfileSetForceMetaCounters(true);
+
+	MicroProfileWebServerStart();
+#endif
+
 	Time::init();
 	Input::init(_window);
 
 	GraphicEngine::create();
 	PhysicEngine::create();
 	ScriptEngine::create();
-
-#ifdef REPORTFPS
-	if (!font.loadFromFile("Resources/Calibri.ttf"))
-		Error::add(WARNING, "Engine(): Cannot load font: Resources/Calibri.ttf");
-	else
-	{
-		text.setString("");
-		text.setFont(font);
-		text.setFillColor(sf::Color::Black);
-		text.setCharacterSize(20);
-		text.setPosition(8, 0);
-	}
-#endif
 }
 
 Engine::~Engine()
@@ -53,6 +54,13 @@ Engine::~Engine()
 	Input::destroy();
 
 	instance = nullptr;
+
+#ifdef PROFILE
+	MicroProfileSetForceEnable(false);
+
+	MicroProfileWebServerStop();
+	MicroProfileShutdown();
+#endif
 }
 
 /// Methods (public)
@@ -86,81 +94,40 @@ void Engine::start()
 
 bool Engine::update()
 {
+	MICROPROFILE_SCOPEI("ENGINE", "update");
+
 	Time::deltaTime = clock.restart().asSeconds() * Time::timeScale;
 	Time::time += Time::deltaTime;
 
 	/// Update events
-		Input::update();
-
+	Input::update();
 
 	if (pause)
 		return false;
 
-#ifdef REPORTFPS
-	sf::Clock timer;
-	static float sTime = 0.0f, pTime = 0.0f, dTime = 0.0f;
-#endif
-
-
 	/// Update scripts
-		ScriptEngine::get()->start();
-		ScriptEngine::get()->update();
-#ifdef REPORTFPS
-		sTime += timer.restart().asSeconds();
-#endif
+	ScriptEngine::get()->start();
+	ScriptEngine::get()->update();
 
 	/// Step physic simulation
-		PhysicEngine::get()->simulate();
-#ifdef REPORTFPS
-		pTime += timer.restart().asSeconds();
-#endif
+	PhysicEngine::get()->simulate();
 
 	/// Re-update scripts
-		ScriptEngine::get()->lateUpdate();
-#ifdef REPORTFPS
-		sTime += timer.restart().asSeconds();
-#endif
+	ScriptEngine::get()->lateUpdate();
 
 	/// Render scene
-		GraphicEngine::get()->render();
-#ifdef REPORTFPS
-		dTime += timer.restart().asSeconds();
-#endif
+	GraphicEngine::get()->render();
 
 
-
-#ifdef REPORTFPS
-	acu += Time::deltaTime;
-	if (acu >= 1.0f)
-	{
-		float ratio = 1000.0f / frames;
-		text.setString("FPS: " + toString<unsigned>(frames) +
-					   "\nScripts: " + toString<float>(ratio * sTime) + " ms" +
-					   "\nPhysics: " + toString<float>(ratio * pTime) + " ms" +
-					   "\nRender:  " + toString<float>(ratio * dTime) + " ms");
-
-		frames = 0;
-		acu = 0.0f;
-		sTime = pTime = dTime = 0.0f;
-	}
-	else
-		frames++;
-
-	/*
-	GL::BindVertexBuffer(0);
-	GL::BindVertexArray(0);
-	GL::UseProgram(0);
-	Input::window->pushGLStates();
-		Input::window->draw(text);
-	Input::window->popGLStates();
-	*/
-#endif
+	MicroProfileFlip();
 
 	return true;
 }
 
 void Engine::clear()
 {
+	MICROPROFILE_SCOPEI("ENGINE", "clear");
+
 	std::cout << "Entities: "; Entity::clear();
 	std::cout << "done" << std::endl;
 
