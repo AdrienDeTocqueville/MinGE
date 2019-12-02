@@ -5,16 +5,23 @@
 #include "Components/Collider.h"
 #include "Components/Transform.h"
 
-//#include "Utility/Input.h"
-
 #include "Components/Sphere.h"
 
 #include <set>
 
-namespace MinGE
-{
 
-Point support(Collider* a, Collider* b, vec3 _axis)
+struct Point
+{
+	Point(vec3 _supA, vec3 _supB): p(_supA - _supB), supA(_supA), supB(_supB) { }
+
+	vec3 p, supA, supB;
+};
+
+typedef std::vector<Point> Simplex;
+
+static void computeBasis(const vec3& a, vec3& b, vec3& c);
+
+static Point support(Collider* a, Collider* b, vec3 _axis)
 {
 	vec3 supA = a->getSupport( _axis);
 	vec3 supB = b->getSupport(-_axis);
@@ -22,8 +29,12 @@ Point support(Collider* a, Collider* b, vec3 _axis)
 	return Point(supA, supB);
 }
 
+
 /// GJK
-bool GJK(Collider* a, Collider* b, Simplex& _simplex)
+static bool containsOrigin(Simplex& _simplex, vec3& _axis);
+static bool checkTriangle(vec3& ABC, vec3& AO, vec3& AB, vec3& AC, Simplex& _simplex, vec3& _axis);
+
+static bool GJK(Collider* a, Collider* b, Simplex& _simplex)
 {
 	vec3 axis = b->find<Transform>()->position - a->find<Transform>()->position;
 
@@ -71,7 +82,7 @@ bool GJK(Collider* a, Collider* b, Simplex& _simplex)
 	return false;
 }
 
-bool containsOrigin(Simplex& _simplex, vec3& _axis)
+static bool containsOrigin(Simplex& _simplex, vec3& _axis)
 {
 	// A est le dernier point ajouté
 
@@ -155,7 +166,7 @@ bool containsOrigin(Simplex& _simplex, vec3& _axis)
 	// la ligne n'est pas possible grace au test initial
 }
 
-bool checkTriangle(vec3& ABC, vec3& AO, vec3& AB, vec3& AC, Simplex& _simplex, vec3& _axis)
+static bool checkTriangle(vec3& ABC, vec3& AO, vec3& AB, vec3& AC, Simplex& _simplex, vec3& _axis)
 {
 	if (dot(cross(ABC, AC), AO) >= 0.0f)	// Du cote AC
 	{
@@ -181,22 +192,32 @@ bool checkTriangle(vec3& ABC, vec3& AO, vec3& AB, vec3& AC, Simplex& _simplex, v
 
 
 /// EPA
+struct Face
+{
+	Face(unsigned _a, unsigned _b, unsigned _c);	// CCW
+
+	void draw() const;
+
+	unsigned a, b, c;
+	float distance;
+	vec3 normal;
+
+	static Simplex* simplex;
+};
+
 struct Closer
 {
 	bool operator() (const Face& a, const Face& b) const
 	{ return a.distance < b.distance; }
 };
 
-Manifold* EPA(Collider* _a, Collider* _b, Simplex& _simplex)
+typedef std::pair<unsigned, unsigned> Edge;
+static void addEdge(std::vector<Edge>& edges, Edge b);
+static void getBarycentricCoordinates(const vec3& point, const Face& triangle, vec3& lambdas);
+
+static Manifold* EPA(Collider* _a, Collider* _b, Simplex& _simplex)
 {
 	static unsigned maxSteps = 20;
-
-//	if (Input::getKeyReleased(sf::Keyboard::T))
-//		maxSteps--;
-//	if (Input::getKeyReleased(sf::Keyboard::Y))
-//		maxSteps++;
-//
-//	maxSteps = min(maxSteps, 20);
 
 	Face::simplex = &_simplex;
 
@@ -261,7 +282,7 @@ Manifold* EPA(Collider* _a, Collider* _b, Simplex& _simplex)
 	vec3 A1 = _simplex[closest->a].supA, A2 = _simplex[closest->b].supA, A3 = _simplex[closest->c].supA;
 	vec3 B1 = _simplex[closest->a].supB, B2 = _simplex[closest->b].supB, B3 = _simplex[closest->c].supB;
 
-	Manifold* man = new Manifold();
+	Manifold* man = new Manifold;
 		man->points[0] = lambdas.x*A1 + lambdas.y*A2 + lambdas.z*A3;
 		man->points[1] = lambdas.x*B1 + lambdas.y*B2 + lambdas.z*B3;
 
@@ -295,7 +316,7 @@ void Face::draw() const
 //	Debug::drawVector(center/3.0f, normal, vec3(0.7f, 0.2f, 0.2f));
 }
 
-void addEdge(std::vector<Edge>& edges, Edge b)
+static void addEdge(std::vector<Edge>& edges, Edge b)
 {
 	for (unsigned i(0) ; i < edges.size() ; i++)
 	{
@@ -309,7 +330,7 @@ void addEdge(std::vector<Edge>& edges, Edge b)
 	edges.push_back(b);
 }
 
-void getBarycentricCoordinates(const vec3& point, const Face& triangle, vec3& lambdas)
+static void getBarycentricCoordinates(const vec3& point, const Face& triangle, vec3& lambdas)
 {
 	vec3 AB = (*Face::simplex)[triangle.b].p - (*Face::simplex)[triangle.a].p;
 	vec3 AC = (*Face::simplex)[triangle.c].p - (*Face::simplex)[triangle.a].p;
@@ -328,26 +349,27 @@ void getBarycentricCoordinates(const vec3& point, const Face& triangle, vec3& la
 }
 
 // http://box2d.org/2014/02/computing-a-basis/
-void computeBasis(const vec3& a, vec3& b, vec3& c)
+static void computeBasis(const vec3& a, vec3& b, vec3& c)
 {
-  // Suppose vector a has all equal components and is a unit vector: a = (s, s, s)
-  // Then 3*s*s = 1, s = sqrt(1/3) = 0.57735. This means that at least one component of a
-  // unit vector must be greater or equal to 0.57735.
+	// Suppose vector a has all equal components and is a unit vector: a = (s, s, s)
+	// Then 3*s*s = 1, s = sqrt(1/3) = 0.57735. This means that at least one component of a
+	// unit vector must be greater or equal to 0.57735.
 
-  if (abs(a.x) >= 0.57735f)
-	b = vec3(a.y, -a.x, 0.0f);
-  else
-	b = vec3(0.0f, a.z, -a.y);
+	if (abs(a.x) >= 0.57735f)
+		b = vec3(a.y, -a.x, 0.0f);
+	else
+		b = vec3(0.0f, a.z, -a.y);
 
-  b = normalize(b);
-  c = cross(a, b);
+	b = normalize(b);
+	c = cross(a, b);
 }
 
-/// Custom
-Manifold* SphereSphere(Collider* _a, Collider* _b)
+/// Collision detection functions
+Manifold* detect_SphereSphere(Collider* _a, Collider* _b)
 {
 	Sphere* a = reinterpret_cast<Sphere*>(_a);
 	Sphere* b = reinterpret_cast<Sphere*>(_b);
+	Manifold* man;
 
 	vec3 normal = b->find<Transform>()->position - a->find<Transform>()->position;
 
@@ -356,30 +378,33 @@ Manifold* SphereSphere(Collider* _a, Collider* _b)
 	float squaredDistance = length2(normal);
 	if (epsilonEqual(squaredDistance, 0.0f, EPSILON*EPSILON))
 	{
-		Manifold* man = new Manifold();
-			man->normal = vec3(0, 0, 1);
+		man = new Manifold;
+		man->normal = vec3(0, 0, 1);
 		man->penetration = -radiusSum;
-
-		man->points[0] = a->find<Transform>()->position + a->getRadius() * man->normal;
-		man->points[1] = b->find<Transform>()->position - b->getRadius() * man->normal;
-
-		return man;
 	}
+	else if (squaredDistance < radiusSum*radiusSum)
+	{
+		float distance = sqrt(squaredDistance);
 
-	if (squaredDistance >= radiusSum*radiusSum)
+		man = new Manifold;
+		man->normal = normal / distance;
+		man->penetration = -radiusSum + distance;
+	}
+	else
 		return nullptr;
 
-	float distance = sqrt(squaredDistance);
-
-
-	Manifold* man = new Manifold();
-		man->normal = normal/distance;
-		man->penetration = -radiusSum + distance;
-
-		man->points[0] = a->find<Transform>()->position + a->getRadius() * man->normal;
-		man->points[1] = b->find<Transform>()->position - b->getRadius() * man->normal;
+	man->points[0] = a->find<Transform>()->position + a->getRadius() * man->normal;
+	man->points[1] = b->find<Transform>()->position - b->getRadius() * man->normal;
+	computeBasis(man->normal, man->u, man->v);
 
 	return man;
 }
 
+Manifold* detect_default(Collider* _a, Collider* _b)
+{
+	Simplex simplex;
+	if (GJK(_a, _b, simplex))
+		return nullptr;
+
+	return EPA(_a, _b, simplex);
 }

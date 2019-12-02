@@ -9,8 +9,6 @@
 
 #include "Components/Sphere.h"
 
-using namespace MinGE;
-
 ContactConstraint::ContactConstraint(Collider* _a, Collider* _b):
 	entities{_a->getEntity(), _b->getEntity()},
 	bodies{ _a->rigidBody, _b->rigidBody},
@@ -198,7 +196,7 @@ std::map<Dispatcher::key, Dispatcher::collisionFunction> Dispatcher::functions;
 
 void Dispatcher::fill()
 {
-	addEntry<Sphere, Sphere>(SphereSphere);
+	addEntry<Sphere, Sphere>(detect_SphereSphere);
 }
 
 void Dispatcher::clear()
@@ -215,16 +213,8 @@ Manifold* Dispatcher::getManifold(Collider* _a, Collider* _b)
 		std::swap(a, b);
 
 	auto it = functions.find( key(a, b) );
-
 	if (it != functions.end())
 		return (it->second)(_a, _b);
 
-	else
-	{
-		Simplex simplex;
-		if (!GJK(_a, _b, simplex))
-			return nullptr;
-
-		return EPA(_a, _b, simplex);
-	}
+	return detect_default(_a, _b);
 }
