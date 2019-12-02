@@ -6,7 +6,7 @@ void test_physic()
 {
 	//Time::timeScale = 1.0f / 5.0f;
 
-	Input::setCursorMode(CursorMode::Capture);
+	Input::setCursorMode(Input::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
 	MeshRef cubeMesh = Mesh::createCube();

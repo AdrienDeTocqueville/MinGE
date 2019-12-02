@@ -3,6 +3,9 @@
 
 #include "Profiler/profiler.h"
 
+#include <SFML/Window/Event.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
+
 sf::RenderWindow* Input::window = nullptr;
 
 vec2 Input::dim(0.0f), Input::center(0.0f);
@@ -11,7 +14,7 @@ vec2 Input::prevMousePos(0.0f), Input::mousePos(0.0f);
 vec2 Input::delta(0.0f);
 int Input::wheelDelta(0);
 
-CursorMode Input::mode = CursorMode::Free;
+Input::Cursor Input::mode = Input::Cursor::Free;
 
 bool Input::focus = true;
 bool Input::closed = false;
@@ -88,7 +91,7 @@ void Input::update()
 			dim = vec2(event.size.width, event.size.height);
 			center = ivec2(0.5f*dim);
 
-			if (mode == CursorMode::Capture)
+			if (mode == Cursor::Capture)
 				prevMousePos = center;
 			RenderTarget::getDefault()->resize(dim);
 			break;
@@ -142,7 +145,7 @@ void Input::update()
 	delta.x *= -1;
 
 
-	if (mode == CursorMode::Capture)
+	if (mode == Cursor::Capture)
 		sf::Mouse::setPosition(toSFVec2i(center), *window);
 	else
 		prevMousePos = mousePos;
@@ -156,7 +159,7 @@ void Input::setWindowSize(vec2 _size)
 	dim = _size;
 	center = ivec2(0.5f*dim);
 
-	if (mode == CursorMode::Capture)
+	if (mode == Cursor::Capture)
 		prevMousePos = center;
 }
 
@@ -187,7 +190,7 @@ void Input::close()
 }
 
 /// Setter
-void Input::setCursorMode(CursorMode _mode)
+void Input::setCursorMode(Input::Cursor _mode)
 {
 	if (mode == _mode)
 		return;
@@ -197,10 +200,10 @@ void Input::setCursorMode(CursorMode _mode)
 	sf::Mouse::setPosition(toSFVec2i(center), *window);
 	delta = vec2(0.0f);
 
-	if (mode == CursorMode::Capture)
+	if (mode == Cursor::Capture)
 		prevMousePos = center;
 
-	if (mode == CursorMode::FreeHidden || mode == CursorMode::Capture)
+	if (mode == Cursor::FreeHidden || mode == Cursor::Capture)
 		window->setMouseCursorVisible(false);
 	else
 		window->setMouseCursorVisible(true);
@@ -212,7 +215,7 @@ void Input::setMousePosition(vec2 _pos)
 }
 
 /// Getters
-CursorMode Input::getCursorMode()
+Input::Cursor Input::getCursorMode()
 {
 	return mode;
 }

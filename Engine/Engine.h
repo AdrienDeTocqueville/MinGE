@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Systems/GraphicEngine.h"
-#include "Systems/PhysicEngine.h"
-#include "Systems/ScriptEngine.h"
+#include "Utility/glm.h"
+#include <SFML/System/Clock.hpp>
 
-class Entity;
+namespace sf
+{ class RenderWindow; };
 
 class Engine
 {
@@ -17,9 +17,7 @@ public:
 
 	/// Methods (public)
 	void start();
-
 	bool update();
-
 	void clear();
 
 	/// Setters
@@ -32,13 +30,7 @@ public:
 
 private:
 	/// Attributes
-	GraphicEngine* gEngine = nullptr;
-	PhysicEngine*  pEngine = nullptr;
-	ScriptEngine*  sEngine = nullptr;
-
-	sf::Event* event;
 	sf::Clock clock;
-
 	bool pause;
 
 	/// Attributes (static)

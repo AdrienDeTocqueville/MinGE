@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include "Renderer/CommandBucket.h"
 #include "Assets/Texture.h"
 
 typedef std::shared_ptr<class RenderTarget> RenderTargetRef;
@@ -23,7 +22,6 @@ public:
 	static RenderTargetRef getDefault();
 	~RenderTarget();
 
-	void bind() const;
 	void resize(uvec2 _size);
 
 	const Texture* getColorBuffer() const;
@@ -31,8 +29,6 @@ public:
 
 	vec2 getSize() const;
 	unsigned getPriority() const;
-
-	CommandBucket bucket;
 
 private:
 	RenderTarget(uvec2 _size);

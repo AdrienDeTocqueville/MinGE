@@ -60,35 +60,21 @@ void Camera::onDeregister()
 	GraphicEngine::get()->removeCamera(this);
 }
 
-void Camera::update()
+void Camera::update(View *view)
 {
-	CommandBucket *bucket = &renderTarget->bucket;
-
-	unsigned view_id = bucket->add_view();
-	CommandBucket::View *view = bucket->get_view(view_id);
-
-	view->passes = (1<<RenderPass::Forward) | (1<<RenderPass::Skybox);
-
-	view->viewport = viewport;
-	view->clearColor = vec4(clearColor, 0.0f);
-	view->clearFlags = clearFlags;
-
 	// Compute new VP
 	static const vec3 up(0, 0, 1);
 	const mat4 view_matrix = glm::lookAt(getPosition(), getPosition() + getDirection(), up);
 	simd_mul(projection, view_matrix, view->vp);
 
-	// Setup forward pass
-	uint64_t key = CommandKey::encode(view_id, RenderPass::Forward);
-	bucket->add<SetupView>(key)->view = view;
+	// Copy data
+	view->viewport = viewport;
+	view->clearColor = vec4(clearColor, 0.0f);
+	view->clearFlags = clearFlags;
+	view->fbo = renderTarget->fbo;
 
-	// Setup skybox pass
-	key = CommandKey::encode(view_id, RenderPass::Skybox);
-	bucket->add<SetupSkybox>(key);
-
-
-	if (Skybox* sky = find<Skybox>())
-		sky->render(bucket, view_id);
+	// Set pass type
+	view->pass = RenderPass::Forward;
 
 	// TODO: find a solution for that
 	Program::setBuiltin("cameraPosition", getPosition());

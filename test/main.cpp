@@ -17,7 +17,7 @@ const auto video_mode = desktop;
 const auto style = sf::Style::Fullscreen;
 #endif
 
-int scene = 2;
+int scene = 3;
 std::vector<void (*)()> setups = {test_physic, test_bvh, test_materials, test_animations, test_sky};
 std::vector<std::string> names = {"physic", "bvh", "materials", "animations", "sky"};
 
@@ -70,10 +70,10 @@ int main()
 
 
 				if (Input::getKeyReleased(sf::Keyboard::Escape))
-					engine->setPause(true), Input::setCursorMode(CursorMode::Free);
+					engine->setPause(true), Input::setCursorMode(Input::Free);
 
 				if (Input::getMousePressed(sf::Mouse::Left) && Input::hasFocus())
-					engine->setPause(false), Input::setCursorMode(CursorMode::Capture);
+					engine->setPause(false), Input::setCursorMode(Input::Capture);
 
 				if (Input::getKeyReleased(sf::Keyboard::Tab))
 				{

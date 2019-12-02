@@ -6,7 +6,7 @@ void test_materials()
 {
 	Random::setSeed(42);
 
-	Input::setCursorMode(CursorMode::Capture);
+	Input::setCursorMode(Input::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
 	MeshRef mesh = Mesh::createCube();

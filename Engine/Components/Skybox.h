@@ -13,7 +13,7 @@ public:
 	/// Methods (public)
 	virtual Skybox* clone() const override;
 
-	void render(struct CommandBucket *bucket, uint32_t view_id) const;
+	void render(struct RenderContext *ctx, uint32_t view_id) const;
 
 private:
 	MaterialRef sky;

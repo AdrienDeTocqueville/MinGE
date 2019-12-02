@@ -2,7 +2,10 @@
 #include "Components/Transform.h"
 
 #include "Systems/GraphicEngine.h"
+
+#include "Renderer/RenderContext.inl"
 #include "Renderer/CommandKey.h"
+#include "Renderer/Commands.h"
 
 Graphic::Graphic(MeshRef _mesh)
 {
@@ -31,32 +34,38 @@ Graphic* Graphic::clone() const
 	return new Graphic(mesh, materials);
 }
 
-void Graphic::render(CommandBucket *bucket) const
+void Graphic::render(RenderContext *ctx, size_t num_views, View const *views) const
 {
-	for (uint32_t view_id(0) ; view_id < bucket->current_view; ++view_id)
+	const mat4 &model = tr->getToWorld();
+
+	unsigned vao = mesh->getVAO();
+	const Submesh *submeshes = mesh->getSubmeshes().data();
+
+	std::vector<void*> commands(materials.size());
+	for (int i(0); i < materials.size(); i++)
 	{
-		CommandBucket::View *view = bucket->get_view(view_id);
-		if (!(view->passes & (1 << RenderPass::Forward)))
-			continue;
+		auto *cmd = ctx->create<DrawElements>();
+		commands[i] = cmd;
 
-		const mat4 &model = tr->getToWorld();
+		cmd->model = model;
+		cmd->vao = vao;
+		memcpy(&(cmd->submesh), submeshes + i, sizeof(Submesh));
+	}
 
-		vec4 pos = view->vp * vec4(tr->position, 1.0f);
+	for (uint32_t view_id(0) ; view_id < num_views; ++view_id)
+	{
+		const View &view = views[view_id];
+
+		vec4 pos = view.vp * vec4(tr->position, 1.0f);
 		float depth = pos.z / pos.w;
-
-		unsigned vao = mesh->getVAO();
-		const Submesh *submeshes = mesh->getSubmeshes().data();
 
 		for (int i(0); i < materials.size(); i++)
 		{
-			if (!materials[i]->hasRenderPass(RenderPass::Forward))
+			if (!materials[i]->hasRenderPass(view.pass))
 				continue;
 
-			uint64_t key = CommandKey::encode(view_id, RenderPass::Forward, materials[i]->getId(), depth);
-			DrawElements *cmd = bucket->add<DrawElements>(key);
-			cmd->model = model;
-			cmd->vao = vao;
-			memcpy(&(cmd->submesh), submeshes + i, sizeof(Submesh));
+			uint64_t key = CommandKey::encode(view_id, view.pass, materials[i]->getId(), depth);
+			ctx->add(key, commands[i]);
 		}
 	}
 }

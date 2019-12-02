@@ -4,7 +4,7 @@
 
 void test_sky()
 {
-	Input::setCursorMode(CursorMode::Capture);
+	Input::setCursorMode(Input::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
 	std::string name = Random::element({"Iron", "Greasy", "Grimy"});

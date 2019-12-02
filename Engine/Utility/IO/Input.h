@@ -1,88 +1,90 @@
 #pragma once
 
 #include <bitset>
-
-#include <SFML/Window/Event.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Window/Mouse.hpp>
+#include <SFML/Window/Keyboard.hpp>
 
 #include "Utility/helpers.h"
 
-enum CursorMode {Free, FreeHidden, Capture};
+namespace sf
+{ class RenderWindow; };
 
 class Input
 {
-	friend class Engine;
+friend class Engine;
 
-	public:
-		/// Methods (public)
-			static bool hasFocus();
-			static bool isOpen();
+public:
+	enum Cursor {Free, FreeHidden, Capture};
 
-			static bool textIsChar();
-			static bool textIsNum();
+	/// Methods (public)
+	static bool hasFocus();
+	static bool isOpen();
 
-			static void close();
+	static bool textIsChar();
+	static bool textIsNum();
 
-		/// Setters
-			static void setCursorMode(CursorMode _mode);
-			static void setMousePosition(vec2 _pos);
+	static void close();
 
-		/// Getters
-			static CursorMode getCursorMode();
+	/// Setters
+	static void setCursorMode(Cursor _mode);
+	static void setMousePosition(vec2 _pos);
 
-			// Window
-			static sf::RenderWindow* getWindow();
+	/// Getters
+	static Cursor getCursorMode();
 
-			static vec2 getWindowSize();
+	// Window
+	static sf::RenderWindow* getWindow();
 
-			// Keyboard
-			static bool getKeyDown(sf::Keyboard::Key _key);
-			static bool getKeyPressed (sf::Keyboard::Key _key);
-			static bool getKeyReleased(sf::Keyboard::Key _key);
+	static vec2 getWindowSize();
 
-			static char getText();
+	// Keyboard
+	static bool getKeyDown(sf::Keyboard::Key _key);
+	static bool getKeyPressed (sf::Keyboard::Key _key);
+	static bool getKeyReleased(sf::Keyboard::Key _key);
 
-			// Mouse
-			static bool getMouseDown(sf::Mouse::Button _button);
-			static bool getMousePressed(sf::Mouse::Button _button);
-			static bool getMouseReleased(sf::Mouse::Button _button);
+	static char getText();
 
-			static vec2 getMousePosition(bool openGLSpace = true);
-			static vec2 getMousePositionRelative();
+	// Mouse
+	static bool getMouseDown(sf::Mouse::Button _button);
+	static bool getMousePressed(sf::Mouse::Button _button);
+	static bool getMouseReleased(sf::Mouse::Button _button);
 
-			static vec2 getMouseDelta();
-			static vec2 getMouseDeltaRelative();
+	static vec2 getMousePosition(bool openGLSpace = true);
+	static vec2 getMousePositionRelative();
 
-			static int getMouseWheelDelta();
+	static vec2 getMouseDelta();
+	static vec2 getMouseDeltaRelative();
 
-			static sf::Uint32 unicode;
+	static int getMouseWheelDelta();
 
-	private:
-		/// Methods (private)
-			static void init(sf::RenderWindow* _window);
-			static void destroy();
+	static sf::Uint32 unicode;
 
-			static void update();
+private:
+	/// Methods (private)
+	static void init(sf::RenderWindow* _window);
+	static void destroy();
 
-			static void setWindowSize(vec2 _size);
+	static void update();
 
-		/// Attributes (private)
-			static sf::RenderWindow* window;
+	static void setWindowSize(vec2 _size);
 
-			static vec2 dim, center;
+	/// Attributes (private)
+	static sf::RenderWindow* window;
 
-			static vec2 prevMousePos, mousePos;
-			static vec2 delta;
-			static int wheelDelta;
+	static vec2 dim, center;
 
-			static CursorMode mode;
+	static vec2 prevMousePos, mousePos;
+	static vec2 delta;
+	static int wheelDelta;
 
-			static bool focus;
-			static bool closed;
+	static Cursor mode;
 
-			static int mouseIndex, keyboardIndex;
-			static bool mouseCleared, keyboardCleared;
+	static bool focus;
+	static bool closed;
 
-			static std::bitset<sf::Mouse::ButtonCount> mouseState[2];
-			static std::bitset<sf::Keyboard::KeyCount> keyboardState[2];
+	static int mouseIndex, keyboardIndex;
+	static bool mouseCleared, keyboardCleared;
+
+	static std::bitset<sf::Mouse::ButtonCount> mouseState[2];
+	static std::bitset<sf::Keyboard::KeyCount> keyboardState[2];
 };

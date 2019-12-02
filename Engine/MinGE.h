@@ -18,6 +18,10 @@
 #include "Engine.h"
 #include "Entity.h"
 
+#include "Systems/GraphicEngine.h"
+#include "Systems/PhysicEngine.h"
+#include "Systems/ScriptEngine.h"
+
 #include "Assets/PhysicMaterial.h"
 #include "Assets/Animation.h"
 #include "Assets/Material.h"

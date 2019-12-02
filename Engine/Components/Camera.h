@@ -34,7 +34,7 @@ private:
 	virtual void onRegister() override;
 	virtual void onDeregister() override;
 
-	void update();
+	void update(struct View *view);
 	void computeViewPort();
 
 	/// Attributes

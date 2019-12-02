@@ -1,20 +1,25 @@
 #include "Systems/GraphicEngine.h"
+
+#include "Renderer/RenderContext.inl"
+#include "Renderer/CommandKey.h"
+#include "Renderer/Commands.h"
 #include "Renderer/UBO.h"
+
 #include "Utility/Debug.h"
 #include "Assets/Program.h"
+#include "Profiler/profiler.h"
 
 #include "Components/Animator.h"
 #include "Components/Graphic.h"
 #include "Components/Camera.h"
+#include "Components/Skybox.h"
 #include "Components/Light.h"
-
-#include "Profiler/profiler.h"
 
 #include "Entity.h"
 
 #include <thread>
 #include <cstring>
-#include <unordered_set>
+#include <algorithm>
 
 GraphicEngine* GraphicEngine::instance = nullptr;
 
@@ -81,21 +86,6 @@ GraphicEngine* GraphicEngine::get()
 	return instance;
 }
 
-void GraphicEngine::editBuffer(GLenum _target, unsigned _size, const void* _data)
-{
-	void* adress = glMapBuffer(_target, GL_WRITE_ONLY);
-
-	if (adress == nullptr)
-	{
-		Error::add(OPENGL_ERROR, "GraphicEngine::editBuffer() -> glMapBuffer() returns nullptr");
-		return;
-	}
-
-	memcpy(adress, _data, _size);
-
-	glUnmapBuffer(_target);
-}
-
 /// Methods (public)
 void GraphicEngine::addAnimator(Animator* _animator)
 {
@@ -109,8 +99,11 @@ void GraphicEngine::addGraphic(Graphic* _graphic)
 
 void GraphicEngine::addCamera(Camera* _camera)
 {
+	if (cameras.size() == MAX_VIEWS)
+		return Error::add(USER_ERROR, "GraphicEngine::addCamera() -> You reached max number of cameras");
+
 	cameras.push_back(_camera);
-	sortBuckets();
+	sortCameras();
 }
 
 void GraphicEngine::addLight(Light* _light)
@@ -140,14 +133,10 @@ void GraphicEngine::removeGraphic(Graphic* _graphic)
 
 void GraphicEngine::removeCamera(Camera* _camera)
 {
+	// keep cameras sorted
 	auto it = std::find(cameras.begin(), cameras.end(), _camera);
 	if (it != cameras.end())
-	{
-		*it = cameras.back();
-		cameras.pop_back();
-	}
-
-	sortBuckets();
+		cameras.erase(it);
 }
 
 void GraphicEngine::removeLight(Light* _light)
@@ -160,20 +149,11 @@ void GraphicEngine::removeLight(Light* _light)
 	}
 }
 
-void GraphicEngine::sortBuckets()
+void GraphicEngine::sortCameras()
 {
-	std::unordered_set<RenderTarget*> targets;
-
-	buckets.clear();
-	for (Camera *camera : cameras)
-	{
-		RenderTarget *target = camera->getRenderTarget().get();
-		if (targets.find(target) == targets.end())
-			buckets.push_back(&(target->bucket));
-	}
-
-	std::sort(buckets.begin(), buckets.end(), [] (CommandBucket *&a, CommandBucket *&b) {
-		return (a->target->getPriority() > b->target->getPriority());
+	std::sort(cameras.begin(), cameras.end(), [] (Camera *&a, Camera *&b) {
+		RenderTarget *ta = a->getRenderTarget().get(), *tb = b->getRenderTarget().get();
+		return (ta->getPriority() > tb->getPriority());
 	});
 }
 
@@ -211,30 +191,66 @@ void GraphicEngine::render()
 		Program::setBuiltin("lightColor", source->getColor());
 	}
 
-	for (Camera* camera: cameras)
-		camera->update();
+	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "cameras");
+	for (size_t i(0); i < cameras.size(); i++)
+	{
+		cameras[i]->update(views + i);
+
+		auto *cmd = contexts[0].create<SetupView>(); cmd->view = views + i;
+		contexts[0].add(CommandKey::encode(i, views[i].pass, 0), cmd);
+
+		if (Skybox* sky = cameras[i]->find<Skybox>())
+		{
+			contexts[0].add(CommandKey::encode(i, RenderPass::Skybox), contexts[0].create<SetupSkybox>());
+			sky->render(contexts + 0, i);
+		}
+	}
+	}
 
 	// Create commands
 	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "create commands");
 	for (Graphic* graphic: graphics)
-		for (CommandBucket *bucket : buckets)
-			graphic->render(bucket);
+		graphic->render(contexts + 0, cameras.size(), views);
 	}
 
+	// Merge
+	RenderContext::CommandPair *pairs;
+	size_t cmd_count = 0;
+
+	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "merge contexts");
+	for (int i(0); i < NUM_THREADS; i++)
+		cmd_count += contexts[i].cmd_count();
+
+	pairs = new RenderContext::CommandPair[cmd_count];
+	auto *dest = (uint8_t*)pairs;
+	for (int i(0); i < NUM_THREADS; i++)
+	{
+		const auto &pool = contexts[i].commands;
+		for (int b(0); b < pool.block; b++)
+		{
+			memcpy(dest, pool.blocks[b], pool.block_bytes);
+			dest += pool.block_bytes;
+		}
+		memcpy(dest, pool.blocks[pool.block], pool.index);
+		dest += pool.index;
+	}
+	}
+	
 	// Sort
 	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "sort commands");
-	for (CommandBucket *bucket : buckets)
-		bucket->sort();
+	std::sort(pairs, pairs + cmd_count);
 	}
 
 	// Submit to backend
 	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "submit commands");
-	for (CommandBucket *bucket : buckets)
-	{
-		bucket->submit();
-		bucket->clear();
+	auto *count = pairs + cmd_count;
+	for (auto *pair = pairs; pair < count; pair++)
+		CommandPacket::submit(pair->key, pair->packet);
 	}
-	}
+
+	delete pairs;
+	for (int i(0); i < NUM_THREADS; i++)
+		contexts[i].clear();
 
 #ifdef DRAWAABB
 	for(Graphic* g: graphics)

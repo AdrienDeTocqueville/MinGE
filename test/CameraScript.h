@@ -41,7 +41,7 @@ class CameraScript : public Script
 
 		void lateUpdate() override
 		{
-			if (Input::getCursorMode() != CursorMode::Capture)
+			if (Input::getCursorMode() != Input::Capture)
 				return;
 
 

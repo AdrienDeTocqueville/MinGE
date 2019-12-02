@@ -2,6 +2,7 @@
 #include "Components/Transform.h"
 #include "Components/Camera.h"
 
+#include "Renderer/RenderContext.inl"
 #include "Renderer/CommandKey.h"
 
 #include "Utility/Time.h"
@@ -111,10 +112,12 @@ Skybox* Skybox::clone() const
 	return new Skybox(sky);
 }
 
-void Skybox::render(CommandBucket *bucket, uint32_t view_id) const
+void Skybox::render(RenderContext *ctx, uint32_t view_id) const
 {
-	uint64_t key = CommandKey::encode(view_id, RenderPass::Skybox, sky->getId(), 0.0f);
-	DrawElements *cmd = bucket->add<DrawElements>(key);
+	auto *cmd = ctx->create<DrawElements>();
 	cmd->vao = mesh->getVAO();
 	memcpy(&(cmd->submesh), mesh->getSubmeshes().data(), sizeof(Submesh));
+
+	uint64_t key = CommandKey::encode(view_id, RenderPass::Skybox, sky->getId(), 0.0f);
+	ctx->add(key, cmd);
 }

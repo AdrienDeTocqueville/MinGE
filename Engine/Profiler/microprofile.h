@@ -3618,7 +3618,7 @@ void MicroProfileWebServerHello(int nPort)
 				char Ip[INET_ADDRSTRLEN];
 				if(inet_ntop(AF_INET, pAddress, Ip, sizeof(Ip)))
 				{
-					MICROPROFILE_PRINTF("MicroProfile: Web server started on %s:%d\n", Ip, nPort);
+					MICROPROFILE_PRINTF("MicroProfile on http://%s:%d/\n", Ip, nPort);
 					nInterfaces++;
 				}
 			}

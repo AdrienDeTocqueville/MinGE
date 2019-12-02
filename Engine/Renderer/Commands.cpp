@@ -1,6 +1,8 @@
 #include "Renderer/Commands.h"
+#include "Renderer/GLDriver.h"
 #include "Renderer/CommandKey.h"
 
+#include "Systems/GraphicEngine.h"
 #include "Assets/Program.h"
 
 void DrawElements::submit(uint64_t key, const void *_cmd)
@@ -22,8 +24,10 @@ void DrawElements::submit(uint64_t key, const void *_cmd)
 void SetupView::submit(uint64_t, const void *_cmd)
 {
 	const SetupView* cmd = reinterpret_cast<const SetupView*>(_cmd);
-	CommandBucket::View *view = cmd->view;
+	View *view = cmd->view;
+	GL::BindFramebuffer(view->fbo);
 
+	Program::setBuiltin("MATRIX_VP", view->vp);
 	GL::Viewport(view->viewport);
 	GL::Scissor (view->viewport);
 
@@ -32,8 +36,6 @@ void SetupView::submit(uint64_t, const void *_cmd)
 
 	glEnable(GL_CULL_FACE);
 	glDepthFunc(GL_LEQUAL);
-
-	Program::setBuiltin("MATRIX_VP", view->vp);
 }
 
 void SetupSkybox::submit(uint64_t, const void *)

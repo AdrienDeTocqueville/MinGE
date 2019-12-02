@@ -62,7 +62,7 @@ class Printer : public Script
 
 void test_animations()
 {
-	Input::setCursorMode(CursorMode::Capture);
+	Input::setCursorMode(Input::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
 

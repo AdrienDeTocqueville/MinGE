@@ -2,15 +2,12 @@
 
 /// Quadtree
 QuadTree::QuadTree() :
-	size(0), prevPos(vec2(-1, -1))
-{
-	glGenBuffers(1, &ibo);
-}
+	size(0), prevPos(vec2(-1, -1)), ibo(GL::GenBuffer())
+{ }
 
 QuadTree::~QuadTree()
 {
-	glDeleteBuffers(1, &ibo);
-
+	GL::DeleteBuffer(ibo);
 	delete root;
 }
 
@@ -34,12 +31,8 @@ void QuadTree::resize(unsigned _size)
 {
 	size = _size;
 
-	glDeleteBuffers(1, &ibo);
-	glGenBuffers(1, &ibo);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, size*sizeof(unsigned), 0, GL_STREAM_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	GL::BindElementBuffer(ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size*sizeof(unsigned), 0, GL_STREAM_DRAW);
 }
 
 void QuadTree::update(vec2 _pos)
@@ -65,9 +58,10 @@ void QuadTree::update(vec2 _pos)
 	if (indices.size() > size)
 		resize(indices.size());
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-		GraphicEngine::editBuffer(GL_ELEMENT_ARRAY_BUFFER, indices.size()*sizeof(unsigned), &indices[0]);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	GL::BindElementBuffer(ibo);
+	void* adress = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
+		memcpy(adress, indices.data(), indices.size()*sizeof(unsigned));
+	glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
 }
 
 /// Node

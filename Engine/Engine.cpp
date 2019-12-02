@@ -1,6 +1,10 @@
 #include "Engine.h"
 #include "Entity.h"
 
+#include "Systems/GraphicEngine.h"
+#include "Systems/PhysicEngine.h"
+#include "Systems/ScriptEngine.h"
+
 #include "Assets/Texture.h"
 #include "Assets/Program.h"
 
@@ -8,7 +12,7 @@
 #include "Utility/Debug.h"
 #include "Utility/IO/Input.h"
 
-#define MICROPROFILE_MAX_FRAME_HISTORY (2<<10)
+//#define MICROPROFILE_MAX_FRAME_HISTORY (2<<10)
 #define MICROPROFILE_IMPL
 #include "Profiler/profiler.h"
 
