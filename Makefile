@@ -61,4 +61,4 @@ fclean: clean
 	rm -f $(NAME)
 
 re: fclean
-	make -j4 all
+	make -j$(shell nproc) all
