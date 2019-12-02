@@ -9,7 +9,7 @@ class LinearAllocator
 {
 public:
 	LinearAllocator(size_t _size):
-		size(_size), pool(new uint8_t[size]()), current(0)
+		size(_size), pool(new uint8_t[size]), current(0)
 	{
 		assert(current.is_lock_free());
 		assert(size % sizeof(uint32_t) == 0);
