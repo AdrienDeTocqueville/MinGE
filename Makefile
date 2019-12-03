@@ -31,16 +31,19 @@ all: $(TARGETS)
 
 define Template
 OBJ_$(1) := $(addprefix $(OBJDIR)/$(1)/, $(SRC:.cpp=.o))
+DEP_$(1) := $(addprefix $(OBJDIR)/$(1)/, $(SRC:.cpp=.d))
 
 $$(CFLAGS_$(1)) += $$(CFLAGS)
 
 $(1): $(BINDIR)/$(1)
 
 $(BINDIR)/$(1): $$(OBJ_$(1))
-	$(LD) $$(OBJ_$(1)) -o $$@ $(LPATH) $(LDFLAGS)
+	$(LD) -o $$@ $$(OBJ_$(1)) $(LPATH) $(LDFLAGS)
 
-$(OBJDIR)/$(1)/%.o: %.cpp $(INC)
-	$(CC) $$(CFLAGS_$(1)) $(IPATH) -c $$< -o $$@
+$(OBJDIR)/$(1)/%.o: %.cpp
+	$(CC) $$(CFLAGS_$(1)) $(IPATH) -MMD -c $$< -o $$@
+
+-include $$(DEP_$(1))
 
 $$(OBJ_$(1)): | $(OBJDIR)/$(1)
 
