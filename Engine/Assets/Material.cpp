@@ -33,6 +33,8 @@ Material::~Material()
 void Material::bind(RenderPass::Type pass) const
 {
 	// TODO: handle multipass
+	(void)pass;
+
 	program->updateBuiltins();
 
 	if (Material::bound == this)
@@ -100,6 +102,9 @@ MaterialRef Material::getDefault()
 		return shared;
 
 	MaterialRef shared(new Material(Program::getDefault()));
+	shared->set("color", vec3(0.8f));
+	shared->set("metallic", 0.0f);
+	shared->set("roughness", 0.5f);
 
 	basic = shared;
 	materials.push_back(basic);

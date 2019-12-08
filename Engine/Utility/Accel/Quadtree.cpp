@@ -2,7 +2,7 @@
 
 /// Quadtree
 QuadTree::QuadTree() :
-	size(0), prevPos(vec2(-1, -1)), ibo(GL::GenBuffer())
+	ibo(GL::GenBuffer()), size(0), prevPos(vec2(-1, -1))
 { }
 
 QuadTree::~QuadTree()

@@ -3,10 +3,9 @@ OBJDIR = obj
 
 LD = g++
 CC = g++
-CFLAGS = #-Wall -Wextra -Werror
+CFLAGS = -Wextra -Wall -Werror -Wno-sign-compare -Wno-class-memaccess
 
 LDFLAGS := -lGLEW -lGLU -lGL -lpthread
-LDFLAGS += -lassimp
 LDFLAGS += -lsfml-audio -lsfml-graphics -lsfml-window -lsfml-network -lsfml-system
 
 IPATH = -I. -IEngine
@@ -21,9 +20,9 @@ SRC += $(shell find Engine -name '*.cpp')
 INC += $(shell find Engine -name '*.h')
 
 TARGETS		:= debug dev release
-CFLAGS_debug	:= -DDEBUG -g3 -ggdb
-CFLAGS_dev	:= -DPROFILE -DDEBUG -O2 -g -ggdb
-CFLAGS_release	:= -O3
+CFLAGS_debug	:= $(CFLAGS) -DDEBUG -g3 -ggdb
+CFLAGS_dev	:= $(CFLAGS) -DPROFILE -DDEBUG -O2 -g -ggdb
+CFLAGS_release	:= $(CFLAGS) -O3
 
 dev: #default target
 all: $(TARGETS)
@@ -32,8 +31,6 @@ all: $(TARGETS)
 define Template
 OBJ_$(1) := $(addprefix $(OBJDIR)/$(1)/, $(SRC:.cpp=.o))
 DEP_$(1) := $(addprefix $(OBJDIR)/$(1)/, $(SRC:.cpp=.d))
-
-$$(CFLAGS_$(1)) += $$(CFLAGS)
 
 $(1): $(BINDIR)/$(1)
 

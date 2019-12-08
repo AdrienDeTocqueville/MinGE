@@ -4,10 +4,12 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
+#include <fstream>
 
+#include "Utility/IO/json.hpp"
+using json = nlohmann::json;
+
+/*
 static unsigned argmin_weight(vec4 weights)
 {
 	unsigned argmin = 0;
@@ -25,397 +27,336 @@ static unsigned argmin_weight(vec4 weights)
 	}
 	return argmin;
 }
+*/
 
-static mat4 assimp_glm(const aiMatrix4x4 &from)
+static inline vec3 make_vec3(json &n, const vec3 &def)
 {
-	mat4 to;
-	to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
-	to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
-	to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
-	to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
-
-	return to;
+	if (n.is_null()) return def;
+	return vec3(n[0].get<float>(), n[1].get<float>(), n[2].get<float>());
 }
 
-static vec3 assimp_glm(const aiVector3D &from)
+static inline quat make_quat(json &n, const quat &def)
 {
-	return vec3(from.x, -from.z, from.y);
+	if (n.is_null()) return def;
+	return quat(n[0].get<float>(),
+		n[1].get<float>(),
+		n[2].get<float>(),
+		n[3].get<float>());
 }
 
-static quat assimp_glm(const aiQuaternion &from)
-{
-	return quat(from.w, from.x, -from.z, from.y);
+inline char encode_base64_char(uint8_t b) {
+	return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="[size_t(b)];
 }
 
-static void swap_yz(mat4 &mat)
-{
-	mat4 t(1.0f);
-	t[1][1] = 0.0f;
-	t[2][2] = 0.0f;
-	t[2][1] = -1.0f;
-	t[1][2] = 1.0f;
-
-	mat = t * mat;
+inline uint8_t decode_base64_char(char c) {
+	static const uint8_t tableDecodeBase64[128] = {
+		0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+		0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+		0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  62, 0,  0,  0,  63,
+		52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 0,  0,  0,  64, 0,  0,
+		0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+		15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0,  0,  0,  0,  0,
+		0,  26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+		41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 0,  0,  0,  0,  0
+	};
+	return tableDecodeBase64[size_t(c)];
 }
-
-static void swap_yz(vec3 &pos, quat &rot)
+static uint8_t *decode_base64_uri(int length, char const* uri)
 {
-	// pos
-	float temp = pos.z;
-	pos.z = pos.y;
-	pos.y = -temp;
+	if (strncmp(uri, "data:", 5))
+		return NULL;
+	uri = strchr(uri + 5, ';') + 1;
 
-	// rot
-	temp = rot.z;
-	rot.z = rot.y;
-	rot.y = -temp;
-}
+	if (strncmp(uri, "base64", 6))
+		return NULL;
+	uri += 7;
 
+	int size = length * 4 / 3, i = 0, j = 0;
+	uint8_t *out = new uint8_t[length];
 
-static void import_node(aiNode *node, Transform *parent, Skeleton &skeleton)
-{
-	Transform *curr;
-
-	if (node->mNumMeshes)
-		curr = parent;
-	else
+	for (; i + 4 < size; i += 4)
 	{
-		std::string name = node->mName.C_Str();
-		mat4 matrix = assimp_glm(node->mTransformation);
+		uint8_t b0 = decode_base64_char(uri[i + 0]);
+		uint8_t b1 = decode_base64_char(uri[i + 1]);
+		uint8_t b2 = decode_base64_char(uri[i + 2]);
+		uint8_t b3 = decode_base64_char(uri[i + 3]);
 
-		glm::vec3 pos, scale, skew;
-		glm::quat rotation;
-		glm::vec4 perspective;
-		glm::decompose(matrix, scale, rotation, pos, skew, perspective);
-
-		swap_yz(pos, rotation);
-
-		Entity *e = Entity::create(name, false, pos, rotation, scale);
-		curr = e->find<Transform>();
-		curr->setParent(parent);
-
-		skeleton.bone_index[name] = skeleton.offsets.size();
-		skeleton.offsets.emplace_back(1.0f);
+		out[j++] = (uint8_t)((b0 << 2) | (b1 >> 4));
+		out[j++] = (uint8_t)((b1 << 4) | (b2 >> 2));
+		out[j++] = (uint8_t)((b2 << 6) | (b3 >> 0));
 	}
 
-	for (unsigned int i = 0; i < node->mNumChildren; i++)
-		import_node(node->mChildren[i], curr, skeleton);
+	{
+		uint8_t b0 = decode_base64_char(uri[i + 0]);
+		uint8_t b1 = decode_base64_char(uri[i + 1]);
+		uint8_t b2 = decode_base64_char(uri[i + 2]);
+		uint8_t b3 = decode_base64_char(uri[i + 3]);
+
+				out[j++] = (uint8_t)((b0 << 2) | (b1 >> 4));
+		if (j < length)	out[j++] = (uint8_t)((b1 << 4) | (b2 >> 2));
+		if (j < length)	out[j++] = (uint8_t)((b2 << 6) | (b3 >> 0));
+	}
+
+	return out;
 }
 
-static MeshRef import_mesh(const aiScene *scene, Transform *root, Skeleton &skeleton, std::vector<unsigned> &materials)
+static MeshRef import_mesh(const json &mesh, const json &scene, const std::vector<uint8_t*> &buffers)
 {
+	json prims = mesh["primitives"], accessors = scene["accessors"];
+	std::vector<Submesh> submeshes; submeshes.reserve(prims.size());
+
 	// 1 - Determine what data is needed and sort by materials
 	bool has_pos = true, has_normal = true, has_uv = true;
-	int vertex_count = 0, index_count = 0, bone_count = 0;
+	uint32_t vertex_count = 0, index_count = 0;
 
-	std::vector<Submesh> submeshes;
-	submeshes.reserve(scene->mNumMeshes);
-
-	std::vector<aiMesh*> meshes;
-	for (unsigned i = 0; i < scene->mNumMeshes; i++)
+	for (unsigned i = 0; i < prims.size(); i++)
 	{
-		aiMesh *submesh = scene->mMeshes[i];
-		meshes.push_back(submesh);
+		json attribs = prims[i]["attributes"];
 
-		if (!submesh->HasPositions()) has_pos = false;
-		if (!submesh->HasNormals()) has_normal = false;
-		if (!submesh->HasTextureCoords(0)) has_uv = false;
+		if (!attribs.contains("POSITION"))   has_pos = false;
+		if (!attribs.contains("NORMAL"))     has_normal = false;
+		if (!attribs.contains("TEXCOORD_0")) has_uv = false;
+		//if (!attribs.contains("WEIGHTS_0"))  has_bones = false;
 
-		vertex_count += submesh->mNumVertices;
-		index_count += submesh->mNumFaces * 3;
-		bone_count += submesh->mNumBones;
+		vertex_count += accessors[attribs["POSITION"].get<int>()]["count"].get<int>();
+		index_count  += accessors[prims[i]["indices"].get<int>()]["count"].get<int>();
+		//bone_count += submesh->mNumBones;
 	}
-
-	std::sort(meshes.begin(), meshes.end(), [] (aiMesh *&a, aiMesh *&b) {
-		return a->mMaterialIndex < b->mMaterialIndex;
-	});
 
 	// 2 - Allocate necessary space
 	MeshData::Flags flags = MeshData::Empty;
 	if (has_pos)	flags = (MeshData::Flags)(flags | MeshData::Points);
 	if (has_normal)	flags = (MeshData::Flags)(flags | MeshData::Normals);
 	if (has_uv)	flags = (MeshData::Flags)(flags | MeshData::UVs);
-	if (bone_count)	flags = (MeshData::Flags)(flags | MeshData::Bones);
+	//if (bone_count)	flags = (MeshData::Flags)(flags | MeshData::Bones);
 
 	MeshData data(vertex_count, index_count, flags);
 
-	if (flags & MeshData::Bones)
+	vertex_count = index_count = 0;
+	for (unsigned i = 0; i < prims.size(); i++)
 	{
-		memset(data.bones, 0, sizeof(*data.bones) * data.vertex_count);
-		for (unsigned int i = 0; i < scene->mRootNode->mNumChildren; i++)
-			import_node(scene->mRootNode->mChildren[i], root, skeleton);
-	}
+		int count = 0, vertex_start = vertex_count;
+		json attribs = prims[i]["attributes"];
 
-	// 3 - Read data
-	unsigned prev_mat = scene->mNumMaterials;
-	vertex_count = index_count = bone_count = 0;
-	for (aiMesh *submesh : meshes)
-	{
-		if (submesh->mMaterialIndex == prev_mat)
-			submeshes.back().count += submesh->mNumFaces * 3;
-		else
-		{
-			prev_mat = submesh->mMaterialIndex;
-			submeshes.emplace_back(GL_TRIANGLES, submesh->mNumFaces * 3, index_count);
-			materials.push_back(prev_mat);
-		}
+		submeshes.push_back({GL_TRIANGLES, 0, index_count});
+
+
+		#define IMPORT(accessor, dest, dst_offset) do { \
+			int view_id = accessors[accessor.get<int>()]["bufferView"].get<int>(); \
+			json view = scene["bufferViews"][view_id]; \
+			\
+			uint8_t* buf = buffers[view["buffer"].get<int>()]; \
+			int offset = view["byteOffset"].get<int>(); \
+			count = view["byteLength"].get<int>(); \
+			\
+			memcpy(dest + dst_offset, buf + offset, count); \
+			count /= sizeof(*dest); \
+		} while (0)
 
 		// Read vertices
-		unsigned numVertices = submesh->mNumVertices;
-		for (unsigned i = 0; i < numVertices; i++)
-		{
-			size_t v = vertex_count + i;
-
-			if (flags & MeshData::Points)
-				data.points[v] = vec3(
-					submesh->mVertices[i].x,
-					submesh->mVertices[i].y,
-					submesh->mVertices[i].z
-				);
-
-			if (flags & MeshData::Normals)
-				data.normals[v] = vec3(
-					submesh->mNormals[i].x,
-					submesh->mNormals[i].y,
-					submesh->mNormals[i].z
-				);
-
-			if (flags & MeshData::UVs)
-				data.uvs[v] = vec2(
-					submesh->mTextureCoords[0][i].x,
-					submesh->mTextureCoords[0][i].y
-				);
-		}
+		if (flags & MeshData::Points)	IMPORT(attribs["POSITION"], data.points, vertex_count);
+		if (flags & MeshData::Normals)	IMPORT(attribs["NORMAL"], data.normals, vertex_count);
+		if (flags & MeshData::UVs)	IMPORT(attribs["TEXCOORD_0"], data.uvs, vertex_count);
+		vertex_count += count;
 
 		// Read indices
-		unsigned numFaces = submesh->mNumFaces;
-		for (unsigned i = 0; i < numFaces; i++)
-		{
-			auto *face = submesh->mFaces[i].mIndices;
-			for (unsigned j = 0; j < 3; j++)
-				data.indices[index_count++] = vertex_count + face[j];
-		}
+		IMPORT(prims[i]["indices"], data.indices, index_count);
+		for (int j(0); j < count; j++)
+			data.indices[index_count + j] += vertex_start;
+		index_count += count;
+		submeshes[i].count = count;
 
-		// Read bones
-		if (flags & MeshData::Bones)
-		{
-			unsigned numBones = submesh->mNumBones;
-			for (unsigned i = 0; i < numBones; i++)
-			{
-				aiBone *bone = submesh->mBones[i];
-				std::string name(bone->mName.C_Str());
-
-				auto it = skeleton.bone_index.find(name);
-				if (it == skeleton.bone_index.end())
-					Error::add(USER_ERROR, "import_mesh(): invalid data");
-
-				unsigned bone_index = it->second;
-
-				skeleton.offsets[bone_index] = assimp_glm(bone->mOffsetMatrix);
-				swap_yz(skeleton.offsets[bone_index]);
-
-				for (unsigned j = 0; j < bone->mNumWeights; j++)
-				{
-					unsigned index = vertex_count + bone->mWeights[j].mVertexId;
-					unsigned k = argmin_weight(data.bones[index].weights);
-					data.bones[index].bones[k] = bone_index;
-					data.bones[index].weights[k] = bone->mWeights[j].mWeight;
-				}
-			}
-		}
-
-		vertex_count += numVertices;
+		#undef IMPORT
 	}
 
 	return MeshRef(new Mesh(std::move(data), submeshes));
 }
 
-static std::vector<MaterialRef> import_materials(const aiScene *scene, const std::vector<unsigned> &material_indices, bool skinned, const std::string &base_path)
+static MaterialRef import_material(const json &material)
 {
-	MaterialRef base = Material::create(skinned ? "skinned" : "object");
+	auto m = Material::create("object");
 
-	std::vector<MaterialRef> materials;
-	for (unsigned i = 0; i < scene->mNumMaterials; i++)
+	// Load PBR values
+	auto pbr = material["pbrMetallicRoughness"];
+
+	vec3 color = make_vec3(pbr["baseColorFactor"], vec3(0.8f));
+	float metallic = pbr["metallicFactor"];
+	float roughness = pbr["roughnessFactor"];
+
+	m->set("color", color);
+	m->set("metallic", metallic);
+	m->set("roughness", roughness);
+
+	// Load textures
+	// ...
+
+	return m;
+}
+
+/*
+static bool has_offset(Blender::Object *obj)
+{
+	float *p = obj->loc;
+	float *r = obj->rot;
+	float *s = obj->size;
+
+	return	(p[0] == p[1] == p[2] == 0.0f) &&
+		(r[0] == r[1] == r[2] == 0.0f) &&
+		(s[0] == s[1] == s[2] == 0.0f);
+}
+
+static Blender::Object *get_entity(Blender::Object *obj)
+{
+	while (obj->_pad0 == nullptr)
+		obj = obj->parent;
+
+	return obj;
+}
+*/
+
+Scene::Scene(const std::string &file)
+{
+	std::string path = "Resources/" + file;
+	std::string base = file.substr(0, file.find_last_of("/\\"));
+
+	// Parse file
+	std::ifstream src(path);
+	json root;
+	src >> root;
+
+	// Scene data
+	json scene = root["scenes"][root["scene"].get<int>()];
+	name = scene["name"].get<std::string>();
+
+	// Decode base64 buffers
+	json jbuffers = root["buffers"];
+	std::vector<uint8_t*> buffers;
+	for (int i(0); i < jbuffers.size(); i++)
 	{
-		aiMaterial *mat = scene->mMaterials[i];
+		buffers.push_back(decode_base64_uri(
+			jbuffers[i]["byteLength"].get<int>(),
+			jbuffers[i]["uri"].get_ptr<json::string_t*>()->c_str()
+		));
+		jbuffers[i].erase("uri");
+	}
 
-		aiString path;
-		mat->GetTexture(aiTextureType_DIFFUSE, 0, &path);
-		std::string texture_path(path.C_Str());
+	// Import materials
+	json jmaterials = root["materials"];
+	std::vector<MaterialRef> materials_ref;
+	materials.reserve(jmaterials.size());
+	materials_ref.reserve(jmaterials.size());
 
-		MaterialRef m = base->clone();
-		//m->set("albedoMap", Texture::get(base_path + texture_path));
-		//m->set("metallicMap", Texture::get("Knight/metallic_" + diff));
-		//m->set("roughnessMap", Texture::get("Knight/roughness_" + diff));
+	for (int i(0); i < jmaterials.size(); i++)
+	{
+		json material = jmaterials[i];
+		MaterialRef m = import_material(material);
+
+		materials_ref.push_back(m);
 		materials.push_back(m);
 	}
 
-	std::vector<MaterialRef> mesh_materials;
-	for (unsigned index : material_indices)
-		mesh_materials.push_back(materials[index]);
+	// Import meshes
+	json jmeshes = root["meshes"];
+	std::vector<MeshRef> meshes_ref;
+	meshes.reserve(jmeshes.size());
+	meshes_ref.reserve(jmeshes.size());
 
-	return mesh_materials;
-}
-
-// Ignores scaling
-static std::vector<AnimationRef> import_animations(const aiScene *scene, const Skeleton &skeleton)
-{
-	std::vector<AnimationRef> animations; animations.reserve(scene->mNumAnimations);
-
-	for (unsigned i = 0; i < scene->mNumAnimations; i++)
+	for (int i(0); i < jmeshes.size(); i++)
 	{
-		aiAnimation *aiAnim = scene->mAnimations[i];
-		float rate = 1.0f / aiAnim->mTicksPerSecond;
+		json mesh = jmeshes[i];
+		MeshRef m = import_mesh(mesh, root, buffers);
 
-		Animation *anim = new Animation(aiAnim->mName.C_Str(), aiAnim->mDuration * rate);
+		meshes_ref.push_back(m);
+		meshes.push_back(m);
+	}
 
-		anim->channels.reserve(aiAnim->mNumChannels);
-		for (unsigned j = 0; j < aiAnim->mNumChannels; j++)
+	// Import nodes
+	json nodes = root["nodes"];
+	prototypes.reserve(nodes.size());
+	for (int i(0); i < nodes.size(); i++)
+	{
+		json node = nodes[i];
+
+		auto *proto = Entity::create(node["name"].get<std::string>(), true,
+			make_vec3(node["translation"], vec3(0.0f)),
+			make_quat(node["rotation"], quat(vec3(0))),
+			make_vec3(node["scale"], vec3(1.0f))
+		);
+		prototypes.push_back(proto);
+
+		// Read hierarchy
+		json children = node["children"];
+		for (int c(0); c < children.size(); c++)
 		{
-			aiNodeAnim *node = aiAnim->mChannels[j];
-
-			if (node->mNumPositionKeys != node->mNumRotationKeys)
-				Error::add(USER_ERROR, "import_animations(): unsupported channel");
-
-			auto it = skeleton.bone_index.find(node->mNodeName.C_Str());
-			if (it == skeleton.bone_index.end())
-				Error::add(USER_ERROR, "import_animations(): invalid data");
-
-			unsigned key_count = node->mNumPositionKeys;
-			Animation::Track track(it->second, key_count);
-
-			for (unsigned key = 0; key < key_count; key++)
-			{
-				if (node->mPositionKeys[key].mTime != node->mRotationKeys[key].mTime)
-					Error::add(USER_ERROR, "import_animations(): unsupported key");
-
-				track.keys.emplace_back(
-					node->mPositionKeys[key].mTime * rate,
-					assimp_glm(node->mPositionKeys[key].mValue),
-					assimp_glm(node->mRotationKeys[key].mValue)
-				);
-			}
-
-			anim->channels.emplace_back(std::move(track));
+			auto *child = prototypes[children[c].get<int>()];
+			child->find<Transform>()->setParent(proto->find<Transform>());
 		}
 
-		animations.push_back(AnimationRef(anim));
+		// Read components
+		json CAMERAS = root["cameras"];
+		json LIGHTS = root["extensions"]["KHR_lights_punctual"]["lights"];
+
+		if (node.contains("mesh"))
+		{
+			int mesh_id = node["mesh"].get<int>();
+			json primitives = jmeshes[mesh_id]["primitives"];
+
+			MeshRef mesh = meshes_ref[mesh_id];
+			std::vector<MaterialRef> mesh_materials;
+
+			for (int j(0); j < primitives.size(); j++)
+			{
+				if (primitives[j].contains("material"))
+					mesh_materials.push_back(materials_ref[primitives[j]["material"].get<int>()]);
+				else
+					mesh_materials.push_back(Material::getDefault());
+			}
+
+			proto->insert<Graphic>(mesh, mesh_materials);
+		}
+		if (node.contains("camera"))
+		{
+			json cam = CAMERAS[node["camera"].get<int>()];
+			if (cam.contains("persepective"))
+			{
+				json perspective = root["perspective"];
+				proto->insert<Camera>(
+					perspective["yfov"].get<float>(),
+					perspective["znear"].get<float>(),
+					perspective["zfar"].get<float>()
+				);
+			}
+		}
+		if (node.contains("extensions"))
+		{
+			json light = node["extensions"]["KHR_lights_punctual"];
+			if (!light.is_null())
+			{
+				light = LIGHTS[light["light"].get<int>()];
+				std::string type_str = light["type"].get<std::string>();
+				vec3 color = make_vec3(light["color"], vec3(0.6f));
+
+				Light::Type type = Light::Point;
+				if (type_str == "directional") type = Light::Directional;
+				else if (type_str == "point") type = Light::Point;
+				else if (type_str == "spot") type = Light::Spot;
+				else Error::add(USER_ERROR, "Unknow light type");
+
+				proto->insert<Light>(type, color);
+			}
+		}
 	}
-	return animations;
+
+	for (int i(0); i < buffers.size(); i++)
+		delete buffers[i];
+	buffers.clear();
 }
 
-static void dump_node(aiNode *node, int recur = 0)
+void Scene::instantiate()
 {
-	for (int i(0); i < recur; i++)
-		printf("  ");
-	printf("%s (%d children) (%d meshes)\n", node->mName.C_Str(), node->mNumChildren, node->mNumMeshes);
-
-	for (unsigned int i = 0; i < node->mNumChildren; i++)
-		dump_node(node->mChildren[i], recur + 1);
-}
-
-static inline void dump_meshes(const aiScene *scene)
-{
-	for (size_t i(0); i < scene->mNumMeshes; i++)
+	for (Entity *e : prototypes)
 	{
-		aiMesh *mesh = scene->mMeshes[i];
-		printf(" - %s (%d faces) (%d bones) (material %d)\n", mesh->mName.C_Str(), mesh->mNumFaces, mesh->mNumBones, mesh->mMaterialIndex);
+		if (!e->find<Transform>()->getParent())
+			Entity::clone(e);
 	}
-}
-
-static inline void dump_animations(const aiScene *scene)
-{
-	for (size_t i(0); i < scene->mNumAnimations; i++)
-	{
-		aiAnimation *anim = scene->mAnimations[i];
-		printf(" - %s\n", anim->mName.C_Str());
-	}
-}
-
-static void dump(const aiScene *scene)
-{
-	printf("> Scene\n - meshes: %d\n - materials: %d\n - textures: %d\n", scene->mNumMeshes, scene->mNumMaterials, scene->mNumTextures);
-	printf(" - animations: %d\n - lights: %d\n - cameras: %d\n\n", scene->mNumAnimations, scene->mNumLights, scene->mNumCameras);
-
-	printf("> Root node\n");
-	dump_node(scene->mRootNode);
-	printf("\n\n");
-
-	printf("> Meshes\n");
-	dump_meshes(scene);
-	printf("\n\n");
-
-	if (scene->HasAnimations())
-	{
-		printf("> Animations\n");
-		dump_animations(scene);
-		printf("\n\n");
-	}
-}
-
-Entity *Scene::import(const std::string &file)
-{
-	std::string path = "Resources/" + file;
-	std::string base = file.substr(0, file.find_last_of("/\\"));
-
-	// read file via ASSIMP
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices |
-			aiProcess_GenNormals);
-
-	// check for errors
-	if (!scene || !scene->mRootNode)
-	{
-		Error::add(FILE_NOT_FOUND, "Scene::import() -> " + path);
-		return nullptr;
-	}
-	if (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE)
-		Error::add(WARNING, "Scene::import() -> Incomplete scene :" + path);
-
-#ifdef DEBUG
-	dump(scene);
-#endif
-
-	//Entity *e = Entity::create(base, true);
-	Entity *e = Entity::create(base, false);
-
-	Skeleton skeleton;
-	std::vector<unsigned> material_indices;
-
-	auto mesh = import_mesh(scene, e->find<Transform>(), skeleton, material_indices);
-	auto materials = import_materials(scene, material_indices, skeleton.offsets.size(), base + '/');
-	e->insert<Graphic>(mesh, materials);
-
-	if (skeleton.offsets.size())
-		e->insert<Animator>(skeleton);
-
-	return e;
-}
-
-AnimationRef Scene::import_animation(const std::string &file, const Skeleton &skeleton)
-{
-	std::string path = "Resources/" + file;
-	std::string base = file.substr(0, file.find_last_of("/\\"));
-
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, 0);
-
-	// check for errors
-	if (!scene || !scene->mRootNode)
-	{
-		Error::add(FILE_NOT_FOUND, "Scene::import() -> " + path);
-		return nullptr;
-	}
-
-	if (!scene->HasAnimations())
-	{
-		Error::add(WARNING, "Scene::import() -> Scene has no animations :" + path);
-		return nullptr;
-	}
-
-#ifdef DEBUG
-	dump(scene);
-#endif
-
-	return import_animations(scene, skeleton)[0];
 }

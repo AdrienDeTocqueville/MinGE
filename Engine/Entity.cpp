@@ -66,7 +66,7 @@ Entity* Entity::clone(Entity* _entity, vec3 _position, vec3 _rotation, vec3 _sca
 				size_t s = scriptSizes[typeid(*component)];
 
 				c = reinterpret_cast<Component*>(operator new(s));
-				memcpy(c, component, s);
+				memcpy((void*)c, component, s);
 #ifdef DEBUG
 				Component::instances++;
 #endif
@@ -78,6 +78,12 @@ Entity* Entity::clone(Entity* _entity, vec3 _position, vec3 _rotation, vec3 _sca
 			c->tr = e->tr;
 			c->onRegister();
 		}
+	}
+
+	for (auto *child : _entity->find<Transform>()->getChildren())
+	{
+		Entity *c = child->entity;
+		Entity::clone(c)->tr->setParent(e->tr);
 	}
 
 	return e;

@@ -75,8 +75,8 @@ struct QuadTree
 		unsigned lowest = 0;
 		int step = 0;
 
-		unsigned ibo = 0;
-		unsigned size = 0;
+		unsigned ibo;
+		unsigned size;
 
 		std::vector<unsigned> dist, indices;
 

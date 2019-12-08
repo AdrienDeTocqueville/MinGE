@@ -47,12 +47,13 @@ struct MeshData
 	void operator=(const MeshData&) = delete;
 
 	uint32_t vertex_count;
+	uint32_t index_count;
+
 	vec3 *points;
 	vec3 *normals;
 	vec2 *uvs;
 	BoneWeight *bones;
 
-	uint32_t index_count;
 	uint16_t *indices;
 };
 

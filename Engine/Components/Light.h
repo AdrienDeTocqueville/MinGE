@@ -13,8 +13,7 @@ public:
 		Directional,
 	};
 
-	Light(Light::Type _type, vec3 _offset = vec3(0.0f),
-			vec3 _color = vec3(150.0f / 255.0f));
+	Light(Light::Type _type, vec3 _color = vec3(150.0f / 255.0f));
 	virtual ~Light();
 
 	/// Methods (public)
@@ -32,5 +31,5 @@ private:
 	/// Attributes (private)
 	Light::Type type;
 
-	vec3 offset, color;
+	vec3 color;
 };

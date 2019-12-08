@@ -14,17 +14,19 @@ General architecture is heavily inspired from Unity.
 #### Physic Engine
  * [bullet3](https://github.com/bulletphysics/bullet3)
 
+#### JSON parser
+ * [json](https://github.com/nlohmann/json)
+
 
 ## Dependencies
 * [SFML GCC 4.9.2 TDM (SJLJ) - 32-bit](https://www.sfml-dev.org/download/sfml/2.4.2/index-fr.php)
 * [GLEW](http://glew.sourceforge.net/index.html)
 * [GLM](https://github.com/g-truc/glm/releases/)
-* [Assimp](http://assimp.org/index.php/)
 
 ## Build on Linux
 
 ```bash
-pacman -S sfml glew glm assimp
+pacman -S sfml glew glm
 make
 ```
 

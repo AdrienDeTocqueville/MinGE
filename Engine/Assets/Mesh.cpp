@@ -23,7 +23,7 @@ MeshData::MeshData(uint32_t _vertex_count, uint32_t _index_count, MeshData::Flag
 MeshData::MeshData(MeshData &&data)
 {
 	memcpy(this, &data, sizeof(MeshData));
-	memset(&data, 0, sizeof(MeshData));
+	memset((void*)&data, 0, sizeof(MeshData));
 }
 
 MeshData::~MeshData()
@@ -393,6 +393,11 @@ MeshRef Mesh::createSphere(MeshData::Flags flags, float radius, unsigned slices,
 
 MeshRef Mesh::createCylinder(MeshData::Flags flags, float _base, float _top, float _height, unsigned _slices)
 {
+	(void)flags;
+	(void)_base;
+	(void)_top;
+	(void)_height;
+	(void)_slices;
 	return nullptr;
 	/*
 	const float iSlices = 1/((float)_slices);

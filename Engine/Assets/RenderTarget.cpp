@@ -36,7 +36,7 @@ RenderTargetRef RenderTarget::create(uvec2 size, Depth depth, unsigned priority)
 	GLuint buf[1] = {GL_COLOR_ATTACHMENT0};
 	glDrawBuffers(1, buf);
 
-	return RenderTargetRef(new RenderTarget(size, fbo, std::move(colorBuffer), std::move(depthBuffer), 0));
+	return RenderTargetRef(new RenderTarget(size, fbo, std::move(colorBuffer), std::move(depthBuffer), priority));
 }
 
 RenderTargetRef RenderTarget::getDefault()
@@ -51,11 +51,11 @@ RenderTargetRef RenderTarget::getDefault()
 }
 
 RenderTarget::RenderTarget(uvec2 _size):
-	size(_size), fbo(0), priority(0)
+	fbo(0), priority(0), size(_size)
 { }
 
 RenderTarget::RenderTarget(uvec2 _size, unsigned _fbo, Texture &&_color, RenderBuffer &&_depth, unsigned _priority):
-	size(_size), fbo(_fbo), colorBuffer(_color), depthBuffer(_depth), priority(_priority)
+	fbo(_fbo), priority(_priority), size(_size), colorBuffer(_color), depthBuffer(_depth)
 { }
 
 
@@ -67,6 +67,8 @@ RenderTarget::~RenderTarget()
 void RenderTarget::resize(uvec2 _size)
 {
 	// TODO: resize attachments
+	(void)_size;
+	Error::add(MINGE_ERROR, "render target will not be resized");
 	GraphicEngine::get()->onResize(this);
 }
 

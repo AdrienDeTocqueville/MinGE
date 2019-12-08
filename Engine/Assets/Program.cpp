@@ -22,9 +22,9 @@ static const std::unordered_map<GLuint, uint8_t> uniform_type_size = {
 
 
 Program::Program(std::string _name):
+	vertex(nullptr), fragment(nullptr),
 	program(0),
-	name(_name),
-	vertex(nullptr), fragment(nullptr)
+	name(_name)
 {
 	if (!(vertex = Shader::get(GL_VERTEX_SHADER, _name + ".vert")))
 		return;

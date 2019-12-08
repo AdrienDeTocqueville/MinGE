@@ -7,7 +7,7 @@
 class Skybox : public Component
 {
 public:
-	Skybox(vec3 c0 = vec3(0.67f, 0.92f, 1.0f), vec3 c1 = vec3(0.208608f, 0.348608f, 0.478608f));
+	Skybox();
 	Skybox(MaterialRef material);
 
 	/// Methods (public)

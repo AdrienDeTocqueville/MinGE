@@ -71,6 +71,7 @@ void test_animations()
 	//Entity *root = Scene::import("Bob/bob_lamp_update.md5mesh");
 
 
+	/*
 	Entity *root = Scene::import("Model/model.fbx");
 	if (root)
 	{
@@ -88,6 +89,7 @@ void test_animations()
 		});
 		root->insert<Printer>();
 	}
+	*/
 
 
 	MaterialRef m = Material::getDefault();
@@ -100,7 +102,7 @@ void test_animations()
 		->insert<Graphic>(groundMesh);
 
 	MeshRef mesh = Mesh::createSphere(MeshData::Basic, 0.25f);
-	Entity *object = Entity::create("Object", true)
+	Entity::create("Object", true)
 		->insert<Graphic>(mesh);
 
 	/*
@@ -112,7 +114,7 @@ void test_animations()
 	Entity::create("MainCamera", false, vec3(0.0f, 2.0f, 2.0f))
 		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
 		->insert<Skybox>()
-		//->insert<CameraScript>(nullptr, 0.2f, 0.0f);
-		->insert<CameraScript>(root->find<Transform>(), 0.2f, 5.0f, vec3(0,0,1/0.0025f));
+		->insert<CameraScript>(nullptr, 0.2f, 0.0f);
+		//->insert<CameraScript>(root->find<Transform>(), 0.2f, 5.0f, vec3(0,0,1/0.0025f));
 		//->insert<CameraScript>(root->find<Transform>(), 0.2f, 5.0f);
 }

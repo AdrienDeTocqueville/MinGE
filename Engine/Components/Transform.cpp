@@ -1,9 +1,9 @@
 #include "Components/Transform.h"
 
 Transform::Transform(vec3 _position, quat _rotation, vec3 _scale):
-	validWorld(false), validLocal(false),
 	position(_position), rotation(_rotation), scale(_scale),
-	root(this), parent(nullptr)
+	root(this), parent(nullptr),
+	validWorld(false), validLocal(false)
 { }
 
 Transform::Transform(vec3 _position, vec3 _rotation, vec3 _scale):

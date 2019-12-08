@@ -17,7 +17,7 @@ void test_materials()
 
 	const std::vector<std::string> mat_names = {"Iron", "Greasy", "Grimy"};
 	MaterialRef mats[mat_names.size()];
-	for (int i(0); i < mat_names.size(); i++)
+	for (size_t i(0); i < mat_names.size(); i++)
 	{
 		mats[i] = m->clone();
 		mats[i]->set("albedoMap", Texture::get(mat_names[i] + "/albedo.png"));

@@ -15,7 +15,7 @@ void test_sky()
 
 
 	MeshRef groundMesh = Mesh::createQuad(MeshData::Basic, vec2(20.0f), uvec2(2), uvec2(2));
-	Entity *object = Entity::create("Ground", false)
+	Entity::create("Ground", false)
 		->insert<Graphic>(groundMesh);
 
 	// Camera

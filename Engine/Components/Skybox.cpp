@@ -86,7 +86,7 @@ static vec3 getLuminance(float time, const KeyMap &table)
 
 
 
-Skybox::Skybox(vec3 c0, vec3 c1):
+Skybox::Skybox():
 	Skybox(Material::create("skybox"))
 {
 	vec4 perezCoeff[5];
