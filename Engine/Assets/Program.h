@@ -61,13 +61,14 @@ private:
 
 	struct Uniform
 	{
-		GLuint location, type, size;
+		GLint location;
+		GLuint type, size;
 		GLsizei num;
 		size_t offset; // offset in the array 'uniforms' of each Material
 	};
 	struct Builtin
 	{
-		GLuint location;
+		GLint location;
 		uint8_t update_idx;
 		size_t offset; // offset in the static array 'builtins'
 	};
@@ -100,40 +101,40 @@ private:
 	};
 };
 
-inline void set_uniform(unsigned _location, int _value)
+inline void set_uniform(int _location, int _value)
 {
 	glCheck(glUniform1i(_location, _value));
 }
-inline void set_uniform(unsigned _location, unsigned _value)
+inline void set_uniform(int _location, unsigned _value)
 {
 	glCheck(glUniform1i(_location, (int)_value));
 }
-inline void set_uniform(unsigned _location, float _value)
+inline void set_uniform(int _location, float _value)
 {
 	glCheck(glUniform1f(_location, _value));
 }
-inline void set_uniform(unsigned _location, vec3 _value)
+inline void set_uniform(int _location, vec3 _value)
 {
 	glCheck(glUniform3f(_location, _value[0], _value[1], _value[2]));
 }
-inline void set_uniform(unsigned _location, vec4 _value)
+inline void set_uniform(int _location, vec4 _value)
 {
 	glCheck(glUniform4f(_location, _value[0], _value[1], _value[2], _value[3]));
 }
-inline void set_uniform(unsigned _location, mat3 _value)
+inline void set_uniform(int _location, mat3 _value)
 {
 	glCheck(glUniformMatrix3fv(_location, 1, GL_FALSE, value_ptr(_value)));
 }
-inline void set_uniform(unsigned _location, mat4 _value)
+inline void set_uniform(int _location, mat4 _value)
 {
 	glCheck(glUniformMatrix4fv(_location, 1, GL_FALSE, value_ptr(_value)));
 }
-inline void set_uniform(unsigned _location, const std::vector<mat4>& _values)
+inline void set_uniform(int _location, const std::vector<mat4>& _values)
 {
 	glCheck(glUniformMatrix4fv(_location, _values.size(), GL_FALSE, value_ptr(_values[0])));
 }
 
-inline void set_uniform(unsigned location, GLuint type, GLsizei num, const void *data)
+inline void set_uniform(int location, GLuint type, GLsizei num, const void *data)
 {
 	switch (type)
 	{

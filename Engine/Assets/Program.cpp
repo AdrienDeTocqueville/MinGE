@@ -152,8 +152,8 @@ void Program::load_uniforms()
 		if (num != 1)
 			real_len = strchr(temp_name, '[') - temp_name;
 
-		std::string name(temp_name, real_len);
-		auto it = builtins_names.find(name);
+		std::string var_name(temp_name, real_len);
+		auto it = builtins_names.find(var_name);
 
 		// If builtin or not
 		if (it != builtins_names.end())
@@ -163,7 +163,7 @@ void Program::load_uniforms()
 			u.size = uniform_type_size.at(u.type);
 			u.num = num;
 
-			uniforms_names.emplace(std::move(name), uniforms.size());
+			uniforms_names.emplace(std::move(var_name), uniforms.size());
 			uniforms.push_back(u);
 
 			// add offset for next iteration
