@@ -39,7 +39,7 @@ public:
 	inline void set(std::string name, T value)
 	{
 		size_t loc = getLocation(name);
-		if (loc != -1)
+		if (loc != (size_t)-1)
 			set(loc, value);
 	}
 
@@ -53,7 +53,7 @@ public:
 	inline void set(std::string name, T *values, uint32_t num)
 	{
 		size_t loc = getLocation(name);
-		if (loc != -1)
+		if (loc != (size_t)-1)
 			set(loc, values, num);
 	}
 

@@ -42,7 +42,7 @@ void Graphic::render(RenderContext *ctx, size_t num_views, View const *views) co
 	const Submesh *submeshes = mesh->getSubmeshes().data();
 
 	std::vector<void*> commands(materials.size());
-	for (int i(0); i < materials.size(); i++)
+	for (size_t i(0); i < materials.size(); i++)
 	{
 		auto *cmd = ctx->create<DrawElements>();
 		commands[i] = cmd;
@@ -59,7 +59,7 @@ void Graphic::render(RenderContext *ctx, size_t num_views, View const *views) co
 		vec4 pos = view.vp * vec4(tr->position, 1.0f);
 		float depth = pos.z / pos.w;
 
-		for (int i(0); i < materials.size(); i++)
+		for (size_t i(0); i < materials.size(); i++)
 		{
 			if (!materials[i]->hasRenderPass(view.pass))
 				continue;
@@ -78,7 +78,7 @@ void Graphic::setMesh(MeshRef _mesh)
 	if (mesh == nullptr)
 		return;
 
-	for (int i(0); i < mesh->getSubmeshes().size(); i++)
+	for (size_t i(0); i < mesh->getSubmeshes().size(); i++)
 		materials.emplace_back(Material::getDefault());
 }
 

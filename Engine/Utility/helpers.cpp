@@ -51,9 +51,13 @@ bool epsilonEqual(const quat& a, const quat& b, float epsilon)
 	return true;
 }
 
+#ifndef NO_SIMD
 #include <immintrin.h>
+#endif // NO_SIMD
+
 void simd_mul(const mat4& a, const mat4& b, mat4& out)
 {
+#ifndef NO_SIMD
 	__m128 r0 = _mm_loadu_ps(&a[0][0]);
 	__m128 r1 = _mm_loadu_ps(&a[1][0]);
 	__m128 r2 = _mm_loadu_ps(&a[2][0]);
@@ -86,4 +90,7 @@ void simd_mul(const mat4& a, const mat4& b, mat4& out)
 	t2 = _mm_mul_ps(_mm_shuffle_ps(l,l,_MM_SHUFFLE(2,2,2,2)),r2);
 	t3 = _mm_mul_ps(_mm_shuffle_ps(l,l,_MM_SHUFFLE(3,3,3,3)),r3);
 	_mm_storeu_ps(&out[3][0], _mm_add_ps(_mm_add_ps(t0, t1), _mm_add_ps(t2, t3)));
+#else
+	out = a * b;
+#endif
 }

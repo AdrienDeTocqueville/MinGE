@@ -27,10 +27,11 @@ struct CommandKey
 	static const uint8_t  DEPTH_SHIFT	= MATERIAL_SHIFT - DEPTH_NUM_BITS;
 	static const uint64_t DEPTH_MASK	= ((uint64_t(1) << DEPTH_NUM_BITS) - 1) << DEPTH_SHIFT;
 
-	static_assert(GraphicEngine::MAX_VIEWS <= (1 << VIEW_NUM_BITS));
-	static_assert(RenderPass::Count <= (1 << PASS_NUM_BITS));
+	static_assert(GraphicEngine::MAX_VIEWS <= (1 << VIEW_NUM_BITS), "Too many MAX_VIEWS");
+	static_assert(RenderPass::Count <= (1 << PASS_NUM_BITS), "Too many pass count");
 
-	static_assert(64 == VIEW_NUM_BITS + PASS_NUM_BITS + CMD_NUM_BITS + MATERIAL_NUM_BITS + DEPTH_NUM_BITS);
+	static_assert(64 == VIEW_NUM_BITS + PASS_NUM_BITS + CMD_NUM_BITS + MATERIAL_NUM_BITS + DEPTH_NUM_BITS,
+				  "Command key is not 64 bits");
 
 	// Encode
 	static uint64_t encode(uint32_t view, RenderPass::Type pass, uint32_t priority = 0)

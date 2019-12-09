@@ -228,27 +228,29 @@ Scene::Scene(const std::string &file)
 	json scene = root["scenes"][root["scene"].get<int>()];
 	name = scene["name"].get<std::string>();
 
+	json BUFFERS = root["buffers"];
+	json MATERIALS = root["materials"];
+	json MESHES = root["meshes"];
+	json NODES = root["nodes"];
+
 	// Decode base64 buffers
-	json jbuffers = root["buffers"];
 	std::vector<uint8_t*> buffers;
-	for (int i(0); i < jbuffers.size(); i++)
+	for (auto &buffer : BUFFERS)
 	{
 		buffers.push_back(decode_base64_uri(
-			jbuffers[i]["byteLength"].get<int>(),
-			jbuffers[i]["uri"].get_ptr<json::string_t*>()->c_str()
+			buffer["byteLength"].get<int>(),
+			buffer["uri"].get_ptr<json::string_t*>()->c_str()
 		));
-		jbuffers[i].erase("uri");
+		buffer.erase("uri");
 	}
 
 	// Import materials
-	json jmaterials = root["materials"];
 	std::vector<MaterialRef> materials_ref;
-	materials.reserve(jmaterials.size());
-	materials_ref.reserve(jmaterials.size());
+	materials.reserve(MATERIALS.size());
+	materials_ref.reserve(MATERIALS.size());
 
-	for (int i(0); i < jmaterials.size(); i++)
+	for (auto &material : MATERIALS)
 	{
-		json material = jmaterials[i];
 		MaterialRef m = import_material(material);
 
 		materials_ref.push_back(m);
@@ -256,14 +258,12 @@ Scene::Scene(const std::string &file)
 	}
 
 	// Import meshes
-	json jmeshes = root["meshes"];
 	std::vector<MeshRef> meshes_ref;
-	meshes.reserve(jmeshes.size());
-	meshes_ref.reserve(jmeshes.size());
+	meshes.reserve(MESHES.size());
+	meshes_ref.reserve(MESHES.size());
 
-	for (int i(0); i < jmeshes.size(); i++)
+	for (auto &mesh : MESHES)
 	{
-		json mesh = jmeshes[i];
 		MeshRef m = import_mesh(mesh, root, buffers);
 
 		meshes_ref.push_back(m);
@@ -271,12 +271,11 @@ Scene::Scene(const std::string &file)
 	}
 
 	// Import nodes
-	json nodes = root["nodes"];
+	std::vector<Entity*> prototypes;
 	prototypes.reserve(nodes.size());
-	for (int i(0); i < nodes.size(); i++)
-	{
-		json node = nodes[i];
 
+	for (auto &node : NODES)
+	{
 		auto *proto = Entity::create(node["name"].get<std::string>(), true,
 			make_vec3(node["translation"], vec3(0.0f)),
 			make_quat(node["rotation"], quat(vec3(0))),
@@ -285,21 +284,18 @@ Scene::Scene(const std::string &file)
 		prototypes.push_back(proto);
 
 		// Read hierarchy
-		json children = node["children"];
-		for (int c(0); c < children.size(); c++)
+		if (node.contains("children"))
 		{
-			auto *child = prototypes[children[c].get<int>()];
-			child->find<Transform>()->setParent(proto->find<Transform>());
+			auto *tr = proto->find<Transform>();
+			for (auto &child : node["children"])
+				prototypes[child.get<int>()]->find<Transform>()->setParent(tr);
 		}
 
 		// Read components
-		json CAMERAS = root["cameras"];
-		json LIGHTS = root["extensions"]["KHR_lights_punctual"]["lights"];
-
 		if (node.contains("mesh"))
 		{
 			int mesh_id = node["mesh"].get<int>();
-			json primitives = jmeshes[mesh_id]["primitives"];
+			json primitives = MESHES[mesh_id]["primitives"];
 
 			MeshRef mesh = meshes_ref[mesh_id];
 			std::vector<MaterialRef> mesh_materials;
@@ -316,6 +312,7 @@ Scene::Scene(const std::string &file)
 		}
 		if (node.contains("camera"))
 		{
+			json CAMERAS = root["cameras"];
 			json cam = CAMERAS[node["camera"].get<int>()];
 			if (cam.contains("persepective"))
 			{
@@ -329,6 +326,7 @@ Scene::Scene(const std::string &file)
 		}
 		if (node.contains("extensions"))
 		{
+			json LIGHTS = root["extensions"]["KHR_lights_punctual"]["lights"];
 			json light = node["extensions"]["KHR_lights_punctual"];
 			if (!light.is_null())
 			{
@@ -340,23 +338,24 @@ Scene::Scene(const std::string &file)
 				if (type_str == "directional") type = Light::Directional;
 				else if (type_str == "point") type = Light::Point;
 				else if (type_str == "spot") type = Light::Spot;
-				else Error::add(USER_ERROR, "Unknow light type");
+				else Error::add(USER_ERROR, "Unknown light type");
 
 				proto->insert<Light>(type, color);
 			}
 		}
 	}
 
+	for (auto &node : scene["nodes"])
+		nodes.push_back(prototypes[node.get<int>()]);
+
+
 	for (int i(0); i < buffers.size(); i++)
-		delete buffers[i];
+		delete[] buffers[i];
 	buffers.clear();
 }
 
 void Scene::instantiate()
 {
-	for (Entity *e : prototypes)
-	{
-		if (!e->find<Transform>()->getParent())
-			Entity::clone(e);
-	}
+	for (Entity *e : nodes)
+		Entity::clone(e);
 }

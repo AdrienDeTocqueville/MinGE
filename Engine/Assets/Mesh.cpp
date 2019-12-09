@@ -92,7 +92,7 @@ void Mesh::loadBuffers()
 		uint8_t* address = (uint8_t*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 		{
 			#define UPLOAD(x) if (x) { \
-				for (int i(0); i < data.vertex_count; i++) \
+				for (size_t i(0); i < data.vertex_count; i++) \
 					memcpy(address + i*stride, x + i, sizeof(*x)); \
 				address += sizeof(*x); }
 
@@ -287,9 +287,9 @@ MeshRef Mesh::createQuad(MeshData::Flags flags, vec2 halfExtent, uvec2 subdiv, v
 	MeshData data(subdiv.x * subdiv.y, (subdiv.x - 1) * (subdiv.y - 1) * 6, flags);
 
 	size_t v(0);
-	for (int i = 0; i < subdiv.y; i++)
+	for (unsigned i = 0; i < subdiv.y; i++)
 	{
-		for (int j = 0; j < subdiv.x; j++)
+		for (unsigned j = 0; j < subdiv.x; j++)
 		{
 			vec2 uv(
 				float(j) / (subdiv.x - 1),
@@ -311,9 +311,9 @@ MeshRef Mesh::createQuad(MeshData::Flags flags, vec2 halfExtent, uvec2 subdiv, v
 	}
 
 	v = 0;
-	for (int i = 0; i < subdiv.y - 1; i++)
+	for (unsigned i = 0; i < subdiv.y - 1; i++)
 	{
-		for (int j = 0; j < subdiv.x - 1; j++)
+		for (unsigned j = 0; j < subdiv.x - 1; j++)
 		{
 			data.indices[v++] = j + 0 + subdiv.x * (i + 0);
 			data.indices[v++] = j + 1 + subdiv.x * (i + 0);
@@ -343,13 +343,13 @@ MeshRef Mesh::createSphere(MeshData::Flags flags, float radius, unsigned slices,
 
 	// Generate vertices
 	size_t v(0);
-	for (int i = 0; i <= stacks; ++i)
+	for (unsigned i = 0; i <= stacks; ++i)
 	{
 		stack_angle = 0.5f * PI - i * stack_step;
 		float xy = cosf(stack_angle);
 		float z = sinf(stack_angle);
 
-		for (int j = 0; j <= slices; ++j)
+		for (unsigned j = 0; j <= slices; ++j)
 		{
 			slice_angle = j * slice_step;
 
@@ -367,12 +367,12 @@ MeshRef Mesh::createSphere(MeshData::Flags flags, float radius, unsigned slices,
 
 	// Generate indices
 	v = 0;
-	for (int i = 0; i < stacks; ++i)
+	for (unsigned i = 0; i < stacks; ++i)
 	{
 		uint16_t k1 = i * (slices + 1);
 		uint16_t k2 = k1 + slices + 1;
 
-		for (int j = 0; j < slices; ++j, ++k1, ++k2)
+		for (unsigned j = 0; j < slices; ++j, ++k1, ++k2)
 		{
 			if (i != 0) {
 				data.indices[v++] = k1;

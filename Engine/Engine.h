@@ -4,7 +4,7 @@
 #include <SFML/System/Clock.hpp>
 
 namespace sf
-{ class RenderWindow; };
+{ class RenderWindow; }
 
 class Engine
 {

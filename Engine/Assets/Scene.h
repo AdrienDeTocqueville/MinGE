@@ -11,7 +11,7 @@ struct Scene
 	void instantiate();
 
 	std::string name;
-	std::vector<class Entity*> prototypes;
+	std::vector<class Entity*> nodes;
 
 	std::vector<std::weak_ptr<class Mesh>> meshes;
 	std::vector<std::weak_ptr<class Material>> materials;

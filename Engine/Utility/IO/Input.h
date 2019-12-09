@@ -7,7 +7,7 @@
 #include "Utility/helpers.h"
 
 namespace sf
-{ class RenderWindow; };
+{ class RenderWindow; }
 
 class Input
 {
