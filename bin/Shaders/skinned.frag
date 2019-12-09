@@ -14,9 +14,9 @@ uniform vec3 lightPosition;
 uniform vec3 lightColor;
 
 // Material
-uniform sampler2D albedoMap;
-uniform sampler2D metallicMap;
-uniform sampler2D roughnessMap;
+uniform vec3 color;
+uniform float metallic;
+uniform float roughness;
 
 const float PI = 3.14159265359;
 
@@ -63,9 +63,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 void main()
 {
-	vec3 albedo     = pow(texture(albedoMap, fs_in.texCoords).rgb, vec3(2.2));
-	float metallic  = 1.0f - texture(metallicMap, fs_in.texCoords).r;
-	float roughness  = texture(roughnessMap, fs_in.texCoords).r;
+	vec3 albedo     = pow(color, vec3(2.2));
 	float ao        = 1.0f;
 
 	vec3 N = normalize(fs_in.normal);

@@ -7,7 +7,7 @@ void test_scene()
 	Input::setCursorMode(Input::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
-	Scene scene("test2.gltf");
+	Scene scene("skinned2.gltf");
 	scene.instantiate();
 
 	// Camera

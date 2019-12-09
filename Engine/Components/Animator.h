@@ -3,6 +3,7 @@
 #include "Components/Component.h"
 #include "Assets/Animation.h"
 
+// TODO: make this a shared asset ?
 struct Skeleton
 {
 	std::unordered_map<std::string, unsigned> bone_index;

@@ -76,7 +76,6 @@ Entity* Entity::clone(Entity* _entity, vec3 _position, vec3 _rotation, vec3 _sca
 
 			c->entity = e;
 			c->tr = e->tr;
-			c->onRegister();
 		}
 	}
 
@@ -84,6 +83,12 @@ Entity* Entity::clone(Entity* _entity, vec3 _position, vec3 _rotation, vec3 _sca
 	{
 		Entity *c = child->entity;
 		Entity::clone(c)->tr->setParent(e->tr);
+	}
+
+	for (auto& componentPair: e->components)
+	{
+		for (Component* component: componentPair.second)
+			component->onRegister();
 	}
 
 	return e;

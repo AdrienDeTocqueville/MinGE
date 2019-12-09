@@ -9,39 +9,27 @@
 #include "Utility/IO/json.hpp"
 using json = nlohmann::json;
 
-/*
-static unsigned argmin_weight(vec4 weights)
+static inline float make_float(const json &n, const char *prop, const float &def)
 {
-	unsigned argmin = 0;
-	float min_val = 1.0f; // Weights should be between 0 and 1
-	for (unsigned k(0); k < 4; k++)
-	{
-		if (weights[k] == 0.0f)
-			return k;
-		if (weights[k] < min_val)
-		{
-			min_val = weights[k];
-			argmin = k;
-		}
-		k++;
-	}
-	return argmin;
-}
-*/
-
-static inline vec3 make_vec3(json &n, const vec3 &def)
-{
-	if (n.is_null()) return def;
-	return vec3(n[0].get<float>(), n[1].get<float>(), n[2].get<float>());
+	if (!n.contains(prop)) return def;
+	return n[prop].get<float>();
 }
 
-static inline quat make_quat(json &n, const quat &def)
+static inline vec3 make_vec3(const json &n, const char *prop, const vec3 &def)
 {
-	if (n.is_null()) return def;
-	return quat(n[0].get<float>(),
-		n[1].get<float>(),
-		n[2].get<float>(),
-		n[3].get<float>());
+	if (!n.contains(prop)) return def;
+	json x = n[prop];
+	return vec3(x[0].get<float>(), x[1].get<float>(), x[2].get<float>());
+}
+
+static inline quat make_quat(const json &n, const char *prop, const quat &def)
+{
+	if (!n.contains(prop)) return def;
+	json x = n[prop];
+	return quat(x[0].get<float>(),
+		x[1].get<float>(),
+		x[2].get<float>(),
+		x[3].get<float>());
 }
 
 inline char encode_base64_char(uint8_t b) {
@@ -106,7 +94,7 @@ static MeshRef import_mesh(const json &mesh, const json &scene, const std::vecto
 	std::vector<Submesh> submeshes; submeshes.reserve(prims.size());
 
 	// 1 - Determine what data is needed and sort by materials
-	bool has_pos = true, has_normal = true, has_uv = true;
+	bool has_pos = true, has_normal = true, has_uv = true, has_bones = true;
 	uint32_t vertex_count = 0, index_count = 0;
 
 	for (unsigned i = 0; i < prims.size(); i++)
@@ -116,11 +104,11 @@ static MeshRef import_mesh(const json &mesh, const json &scene, const std::vecto
 		if (!attribs.contains("POSITION"))   has_pos = false;
 		if (!attribs.contains("NORMAL"))     has_normal = false;
 		if (!attribs.contains("TEXCOORD_0")) has_uv = false;
-		//if (!attribs.contains("WEIGHTS_0"))  has_bones = false;
+		if (!attribs.contains("JOINTS_0"))   has_bones = false;
+		if (!attribs.contains("WEIGHTS_0"))  has_bones = false;
 
 		vertex_count += accessors[attribs["POSITION"].get<int>()]["count"].get<int>();
 		index_count  += accessors[prims[i]["indices"].get<int>()]["count"].get<int>();
-		//bone_count += submesh->mNumBones;
 	}
 
 	// 2 - Allocate necessary space
@@ -128,7 +116,7 @@ static MeshRef import_mesh(const json &mesh, const json &scene, const std::vecto
 	if (has_pos)	flags = (MeshData::Flags)(flags | MeshData::Points);
 	if (has_normal)	flags = (MeshData::Flags)(flags | MeshData::Normals);
 	if (has_uv)	flags = (MeshData::Flags)(flags | MeshData::UVs);
-	//if (bone_count)	flags = (MeshData::Flags)(flags | MeshData::Bones);
+	if (has_bones)	flags = (MeshData::Flags)(flags | MeshData::Bones);
 
 	MeshData data(vertex_count, index_count, flags);
 
@@ -157,6 +145,31 @@ static MeshRef import_mesh(const json &mesh, const json &scene, const std::vecto
 		if (flags & MeshData::Points)	IMPORT(attribs["POSITION"], data.points, vertex_count);
 		if (flags & MeshData::Normals)	IMPORT(attribs["NORMAL"], data.normals, vertex_count);
 		if (flags & MeshData::UVs)	IMPORT(attribs["TEXCOORD_0"], data.uvs, vertex_count);
+		if (flags & MeshData::Bones)
+		{
+			json joints_acc = accessors[attribs["JOINTS_0"].get<int>()];
+			json weights_acc = accessors[attribs["WEIGHTS_0"].get<int>()];
+
+			json joints_view = scene["bufferViews"][joints_acc["bufferView"].get<int>()];
+			json weights_view = scene["bufferViews"][weights_acc["bufferView"].get<int>()];
+
+			int joints_offset = joints_view["byteOffset"].get<int>();
+			int weights_offset = weights_view["byteOffset"].get<int>();
+
+			uint8_t* joints_buf = buffers[joints_view["buffer"].get<int>()] + joints_offset;
+			uint8_t* weights_buf = buffers[weights_view["buffer"].get<int>()] + weights_offset;
+
+			count = joints_acc["count"].get<int>(); // == weights_acc["count"]
+
+			for (int j(0); j < count; j++)
+			{
+				uint16_t *joints = (uint16_t*)joints_buf + j * 4;
+				float *weights = (float*)weights_buf + j * 4;
+
+				data.bones[vertex_count + j].bones = uvec4(joints[0], joints[1], joints[2], joints[3]);
+				data.bones[vertex_count + j].weights = vec4(weights[0], weights[1], weights[2], weights[3]);
+			}
+		}
 		vertex_count += count;
 
 		// Read indices
@@ -174,14 +187,14 @@ static MeshRef import_mesh(const json &mesh, const json &scene, const std::vecto
 
 static MaterialRef import_material(const json &material)
 {
-	auto m = Material::create("object");
+	auto m = Material::create("skinned");
 
 	// Load PBR values
 	auto pbr = material["pbrMetallicRoughness"];
 
-	vec3 color = make_vec3(pbr["baseColorFactor"], vec3(0.8f));
-	float metallic = pbr["metallicFactor"];
-	float roughness = pbr["roughnessFactor"];
+	vec3 color = make_vec3(pbr, "baseColorFactor", vec3(0.8f));
+	float metallic = make_float(pbr, "metallicFactor", 0.0f);
+	float roughness = make_float(pbr, "roughnessFactor", 0.5f);
 
 	m->set("color", color);
 	m->set("metallic", metallic);
@@ -191,6 +204,28 @@ static MaterialRef import_material(const json &material)
 	// ...
 
 	return m;
+}
+
+static Skeleton import_skin(const json &skin, const json &scene, const std::vector<uint8_t*> &buffers)
+{
+	Skeleton skel;
+
+	int view_id = skin["inverseBindMatrices"].get<int>();
+	json view = scene["bufferViews"][view_id];
+
+	int offset = view["byteOffset"].get<int>();
+	uint8_t* buf = buffers[view["buffer"].get<int>()] + offset;
+
+	json joints = skin["joints"];
+	skel.offsets.resize(joints.size());
+
+	for (int i(0); i < joints.size(); i++)
+	{
+		int src = joints[i].get<int>();
+		memcpy(skel.offsets.data() + i, (mat4*)buf + src, sizeof(mat4));
+	}
+
+	return skel;
 }
 
 /*
@@ -231,6 +266,7 @@ Scene::Scene(const std::string &file)
 	json BUFFERS = root["buffers"];
 	json MATERIALS = root["materials"];
 	json MESHES = root["meshes"];
+	json SKINS = root["skins"];
 	json NODES = root["nodes"];
 
 	// Decode base64 buffers
@@ -257,6 +293,13 @@ Scene::Scene(const std::string &file)
 		materials.push_back(m);
 	}
 
+	// Import skeletons
+	std::vector<Skeleton> skeletons;
+	skeletons.reserve(MATERIALS.size());
+
+	for (auto &skin : SKINS)
+		skeletons.push_back(import_skin(skin, root, buffers));
+
 	// Import meshes
 	std::vector<MeshRef> meshes_ref;
 	meshes.reserve(MESHES.size());
@@ -277,9 +320,9 @@ Scene::Scene(const std::string &file)
 	for (auto &node : NODES)
 	{
 		auto *proto = Entity::create(node["name"].get<std::string>(), true,
-			make_vec3(node["translation"], vec3(0.0f)),
-			make_quat(node["rotation"], quat(vec3(0))),
-			make_vec3(node["scale"], vec3(1.0f))
+			make_vec3(node, "translation", vec3(0.0f)),
+			make_quat(node, "rotation", quat(vec3(0))),
+			make_vec3(node, "scale", vec3(1.0f))
 		);
 		prototypes.push_back(proto);
 
@@ -310,6 +353,11 @@ Scene::Scene(const std::string &file)
 
 			proto->insert<Graphic>(mesh, mesh_materials);
 		}
+		if (node.contains("skin"))
+		{
+			int skin_id = node["skin"].get<int>();
+			proto->insert<Animator>(skeletons[skin_id]);
+		}
 		if (node.contains("camera"))
 		{
 			json CAMERAS = root["cameras"];
@@ -326,13 +374,13 @@ Scene::Scene(const std::string &file)
 		}
 		if (node.contains("extensions"))
 		{
-			json LIGHTS = root["extensions"]["KHR_lights_punctual"]["lights"];
 			json light = node["extensions"]["KHR_lights_punctual"];
 			if (!light.is_null())
 			{
+				json LIGHTS = root["extensions"]["KHR_lights_punctual"]["lights"];
 				light = LIGHTS[light["light"].get<int>()];
 				std::string type_str = light["type"].get<std::string>();
-				vec3 color = make_vec3(light["color"], vec3(0.6f));
+				vec3 color = make_vec3(light, "color", vec3(0.6f));
 
 				Light::Type type = Light::Point;
 				if (type_str == "directional") type = Light::Directional;

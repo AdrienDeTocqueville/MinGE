@@ -1,7 +1,6 @@
 #version 430 core
 
-in VS_FS
-{
+in VS_FS {
 	vec3 fragPos;
 	vec3 normal;
 	vec2 texCoords;
