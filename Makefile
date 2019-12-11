@@ -20,9 +20,9 @@ SRC += $(shell find Engine -name '*.cpp')
 INC += $(shell find Engine -name '*.h')
 
 TARGETS		:= debug dev release
-CFLAGS_debug	:= $(CFLAGS) -DDEBUG -g3 -ggdb
+CFLAGS_debug	:= $(CFLAGS) -DDRAWAABB -DDEBUG -g3 -ggdb
 CFLAGS_dev	:= $(CFLAGS) -DPROFILE -DDEBUG -O2 -g -ggdb
-CFLAGS_release	:= $(CFLAGS) -O3
+CFLAGS_release	:= $(CFLAGS) -DNDEBUG -O3
 
 dev: #default target
 all: $(TARGETS)

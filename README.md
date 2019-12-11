@@ -14,8 +14,10 @@ General architecture is heavily inspired from Unity.
 #### Physic Engine
  * [bullet3](https://github.com/bulletphysics/bullet3)
 
-#### JSON parser
- * [json](https://github.com/nlohmann/json)
+#### Other
+ * [JSON parser](https://github.com/nlohmann/json)
+ * [Lock-free job system](https://blog.molecular-matters.com/tag/job-system/)
+ * [microprofile](https://github.com/zeux/microprofile)
 
 
 ## Dependencies

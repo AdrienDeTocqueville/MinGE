@@ -31,7 +31,7 @@ struct CommandKey
 	static_assert(RenderPass::Count <= (1 << PASS_NUM_BITS), "Too many pass count");
 
 	static_assert(64 == VIEW_NUM_BITS + PASS_NUM_BITS + CMD_NUM_BITS + MATERIAL_NUM_BITS + DEPTH_NUM_BITS,
-				  "Command key is not 64 bits");
+		"Command key is not 64 bits");
 
 	// Encode
 	static uint64_t encode(uint32_t view, RenderPass::Type pass, uint32_t priority = 0)

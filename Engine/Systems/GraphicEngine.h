@@ -54,7 +54,6 @@ public:
 	//vec3 getViewPosition() const;
 
 	static const size_t MAX_VIEWS = 8;
-	static const size_t NUM_THREADS = 4;
 
 private:
 	/// Methods (private)
@@ -73,7 +72,7 @@ private:
 	std::vector<Light*> lights;
 
 	View views[MAX_VIEWS];
-	RenderContext contexts[NUM_THREADS];
+	RenderContext *contexts;
 
 	bool wireframe = false;
 

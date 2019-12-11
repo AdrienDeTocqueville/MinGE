@@ -228,7 +228,6 @@ void PhysicEngine::detectCollision(Collider* a, Collider* b)
 		return;
 
 
-
 	ContactConstraint* contact = new ContactConstraint(a, b);
 
 	if (!contact->positionConstraint())	// not colliding

@@ -23,9 +23,6 @@ struct AABB
 	vec3 default_color = vec3(0.3f, 0.78f, 0.84f);
 	vec3 color;
 
-	static unsigned vbo;
-	static unsigned vao;
-
 	static std::vector<vec3> vertices;
 	static std::vector<vec3> colors;
 

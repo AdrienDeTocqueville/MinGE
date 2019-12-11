@@ -18,7 +18,7 @@ const auto video_mode = desktop;
 const auto style = sf::Style::Fullscreen;
 #endif
 
-int scene = 5;
+int scene = 2;
 std::vector<void (*)()> setups = {
 	test_physic,	// 0
 	test_bvh,	// 1
@@ -49,62 +49,55 @@ int main()
 
 
 	/// Create window
-		sf::RenderWindow window(video_mode, "MinGE test suite", style, sf::ContextSettings(24, 0, 0, 4, 3));
-		window.setPosition(sf::Vector2i(desktop.width - video_mode.width, desktop.height - video_mode.height) / 2);
+	sf::RenderWindow window(video_mode, "MinGE test suite", style, sf::ContextSettings(24, 0, 0, 4, 3));
+	window.setPosition(sf::Vector2i(desktop.width - video_mode.width, desktop.height - video_mode.height) / 2);
 
 
 	/// Create engine
-		Engine* engine = new Engine(&window, 60);
-		std::cout << "Seed: " << Random::getSeed() << std::endl;
+	Engine* engine = new Engine(&window, 60);
+	std::cout << "Seed: " << Random::getSeed() << std::endl;
 
 	/// Init scene
-		load_scene(engine);
+	load_scene(engine);
 
 	/// Main loop
-		while ( Input::isOpen() )
+	while ( Input::isOpen() )
+	{
+		/// Handle events
+		#ifdef DRAWAABB
+		if (Input::getKeyReleased(sf::Keyboard::F1))
+			AABB::drawAABBs = !AABB::drawAABBs;
+		#endif
+
+		if (Input::getKeyReleased(sf::Keyboard::F2))
+			GraphicEngine::get()->toggleWireframe();
+
+		if (Input::getKeyReleased(sf::Keyboard::F3))
+			PhysicEngine::get()->setGravity();
+
+
+		if (Input::getKeyReleased(sf::Keyboard::Tab))
 		{
-			/// Handle events
-				#ifdef DRAWAABB
-				if (Input::getKeyReleased(sf::Keyboard::F1))
-					AABB::drawAABBs = !AABB::drawAABBs;
-				#endif
-
-				if (Input::getKeyReleased(sf::Keyboard::F2))
-					GraphicEngine::get()->toggleWireframe();
-
-				if (Input::getKeyReleased(sf::Keyboard::F3))
-					PhysicEngine::get()->setGravity();
-
-
-
-				if (Input::getKeyReleased(sf::Keyboard::Escape))
-					engine->setPause(true), Input::setCursorMode(Input::Free);
-
-				if (Input::getMousePressed(sf::Mouse::Left) && Input::hasFocus())
-					engine->setPause(false), Input::setCursorMode(Input::Capture);
-
-				if (Input::getKeyReleased(sf::Keyboard::Tab))
-				{
-					engine->clear();
-					if (Input::getKeyDown(sf::Keyboard::LShift))
-						scene--;
-					else
-						scene++;
-					load_scene(engine);
-				}
-
-			/// Render
-				if (engine->update())
-					window.display();
+			engine->clear();
+			if (Input::getKeyDown(sf::Keyboard::LShift))
+				scene--;
+			else
+				scene++;
+			load_scene(engine);
 		}
 
-		std::cout << '\n' << '\n' << std::endl;
+		/// Render
+		if (engine->update())
+			window.display();
+	}
+
+	std::cout << '\n' << '\n' << std::endl;
 
 	/// Delete resources
-		delete engine;
+	delete engine;
 
 	#if defined(DEBUG) && defined(_WIN32)
-		sf::sleep(sf::seconds(1.0f));
+	sf::sleep(sf::seconds(1.0f));
 	#endif // DEBUG
 
 	return 0;

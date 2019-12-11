@@ -4,8 +4,6 @@
 
 struct RenderContext
 {
-	friend class GraphicEngine;
-
 	template<typename Command>
 	Command *create();
 
@@ -15,7 +13,6 @@ struct RenderContext
 	inline size_t cmd_count() const
 	{ return commands.count(); }
 
-private:
 	struct CommandPair
 	{
 		uint64_t key;

@@ -11,6 +11,7 @@
 #include "Utility/Time.h"
 #include "Utility/Debug.h"
 #include "Utility/IO/Input.h"
+#include "Utility/JobSystem.h"
 
 //#define MICROPROFILE_MAX_FRAME_HISTORY (2<<10)
 #define MICROPROFILE_IMPL
@@ -40,6 +41,7 @@ Engine::Engine(sf::RenderWindow* _window, unsigned _FPS):
 #endif
 
 	Time::init();
+	JobSystem::init();
 	Input::init(_window);
 
 	GraphicEngine::create();
@@ -56,6 +58,7 @@ Engine::~Engine()
 	ScriptEngine::destroy();
 
 	Input::destroy();
+	JobSystem::destroy();
 
 	instance = nullptr;
 

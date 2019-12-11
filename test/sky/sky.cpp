@@ -4,9 +4,6 @@
 
 void test_sky()
 {
-	Input::setCursorMode(Input::Capture);
-	PhysicEngine::get()->setGravity(vec3(0.0f));
-
 	std::string name = Random::element({"Iron", "Greasy", "Grimy"});
 	MaterialRef m = Material::getDefault();
 	m->set("albedoMap", Texture::get(name + "/albedo.png"));

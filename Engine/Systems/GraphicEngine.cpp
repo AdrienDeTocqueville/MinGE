@@ -1,25 +1,14 @@
 #include "Systems/GraphicEngine.h"
 
-#include "Renderer/RenderContext.inl"
-#include "Renderer/CommandKey.h"
-#include "Renderer/Commands.h"
 #include "Renderer/UBO.h"
-
-#include "Utility/Debug.h"
 #include "Assets/Program.h"
-#include "Profiler/profiler.h"
+#include "Utility/JobSystem.h"
 
 #include "Components/Animator.h"
 #include "Components/Graphic.h"
 #include "Components/Camera.h"
 #include "Components/Skybox.h"
 #include "Components/Light.h"
-
-#include "Entity.h"
-
-#include <thread>
-#include <cstring>
-#include <algorithm>
 
 GraphicEngine* GraphicEngine::instance = nullptr;
 
@@ -51,12 +40,16 @@ GraphicEngine::GraphicEngine()
 	glPointSize(7);
 	glLineWidth(3);
 
+	contexts = new RenderContext[JobSystem::worker_count()];
+
 	UBO::setupPool();
 	Program::init();
 }
 
 GraphicEngine::~GraphicEngine()
-{ }
+{
+	delete[] contexts;
+}
 
 void GraphicEngine::clear()
 {
@@ -169,101 +162,6 @@ void GraphicEngine::toggleWireframe()
 	wireframe = !wireframe;
 
 	glPolygonMode(GL_FRONT_AND_BACK, wireframe? GL_LINE: GL_FILL);
-}
-
-void GraphicEngine::render()
-{
-	MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "render");
-
-	// Animate skeletal meshes
-	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "animate");
-	for (Animator* animator: animators)
-		animator->animate();
-	}
-
-
-	//glEnable(GL_SCISSOR_TEST);
-
-	// TODO : find a solution for that
-	{
-		Light *source = GraphicEngine::get()->getLight();
-		Program::setBuiltin("lightPosition", source->getPosition());
-		Program::setBuiltin("lightColor", source->getColor());
-	}
-
-	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "cameras");
-	for (size_t i(0); i < cameras.size(); i++)
-	{
-		cameras[i]->update(views + i);
-
-		auto *cmd = contexts[0].create<SetupView>(); cmd->view = views + i;
-		contexts[0].add(CommandKey::encode(i, views[i].pass, 0), cmd);
-
-		if (Skybox* sky = cameras[i]->find<Skybox>())
-		{
-			contexts[0].add(CommandKey::encode(i, RenderPass::Skybox), contexts[0].create<SetupSkybox>());
-			sky->render(contexts + 0, i);
-		}
-	}
-	}
-
-	// Create commands
-	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "create commands");
-	for (Graphic* graphic: graphics)
-		graphic->render(contexts + 0, cameras.size(), views);
-	}
-
-	// Merge
-	RenderContext::CommandPair *pairs;
-	size_t cmd_count = 0;
-
-	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "merge contexts");
-	for (int i(0); i < NUM_THREADS; i++)
-		cmd_count += contexts[i].cmd_count();
-
-	pairs = new RenderContext::CommandPair[cmd_count];
-	auto *dest = (uint8_t*)pairs;
-	for (int i(0); i < NUM_THREADS; i++)
-	{
-		const auto &pool = contexts[i].commands;
-		for (int b(0); b < pool.block; b++)
-		{
-			memcpy(dest, pool.blocks[b], pool.block_bytes);
-			dest += pool.block_bytes;
-		}
-		memcpy(dest, pool.blocks[pool.block], pool.index);
-		dest += pool.index;
-	}
-	}
-	
-	// Sort
-	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "sort commands");
-	std::sort(pairs, pairs + cmd_count);
-	}
-
-	// Submit to backend
-	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "submit commands");
-	auto *count = pairs + cmd_count;
-	for (auto *pair = pairs; pair < count; pair++)
-		CommandPacket::submit(pair->key, pair->packet);
-	}
-
-	delete pairs;
-	for (int i(0); i < NUM_THREADS; i++)
-		contexts[i].clear();
-
-#ifdef DRAWAABB
-	for(Graphic* g: graphics)
-		g->getAABB().prepare();
-
-	AABB::draw();
-#endif
-
-#ifdef DEBUG
-	Debug::update();
-#endif
-
-	//glDisable(GL_SCISSOR_TEST);
 }
 
 /// Getters

@@ -12,6 +12,8 @@ class CameraScript : public Script
 
 		void start() override
 		{
+			Input::setCursorMode(Input::Free);
+
 			if (!target)
 				lookAt(offset);
 		}
@@ -19,8 +21,16 @@ class CameraScript : public Script
 		/// Methods (public)
 		void update() override
 		{
-			angles += radians(Input::getMouseDelta() * sensivity);
-			angles.y = clamp(angles.y, clampAngleY.x, clampAngleY.y);
+			if (Input::getMousePressed(sf::Mouse::Left))
+				Input::setCursorMode(Input::Capture);
+			else if (Input::getMouseReleased(sf::Mouse::Left))
+				Input::setCursorMode(Input::Free);
+
+			if (Input::getCursorMode() == Input::Capture)
+			{
+				angles += radians(Input::getMouseDelta() * sensivity);
+				angles.y = clamp(angles.y, clampAngleY.x, clampAngleY.y);
+			}
 
 			distance = max(0.01f, distance + (target ? -1 : 1) * 0.2f*Input::getMouseWheelDelta());
 
@@ -41,10 +51,6 @@ class CameraScript : public Script
 
 		void lateUpdate() override
 		{
-			if (Input::getCursorMode() != Input::Capture)
-				return;
-
-
 			if (target == nullptr) /// FPS
 			{
 				vec3 dir = getMovement(tr->vectorToWorld(vec3(1, 0, 0)));
