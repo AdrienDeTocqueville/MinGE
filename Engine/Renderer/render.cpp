@@ -52,7 +52,7 @@ void merge_cmd(const void *_data)
 	auto *pairs = data->pairs;
 
 	const auto &pool = data->ctx->commands;
-	for (int b(0); b < pool.block; b++)
+	for (size_t b(0); b < pool.block; b++)
 	{
 		memcpy(pairs, pool.blocks[b], pool.block_bytes);
 		pairs += pool.block_bytes;
@@ -120,13 +120,13 @@ void GraphicEngine::render()
 	size_t cmd_count = 0;
 
 	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "merge contexts");
-	for (int i(0); i < worker_count; i++)
+	for (unsigned i(0); i < worker_count; i++)
 		cmd_count += contexts[i].cmd_count();
 	pairs = new RenderContext::CommandPair[cmd_count];
 
 	cmd_count = 0;
 	std::atomic<int> counter(0);
-	for (int i(0); i < worker_count; i++)
+	for (unsigned i(0); i < worker_count; i++)
 	{
 		merge_cmd_data data = {pairs + cmd_count, contexts + i};
 		JobSystem::run(merge_cmd, &data, sizeof(data), &counter);

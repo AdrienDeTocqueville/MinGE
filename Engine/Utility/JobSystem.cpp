@@ -9,7 +9,6 @@
 #include <pthread.h>
 #elif _WIN32
 #include <Windows.h>
-#include <intrin.h>
 #else
 #error Unsupported OS
 #endif
@@ -42,14 +41,16 @@ Job* allocate_job()
 #define ATOMIC_EXCHANGE  __sync_lock_test_and_set
 #define COMPARE_EXCHANGE __sync_bool_compare_and_swap
 
+#define THREAD_HANDLE std::thread::native_handle_type
 #define MAIN_THREAD pthread_self()
 
 #elif _WIN32
-#define COMPILER_BARRIER() _ReadWriteBarrier()
+#define COMPILER_BARRIER() std::atomic_thread_fence(std::memory_order_release);
 
-#define ATOMIC_EXCHANGE _InterlockedExchange
-#define COMPARE_EXCHANGE(dest, cmp, val) (_InterlockedCompareExchange(dest, val, cmp) == cmp)
+#define ATOMIC_EXCHANGE InterlockedExchange
+#define COMPARE_EXCHANGE(dest, cmp, val) (InterlockedCompareExchange(dest, val, cmp) == cmp)
 
+#define THREAD_HANDLE HANDLE
 #define MAIN_THREAD GetCurrentProcess()
 
 #endif
@@ -69,7 +70,7 @@ struct Worker
 			return j;
 
 		// Pick a random worker to steal from
-		int steal_worker = Random::next<int>(0, num_worker - 1);
+		unsigned steal_worker = Random::next<int>(0, num_worker - 1);
 		steal_worker += (steal_worker >= this_worker);
 
 		if (Job *j = workers[steal_worker].steal())
@@ -175,7 +176,7 @@ void worker_main(const int i)
 	}
 }
 
-void set_cpu_affinity(const std::thread::native_handle_type handle, const int cpu)
+void set_cpu_affinity(const THREAD_HANDLE handle, const int cpu)
 {
 #ifdef __linux__
 	cpu_set_t cpuset;
@@ -207,7 +208,7 @@ void init()
 	for (unsigned i(1); i < num_worker; i++)
 	{
 		workers[i].thread = std::thread(worker_main, i);
-		set_cpu_affinity(workers[i].thread.native_handle(), i);
+		set_cpu_affinity((THREAD_HANDLE)workers[i].thread.native_handle(), i);
 	}
 }
 

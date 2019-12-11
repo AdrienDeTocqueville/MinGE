@@ -65,7 +65,7 @@ void Animator::animate()
 	for (auto &motion : blender.motions)
 		motion.update();
 
-	for (int i = 0; i < skeleton.offsets.size(); i++)
+	for (size_t i = 0; i < skeleton.offsets.size(); i++)
 	{
 		bones[i]->position = vec3(0.0f);
 		bones[i]->rotation = quat(0,0,0,0);
@@ -114,7 +114,7 @@ void Animator::setMotionBlender(MotionBlender &&_blender)
 		m.time = 0.0f;
 		m.pos.resize(skeleton.offsets.size());
 		m.rot.resize(skeleton.offsets.size());
-		for (int i = 0; i < skeleton.offsets.size(); i++)
+		for (size_t i = 0; i < skeleton.offsets.size(); i++)
 		{
 			m.pos[i] = bones[i]->position;
 			m.rot[i] = bones[i]->rotation;
@@ -141,7 +141,7 @@ void Animator::onRegister()
 void Animator::upload()
 {
 	tr->toMatrix(); // Updates all hierarchy
-	for (int i=0; i < skeleton.offsets.size(); i++)
+	for (size_t i(0); i < skeleton.offsets.size(); i++)
 	{
 		simd_mul(bones[i]->getToWorld(), skeleton.offsets[i], matrices[i]);
 		//simd_mul(bones[0]->getToLocal(), matrices[i], matrices[i]);

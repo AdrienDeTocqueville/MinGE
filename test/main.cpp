@@ -32,7 +32,7 @@ std::vector<std::string> names = {"physic", "bvh", "materials", "animations", "s
 void load_scene(Engine *engine)
 {
 	if (scene < 0) scene = setups.size()-1;
-	if (scene >= setups.size()) scene = 0;
+	if (scene >= (int)setups.size()) scene = 0;
 
 	auto sun = Entity::create("Light", false, vec3(0))
 		->insert<Light>(Light::Directional);

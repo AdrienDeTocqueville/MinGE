@@ -219,7 +219,7 @@ static Skeleton import_skin(const json &skin, const json &scene, const std::vect
 	json joints = skin["joints"];
 	skel.offsets.resize(joints.size());
 
-	for (int i(0); i < joints.size(); i++)
+	for (size_t i(0); i < joints.size(); i++)
 	{
 		int src = joints[i].get<int>();
 		memcpy(skel.offsets.data() + i, (mat4*)buf + src, sizeof(mat4));
@@ -343,7 +343,7 @@ Scene::Scene(const std::string &file)
 			MeshRef mesh = meshes_ref[mesh_id];
 			std::vector<MaterialRef> mesh_materials;
 
-			for (int j(0); j < primitives.size(); j++)
+			for (size_t j(0); j < primitives.size(); j++)
 			{
 				if (primitives[j].contains("material"))
 					mesh_materials.push_back(materials_ref[primitives[j]["material"].get<int>()]);
@@ -397,7 +397,7 @@ Scene::Scene(const std::string &file)
 		nodes.push_back(prototypes[node.get<int>()]);
 
 
-	for (int i(0); i < buffers.size(); i++)
+	for (size_t i(0); i < buffers.size(); i++)
 		delete[] buffers[i];
 	buffers.clear();
 }
