@@ -403,7 +403,7 @@ Manifold* detect_SphereSphere(Collider* _a, Collider* _b)
 Manifold* detect_default(Collider* _a, Collider* _b)
 {
 	Simplex simplex;
-	if (GJK(_a, _b, simplex))
+	if (!GJK(_a, _b, simplex))
 		return nullptr;
 
 	return EPA(_a, _b, simplex);

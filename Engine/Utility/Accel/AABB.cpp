@@ -1,10 +1,5 @@
 #include "Utility/Accel/AABB.h"
 
-#ifdef DRAWAABB
-	#include "Assets/Program.h"
-	#include "Systems/GraphicEngine.h"
-#endif
-
 bool AABB::collide(AABB* a, AABB* b)
 {
 	/*
@@ -55,11 +50,10 @@ bool AABB::operator==(const AABB& box)
 }
 
 #ifdef DRAWAABB
+#include "Systems/GraphicEngine.h"
+#include "Assets/Program.h"
 
 bool AABB::drawAABBs = true;
-
-unsigned AABB::vbo;
-unsigned AABB::vao;
 
 std::vector<vec3> AABB::vertices;
 std::vector<vec3> AABB::colors;
@@ -108,10 +102,11 @@ void AABB::draw()
 	if (!drawAABBs)
 		return;
 
-	static Program* p = Program::get("debug.vert", "debug.frag");
+	static MaterialRef material = Material::create("debug");
 
-	glGenBuffers(1, &vbo);
-	glGenVertexArrays(1, &vao);
+	static unsigned vao = 0, vbo = 0;
+	if (vao == 0) vao = GL::GenVertexArray();
+	if (vbo == 0) vbo = GL::GenBuffer();
 
 	unsigned offset[2];
 	offset[0] = vertices.size() *sizeof(vec3);
@@ -135,11 +130,8 @@ void AABB::draw()
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char*)nullptr + (offset[0])));
 
 
-	GraphicEngine::get()->setMatrix(GE_MODEL, mat4(1.0f));
-	GraphicEngine::get()->computeMVP();
-
-	p->use();
-	p->send(0, GraphicEngine::get()->getMatrix(GE_MVP));
+	Program::setBuiltin("MATRIX_M", mat4(1.0f));
+	material->bind(RenderPass::Forward);
 
 	glPushAttrib(GL_POLYGON_BIT);
 
@@ -148,9 +140,6 @@ void AABB::draw()
 		glDrawArrays(GL_QUADS, 0, vertices.size());
 
 	glPopAttrib();
-
-	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);
 
 	AABB::vertices.clear();
 	AABB::colors.clear();

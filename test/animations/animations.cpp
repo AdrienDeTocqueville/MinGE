@@ -62,11 +62,6 @@ class Printer : public Script
 
 void test_animations()
 {
-	Input::setCursorMode(Input::Capture);
-	PhysicEngine::get()->setGravity(vec3(0.0f));
-
-
-
 	//Entity *root = Scene::import("Knight/knight.dae");
 	//Entity *root = Scene::import("Bob/bob_lamp_update.md5mesh");
 
