@@ -21,29 +21,23 @@
 
 struct create_cmd_data
 {
-	RenderContext *ctx;
-	Graphic **first, **last;
+	RenderContext *contexts;
 	const View *views;
 	size_t view_count;
 };
 
 void create_cmd(const void *_data)
 {
-	auto *data = static_cast<const create_cmd_data*>(_data);
+	auto *data = static_cast<const JobSystem::ParallelFor<Graphic*, create_cmd_data>*>(_data);
 
-	Graphic **it = data->first;
-	Graphic **last = data->last;
-	RenderContext *ctx = data->ctx;
-	const View *views = data->views;
-	size_t view_count = data->view_count;
+	RenderContext *ctx = data->user_data.contexts + JobSystem::worker_id();
+	const View *views = data->user_data.views;
+	size_t view_count = data->user_data.view_count;
 
+	const Graphic **it = (const Graphic**)data->start;
+	const Graphic **last = (const Graphic**)data->end;
 	while (it != last)
 		(*it++)->render(ctx, view_count, views);
-}
-
-inline unsigned div_ceil(unsigned a, unsigned b)
-{
-	return (a + b - 1) / b;	
 }
 
 void GraphicEngine::render()
@@ -85,26 +79,18 @@ void GraphicEngine::render()
 	unsigned worker_count = JobSystem::worker_count();
 
 	// Create commands
-	std::atomic<int> counter(0);
-
 	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "create commands");
-	unsigned i, graphic_count = graphics.size();
-	unsigned load = std::max(32u, div_ceil(graphic_count, worker_count));
-	create_cmd_data datas[worker_count];
 
-	for (i = 0; i < worker_count; i++)
-	{
-		unsigned last = min((i + 1) * load, graphic_count);
-		datas[i].ctx = contexts + i;
-		datas[i].first = graphics.data() + i * load;
-		datas[i].last = graphics.data() + last;
-		datas[i].views = views;
-		datas[i].view_count = cameras.size();
-		JobSystem::run(create_cmd, datas + i, &counter);
-		if (last == graphic_count)
-			break;
-	}
-	worker_count = i + 1;
+	JobSystem::ParallelFor<Graphic*, create_cmd_data> data{
+		graphics.data(), (unsigned)graphics.size(),
+		contexts, views, cameras.size()
+	};
+
+	std::atomic<int> counter(0);
+	worker_count = JobSystem::parallel_for(
+		create_cmd, &data, &counter
+	);
+
 	JobSystem::wait(&counter, worker_count);
 	}
 
@@ -144,7 +130,7 @@ void GraphicEngine::render()
 		CommandPacket::submit(pair->key, pair->packet);
 	}
 
-	delete pairs;
+	delete[] pairs;
 
 #ifdef DRAWAABB
 	for(Graphic* g: graphics)

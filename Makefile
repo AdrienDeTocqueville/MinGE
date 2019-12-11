@@ -23,7 +23,7 @@ INC += $(shell find Engine -name '*.h')
 TARGETS		:= debug dev release
 CFLAGS_debug	:= -DDRAWAABB -DDEBUG -g3 -ggdb
 CFLAGS_dev	:= -DPROFILE -DDEBUG -O2 -g -ggdb
-CFLAGS_release	:= -O3
+CFLAGS_release	:= -DNDEBUG -O3
 
 dev: #default target
 all: $(TARGETS)

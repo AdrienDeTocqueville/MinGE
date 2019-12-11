@@ -1,7 +1,8 @@
 #include "JobSystem.h"
 #include "Utility/Random.h"
 
-#include <vector>
+#include <cassert>
+#include <cstring>
 #include <thread>
 
 #ifdef __linux__
@@ -20,9 +21,9 @@ namespace JobSystem
 bool work = true;
 
 // Workers
-unsigned num_cores;
+unsigned num_worker;
 struct Worker *workers = nullptr;
-thread_local unsigned worker_id;
+thread_local unsigned this_worker;
 
 // Job pools
 const unsigned JOB_POOL_SIZE = 512;
@@ -68,8 +69,8 @@ struct Worker
 			return j;
 
 		// Pick a random worker to steal from
-		int steal_worker = Random::next<int>(0, num_cores - 1);
-		steal_worker += (steal_worker >= worker_id);
+		int steal_worker = Random::next<int>(0, num_worker - 1);
+		steal_worker += (steal_worker >= this_worker);
 
 		if (Job *j = workers[steal_worker].steal())
 			return j;
@@ -162,7 +163,7 @@ void Job::run()
 
 void worker_main(const int i)
 {
-	worker_id = i; // TLS
+	this_worker = i; // TLS
 
 	while (true)
 	{
@@ -194,21 +195,19 @@ void init()
 	if (workers)
 		return;
 
-	num_cores = std::thread::hardware_concurrency();
-	workers = new Worker[num_cores];
+	num_worker = std::thread::hardware_concurrency();
+	workers = new Worker[num_worker];
 
 	work = true;
-	for (unsigned i(0); i < num_cores; i++)
-	{
+	for (unsigned i(0); i < num_worker; i++)
 		workers[i].bottom = workers[i].top = 0;
 
-		if (i == 0) // Main thread
-			set_cpu_affinity(MAIN_THREAD, i);
-		else
-		{
-			workers[i].thread = std::thread(worker_main, i);
-			set_cpu_affinity(workers[i].thread.native_handle(), i);
-		}
+	// Launch threads
+	set_cpu_affinity(MAIN_THREAD, 0);
+	for (unsigned i(1); i < num_worker; i++)
+	{
+		workers[i].thread = std::thread(worker_main, i);
+		set_cpu_affinity(workers[i].thread.native_handle(), i);
 	}
 }
 
@@ -216,26 +215,28 @@ void destroy()
 {
 	work = false;
 
-	for (unsigned i(1); i < num_cores; i++)
+	for (unsigned i(1); i < num_worker; i++)
 		workers[i].thread.join();
 	delete[] workers;
 }
 
-void run(Work func, const void *data, std::atomic<int> *counter)
+void run(Work func, const void *data, unsigned n, std::atomic<int> *counter)
 {
+	assert(n <= sizeof(Job::data));
+
 	Job* job = allocate_job();
 	job->function = func;
-	job->data = data;
 	job->counter = counter;
+	memcpy(job->data, data, n);
 
-	workers[worker_id].push(job);
+	workers[this_worker].push(job);
 }
 
 void wait(const std::atomic<int> *counter, const int value)
 {
 	while (counter->load(std::memory_order_relaxed) != value)
 	{
-		if (Job* job = workers[worker_id].get_job())
+		if (Job* job = workers[this_worker].get_job())
 			job->run();
 
 		else std::this_thread::yield();
@@ -244,7 +245,12 @@ void wait(const std::atomic<int> *counter, const int value)
 
 unsigned worker_count()
 {
-	return num_cores;
+	return num_worker;
+}
+
+unsigned worker_id()
+{
+	return this_worker;
 }
 
 } // namespace
