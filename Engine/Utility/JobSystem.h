@@ -71,7 +71,7 @@ unsigned parallel_for(Work func, ParallelFor<T, D> *data, std::atomic<int> *coun
 		if (i * load > count) data->end = last;
 		else data->end = first + i * load;
 
-		run(func, data, sizeof(ParallelFor<T, D>), counter);
+		run(func, data, sizeof(*data), counter);
 
 		if (data->end == last) break;
 	}

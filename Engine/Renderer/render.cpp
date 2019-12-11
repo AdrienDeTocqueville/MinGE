@@ -30,14 +30,35 @@ void create_cmd(const void *_data)
 {
 	auto *data = static_cast<const JobSystem::ParallelFor<Graphic*, create_cmd_data>*>(_data);
 
-	RenderContext *ctx = data->user_data.contexts + JobSystem::worker_id();
-	const View *views = data->user_data.views;
-	size_t view_count = data->user_data.view_count;
+	auto *ctx = data->user_data.contexts + JobSystem::worker_id();
+	auto *views = data->user_data.views;
+	auto view_count = data->user_data.view_count;
 
-	const Graphic **it = (const Graphic**)data->start;
-	const Graphic **last = (const Graphic**)data->end;
+	auto **it = (const Graphic**)data->start;
+	auto **last = (const Graphic**)data->end;
 	while (it != last)
 		(*it++)->render(ctx, view_count, views);
+}
+
+struct merge_cmd_data
+{
+	RenderContext::CommandPair *pairs;
+	RenderContext *ctx;
+};
+
+void merge_cmd(const void *_data)
+{
+	auto *data = static_cast<const merge_cmd_data*>(_data);
+	auto *pairs = data->pairs;
+
+	const auto &pool = data->ctx->commands;
+	for (int b(0); b < pool.block; b++)
+	{
+		memcpy(pairs, pool.blocks[b], pool.block_bytes);
+		pairs += pool.block_bytes;
+	}
+	memcpy(pairs, pool.blocks[pool.block], pool.index);
+	data->ctx->clear();
 }
 
 void GraphicEngine::render()
@@ -101,21 +122,17 @@ void GraphicEngine::render()
 	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "merge contexts");
 	for (int i(0); i < worker_count; i++)
 		cmd_count += contexts[i].cmd_count();
-
 	pairs = new RenderContext::CommandPair[cmd_count];
-	auto *dest = (uint8_t*)pairs;
+
+	cmd_count = 0;
+	std::atomic<int> counter(0);
 	for (int i(0); i < worker_count; i++)
 	{
-		const auto &pool = contexts[i].commands;
-		for (int b(0); b < pool.block; b++)
-		{
-			memcpy(dest, pool.blocks[b], pool.block_bytes);
-			dest += pool.block_bytes;
-		}
-		memcpy(dest, pool.blocks[pool.block], pool.index);
-		dest += pool.index;
-		contexts[i].clear();
+		merge_cmd_data data = {pairs + cmd_count, contexts + i};
+		JobSystem::run(merge_cmd, &data, sizeof(data), &counter);
+		cmd_count += contexts[i].cmd_count();
 	}
+	JobSystem::wait(&counter, worker_count);
 	}
 	
 	// Sort
