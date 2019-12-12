@@ -7,6 +7,7 @@ cscope*
 *.depend
 *.vcxproj.filters
 *.vcxproj.user
+.vs/
 
 obj/
 *.dll

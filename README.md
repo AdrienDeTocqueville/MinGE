@@ -34,5 +34,4 @@ make
 
 ## Build on Windows
 
-Download dependencies.
-Create a new solution using the visual studio project file.
+Installe dependencies and update path in visual studio project file.
