@@ -91,7 +91,7 @@ Skybox::Skybox():
 {
 	vec4 perezCoeff[5];
 	computePerezCoeff(2.15f, perezCoeff);
-	float time = 6.118;
+	float time = 6.118f;
 
 	sky->set("perezCoeff", perezCoeff, 5);
 	sky->set("skyLuminance", getLuminance(time, skyLuminanceXYZTable));

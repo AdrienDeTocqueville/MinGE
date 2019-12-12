@@ -43,7 +43,7 @@ struct CommandKey
 	}
 	static uint64_t encode(uint32_t view, RenderPass::Type pass, uint32_t material, float depth)
 	{
-		uint32_t depth_i = depth * std::numeric_limits<uint32_t>::max();
+		uint32_t depth_i = (uint32_t)(depth * (float)std::numeric_limits<uint32_t>::max());
 
 		return	((uint64_t(view)     << VIEW_SHIFT)	& VIEW_MASK)	|
 			((uint64_t(pass)     << PASS_SHIFT)	& PASS_MASK)	|

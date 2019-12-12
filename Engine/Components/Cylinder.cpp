@@ -47,7 +47,7 @@ vec3 Cylinder::getSupport(vec3 _axis)
 	float halfHeight = height * 0.5f;
 	float axisDistanceSquared = _axis.x * _axis.x + _axis.y * _axis.y;
 
-	float sign = (0.0f < _axis.z) - (_axis.z < 0.0f);   // get sign of _axis.z
+	int sign = (0.0f < _axis.z) - (_axis.z < 0.0f);   // get sign of _axis.z
 
 	vec3 support(0.0f, 0.0f, sign * halfHeight);
 

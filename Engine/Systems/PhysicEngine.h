@@ -6,7 +6,7 @@
 class RigidBody;
 class Collider;
 
-class RayHit;
+struct RayHit;
 class Constraint;
 class ContactConstraint;
 

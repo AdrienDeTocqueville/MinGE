@@ -13,7 +13,7 @@ struct StackAllocator
 	~StackAllocator()
 	{ for (uint8_t *b: blocks) delete[] b;}
 
-	void *alloc(size_t size)
+	void *alloc(uint32_t size)
 	{
 		if (index + size <= block_size)
 		{

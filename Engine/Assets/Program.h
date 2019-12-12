@@ -131,7 +131,7 @@ inline void set_uniform(int _location, mat4 _value)
 }
 inline void set_uniform(int _location, const std::vector<mat4>& _values)
 {
-	glCheck(glUniformMatrix4fv(_location, _values.size(), GL_FALSE, value_ptr(_values[0])));
+	glCheck(glUniformMatrix4fv(_location, (GLsizei)_values.size(), GL_FALSE, value_ptr(_values[0])));
 }
 
 inline void set_uniform(int location, GLuint type, GLsizei num, const void *data)

@@ -50,7 +50,7 @@ public:
 	}
 
 	template <typename T>
-	inline void set(std::string name, T *values, uint32_t num)
+	inline void set(std::string name, T *values, size_t num)
 	{
 		size_t loc = getLocation(name);
 		if (loc != (size_t)-1)
@@ -58,7 +58,7 @@ public:
 	}
 
 	template <typename T>
-	inline void set(size_t location, T *values, uint32_t num)
+	inline void set(size_t location, T *values, size_t num)
 	{
 		memcpy(uniforms.data() + location, values, sizeof(T) * num);
 	}

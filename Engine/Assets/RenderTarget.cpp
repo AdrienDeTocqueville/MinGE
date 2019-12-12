@@ -9,7 +9,7 @@ std::weak_ptr<RenderTarget> RenderTarget::basic;
 RenderTargetRef RenderTarget::create(uvec2 size, Depth depth, unsigned priority)
 {
 	unsigned fbo;
-	glGenFramebuffersEXT(1, &fbo);
+	glGenFramebuffers(1, &fbo);
 
 	/// Color attachment
 	Texture colorBuffer;

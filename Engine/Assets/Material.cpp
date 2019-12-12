@@ -6,14 +6,14 @@ std::weak_ptr<Material> Material::basic;
 std::vector<std::weak_ptr<Material>> Material::materials;
 
 Material::Material(Program *_program):
-	program(_program), id(materials.size())
+	program(_program), id((uint32_t)materials.size())
 {
 	load_uniforms();
 }
 
 Material::Material(const Material &material):
 	program(material.program), uniforms(material.uniforms),
-	id(materials.size())
+	id((uint32_t)materials.size())
 { }
 
 Material::~Material()

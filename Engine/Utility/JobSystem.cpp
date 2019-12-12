@@ -41,8 +41,7 @@ Job* allocate_job()
 #define ATOMIC_EXCHANGE  __sync_lock_test_and_set
 #define COMPARE_EXCHANGE __sync_bool_compare_and_swap
 
-#define THREAD_HANDLE std::thread::native_handle_type
-#define MAIN_THREAD pthread_self()
+#define THIS_THREAD pthread_self()
 
 #elif _WIN32
 #define COMPILER_BARRIER() std::atomic_thread_fence(std::memory_order_release);
@@ -50,8 +49,7 @@ Job* allocate_job()
 #define ATOMIC_EXCHANGE InterlockedExchange
 #define COMPARE_EXCHANGE(dest, cmp, val) (InterlockedCompareExchange(dest, val, cmp) == cmp)
 
-#define THREAD_HANDLE HANDLE
-#define MAIN_THREAD GetCurrentProcess()
+#define THIS_THREAD GetCurrentThread()
 
 #endif
 
@@ -176,19 +174,22 @@ void worker_main(const int i)
 	}
 }
 
-void set_cpu_affinity(const THREAD_HANDLE handle, const int cpu)
+void set_cpu_affinity(const std::thread::native_handle_type handle, const int cpu)
 {
+	bool failed;
+
 #ifdef __linux__
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
 	CPU_SET(cpu, &cpuset);
-	bool failed = pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
+	failed = pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
 #elif _WIN32
-	bool failed = SetProcessAffinityMask(handle, 1 << cpu) == 0;
+	failed = SetThreadAffinityMask(handle, 1 << cpu) == 0;
 #endif
 
-	if (failed)
-		printf("[WARNING] Failed to set cpu affinity\n");
+#ifdef DEBUG
+	if (failed) printf("[WARNING] Failed to set cpu affinity for cpu %d\n", cpu);
+#endif
 }
 
 void init()
@@ -204,11 +205,11 @@ void init()
 		workers[i].bottom = workers[i].top = 0;
 
 	// Launch threads
-	set_cpu_affinity(MAIN_THREAD, 0);
+	set_cpu_affinity(THIS_THREAD, 0); // main thread
 	for (unsigned i(1); i < num_worker; i++)
 	{
 		workers[i].thread = std::thread(worker_main, i);
-		set_cpu_affinity((THREAD_HANDLE)workers[i].thread.native_handle(), i);
+		set_cpu_affinity(workers[i].thread.native_handle(), i);
 	}
 }
 
