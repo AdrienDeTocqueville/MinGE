@@ -109,7 +109,7 @@ void Program::link()
 		error[stringSize] = '\0';
 
 		std::string errorString(reinterpret_cast<char*>(error));
-		Error::add(OPENGL_ERROR, "Shader::linkProgram() -> " + errorString);
+		Error::add(Error::OPENGL, "Shader::linkProgram() -> " + errorString);
 
 		delete[] error;
 		glCheck(glDeleteProgram(program));
@@ -349,7 +349,7 @@ Program::Shader* Program::Shader::load(GLuint type, const std::string& _shader)
 
 	if(!file)
 	{
-		Error::add(FILE_NOT_FOUND, "Shader::load() -> Shaders/" + _shader);
+		Error::add(Error::FILE_NOT_FOUND, "Shader::load() -> Shaders/" + _shader);
 		return nullptr;
 	}
 
@@ -358,7 +358,7 @@ Program::Shader* Program::Shader::load(GLuint type, const std::string& _shader)
 
 	if(!shaderID)
 	{
-		Error::add(OPENGL_ERROR, "Shader::load() -> glCreateShader() returns 0");
+		Error::add(Error::OPENGL, "Shader::load() -> glCreateShader() returns 0");
 		return nullptr;
 	}
 
@@ -386,7 +386,7 @@ Program::Shader* Program::Shader::load(GLuint type, const std::string& _shader)
 		glCheck(glGetShaderInfoLog(shaderID, stringSize, &stringSize, error));
 		error[stringSize] = '\0';
 
-		Error::add(OPENGL_ERROR, "Shader::compileShader() -> Compilation error in file: " + _shader);
+		Error::add(Error::OPENGL, "Shader::compileShader() -> Compilation error in file: " + _shader);
 		std::cout << std::endl << "\"" + _shader + "\" error = " << error;
 
 		delete[] error;

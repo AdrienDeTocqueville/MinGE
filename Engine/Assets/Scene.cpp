@@ -386,7 +386,7 @@ Scene::Scene(const std::string &file)
 				if (type_str == "directional") type = Light::Directional;
 				else if (type_str == "point") type = Light::Point;
 				else if (type_str == "spot") type = Light::Spot;
-				else Error::add(USER_ERROR, "Unknown light type");
+				else Error::add(Error::USER, "Unknown light type");
 
 				proto->insert<Light>(type, color);
 			}

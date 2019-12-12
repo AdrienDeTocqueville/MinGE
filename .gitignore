@@ -12,9 +12,11 @@ cscope*
 obj/
 *.dll
 *.pdb
+*.ipdb
 *.ilk
+*.iobj
 
-*.exe
+bin/*.exe
 
 bin/debug
 bin/dev

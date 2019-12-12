@@ -42,7 +42,7 @@ public:
 		if (typeid(T) == typeid(Transform))
 		{
 			if (tr)
-				Error::add(USER_ERROR, "Impossible to insert a Transform component");
+				Error::add(Error::USER, "Impossible to insert a Transform component");
 			else
 			{
 				T* c = new T(args...);

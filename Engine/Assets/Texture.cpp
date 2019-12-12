@@ -17,7 +17,7 @@ Texture::Texture(std::string _path):
 	sf::Image image;
 	if (!image.loadFromFile(path))
 	{
-		Error::add(MINGE_ERROR, "Texture::Texture() -> SFML failed to load file: " + path);
+		Error::add(Error::MINGE, "Texture::Texture() -> SFML failed to load file: " + path);
 		return;
 	}
 

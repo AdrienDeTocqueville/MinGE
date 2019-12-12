@@ -155,7 +155,7 @@ void Engine::clear()
 	if (Component::instances != 0)
 	{
 		Component::instances = 0;
-		Error::add(WARNING, "One or more component have not been deleted ("+toString(Component::instances)+")");
+		Error::add(Error::WARNING, "One or more component have not been deleted ("+toString(Component::instances)+")");
 		exit(EXIT_FAILURE);
 	}
 #endif // DEBUG

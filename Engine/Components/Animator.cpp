@@ -132,7 +132,7 @@ void Animator::onRegister()
 	get_bones(tr, bones, offset);
 
 	if (find<Graphic>() == NULL)
-		return Error::add(USER_ERROR, "Add a graphic before animator");
+		return Error::add(Error::USER, "Add a graphic before animator");
 
 	upload();
 	GraphicEngine::get()->addAnimator(this);

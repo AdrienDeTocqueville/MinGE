@@ -28,7 +28,7 @@ RenderTargetRef RenderTarget::create(uvec2 size, Depth depth, unsigned priority)
 
 	if (val != GL_FRAMEBUFFER_COMPLETE)
 	{
-		Error::add(OPENGL_ERROR, "RenderTarget::create() -> glCheckFramebufferStatus() returns: " + val);
+		Error::add(Error::OPENGL, "RenderTarget::create() -> glCheckFramebufferStatus() returns: " + val);
 		glDeleteFramebuffers(1, &fbo);
 		return nullptr;
 	}
@@ -68,7 +68,7 @@ void RenderTarget::resize(uvec2 _size)
 {
 	// TODO: resize attachments
 	(void)_size;
-	Error::add(MINGE_ERROR, "render target will not be resized");
+	Error::add(Error::MINGE, "render target will not be resized");
 	GraphicEngine::get()->onResize(this);
 }
 

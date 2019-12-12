@@ -90,7 +90,7 @@ void Graphic::setMesh(MeshRef _mesh, std::vector<MaterialRef> _materials)
 		return;
 
 	if (_materials.size() != mesh->getSubmeshes().size())
-		Error::add(USER_ERROR, "Wrong material count");
+		Error::add(Error::USER, "Wrong material count");
 
 	materials = _materials;
 }
@@ -103,7 +103,7 @@ void Graphic::setMesh(MeshRef _mesh, std::initializer_list<MaterialRef> _materia
 		return;
 
 	if (_materials.size() != mesh->getSubmeshes().size())
-		Error::add(USER_ERROR, "Wrong material count");
+		Error::add(Error::USER, "Wrong material count");
 
 	materials = _materials;
 }

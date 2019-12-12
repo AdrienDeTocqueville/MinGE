@@ -20,7 +20,7 @@ GraphicEngine::GraphicEngine()
 	if(code != GLEW_OK)
 	{
 		std::string errorString(reinterpret_cast<const char*>(glewGetErrorString(code)));
-		Error::add(OPENGL_ERROR, "glewInit() -> Failed with error: " + errorString);
+		Error::add(Error::OPENGL, "glewInit() -> Failed with error: " + errorString);
 	}
 
 	std::cout << std::endl;
@@ -93,7 +93,7 @@ void GraphicEngine::addGraphic(Graphic* _graphic)
 void GraphicEngine::addCamera(Camera* _camera)
 {
 	if (cameras.size() == MAX_VIEWS)
-		return Error::add(USER_ERROR, "GraphicEngine::addCamera() -> You reached max number of cameras");
+		return Error::add(Error::USER, "GraphicEngine::addCamera() -> You reached max number of cameras");
 
 	cameras.push_back(_camera);
 	sortCameras();

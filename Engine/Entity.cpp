@@ -210,7 +210,7 @@ std::type_index Entity::getScriptTypeIndex()
 //Entity* Entity::insert<Transform>(Args&&... args)
 //{
 //	if (tr != nullptr)
-//		Error::add(USER_ERROR, "Impossible to add a Transform component");
+//		Error::add(Error::USER, "Impossible to add a Transform component");
 //	else
 //		tr = new Transform(args...);
 //

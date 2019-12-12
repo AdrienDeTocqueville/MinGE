@@ -6,32 +6,36 @@
 #include <iostream>
 #endif
 
-static std::string getTitle(ErrorType _type)
+static std::string getTitle(Error::Type _type)
 {
 	switch (_type)
 	{
-	case WARNING:
+	case Error::WARNING:
 		return "Warning";
-	case FILE_NOT_FOUND:
+	case Error::FILE_NOT_FOUND:
 		return "File not found";
-	case OPENGL_ERROR:
+	case Error::OPENGL:
 		return "OpenGL error";
+	case Error::MINGE:
+		return "MinGE error";
+	case Error::USER:
+		return "User error";
 
 	default:
-		return "MinGE error";
+		return "Unknown error";
 	}
 }
 
 #ifdef _WIN32
-static int getIcon(ErrorType _type)
+static int getIcon(Error::Type _type)
 {
 	switch (_type)
 	{
-	case WARNING:
+	case Error::WARNING:
 		return MB_ICONWARNING;
-	case FILE_NOT_FOUND:
+	case Error::FILE_NOT_FOUND:
 		return MB_ICONINFORMATION;
-	case OPENGL_ERROR:
+	case Error::OPENGL:
 		return MB_ICONERROR;
 
 	default:
@@ -42,17 +46,17 @@ static int getIcon(ErrorType _type)
 
 bool Error::error = false;
 
-void Error::add(ErrorType _type, std::string _description)
+void Error::add(Error::Type _type, std::string _description)
 {
-	if (_type >= maxType)
-		_type = MINGE_ERROR;
+	if (_type >= Error::MAX)
+		_type = Error::MINGE;
 	error = true;
 
 
 #ifdef _WIN32
 	MessageBox(nullptr, _description.c_str(), getTitle(_type).c_str(), getIcon(_type));
 #else
-	std::cout << "Error (" << getTitle(_type).c_str() << "): " << _description << std::endl;
+	std::cout << getTitle(_type).c_str() << ": " << _description << std::endl;
 #endif
 }
 
