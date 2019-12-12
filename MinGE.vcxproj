@@ -264,7 +264,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Adrien\Documents\Programs\C++\MinGE\MinGE\Engine;C:\Users\Adrien\Documents\Programs\C++\libs\glm;C:\Users\Adrien\Documents\Programs\C++\libs\glew-2.1.0\include;C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Engine;C:\Users\Adrien\Documents\Programs\C++\libs\glm;C:\Users\Adrien\Documents\Programs\C++\libs\glew-2.1.0\include;C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
     </ClCompile>
     <Link>
@@ -278,7 +278,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Adrien\Documents\Programs\C++\MinGE\MinGE\Engine;C:\Users\Adrien\Documents\Programs\C++\libs\glm;C:\Users\Adrien\Documents\Programs\C++\libs\glew-2.1.0\include;C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Engine;C:\Users\Adrien\Documents\Programs\C++\libs\glm;C:\Users\Adrien\Documents\Programs\C++\libs\glew-2.1.0\include;C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
     </ClCompile>
     <Link>
@@ -292,7 +292,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Adrien\Documents\Programs\C++\MinGE\MinGE\Engine;C:\Users\Adrien\Documents\Programs\C++\libs\glm;C:\Users\Adrien\Documents\Programs\C++\libs\glew-2.1.0\include;C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Engine;C:\Users\Adrien\Documents\Programs\C++\libs\glm;C:\Users\Adrien\Documents\Programs\C++\libs\glew-2.1.0\include;C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <PreprocessorDefinitions>DRAWAABB;DEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -307,7 +307,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Adrien\Documents\Programs\C++\MinGE\MinGE\Engine;C:\Users\Adrien\Documents\Programs\C++\libs\glm;C:\Users\Adrien\Documents\Programs\C++\libs\glew-2.1.0\include;C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Engine;C:\Users\Adrien\Documents\Programs\C++\libs\glm;C:\Users\Adrien\Documents\Programs\C++\libs\glew-2.1.0\include;C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <PreprocessorDefinitions>PROFILE;DEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -324,7 +324,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Adrien\Documents\Programs\C++\MinGE\MinGE\Engine;C:\Users\Adrien\Documents\Programs\C++\libs\glm;C:\Users\Adrien\Documents\Programs\C++\libs\glew-2.1.0\include;C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Engine;C:\Users\Adrien\Documents\Programs\C++\libs\glm;C:\Users\Adrien\Documents\Programs\C++\libs\glew-2.1.0\include;C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
     </ClCompile>
     <Link>
@@ -342,7 +342,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Adrien\Documents\Programs\C++\MinGE\MinGE\Engine;C:\Users\Adrien\Documents\Programs\C++\libs\glm;C:\Users\Adrien\Documents\Programs\C++\libs\glew-2.1.0\include;C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Engine;C:\Users\Adrien\Documents\Programs\C++\libs\glm;C:\Users\Adrien\Documents\Programs\C++\libs\glew-2.1.0\include;C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
     </ClCompile>
     <Link>
