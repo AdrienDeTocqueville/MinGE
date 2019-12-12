@@ -46,7 +46,7 @@ float Camera::getFOV() const
 
 float Camera::getAspectRatio() const
 {
-	return viewport.z/viewport.w;
+	return (float)viewport.z / (float)viewport.w;
 }
 
 /// Methods (private)
@@ -84,10 +84,11 @@ void Camera::computeViewPort()
 {
 	vec2 ws = renderTarget->getSize();
 
-	viewport = vec4((int)(relViewport.x * ws.x),
-			(int)(relViewport.y * ws.y),
-			(int)(relViewport.z * ws.x),
-			(int)(relViewport.w * ws.y));
+	viewport = ivec4(relViewport.x * ws.x,
+		relViewport.y * ws.y,
+		relViewport.z * ws.x,
+		relViewport.w * ws.y
+	);
 
 	float aspectRatio = getAspectRatio();
 

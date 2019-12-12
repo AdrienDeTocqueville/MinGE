@@ -45,7 +45,7 @@ private:
 
 	bool orthographic;
 
-	vec4 viewport;
+	ivec4 viewport;
 	vec4 relViewport;	// in screen coordinates (between 0 and 1)
 
 	mat4 projection;

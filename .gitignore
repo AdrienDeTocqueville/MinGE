@@ -5,8 +5,14 @@ cscope*
 
 *.layout
 *.depend
+*.vcxproj.filters
+*.vcxproj.user
 
 obj/
+*.dll
+*.pdb
+*.ilk
+
 *.exe
 
 bin/debug

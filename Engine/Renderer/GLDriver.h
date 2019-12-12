@@ -22,7 +22,8 @@ class GL
 		GLuint program;
 		GLuint texture_unit;
 
-		vec4 view, scissor, clearColor;
+		ivec4 view, scissor;
+		vec4 clearColor;
 	};
 
 	static GLState state;
@@ -133,7 +134,7 @@ public:
 		}
 	}
 
-	static void Viewport(const vec4 &view)
+	static void Viewport(const ivec4 &view)
 	{
 		if (view != state.view)
 		{
@@ -142,7 +143,7 @@ public:
 		}
 	}
 
-	static void Scissor(const vec4 &scissor)
+	static void Scissor(const ivec4 &scissor)
 	{
 		if (scissor != state.scissor)
 		{

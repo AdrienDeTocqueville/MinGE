@@ -21,7 +21,7 @@ General architecture is heavily inspired from Unity.
 
 
 ## Dependencies
-* [SFML GCC 4.9.2 TDM (SJLJ) - 32-bit](https://www.sfml-dev.org/download/sfml/2.4.2/index-fr.php)
+* [SFML](https://www.sfml-dev.org/download/sfml/2.5.1/)
 * [GLEW](http://glew.sourceforge.net/index.html)
 * [GLM](https://github.com/g-truc/glm/releases/)
 
@@ -34,4 +34,5 @@ make
 
 ## Build on Windows
 
-Use codeblocks project file
+Download dependencies.
+Create a new solution using the visual studio project file.
