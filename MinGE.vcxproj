@@ -71,7 +71,7 @@
     <ClCompile Include="Engine\Utility\helpers.cpp" />
     <ClCompile Include="Engine\Utility\IO\Input.cpp" />
     <ClCompile Include="Engine\Utility\IO\Network.cpp" />
-    <ClCompile Include="Engine\Utility\JobSystem.cpp" />
+    <ClCompile Include="Engine\Utility\JobSystem\JobSystem.cpp" />
     <ClCompile Include="Engine\Utility\Memory\LinearAllocator.cpp" />
     <ClCompile Include="Engine\Utility\Random.cpp" />
     <ClCompile Include="Engine\Utility\Tag.cpp" />
@@ -137,7 +137,7 @@
     <ClInclude Include="Engine\Utility\IO\Input.h" />
     <ClInclude Include="Engine\Utility\IO\json.hpp" />
     <ClInclude Include="Engine\Utility\IO\Network.h" />
-    <ClInclude Include="Engine\Utility\JobSystem.h" />
+    <ClInclude Include="Engine\Utility\JobSystem\JobSystem.h" />
     <ClInclude Include="Engine\Utility\Memory\BlockAllocator.h" />
     <ClInclude Include="Engine\Utility\Memory\LinearAllocator.h" />
     <ClInclude Include="Engine\Utility\Memory\Memory.h" />
@@ -156,6 +156,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Renderer\RenderContext.inl" />
+    <None Include="JobSystem.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

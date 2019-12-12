@@ -184,7 +184,7 @@ void set_cpu_affinity(const std::thread::native_handle_type handle, const int cp
 	CPU_SET(cpu, &cpuset);
 	failed = pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
 #elif _WIN32
-	failed = SetThreadAffinityMask(handle, 1 << cpu) == 0;
+	failed = SetThreadAffinityMask(handle, (DWORD_PTR)(1 << cpu)) == 0;
 #endif
 
 #ifdef DEBUG

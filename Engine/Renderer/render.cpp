@@ -5,7 +5,7 @@
 #include "Renderer/Commands.h"
 
 #include "Utility/Debug.h"
-#include "Utility/JobSystem.h"
+#include "Utility/JobSystem/JobSystem.inl"
 #include "Profiler/profiler.h"
 
 #include "Assets/Program.h"
@@ -108,11 +108,11 @@ void GraphicEngine::render()
 	};
 
 	std::atomic<int> counter(0);
-	worker_count = JobSystem::parallel_for(
+	int jobs = JobSystem::parallel_for(
 		create_cmd, &data, &counter
 	);
 
-	JobSystem::wait(&counter, worker_count);
+	JobSystem::wait(&counter, jobs);
 	}
 
 	// Merge
@@ -129,7 +129,7 @@ void GraphicEngine::render()
 	for (unsigned i(0); i < worker_count; i++)
 	{
 		merge_cmd_data data = {pairs + cmd_count, contexts + i};
-		JobSystem::run(merge_cmd, &data, sizeof(data), &counter);
+		JobSystem::run(merge_cmd, &data, &counter);
 		cmd_count += contexts[i].cmd_count();
 	}
 	JobSystem::wait(&counter, worker_count);
