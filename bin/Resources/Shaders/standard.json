@@ -1,0 +1,16 @@
+{
+"passes": {
+	"fwd-base": {
+		"macros": [
+			"SKINNED",
+			"COLOR_MAP",
+			["NO_LIGHT", "MAIN_LIGHT", "SHADOW_MAP"]
+		],
+
+		"stages": {
+			"vertex": "glsl/standard.vert",
+			"fragment": "glsl/standard.frag"
+		}
+	}
+}
+}

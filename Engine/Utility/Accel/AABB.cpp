@@ -51,7 +51,8 @@ bool AABB::operator==(const AABB& box)
 
 #ifdef DRAWAABB
 #include "Systems/GraphicEngine.h"
-#include "Assets/Program.h"
+#include "Renderer/GLDriver.h"
+#include "Assets/Shader.h"
 
 bool AABB::drawAABBs = true;
 
@@ -130,7 +131,7 @@ void AABB::draw()
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char*)nullptr + (offset[0])));
 
 
-	Program::setBuiltin("MATRIX_M", mat4(1.0f));
+	Shader::setBuiltin("MATRIX_M", mat4(1.0f));
 	material->bind(RenderPass::Forward);
 
 	glPushAttrib(GL_POLYGON_BIT);

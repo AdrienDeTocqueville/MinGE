@@ -5,8 +5,7 @@
 #include "Systems/PhysicEngine.h"
 #include "Systems/ScriptEngine.h"
 
-#include "Assets/Texture.h"
-#include "Assets/Program.h"
+#include "Renderer/GLDriver.h"
 
 #include "Utility/Time.h"
 #include "Utility/Debug.h"
@@ -136,12 +135,6 @@ void Engine::clear()
 	MICROPROFILE_SCOPEI("ENGINE", "clear");
 
 	std::cout << "Entities: "; Entity::clear();
-	std::cout << "done" << std::endl;
-
-	std::cout << "Programs: "; Program::clear();
-	std::cout << "done" << std::endl;
-
-	std::cout << "Textures: "; Texture::clear();
 	std::cout << "done" << std::endl;
 
 	GraphicEngine::get()->clear();

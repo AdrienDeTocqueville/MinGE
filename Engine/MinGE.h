@@ -24,8 +24,8 @@
 #include "Assets/PhysicMaterial.h"
 #include "Assets/Animation.h"
 #include "Assets/Material.h"
-#include "Assets/Program.h"
 #include "Assets/Texture.h"
+#include "Assets/Shader.h"
 #include "Assets/Scene.h"
 #include "Assets/Mesh.h"
 

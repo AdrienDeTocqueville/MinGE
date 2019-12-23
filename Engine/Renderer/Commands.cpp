@@ -3,14 +3,15 @@
 #include "Renderer/CommandKey.h"
 
 #include "Systems/GraphicEngine.h"
-#include "Assets/Program.h"
+#include "Assets/Shader.h"
+#include "Assets/Shader.inl"
 
 void DrawElements::submit(uint64_t key, const void *_cmd)
 {
 	const DrawElements* cmd = reinterpret_cast<const DrawElements*>(_cmd);
 
-	Program::setBuiltin("MATRIX_M", cmd->model);
-	Program::setBuiltin("MATRIX_N", cmd->model);
+	Shader::setBuiltin("MATRIX_M", cmd->model);
+	Shader::setBuiltin("MATRIX_N", cmd->model);
 
 	auto pass = CommandKey::decodeRenderPass(key);
 	auto material = CommandKey::decodeMaterial(key);
@@ -27,7 +28,7 @@ void SetupView::submit(uint64_t, const void *_cmd)
 	View *view = cmd->view;
 	GL::BindFramebuffer(view->fbo);
 
-	Program::setBuiltin("MATRIX_VP", view->vp);
+	Shader::setBuiltin("MATRIX_VP", view->vp);
 	GL::Viewport(view->viewport);
 	GL::Scissor (view->viewport);
 

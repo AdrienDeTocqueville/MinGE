@@ -1,7 +1,7 @@
 #include "Systems/GraphicEngine.h"
 
 #include "Renderer/UBO.h"
-#include "Assets/Program.h"
+#include "Assets/Shader.h"
 #include "Utility/JobSystem/JobSystem.h"
 
 #include "Components/Animator.h"
@@ -43,7 +43,7 @@ GraphicEngine::GraphicEngine()
 	contexts = new RenderContext[JobSystem::worker_count()];
 
 	UBO::setupPool();
-	Program::init();
+	Shader::setupBuiltins();
 }
 
 GraphicEngine::~GraphicEngine()
@@ -53,6 +53,9 @@ GraphicEngine::~GraphicEngine()
 
 void GraphicEngine::clear()
 {
+	Shader::clear();
+	Texture::clear();
+
 	animators.clear();
 	graphics.clear();
 	cameras.clear();

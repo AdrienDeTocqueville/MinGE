@@ -1,18 +1,24 @@
 #include "Assets/Material.h"
-#include "Assets/Program.h"
+#include "Assets/Texture.h"
+#include "Assets/Shader.h"
+#include "Assets/Shader.inl"
+
+#include "Renderer/Program.h"
 
 const Material *Material::bound = nullptr;
-std::weak_ptr<Material> Material::basic;
+std::weak_ptr<Material> Material::standard;
 std::vector<std::weak_ptr<Material>> Material::materials;
 
-Material::Material(Program *_program):
-	program(_program), id((uint32_t)materials.size())
+Material::Material(Shader *_shader):
+	variant_hash(0), variant_idx(0),
+	shader(_shader), id((uint32_t)materials.size())
 {
-	load_uniforms();
+	sync_uniforms();
 }
 
 Material::Material(const Material &material):
-	program(material.program), uniforms(material.uniforms),
+	variant_hash(material.variant_hash), variant_idx(material.variant_idx),
+	shader(material.shader), uniforms(material.uniforms),
 	id((uint32_t)materials.size())
 { }
 
@@ -32,49 +38,66 @@ Material::~Material()
 
 void Material::bind(RenderPass::Type pass) const
 {
-	// TODO: handle multipass
-	(void)pass;
-
-	program->updateBuiltins();
+	auto *prgm = shader->updateBuiltins(variant_idx, pass);
 
 	if (Material::bound == this)
 		return;
 	Material::bound = this;
 
 	int texture_slot = 0;
-	for (const Program::Uniform& uniform : program->uniforms)
+	for (const Program::Uniform &var : prgm->uniforms)
 	{
-		const void *data = uniforms.data() + uniform.offset;
+		const void *data = uniforms.data() + var.offset;
 
-		if (uniform.type == GL_SAMPLER_2D)
+		if (var.type == GL_SAMPLER_2D)
 		{
 			Texture *t = *(Texture**)data;
 			t->use(texture_slot);
-			glCheck(glUniform1i(uniform.location, texture_slot++));
+			set_uniform(var.location, texture_slot++);
 		}
 		else
-			set_uniform(uniform.location, uniform.type, uniform.num, data);
+			set_uniform(var.location, var.type, var.num, data);
 	}
 }
 
-bool Material::hasRenderPass(RenderPass::Type pass) const
+bool Material::has_pass(RenderPass::Type pass) const
 {
-	// place holder
-	return (pass == RenderPass::Forward);
+	return shader->passes[pass].exists;
 }
 
 void Material::reload()
 {
-	uniforms.clear();
-	program->reload();
-	//load_uniforms();
+	// TODO
 }
+
+void Material::define(std::string macro)
+{
+	auto it = shader->macros.find(macro);
+	if (it == shader->macros.end())
+		return;
+
+	variant_hash = (variant_hash & ~it->second.mask) | it->second.id;
+	variant_idx = shader->get_variant(variant_hash);
+	sync_uniforms();
+}
+
+void Material::undef(std::string macro)
+{
+	auto it = shader->macros.find(macro);
+	if (it == shader->macros.end())
+		return;
+
+	variant_hash = (variant_hash & ~it->second.mask);
+	variant_idx = shader->get_variant(variant_hash);
+	sync_uniforms();
+}
+
 
 size_t Material::getLocation(const std::string &name) const
 {
-	auto it = program->uniforms_names.find(name);
-	if (it != program->uniforms_names.end())
-		return program->uniforms[it->second].offset;
+	auto it = shader->uniforms_names.find(name);
+	if (it != shader->uniforms_names.end())
+		return it->second;
 
 	std::cout << "Unknown uniform: " << name << std::endl;
 	return -1;
@@ -90,7 +113,7 @@ MaterialRef Material::clone() const
 
 MaterialRef Material::create(std::string name)
 {
-	auto shared = MaterialRef(new Material(Program::get(name)));
+	auto shared = MaterialRef(new Material(Shader::get(name)));
 	materials.push_back(shared);
 	
 	return shared;
@@ -98,16 +121,15 @@ MaterialRef Material::create(std::string name)
 
 MaterialRef Material::getDefault()
 {
-	if (auto shared = basic.lock())
+	if (auto shared = standard.lock())
 		return shared;
 
-	MaterialRef shared(new Material(Program::getDefault()));
+	MaterialRef shared = Material::create("standard");
 	shared->set("color", vec3(0.8f));
 	shared->set("metallic", 0.0f);
 	shared->set("roughness", 0.5f);
 
-	basic = shared;
-	materials.push_back(basic);
+	standard = shared;
 	return shared;
 }
 
@@ -116,14 +138,20 @@ MaterialRef Material::get(uint32_t id)
 	return materials[id].lock();
 }
 
-void Material::load_uniforms()
+void Material::sync_uniforms()
 {
-	for (const auto& u : program->uniforms)
-	{
-		uniforms.resize(uniforms.size() + u.size * u.num);
+	size_t old_size = uniforms.size();
+	uniforms.resize(shader->uniform_offset);
 
-		if (u.type == GL_SAMPLER_2D)
-			set(u.offset, (Texture*)NULL);
+	// Initialize textures with default value
+	for (int i(0); i < RenderPass::Count; i++)
+	{
+		Program *prgm = shader->variants[variant_idx].passes[i];
+		for (const Program::Uniform &var : prgm->uniforms)
+		{
+			if (var.offset > old_size && var.type == GL_SAMPLER_2D)
+				set(var.offset, (Texture*)NULL);
+		}
 	}
 }
 

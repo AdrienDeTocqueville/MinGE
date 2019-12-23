@@ -34,12 +34,12 @@ static int getIcon(Error::Type _type)
 	case Error::WARNING:
 		return MB_ICONWARNING;
 	case Error::FILE_NOT_FOUND:
-		return MB_ICONINFORMATION;
+		return MB_ICONERROR;
 	case Error::OPENGL:
 		return MB_ICONERROR;
 
 	default:
-		return MB_ICONERROR;
+		return MB_ICONQUESTION;
 	}
 }
 #endif
@@ -72,6 +72,19 @@ bool Error::check()
 					   "MinGE: loading error", MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2);
 	return (r == IDNO);
 #else
+	return true;
+#endif
+}
+
+Error::Answer Error::ask(Error::Type _type, std::string _question)
+{
+#ifdef _WIN32
+	int r = MessageBox(nullptr, _question.c_str(), getTitle(_type).c_str(), MB_ICONQUESTION | MB_YESNOCANCEL | MB_DEFBUTTON2);
+	if (r == IDYES) return Answer::YES;
+	if (r == IDNO) return Answer::NO;
+	return Answer::CANCEL;
+#else
+	std::cout << getTitle(_type).c_str() << ": " << _description << " (yes)" << std::endl;
 	return true;
 #endif
 }

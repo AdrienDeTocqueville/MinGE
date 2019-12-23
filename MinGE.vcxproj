@@ -30,9 +30,9 @@
     <ClCompile Include="Engine\Assets\Material.cpp" />
     <ClCompile Include="Engine\Assets\Mesh.cpp" />
     <ClCompile Include="Engine\Assets\PhysicMaterial.cpp" />
-    <ClCompile Include="Engine\Assets\Program.cpp" />
     <ClCompile Include="Engine\Assets\RenderTarget.cpp" />
     <ClCompile Include="Engine\Assets\Scene.cpp" />
+    <ClCompile Include="Engine\Assets\Shader.cpp" />
     <ClCompile Include="Engine\Assets\Texture.cpp" />
     <ClCompile Include="Engine\Components\Animator.cpp" />
     <ClCompile Include="Engine\Components\AudioListener.cpp" />
@@ -57,6 +57,7 @@
     <ClCompile Include="Engine\Physic\DistanceConstraint.cpp" />
     <ClCompile Include="Engine\Renderer\Commands.cpp" />
     <ClCompile Include="Engine\Renderer\GLDriver.cpp" />
+    <ClCompile Include="Engine\Renderer\Program.cpp" />
     <ClCompile Include="Engine\Renderer\render.cpp" />
     <ClCompile Include="Engine\Renderer\RenderContext.cpp" />
     <ClCompile Include="Engine\Renderer\UBO.cpp" />
@@ -90,9 +91,9 @@
     <ClInclude Include="Engine\Assets\Material.h" />
     <ClInclude Include="Engine\Assets\Mesh.h" />
     <ClInclude Include="Engine\Assets\PhysicMaterial.h" />
-    <ClInclude Include="Engine\Assets\Program.h" />
     <ClInclude Include="Engine\Assets\RenderTarget.h" />
     <ClInclude Include="Engine\Assets\Scene.h" />
+    <ClInclude Include="Engine\Assets\Shader.h" />
     <ClInclude Include="Engine\Assets\Texture.h" />
     <ClInclude Include="Engine\Components\Animator.h" />
     <ClInclude Include="Engine\Components\AudioListener.h" />
@@ -122,6 +123,7 @@
     <ClInclude Include="Engine\Renderer\CommandKey.h" />
     <ClInclude Include="Engine\Renderer\Commands.h" />
     <ClInclude Include="Engine\Renderer\GLDriver.h" />
+    <ClInclude Include="Engine\Renderer\Program.h" />
     <ClInclude Include="Engine\Renderer\RenderContext.h" />
     <ClInclude Include="Engine\Renderer\UBO.h" />
     <ClInclude Include="Engine\Systems\GraphicEngine.h" />
@@ -145,6 +147,7 @@
     <ClInclude Include="Engine\Utility\Random.h" />
     <ClInclude Include="Engine\Utility\Tag.h" />
     <ClInclude Include="Engine\Utility\Time.h" />
+    <ClInclude Include="structs.h" />
     <ClInclude Include="test\animations\animations.h" />
     <ClInclude Include="test\bvh\bvh.h" />
     <ClInclude Include="test\CameraScript.h" />
@@ -155,8 +158,9 @@
     <ClInclude Include="test\sky\sky.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Engine\Assets\Shader.inl" />
     <None Include="Engine\Renderer\RenderContext.inl" />
-    <None Include="JobSystem.inl" />
+    <None Include="Engine\Utility\JobSystem\JobSystem.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

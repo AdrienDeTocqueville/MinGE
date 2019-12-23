@@ -8,7 +8,7 @@
 #include "Utility/JobSystem/JobSystem.inl"
 #include "Profiler/profiler.h"
 
-#include "Assets/Program.h"
+#include "Assets/Shader.h"
 
 #include "Components/Animator.h"
 #include "Components/Graphic.h"
@@ -77,8 +77,8 @@ void GraphicEngine::render()
 	// TODO : find a solution for that
 	{
 		Light *source = GraphicEngine::get()->getLight();
-		Program::setBuiltin("lightPosition", source->getPosition());
-		Program::setBuiltin("lightColor", source->getColor());
+		Shader::setBuiltin("lightPosition", source->getPosition());
+		Shader::setBuiltin("lightColor", source->getColor());
 	}
 
 	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "cameras");

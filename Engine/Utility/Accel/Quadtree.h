@@ -2,6 +2,7 @@
 #define STRUCTS_H
 
 #include "Systems/GraphicEngine.h"
+#include "Renderer/GLDriver.h"
 
 /// Left-Up, Right-Up, Right-Down, Left-Down
 

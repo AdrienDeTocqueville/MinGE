@@ -1,7 +1,7 @@
 #include "Utility/Debug.h"
+#include "Renderer/GLDriver.h"
 #include "Systems/GraphicEngine.h"
 
-#include "Assets/Program.h"
 #include "Assets/Material.h"
 
 std::vector<Debug::Vertex> Debug::points, Debug::lines;

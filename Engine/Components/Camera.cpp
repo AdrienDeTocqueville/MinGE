@@ -5,7 +5,8 @@
 #include "Systems/GraphicEngine.h"
 #include "Renderer/CommandKey.h"
 
-#include "Assets/Program.h"
+#include "Assets/Shader.h"
+#include "Assets/Shader.inl"
 
 Camera::Camera(float _FOV, float _zNear, float _zFar, vec3 _clearColor, RenderTargetRef _target, bool _orthographic, vec4 _viewport, unsigned _clearFlags):
 	FOV(_FOV), zNear(_zNear), zFar(_zFar),
@@ -77,7 +78,7 @@ void Camera::update(View *view)
 	view->pass = RenderPass::Forward;
 
 	// TODO: find a solution for that
-	Program::setBuiltin("cameraPosition", getPosition());
+	Shader::setBuiltin("cameraPosition", getPosition());
 }
 
 void Camera::computeViewPort()

@@ -1,19 +1,11 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
-#include "Assets/Texture.h"
+#include <string>
+#include <vector>
 
-struct RenderPass
-{
-	enum Type {
-		ShadowMap,
-		Forward,
-		Additive,
-		Skybox,
-		Count
-	};
-};
-
+#include "Renderer/structs.h"
 
 typedef std::shared_ptr<class Material> MaterialRef;
 
@@ -27,8 +19,11 @@ public:
 
 	/// Methods (public)
 	void bind(RenderPass::Type pass) const;
-	bool hasRenderPass(RenderPass::Type pass) const;
+	bool has_pass(RenderPass::Type pass) const;
 	void reload();
+
+	void define(std::string macro);
+	void undef(std::string macro);
 
 	inline uint32_t getId() const { return id; }
 	size_t getLocation(const std::string &name) const;
@@ -66,21 +61,23 @@ public:
 	~Material();
 
 private:
-	Material(class Program *_program);
+	Material(class Shader *_shader);
 	Material(const Material &material);
 
-	void load_uniforms();
+	void sync_uniforms();
 
-	class Program *program;
+	uint32_t variant_hash;
+	uint32_t variant_idx;
+	class Shader *shader;
 	std::vector<uint8_t> uniforms; // Contains < data > sequenced for each uniform
 
 	uint32_t id;
 
 
 	static const Material *bound;
-	static std::weak_ptr<Material> basic;
+	static std::weak_ptr<Material> standard;
 	static std::vector<std::weak_ptr<Material>> materials;
 };
 
 template<>
-void Material::set(size_t location, Texture *value);
+void Material::set(size_t location, class Texture *value);

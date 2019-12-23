@@ -1,6 +1,7 @@
 #include "Assets/Mesh.h"
 
 #include "Systems/GraphicEngine.h"
+#include "Renderer/GLDriver.h"
 #include "Utility/Error.h"
 
 MeshData::MeshData(uint32_t _vertex_count, uint32_t _index_count, MeshData::Flags _flags):
