@@ -187,7 +187,7 @@ static MeshRef import_mesh(const json &mesh, const json &scene, const std::vecto
 
 static MaterialRef import_material(const json &material)
 {
-	auto m = Material::create("skinned");
+	auto m = Material::create("standard");
 
 	// Load PBR values
 	auto pbr = material["pbrMetallicRoughness"];

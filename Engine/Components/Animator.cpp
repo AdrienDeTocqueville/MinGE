@@ -156,8 +156,16 @@ void Animator::upload()
 
 	if (Graphic *g = find<Graphic>())
 	{
-		for (MaterialRef mat : g->getMaterials())
-			mat->set("bones", matrices, skeleton.offsets.size());
+		std::vector<MaterialRef> &materials = g->getMaterials();
+		for (int i(0); i < materials.size(); i++)
+		{
+			if (!materials[i]->ifdef("SKINNED"))
+			{
+				materials[i] = materials[i]->clone();
+				materials[i]->define("SKINNED");
+			}
+			materials[i]->set("bones", matrices, skeleton.offsets.size());
+		}
 	}
 }
 

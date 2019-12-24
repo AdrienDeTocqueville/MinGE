@@ -22,8 +22,8 @@ static bool check_compile(unsigned shader)
 		glCheck(glGetShaderInfoLog(shader, stringSize, &stringSize, error));
 		error[stringSize] = '\0';
 
-		Error::add(Error::OPENGL, "Compilation error (see console)");
 		std::cout << std::endl << "error = " << error;
+		Error::add(Error::OPENGL, "Compilation error (see console)");
 
 		delete[] error;
 	}

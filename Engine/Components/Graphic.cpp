@@ -144,11 +144,6 @@ AABB Graphic::getAABB() const
 	return box;
 }
 
-const std::vector<MaterialRef>& Graphic::getMaterials() const
-{
-	return materials;
-}
-
 /// Methods (private)
 void Graphic::updateMesh(MeshRef _mesh)
 {

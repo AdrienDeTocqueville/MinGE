@@ -11,8 +11,17 @@ uniform sampler2D color_map;
 uniform vec3 color;
 #endif
 
+#ifdef METALLIC_MAP
+uniform sampler2D metallic_map;
+#else
 uniform float metallic;
+#endif
+
+#ifdef ROUGHNESS_MAP
+uniform sampler2D roughness_map;
+#else
 uniform float roughness;
+#endif
 
 const float PI = 3.14159265359;
 
@@ -60,11 +69,16 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 void main()
 {
 #ifdef COLOR_MAP
-	vec3 albedo     = texture(color_map, in_fs.uv).xyz;
-#else
-	vec3 albedo     = color;
+	vec3 color = texture(color_map, in_fs.uv).xyz;
 #endif
-	albedo = pow(albedo, vec3(2.2f));
+#ifdef METALLIC_MAP
+	float metallic = texture(metallic_map, in_fs.uv).x;
+#endif
+#ifdef ROUGHNESS_MAP
+	float roughness = texture(roughness_map, in_fs.uv).x;
+#endif
+
+	vec3 albedo = pow(color, vec3(2.2f));
 	float ao        = 1.0f;
 
 	vec3 N = normalize(in_fs.normal);
@@ -103,12 +117,12 @@ void main()
 
 
 	vec3 ambient = vec3(0.03) * albedo * ao;
-	vec3 color = ambient + Lo;
+	vec3 final = ambient + Lo;
 
 	// HDR tonemapping
-	color = color / (color + vec3(1.0));
+	final = final / (final + vec3(1.0));
 	// gamma correct
-	color = pow(color, vec3(1.0/2.2));
+	final = pow(final, vec3(1.0/2.2));
 
-	out_color = vec4(color, 1.0);
+	out_color = vec4(final, 1.0);
 }

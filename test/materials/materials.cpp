@@ -12,17 +12,17 @@ void test_materials()
 	Entity *object = Entity::create("Object", true)
 		->insert<Graphic>(nullptr);
 
-	/*
 	const std::vector<std::string> mat_names = {"Iron", "Greasy", "Grimy"};
-	MaterialRef mats[mat_names.size()];
+	std::vector<MaterialRef> mats(mat_names.size());
 	for (size_t i(0); i < mat_names.size(); i++)
 	{
 		mats[i] = m->clone();
-		mats[i]->set("albedoMap", Texture::get(mat_names[i] + "/albedo.png"));
-		mats[i]->set("metallicMap", Texture::get(mat_names[i] + "/metallic.png"));
-		mats[i]->set("roughnessMap", Texture::get(mat_names[i] + "/roughness.png"));
+		mats[i]->define({ "COLOR_MAP", "METALLIC_MAP", "ROUGHNESS_MAP" });
+
+		mats[i]->set("color_map", Texture::get(mat_names[i] + "/albedo.png"));
+		mats[i]->set("metallic_map", Texture::get(mat_names[i] + "/metallic.png"));
+		mats[i]->set("roughness_map", Texture::get(mat_names[i] + "/roughness.png"));
 	}
-	*/
 
 	m->define("COLOR_MAP");
 	m->set("color_map", Texture::get("Textures/0.png"));

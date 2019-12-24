@@ -22,8 +22,10 @@ public:
 	bool has_pass(RenderPass::Type pass) const;
 	void reload();
 
+	void define(const std::vector<std::string> &macros);
 	void define(std::string macro);
 	void undef(std::string macro);
+	bool ifdef(std::string macro) const;
 
 	inline uint32_t getId() const { return id; }
 	size_t getLocation(const std::string &name) const;

@@ -70,6 +70,20 @@ void Material::reload()
 	// TODO
 }
 
+void Material::define(const std::vector<std::string> &macros)
+{
+	for (const std::string &macro : macros)
+	{
+		auto it = shader->macros.find(macro);
+		if (it == shader->macros.end())
+			return;
+
+		variant_hash = (variant_hash & ~it->second.mask) | it->second.id;
+	}
+	variant_idx = shader->get_variant(variant_hash);
+	sync_uniforms();
+}
+
 void Material::define(std::string macro)
 {
 	auto it = shader->macros.find(macro);
@@ -90,6 +104,15 @@ void Material::undef(std::string macro)
 	variant_hash = (variant_hash & ~it->second.mask);
 	variant_idx = shader->get_variant(variant_hash);
 	sync_uniforms();
+}
+
+bool Material::ifdef(std::string macro) const
+{
+	auto it = shader->macros.find(macro);
+	if (it == shader->macros.end())
+		return false;
+
+	return (variant_hash & ~it->second.mask) == it->second.id;
 }
 
 

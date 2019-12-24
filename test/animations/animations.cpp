@@ -88,9 +88,10 @@ void test_animations()
 
 
 	MaterialRef m = Material::getDefault();
-	m->set("albedoMap", Texture::get("Iron/albedo.png"));
-	m->set("metallicMap", Texture::get("Iron/metallic.png"));
-	m->set("roughnessMap", Texture::get("Iron/roughness.png"));
+	m->define({ "COLOR_MAP", "METALLIC_MAP", "ROUGHNESS_MAP" });
+	m->set("color_map", Texture::get("Iron/albedo.png"));
+	m->set("metallic_map", Texture::get("Iron/metallic.png"));
+	m->set("roughness_map", Texture::get("Iron/roughness.png"));
 
 	MeshRef groundMesh = Mesh::createQuad(MeshData::Basic, vec2(20.0f), uvec2(2), uvec2(2));
 	Entity::create("Ground", false)

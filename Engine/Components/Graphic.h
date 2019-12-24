@@ -29,7 +29,8 @@ public:
 	MeshRef getMesh() const;
 	AABB getAABB() const;
 
-	const std::vector<MaterialRef>& getMaterials() const;
+	std::vector<MaterialRef>& getMaterials() { return materials; }
+	const std::vector<MaterialRef>& getMaterials() const { return materials; }
 
 private:
 	/// Methods (private)
