@@ -24,6 +24,8 @@ void test_materials()
 	}
 	*/
 
+	m->define("COLOR_MAP");
+
 	for (int i(0); i < 41; i++)
 	for (int j(0); j < 21; j++)
 	{

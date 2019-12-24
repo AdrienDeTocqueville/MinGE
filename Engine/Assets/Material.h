@@ -42,6 +42,7 @@ public:
 	inline void set(size_t location, T value)
 	{
 		memcpy(uniforms.data() + location, &value, sizeof(T));
+		if (Material::bound == this) Material::bound = NULL;
 	}
 
 	template <typename T>
@@ -56,6 +57,7 @@ public:
 	inline void set(size_t location, T *values, size_t num)
 	{
 		memcpy(uniforms.data() + location, values, sizeof(T) * num);
+		if (Material::bound == this) Material::bound = NULL;
 	}
 
 	~Material();

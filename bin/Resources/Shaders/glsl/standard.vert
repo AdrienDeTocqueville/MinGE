@@ -6,7 +6,7 @@ out VS_FS
 {
 	vec3 fragPos;
 	vec3 normal;
-	vec2 texCoords;
+	vec2 uv;
 } out_vs;
 
 #ifdef SKINNED
@@ -31,7 +31,7 @@ void main()
 #ifdef FORWARD_PASS
 	out_vs.fragPos = vec3(pos);
 	out_vs.normal = mat3(model) * in_normal;
-	out_vs.texCoords = in_uv;
+	out_vs.uv = in_uv;
 #endif
 
 	gl_Position = MATRIX_VP * pos;

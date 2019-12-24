@@ -1,7 +1,7 @@
 in VS_FS {
 	vec3 fragPos;
 	vec3 normal;
-	vec2 texCoords;
+	vec2 uv;
 } in_fs;
 
 // Material
@@ -59,7 +59,12 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 void main()
 {
-	vec3 albedo     = pow(color, vec3(2.2));
+#ifdef COLOR_MAP
+	vec3 albedo     = texture(color_map, in_fs.uv).xyz;
+#else
+	vec3 albedo     = color;
+#endif
+	albedo = pow(albedo, vec3(2.2f));
 	float ao        = 1.0f;
 
 	vec3 N = normalize(in_fs.normal);

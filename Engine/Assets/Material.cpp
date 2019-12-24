@@ -146,13 +146,17 @@ void Material::sync_uniforms()
 	// Initialize textures with default value
 	for (int i(0); i < RenderPass::Count; i++)
 	{
-		Program *prgm = shader->variants[variant_idx].passes[i];
-		for (const Program::Uniform &var : prgm->uniforms)
+		if (Program *prgm = shader->variants[variant_idx].passes[i])
 		{
-			if (var.offset > old_size && var.type == GL_SAMPLER_2D)
-				set(var.offset, (Texture*)NULL);
+			for (const Program::Uniform &var : prgm->uniforms)
+			{
+				if (var.offset >= old_size && var.type == GL_SAMPLER_2D)
+					set(var.offset, (Texture*)NULL);
+			}
 		}
 	}
+
+	if (Material::bound == this) Material::bound = NULL;
 }
 
 template<>
@@ -160,4 +164,6 @@ void Material::set(size_t location, Texture *value)
 {
 	if (value == NULL) value = Texture::getDefault();
 	*(Texture**)(uniforms.data() + location) = value;
+
+	if (Material::bound == this) Material::bound = NULL;
 }
