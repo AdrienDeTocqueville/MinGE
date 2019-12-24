@@ -25,6 +25,7 @@ void test_materials()
 	*/
 
 	m->define("COLOR_MAP");
+	m->set("color_map", Texture::get("Textures/0.png"));
 
 	for (int i(0); i < 41; i++)
 	for (int j(0); j < 21; j++)
