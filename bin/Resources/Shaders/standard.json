@@ -3,7 +3,7 @@
 	"fwd-base": {
 		"macros": [
 			"SKINNED",
-			"COLOR_MAP",
+			"COLOR_MAP", "METALLIC_MAP", "ROUGHNESS_MAP",
 			["NO_LIGHT", "MAIN_LIGHT", "SHADOW_MAP"]
 		],
 

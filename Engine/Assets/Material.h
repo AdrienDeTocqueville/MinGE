@@ -15,7 +15,8 @@ public:
 	/// Methods (static)
 	static MaterialRef create(std::string name);
 	static MaterialRef getDefault();
-	static MaterialRef get(uint32_t id);
+	static Material *get(uint32_t id) { return materials[id]; }
+
 
 	/// Methods (public)
 	void bind(RenderPass::Type pass) const;
@@ -27,15 +28,15 @@ public:
 	void undef(std::string macro);
 	bool ifdef(std::string macro) const;
 
-	inline uint32_t getId() const { return id; }
-	size_t getLocation(const std::string &name) const;
+	inline uint32_t get_id() const { return id; }
+	size_t get_location(const std::string &name) const;
 
 	MaterialRef clone() const;
 
 	template <typename T>
 	inline void set(std::string name, T value)
 	{
-		size_t loc = getLocation(name);
+		size_t loc = get_location(name);
 		if (loc != (size_t)-1)
 			set(loc, value);
 	}
@@ -50,7 +51,7 @@ public:
 	template <typename T>
 	inline void set(std::string name, T *values, size_t num)
 	{
-		size_t loc = getLocation(name);
+		size_t loc = get_location(name);
 		if (loc != (size_t)-1)
 			set(loc, values, num);
 	}
@@ -68,6 +69,8 @@ private:
 	Material(class Shader *_shader);
 	Material(const Material &material);
 
+	void update_variant();
+	void compute_id(size_t first);
 	void sync_uniforms();
 
 	uint32_t variant_hash;
@@ -80,7 +83,7 @@ private:
 
 	static const Material *bound;
 	static std::weak_ptr<Material> standard;
-	static std::vector<std::weak_ptr<Material>> materials;
+	static std::vector<Material*> materials;
 };
 
 template<>

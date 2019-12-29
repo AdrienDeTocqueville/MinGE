@@ -118,6 +118,6 @@ void Skybox::render(RenderContext *ctx, uint32_t view_id) const
 	cmd->vao = mesh->getVAO();
 	memcpy(&(cmd->submesh), mesh->getSubmeshes().data(), sizeof(Submesh));
 
-	uint64_t key = CommandKey::encode(view_id, RenderPass::Skybox, sky->getId(), 0.0f);
+	uint64_t key = CommandKey::encode(view_id, RenderPass::Skybox, sky->get_id(), 0.0f);
 	ctx->add(key, cmd);
 }

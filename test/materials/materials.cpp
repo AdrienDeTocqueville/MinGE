@@ -31,8 +31,8 @@ void test_materials()
 	for (int j(0); j < 21; j++)
 	{
 		auto e = Entity::clone(object, vec3(0.0f, i-20.0f, j-10.0f), vec3(0.0f), vec3(0.5f));
-		//e->find<Graphic>()->setMesh(mesh, {mats[Random::next<int>(0, mat_names.size())]});
-		e->find<Graphic>()->setMesh(mesh);
+		e->find<Graphic>()->setMesh(mesh, {mats[Random::next<int>(0, mat_names.size())]});
+		//e->find<Graphic>()->setMesh(mesh);
 	}
 
 	// Camera

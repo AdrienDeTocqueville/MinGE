@@ -64,7 +64,7 @@ void Graphic::render(RenderContext *ctx, size_t num_views, View const *views) co
 			if (!materials[i]->has_pass(view.pass))
 				continue;
 
-			uint64_t key = CommandKey::encode(view_id, view.pass, materials[i]->getId(), depth);
+			uint64_t key = CommandKey::encode(view_id, view.pass, materials[i]->get_id(), depth);
 			ctx->add(key, commands[i]);
 		}
 	}
