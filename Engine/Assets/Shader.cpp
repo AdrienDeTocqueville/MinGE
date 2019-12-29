@@ -100,7 +100,7 @@ Shader::~Shader()
 // Variant stuff
 bool Shader::load(const std::string &name)
 {
-	std::string path = "Resources/Shaders/" + name + ".json";
+	std::string path = "Assets/Shaders/" + name + ".json";
 
 	// Clear state
 	for (int i(0); i < RenderPass::Count; i++)

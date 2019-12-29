@@ -32,7 +32,7 @@ static bool check_compile(unsigned shader)
 
 static unsigned compile(unsigned type, const std::string &path, const char *pass, const char *defines, const char *builtins)
 {
-	std::ifstream file("Resources/Shaders/" + path);
+	std::ifstream file("Assets/Shaders/" + path);
 	if (!file)
 	{
 		Error::add(Error::FILE_NOT_FOUND, "Shader file not found: " + path);

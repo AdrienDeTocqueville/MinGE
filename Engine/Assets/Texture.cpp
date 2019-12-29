@@ -12,7 +12,7 @@ Texture::Texture():
 Texture::Texture(std::string _path):
 	texture(0)
 {
-	path = "Resources/" + _path;
+	path = "Assets/" + _path;
 
 	sf::Image image;
 	if (!image.loadFromFile(path))

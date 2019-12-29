@@ -251,7 +251,7 @@ static Blender::Object *get_entity(Blender::Object *obj)
 
 Scene::Scene(const std::string &file)
 {
-	std::string path = "Resources/" + file;
+	std::string path = "Assets/" + file;
 	std::string base = file.substr(0, file.find_last_of("/\\"));
 
 	// Parse file
