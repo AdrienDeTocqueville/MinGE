@@ -8,11 +8,10 @@
 #include "Assets/Shader.h"
 #include "Assets/Shader.inl"
 
-Camera::Camera(float _FOV, float _zNear, float _zFar, vec3 _clearColor, RenderTargetRef _target, bool _orthographic, vec4 _viewport, unsigned _clearFlags):
-	FOV(_FOV), zNear(_zNear), zFar(_zFar),
-	clearColor(_clearColor), clearFlags(_clearFlags),
-	orthographic(_orthographic),
-	relViewport(_viewport),
+Camera::Camera(float _FOV, float _zNear, float _zFar, vec3 _clearColor, RenderTargetRef _target, bool _orthographic,
+	vec4 _viewport, unsigned _clearFlags, unsigned _priority):
+	FOV(_FOV), zNear(_zNear), zFar(_zFar), clearColor(_clearColor), orthographic(_orthographic),
+	relViewport(_viewport), clearFlags(_clearFlags), priority(_priority),
 	renderTarget(_target ? _target : RenderTarget::getDefault())
 {
 	computeViewPort();
@@ -63,22 +62,22 @@ void Camera::onDeregister()
 
 void Camera::update(View *view)
 {
+	vec3 view_pos = getPosition();
+
 	// Compute new VP
 	static const vec3 up(0, 0, 1);
-	const mat4 view_matrix = glm::lookAt(getPosition(), getPosition() + getDirection(), up);
+	const mat4 view_matrix = glm::lookAt(view_pos, view_pos + getDirection(), up);
 	simd_mul(projection, view_matrix, view->vp);
 
 	// Copy data
 	view->viewport = viewport;
-	view->clearColor = vec4(clearColor, 0.0f);
-	view->clearFlags = clearFlags;
+	view->clear_color = vec4(clearColor, 0.0f);
+	view->view_pos = view_pos;
+	view->clear_flags = clearFlags;
 	view->fbo = renderTarget->fbo;
 
 	// Set pass type
 	view->pass = RenderPass::Forward;
-
-	// TODO: find a solution for that
-	Shader::setBuiltin("cameraPosition", getPosition());
 }
 
 void Camera::computeViewPort()

@@ -104,6 +104,9 @@ void GraphicEngine::addCamera(Camera* _camera)
 
 void GraphicEngine::addLight(Light* _light)
 {
+	if (Light::main == nullptr && _light->type == Light::Directional)
+		Light::main == _light;
+
 	lights.push_back(_light);
 }
 
@@ -143,13 +146,24 @@ void GraphicEngine::removeLight(Light* _light)
 		*it = lights.back();
 		lights.pop_back();
 	}
+
+	if (Light::main == _light)
+	{
+		for (Light *l : lights)
+		{
+			if (l->type == Light::Directional)
+			{
+				Light::main == l;
+				break;
+			}
+		}
+	}
 }
 
 void GraphicEngine::sortCameras()
 {
 	std::sort(cameras.begin(), cameras.end(), [] (Camera *&a, Camera *&b) {
-		RenderTarget *ta = a->getRenderTarget().get(), *tb = b->getRenderTarget().get();
-		return (ta->getPriority() > tb->getPriority());
+		return (a->getPriority() > b->getPriority());
 	});
 }
 

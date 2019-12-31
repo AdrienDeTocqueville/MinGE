@@ -34,7 +34,7 @@ Graphic* Graphic::clone() const
 	return new Graphic(mesh, materials);
 }
 
-void Graphic::render(RenderContext *ctx, size_t num_views, View const *views) const
+void Graphic::render(RenderContext *ctx, uint32_t num_views, View const *views) const
 {
 	const mat4 &model = tr->getToWorld();
 

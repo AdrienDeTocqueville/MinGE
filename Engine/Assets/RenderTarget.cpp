@@ -6,7 +6,7 @@
 
 std::weak_ptr<RenderTarget> RenderTarget::basic;
 
-RenderTargetRef RenderTarget::create(uvec2 size, Depth depth, unsigned priority)
+RenderTargetRef RenderTarget::create(uvec2 size, DepthType depth)
 {
 	unsigned fbo;
 	glGenFramebuffers(1, &fbo);
@@ -36,7 +36,7 @@ RenderTargetRef RenderTarget::create(uvec2 size, Depth depth, unsigned priority)
 	GLuint buf[1] = {GL_COLOR_ATTACHMENT0};
 	glDrawBuffers(1, buf);
 
-	return RenderTargetRef(new RenderTarget(size, fbo, std::move(colorBuffer), std::move(depthBuffer), priority));
+	return RenderTargetRef(new RenderTarget(size, fbo, std::move(colorBuffer), std::move(depthBuffer)));
 }
 
 RenderTargetRef RenderTarget::getDefault()
@@ -51,11 +51,11 @@ RenderTargetRef RenderTarget::getDefault()
 }
 
 RenderTarget::RenderTarget(uvec2 _size):
-	fbo(0), priority(0), size(_size)
+	fbo(0), size(_size)
 { }
 
-RenderTarget::RenderTarget(uvec2 _size, unsigned _fbo, Texture &&_color, RenderBuffer &&_depth, unsigned _priority):
-	fbo(_fbo), priority(_priority), size(_size), colorBuffer(_color), depthBuffer(_depth)
+RenderTarget::RenderTarget(uvec2 _size, unsigned _fbo, Texture &&_color, RenderBuffer &&_depth):
+	fbo(_fbo), size(_size), colorBuffer(_color), depthBuffer(_depth)
 { }
 
 
@@ -89,9 +89,4 @@ const RenderBuffer* RenderTarget::getDepthBuffer() const
 vec2 RenderTarget::getSize() const
 {
 	return size;
-}
-
-unsigned RenderTarget::getPriority() const
-{
-	return priority;
 }

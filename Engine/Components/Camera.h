@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Components/Component.h"
-
 #include "Assets/RenderTarget.h"
 
 class Entity;
@@ -9,13 +8,13 @@ class Transform;
 
 class Camera : public Component
 {
-	friend class Entity;
 	friend class GraphicEngine;
 
 public:
 	Camera(float _FOV, float _zNear, float _zFar, vec3 _clearColor = vec3(0.0f), RenderTargetRef _target = nullptr,
-			bool _orthographic = false, vec4 _viewport = vec4(0.0f,0.0f,1.0f,1.0f),
-			unsigned _clearFlags = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		bool _orthographic = false, vec4 _viewport = vec4(0.0f,0.0f,1.0f,1.0f),
+		unsigned _clearFlags = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT,
+		unsigned _priority = 0);
 
 	/// Methods (public)
 	virtual Camera* clone() const override;
@@ -28,6 +27,7 @@ public:
 
 	float getFOV() const;
 	float getAspectRatio() const;
+	unsigned getPriority() const { return priority; }
 
 private:
 	/// Methods (private)
@@ -38,7 +38,8 @@ private:
 	void computeViewPort();
 
 	/// Attributes
-	float FOV, zNear, zFar, FPS;
+	float FOV, zNear, zFar;
+	unsigned priority;
 
 	vec3 clearColor;
 	unsigned clearFlags;

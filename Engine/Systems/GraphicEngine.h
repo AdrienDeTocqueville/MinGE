@@ -16,10 +16,11 @@ class Light;
 struct View
 {
 	mat4 vp;
-	vec4 viewport;
-	vec4 clearColor;
+	ivec4 viewport;
+	vec4 clear_color;
+	vec3 view_pos;
 
-	unsigned clearFlags;
+	unsigned clear_flags;
 	unsigned fbo;
 	RenderPass::Type pass;
 };

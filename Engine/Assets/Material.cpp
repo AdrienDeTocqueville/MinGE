@@ -240,8 +240,6 @@ void Material::sync_uniforms()
 			}
 		}
 	}
-
-	if (Material::bound == this) Material::bound = NULL;
 }
 
 template<>
@@ -249,6 +247,4 @@ void Material::set(size_t location, Texture *value)
 {
 	if (value == NULL) value = Texture::getDefault();
 	*(Texture**)(uniforms.data() + location) = value;
-
-	if (Material::bound == this) Material::bound = NULL;
 }

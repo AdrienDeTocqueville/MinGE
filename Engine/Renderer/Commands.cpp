@@ -29,11 +29,14 @@ void SetupView::submit(uint64_t, const void *_cmd)
 	GL::BindFramebuffer(view->fbo);
 
 	Shader::setBuiltin("MATRIX_VP", view->vp);
+	Shader::setBuiltin("VIEW_POS", view->view_pos);
 	GL::Viewport(view->viewport);
 	GL::Scissor (view->viewport);
 
-	GL::ClearColor(view->clearColor);
-	glClear(view->clearFlags);
+	if (view->clear_flags & GL_COLOR_BUFFER_BIT)
+		GL::ClearColor(view->clear_color);
+
+	glClear(view->clear_flags);
 
 	glEnable(GL_CULL_FACE);
 	glDepthFunc(GL_LEQUAL);

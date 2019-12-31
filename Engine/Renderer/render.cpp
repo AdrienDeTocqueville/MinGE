@@ -23,7 +23,7 @@ struct create_cmd_data
 {
 	RenderContext *contexts;
 	const View *views;
-	size_t view_count;
+	uint32_t view_count;
 };
 
 void create_cmd(const void *_data)
@@ -81,19 +81,38 @@ void GraphicEngine::render()
 		Shader::setBuiltin("lightColor", source->getColor());
 	}
 
-	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "cameras");
+	// Lights and cameras
+	uint32_t view_count = 0;
+	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "views");
+
+	for (size_t i(0); i < lights.size(); i++)
+	{
+		if (lights[i]->target == NULL)
+			continue;
+		View *view = views + view_count;
+		lights[i]->update(view);
+
+		auto *cmd = contexts[0].create<SetupView>(); cmd->view = view;
+		contexts[0].add(CommandKey::encode(view_count, view->pass, 0), cmd);
+
+		view_count++;
+	}
+
 	for (size_t i(0); i < cameras.size(); i++)
 	{
-		cameras[i]->update(views + i);
+		View *view = views + view_count;
+		cameras[i]->update(view);
 
-		auto *cmd = contexts[0].create<SetupView>(); cmd->view = views + i;
-		contexts[0].add(CommandKey::encode(i, views[i].pass, 0), cmd);
+		auto *cmd = contexts[0].create<SetupView>(); cmd->view = view;
+		contexts[0].add(CommandKey::encode(view_count, view->pass, 0), cmd);
 
 		if (Skybox* sky = cameras[i]->find<Skybox>())
 		{
-			contexts[0].add(CommandKey::encode(i, RenderPass::Skybox), contexts[0].create<SetupSkybox>());
+			contexts[0].add(CommandKey::encode(view_count, RenderPass::Skybox), contexts[0].create<SetupSkybox>());
 			sky->render(contexts + 0, i);
 		}
+
+		view_count++;
 	}
 	}
 
@@ -104,7 +123,7 @@ void GraphicEngine::render()
 
 	JobSystem::ParallelFor<Graphic*, create_cmd_data> data{
 		graphics.data(), (unsigned)graphics.size(),
-		contexts, views, cameras.size()
+		contexts, views, view_count
 	};
 
 	std::atomic<int> counter(0);
@@ -142,8 +161,9 @@ void GraphicEngine::render()
 
 	// Submit to backend
 	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "submit commands");
-	auto *count = pairs + cmd_count;
-	for (auto *pair = pairs; pair < count; pair++)
+	Material::bound = NULL;
+	auto *last = pairs + cmd_count;
+	for (auto *pair = pairs; pair < last; pair++)
 		CommandPacket::submit(pair->key, pair->packet);
 	}
 

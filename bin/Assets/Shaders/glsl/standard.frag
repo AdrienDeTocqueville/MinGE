@@ -82,7 +82,7 @@ void main()
 	float ao        = 1.0f;
 
 	vec3 N = normalize(in_fs.normal);
-	vec3 V = normalize(cameraPosition - in_fs.fragPos);
+	vec3 V = normalize(VIEW_POS - in_fs.fragPos);
 
 	vec3 F0 = vec3(0.04f);
 	F0 = mix(F0, albedo, metallic);

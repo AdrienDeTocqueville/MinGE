@@ -280,7 +280,7 @@ void Shader::setupBuiltins()
 
 	// Camera
 	addBuiltin("MATRIX_VP", GL_FLOAT_MAT4);
-	addBuiltin("cameraPosition", GL_FLOAT_VEC3);
+	addBuiltin("VIEW_POS", GL_FLOAT_VEC3);
 
 	// Light
 	addBuiltin("lightPosition", GL_FLOAT_VEC3);
