@@ -69,3 +69,6 @@ private:
 	static std::vector<uint8_t> builtins; // Contains < update_idx | type | data > sequenced for each builtin
 	static std::unordered_map<std::string, size_t> builtins_names;
 };
+
+template<>
+inline void Shader::setBuiltin(size_t location, const class Texture *value);

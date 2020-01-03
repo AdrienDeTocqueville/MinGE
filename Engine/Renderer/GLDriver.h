@@ -44,6 +44,13 @@ public:
 		return vao;
 	}
 
+	static GLuint GenFramebuffer()
+	{
+		GLuint fbo;
+		glCheck(glGenFramebuffers(1, &fbo));
+		return fbo;
+	}
+
 	// Deletion
 	static void DeleteBuffer(GLuint buf)
 	{
@@ -61,6 +68,13 @@ public:
 		glCheck(glDeleteVertexArrays(1, &vao));
 		if (state.vao == vao)
 			state.vao = 0;
+	}
+
+	static void DeleteFramebuffer(GLuint fbo)
+	{
+		glCheck(glDeleteFramebuffers(1, &fbo));
+		if (state.fbo == fbo)
+			GL::BindFramebuffer(0);
 	}
 
 	// Binding
@@ -106,12 +120,12 @@ public:
 		}
 	}
 
-	static void BindFramebuffer(GLuint buf)
+	static void BindFramebuffer(GLuint fbo)
 	{
-		if (buf != state.fbo)
+		if (fbo != state.fbo)
 		{
-			glCheck(glBindFramebuffer(GL_FRAMEBUFFER, buf));
-			state.fbo = buf;
+			glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
+			state.fbo = fbo;
 		}
 	}
 

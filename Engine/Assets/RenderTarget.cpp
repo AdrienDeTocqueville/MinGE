@@ -8,35 +8,61 @@ std::weak_ptr<RenderTarget> RenderTarget::basic;
 
 RenderTargetRef RenderTarget::create(uvec2 size, DepthType depth)
 {
-	unsigned fbo;
-	glGenFramebuffers(1, &fbo);
+	unsigned fbo = GL::GenFramebuffer();
+	GL::BindFramebuffer(fbo);
 
 	/// Color attachment
 	Texture colorBuffer;
 	colorBuffer.create(size);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer.getId(), 0);
+	glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer.getId(), 0));
+
+	GLuint buf[1] = {GL_COLOR_ATTACHMENT0};
+	glCheck(glDrawBuffers(1, buf));
 
 	/// Depth attachement
 	RenderBuffer depthBuffer;
 	if (depth)
 	{
 		depthBuffer.create(size, depth);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer.getId());
+		glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer.getId()));
 	}
 
-	int val = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
-
+	// Check
+	int val = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (val != GL_FRAMEBUFFER_COMPLETE)
 	{
 		Error::add(Error::OPENGL, "RenderTarget::create() -> glCheckFramebufferStatus() returns: " + val);
-		glDeleteFramebuffers(1, &fbo);
+		GL::DeleteFramebuffer(fbo);
 		return nullptr;
 	}
 
-	GLuint buf[1] = {GL_COLOR_ATTACHMENT0};
-	glDrawBuffers(1, buf);
-
 	return RenderTargetRef(new RenderTarget(size, fbo, std::move(colorBuffer), std::move(depthBuffer)));
+}
+
+RenderTargetRef RenderTarget::create_depth_map(uvec2 size)
+{
+	unsigned fbo = GL::GenFramebuffer();
+	GL::BindFramebuffer(fbo);
+
+	/// Depth attachement
+	Texture depth_tex;
+	depth_tex.create(size, GL_DEPTH_COMPONENT, GL_FLOAT);
+	glCheck(glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_tex.getId(), 0));
+
+	/// Color attachment
+	glCheck(glDrawBuffer(GL_NONE));
+	glCheck(glReadBuffer(GL_NONE));
+
+	// Check
+	int val = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (val != GL_FRAMEBUFFER_COMPLETE)
+	{
+		Error::add(Error::OPENGL, "RenderTarget::create_depth_map() -> glCheckFramebufferStatus() returns: " + val);
+		GL::DeleteFramebuffer(fbo);
+		return nullptr;
+	}
+
+	return RenderTargetRef(new RenderTarget(size, fbo, std::move(depth_tex), std::move(RenderBuffer())));
 }
 
 RenderTargetRef RenderTarget::getDefault()
@@ -55,13 +81,13 @@ RenderTarget::RenderTarget(uvec2 _size):
 { }
 
 RenderTarget::RenderTarget(uvec2 _size, unsigned _fbo, Texture &&_color, RenderBuffer &&_depth):
-	fbo(_fbo), size(_size), colorBuffer(_color), depthBuffer(_depth)
+	fbo(_fbo), size(_size), colorBuffer(std::move(_color)), depthBuffer(std::move(_depth))
 { }
 
 
 RenderTarget::~RenderTarget()
 {
-	glDeleteFramebuffers(1, &fbo);
+	GL::DeleteFramebuffer(fbo);
 }
 
 void RenderTarget::resize(uvec2 _size)

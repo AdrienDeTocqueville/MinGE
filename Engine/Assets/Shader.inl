@@ -33,11 +33,16 @@ inline void set_uniform(int location, GLuint type, GLsizei num, const void *data
 inline size_t Shader::getBuiltinLocation(const std::string &name)
 {
 	auto it = builtins_names.find(name);
-	if (it != builtins_names.end())
-		return it->second;
 
-	std::cout << "Unknown builtin: " << name << std::endl;
-	return -1;
+#ifdef DEBUG
+	if (it == builtins_names.end())
+	{
+		std::cout << "Unknown builtin: " << name << std::endl;
+		return -1;
+	}
+#endif // DEBUG
+
+	return it->second;
 }
 
 template <typename T>
@@ -49,6 +54,17 @@ inline void Shader::setBuiltin(size_t location, T value)
 	b += sizeof(uint8_t) + sizeof(GLuint);
 
 	memcpy(b, &value, sizeof(T));
+}
+
+template<>
+inline void Shader::setBuiltin(size_t location, const class Texture *value)
+{
+	uint8_t *b = builtins.data() + location;
+	(*b)++; // Bump update index;
+
+	b += sizeof(uint8_t) + sizeof(GLuint);
+
+	*(Texture**)(b) = (Texture*)value;
 }
 
 template <typename T>

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Utility/helpers.h"
+#include <vector>
+#include "Utility/glm.h"
 
 class Debug
 {

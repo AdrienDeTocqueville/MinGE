@@ -1,5 +1,13 @@
 {
 "passes": {
+	"shadow": {
+		"macros": [ "SKINNED" ],
+		"stages": {
+			"vertex": "glsl/standard.vert",
+			"fragment": "glsl/empty.frag"
+		}
+	},
+
 	"fwd-base": {
 		"macros": [
 			"SKINNED",

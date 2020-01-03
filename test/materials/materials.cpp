@@ -39,5 +39,5 @@ void test_materials()
 	Entity::create("MainCamera", false, vec3(-15.0f, 0.0f, 0.0f))
 		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
 		->insert<Skybox>()
-		->insert<CameraScript>(nullptr, 0.2f, 7.0f);
+		->insert<CameraScript>(nullptr, 0.2f, 7.0f, vec3(-0.23171, 0.91854, 0.32032));
 }

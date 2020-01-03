@@ -3,6 +3,8 @@
 #include "Components/RigidBody.h"
 #include "Components/Transform.h"
 
+#include "Utility/Debug.h"
+
 #include "Entity.h"
 
 std::vector<DistanceConstraint*> DistanceConstraint::joints;

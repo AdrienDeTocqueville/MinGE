@@ -1,7 +1,8 @@
 in VS_FS {
-	vec3 fragPos;
+	vec3 pos;
 	vec3 normal;
 	vec2 uv;
+	vec4 pos_light_space;
 } in_fs;
 
 // Material
@@ -66,6 +67,15 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 }
 
 
+float compute_shadow()
+{
+	vec3 coords = in_fs.pos_light_space.xyz / in_fs.pos_light_space.w;
+	coords = coords * 0.5f + 0.5f;
+
+	return texture(SHADOW_MAP, coords.xy).r < coords.z ? 0.5 : 1.0;
+}
+
+
 void main()
 {
 #ifdef COLOR_MAP
@@ -82,21 +92,21 @@ void main()
 	float ao        = 1.0f;
 
 	vec3 N = normalize(in_fs.normal);
-	vec3 V = normalize(VIEW_POS - in_fs.fragPos);
+	vec3 V = normalize(VIEW_POS - in_fs.pos);
 
 	vec3 F0 = vec3(0.04f);
 	F0 = mix(F0, albedo, metallic);
 
 	vec3 Lo = vec3(0.0f);
 	{
-		//vec3 L = normalize(lightPosition - in_fs.fragPos); // Point
-		vec3 L = lightPosition; // Directional
+		//vec3 L = normalize(lightPosition - in_fs.pos); // Point
+		vec3 L = -LIGHT_DIR; // Directional
 		vec3 H = normalize(V + L);
 
 		// Compute radiance
 		//float attenuation = 1.0f / (distance * distance);
-		float attenuation = 1.0f;
-		vec3 radiance = lightColor * attenuation;
+		float attenuation = compute_shadow();
+		vec3 radiance = LIGHT_COLOR * attenuation;
 
 		// Cook-Torrance BRDF
 		float NDF = DistributionGGX(N, H, roughness);

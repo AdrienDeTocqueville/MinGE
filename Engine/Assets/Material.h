@@ -11,8 +11,6 @@ typedef std::shared_ptr<class Material> MaterialRef;
 
 class Material
 {
-	friend class GraphicEngine;
-
 public:
 	/// Methods (static)
 	static MaterialRef create(std::string name);
@@ -84,7 +82,9 @@ private:
 	static const Material *bound;
 	static std::weak_ptr<Material> standard;
 	static std::vector<Material*> materials;
+
+	friend struct SetupView;
 };
 
 template<>
-void Material::set(size_t location, class Texture *value);
+void Material::set(size_t location, const class Texture *value);

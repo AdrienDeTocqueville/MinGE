@@ -80,6 +80,9 @@ public:
 	static MeshRef createCylinder(MeshData::Flags flags = MeshData::Basic, float _base = 0.5f, float _top = 0.5f, float _height = 1.0f, unsigned _slices = 20);
 
 private:
+	Mesh(const Mesh&) = delete;
+	Mesh operator=(Mesh) = delete;
+
 	void loadBuffers();
 
 	std::vector<Submesh> submeshes;

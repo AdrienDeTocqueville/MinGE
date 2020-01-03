@@ -1,7 +1,6 @@
 #ifndef COMPONENT_H
 #define COMPONENT_H
 
-#include "Utility/Debug.h"
 #include "Entity.h"
 
 class Component

@@ -35,7 +35,7 @@ void load_scene(Engine *engine)
 	if (scene >= (int)setups.size()) scene = 0;
 
 	auto sun = Entity::create("Light", false, vec3(0))
-		->insert<Light>(Light::Directional);
+		->insert<Light>(Light::Directional, vec3(0.8f), false);
 	sun->find<Transform>()->lookAt(vec3(-0.23171, 0.91854, 0.32032));
 
 	Input::getWindow()->setTitle("MinGE (test " + names[scene] + ")");

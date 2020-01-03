@@ -51,9 +51,9 @@ void main()
 	viewDir.y = abs(viewDir.y);
 
 	vec3 lightDir = vec3(
-		lightPosition.x,
-		lightPosition.z,
-		lightPosition.y
+		LIGHT_DIR.x,
+		LIGHT_DIR.z,
+		LIGHT_DIR.y
 	);
 	vec3 skyDir = vec3(0.0, 1.0, 0.0);
 

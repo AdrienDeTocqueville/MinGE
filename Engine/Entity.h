@@ -140,8 +140,8 @@ public:
 	static Entity* clone(Entity* _entity);
 	static void clear();
 
-	static Entity* findByTag(const Tag& _tag, bool _allowPrototypes = true);
-	static std::vector<Entity*> findAllByTag(const Tag& _tag, bool _allowPrototypes = true);
+	static Entity* findByTag(const Tag& _tag, bool _allowPrototypes = false);
+	static std::vector<Entity*> findAllByTag(const Tag& _tag, bool _allowPrototypes = false);
 
 	/// Attributes (public)
 	const bool prototype;

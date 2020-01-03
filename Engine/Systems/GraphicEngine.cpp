@@ -37,6 +37,7 @@ GraphicEngine::GraphicEngine()
 
 	//glEnable(GL_CLIP_DISTANCE0);
 
+	glDepthFunc(GL_LEQUAL);
 	glPointSize(7);
 	glLineWidth(3);
 
@@ -180,24 +181,3 @@ void GraphicEngine::toggleWireframe()
 
 	glPolygonMode(GL_FRONT_AND_BACK, wireframe? GL_LINE: GL_FILL);
 }
-
-/// Getters
-Light* GraphicEngine::getLight() const
-{
-	if (!lights.empty())
-		return lights.back();
-
-	return nullptr;
-}
-
-/*
-vec3 GraphicEngine::getViewPosition() const
-{
-	mat3 rotMat(matrices[GE_VIEW]);
-	vec3 d(matrices[GE_VIEW][3]);
-
-	vec3 pos = -d * rotMat;
-
-	return pos;
-}
-*/

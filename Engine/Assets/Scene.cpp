@@ -26,10 +26,10 @@ static inline quat make_quat(const json &n, const char *prop, const quat &def)
 {
 	if (!n.contains(prop)) return def;
 	json x = n[prop];
-	return quat(x[0].get<float>(),
+	return quat(x[3].get<float>(),
+		x[0].get<float>(),
 		x[1].get<float>(),
-		x[2].get<float>(),
-		x[3].get<float>());
+		x[2].get<float>());
 }
 
 inline char encode_base64_char(uint8_t b) {
@@ -257,7 +257,13 @@ Scene::Scene(const std::string &file)
 	// Parse file
 	std::ifstream src(path);
 	json root;
-	src >> root;
+	try {
+		src >> root;
+	}
+	catch (json::parse_error e) {
+		Error::add(Error::USER, "JSON parser error");
+		return;
+	}
 
 	// Scene data
 	json scene = root["scenes"][root["scene"].get<int>()];
@@ -362,15 +368,18 @@ Scene::Scene(const std::string &file)
 		{
 			json CAMERAS = root["cameras"];
 			json cam = CAMERAS[node["camera"].get<int>()];
-			if (cam.contains("persepective"))
+			if (cam.contains("perspective"))
 			{
-				json perspective = root["perspective"];
+				json perspective = cam["perspective"];
+				float fov = glm::degrees(perspective["yfov"].get<float>());
 				proto->insert<Camera>(
-					perspective["yfov"].get<float>(),
+					perspective["yfov"].get<float>() * 50.0f, // TODO: find real transformation
 					perspective["znear"].get<float>(),
 					perspective["zfar"].get<float>()
 				);
 			}
+			else Error::add(Error::USER, "Unknown camera type");
+
 		}
 		if (node.contains("extensions"))
 		{
@@ -388,7 +397,7 @@ Scene::Scene(const std::string &file)
 				else if (type_str == "spot") type = Light::Spot;
 				else Error::add(Error::USER, "Unknown light type");
 
-				proto->insert<Light>(type, color);
+				proto->insert<Light>(type, color, true);
 			}
 		}
 	}

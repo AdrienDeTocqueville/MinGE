@@ -7,6 +7,8 @@
 
 #include "Components/Sphere.h"
 
+#include "Utility/Debug.h"
+
 #include <set>
 
 

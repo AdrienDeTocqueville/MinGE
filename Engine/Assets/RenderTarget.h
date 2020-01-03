@@ -21,6 +21,7 @@ public:
 	};
 
 	static RenderTargetRef create(uvec2 size, DepthType depth = DEPTH_16_BIT);
+	static RenderTargetRef create_depth_map(uvec2 size);
 	static RenderTargetRef getDefault();
 	~RenderTarget();
 
@@ -34,6 +35,9 @@ public:
 private:
 	RenderTarget(uvec2 _size);
 	RenderTarget(uvec2 _size, unsigned _fbo, Texture &&_color, RenderBuffer &&_depth);
+
+	RenderTarget(const RenderTarget&) = delete;
+	RenderTarget operator=(RenderTarget) = delete;
 
 	unsigned fbo;
 	uvec2 size;

@@ -74,13 +74,6 @@ void GraphicEngine::render()
 
 	//glEnable(GL_SCISSOR_TEST);
 
-	// TODO : find a solution for that
-	{
-		Light *source = GraphicEngine::get()->getLight();
-		Shader::setBuiltin("lightPosition", source->getPosition());
-		Shader::setBuiltin("lightColor", source->getColor());
-	}
-
 	// Lights and cameras
 	uint32_t view_count = 0;
 	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "views");
@@ -109,7 +102,7 @@ void GraphicEngine::render()
 		if (Skybox* sky = cameras[i]->find<Skybox>())
 		{
 			contexts[0].add(CommandKey::encode(view_count, RenderPass::Skybox), contexts[0].create<SetupSkybox>());
-			sky->render(contexts + 0, i);
+			sky->render(contexts + 0, view_count);
 		}
 
 		view_count++;
@@ -161,13 +154,14 @@ void GraphicEngine::render()
 
 	// Submit to backend
 	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "submit commands");
-	Material::bound = NULL;
 	auto *last = pairs + cmd_count;
 	for (auto *pair = pairs; pair < last; pair++)
 		CommandPacket::submit(pair->key, pair->packet);
 	}
 
 	delete[] pairs;
+
+	GL::BindFramebuffer(0);
 
 #ifdef DRAWAABB
 	for(Graphic* g: graphics)

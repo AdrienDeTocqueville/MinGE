@@ -283,8 +283,10 @@ void Shader::setupBuiltins()
 	addBuiltin("VIEW_POS", GL_FLOAT_VEC3);
 
 	// Light
-	addBuiltin("lightPosition", GL_FLOAT_VEC3);
-	addBuiltin("lightColor", GL_FLOAT_VEC3);
+	addBuiltin("MATRIX_LIGHT", GL_FLOAT_MAT4);
+	addBuiltin("LIGHT_DIR", GL_FLOAT_VEC3);
+	addBuiltin("LIGHT_COLOR", GL_FLOAT_VEC3);
+	addBuiltin("SHADOW_MAP", GL_SAMPLER_2D);
 
 	// Model
 	addBuiltin("MATRIX_M", GL_FLOAT_MAT4);

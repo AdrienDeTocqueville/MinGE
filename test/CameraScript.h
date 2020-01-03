@@ -14,8 +14,11 @@ class CameraScript : public Script
 		{
 			Input::setCursorMode(Input::Free);
 
-			if (!target)
-				lookAt(offset);
+			if (target == nullptr)
+			{
+				vec3 ea = eulerAngles(tr->rotation);
+				angles = vec2(ea.z, ea.y);
+			}
 		}
 
 		/// Methods (public)
@@ -45,6 +48,14 @@ class CameraScript : public Script
 			Debug::drawVector(vec3(0.0f), vec3(1, 0, 0), vec3(1, 0, 0));
 			Debug::drawVector(vec3(0.0f), vec3(0, 1, 0), vec3(0, 1, 0));
 			Debug::drawVector(vec3(0.0f), vec3(0, 0, 1), vec3(0, 0, 1));
+
+			if (Entity *light = Entity::findByTag("Sun", false))
+			{
+				const vec3 view_pos = light->find<Transform>()->getPosition();
+				const vec3 view_dir = light->find<Light>()->getDirection();
+
+				Debug::drawVector(view_pos, view_dir);
+			}
 #endif
 
 		}

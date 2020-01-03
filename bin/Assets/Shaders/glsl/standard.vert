@@ -4,12 +4,15 @@ layout(location = 2) in vec2 in_uv;
 layout(location = 3) in uvec4 in_bones;
 layout(location = 4) in vec4 in_weights;
 
+#ifdef FORWARD_PASS
 out VS_FS
 {
-	vec3 fragPos;
+	vec3 pos;
 	vec3 normal;
 	vec2 uv;
+	vec4 pos_light_space;
 } out_vs;
+#endif
 
 #ifdef SKINNED
 const int MAX_BONES = 100;
@@ -31,9 +34,10 @@ void main()
 	vec4 pos = model * vec4(in_position, 1.0f);
 
 #ifdef FORWARD_PASS
-	out_vs.fragPos = vec3(pos);
+	out_vs.pos = vec3(pos);
 	out_vs.normal = mat3(model) * in_normal;
 	out_vs.uv = in_uv;
+	out_vs.pos_light_space = MATRIX_LIGHT * pos;
 #endif
 
 	gl_Position = MATRIX_VP * pos;

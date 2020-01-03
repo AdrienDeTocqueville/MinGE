@@ -131,8 +131,6 @@ void RigidBody::applyForce(vec3 _force, vec3 _point)
 {
 	forces += _force;
 	torques += cross(_point - getCOM(), _force);
-
-	Debug::drawVector(getCOM(), _point, vec3(249, 54, 13)*(1.0f/255.0f));
 }
 
 void RigidBody::applyForceToCOM(vec3 _force)

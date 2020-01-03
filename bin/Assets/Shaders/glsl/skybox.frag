@@ -17,9 +17,9 @@ void main()
 	float size2 = sunSize * sunSize;
 
 	vec3 lightDir = vec3(
-		lightPosition.x,
-		lightPosition.z,
-		lightPosition.y
+		LIGHT_DIR.x,
+		LIGHT_DIR.z,
+		LIGHT_DIR.y
 	);
 	float dist = 2.0 * (1.0 - dot(normalize(viewDir), lightDir));
 	float sun  = exp(-dist/ sunBloom / size2) + step(dist, size2);

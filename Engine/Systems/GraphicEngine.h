@@ -50,9 +50,8 @@ public:
 	void render();
 
 	/// Getters
-	Light* getLight() const;
-
-	//vec3 getViewPosition() const;
+	Light* getLight(uint32_t id) const
+	{ return lights[id]; }
 
 	static const size_t MAX_VIEWS = 8;
 

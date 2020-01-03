@@ -243,8 +243,8 @@ void Material::sync_uniforms()
 }
 
 template<>
-void Material::set(size_t location, Texture *value)
+void Material::set(size_t location, const Texture *value)
 {
 	if (value == NULL) value = Texture::getDefault();
-	*(Texture**)(uniforms.data() + location) = value;
+	*(Texture**)(uniforms.data() + location) = (Texture*)value;
 }

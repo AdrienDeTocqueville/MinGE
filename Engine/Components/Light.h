@@ -15,15 +15,18 @@ public:
 		Directional,
 	};
 
-	Light(Light::Type _type, vec3 _color = vec3(150.0f / 255.0f), bool _cast_shadows = false);
+	Light(Light::Type _type, vec3 _color = vec3(150.0f / 255.0f), bool _cast_shadow = false);
 	virtual ~Light();
 
 	/// Methods (public)
 	virtual Light* clone() const override;
 
+	void bind() const;
+
 	/// Getters
 	vec3 getPosition() const;
-	vec3 getColor() const;
+	vec3 getDirection() const;
+	vec3 getColor() const { return color; }
 
 private:
 	/// Methods (private)
@@ -35,7 +38,10 @@ private:
 	/// Attributes (private)
 	Light::Type type;
 	vec3 color;
-	RenderTargetRef target;
 
-	static Light *main;
+	bool cast_shadow;
+	RenderTargetRef target;
+	mat4 light_space;
+
+	static Light *main, *bound;
 };
