@@ -27,6 +27,7 @@ class Transform : public Component
 
 			void setPosition(vec3 _position);
 			void setRotation(vec3 _rotation);
+			void setRotation(quat _rotation);
 			void setScale(vec3 _scale);
 
 			void setDirection(vec3 _direction);

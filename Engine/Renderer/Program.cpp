@@ -6,14 +6,28 @@
 
 #include <fstream>
 
+union Stages
+{
+	struct {
+		unsigned vertex;
+		unsigned tess_ctrl;
+		unsigned tess_eval;
+		unsigned geometry;
+		unsigned fragment;
+	};
+	unsigned stages[];
+};
+const int NUM_STAGES = sizeof(Stages) / sizeof(unsigned);
 
-static bool check_compile(unsigned shader)
+
+static bool check_compile(unsigned shader, const std::string &file)
 {
 	GLint success;
 	glCheck(glGetShaderiv(shader, GL_COMPILE_STATUS, &success));
 
 	if (success != GL_TRUE)
 	{
+#ifdef DEBUG
 		GLint stringSize(0);
 		glCheck(glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &stringSize));
 
@@ -22,10 +36,10 @@ static bool check_compile(unsigned shader)
 		glCheck(glGetShaderInfoLog(shader, stringSize, &stringSize, error));
 		error[stringSize] = '\0';
 
-		std::cout << std::endl << "error = " << error;
-		Error::add(Error::OPENGL, "Compilation error (see console)");
-
+		std::cout << std::endl << error;
 		delete[] error;
+#endif
+		Error::add(Error::OPENGL, "Failed to compile shader: " + file);
 	}
 	return success == GL_TRUE;
 }
@@ -60,7 +74,7 @@ static unsigned compile(unsigned type, const std::string &path, const char *pass
 	glCheck(glShaderSource(shader, 4, source, nullptr));
 	glCheck(glCompileShader(shader));
 
-	if (!check_compile(shader))
+	if (!check_compile(shader, path))
 	{
 		glCheck(glDeleteShader(shader));
 		return 0;
@@ -92,16 +106,24 @@ static bool check_link(unsigned program)
 	return success == GL_TRUE;
 }
 
-static unsigned link(const Program::Stages &stages)
+static unsigned link(const Stages &stages)
 {
 	unsigned program = glCreateProgram();
 
-	if (stages.vertex)
-		glCheck(glAttachShader(program, stages.vertex));
-	if (stages.fragment)
-		glCheck(glAttachShader(program, stages.fragment));
+	for (int i(0); i < NUM_STAGES; i++)
+	{
+		if (stages.stages[i])
+			glCheck(glAttachShader(program, stages.stages[i]));
+	}
 
 	glCheck(glLinkProgram(program));
+
+	for (int i(0); i < NUM_STAGES; i++)
+	{
+		if (stages.stages[i])
+			glCheck(glDetachShader(program, stages.stages[i]));
+	}
+
 
 	if (!check_link(program))
 	{
@@ -128,7 +150,7 @@ Program::Program(const ShaderSources &sources, RenderPass::Type pass, const char
 	char pass_str[64];
 	snprintf(pass_str, 64, "#define %s\n", pass_macro[pass]);
 
-	memset(&stages, 0, sizeof(stages));
+	Stages stages = {0};
 
 	bool error;
 	do {
@@ -136,10 +158,14 @@ Program::Program(const ShaderSources &sources, RenderPass::Type pass, const char
 
 		if (!sources.vertex.empty())
 			error |= COMPILE(GL_VERTEX_SHADER, vertex);
+		if (!sources.tess_ctrl.empty())
+			error |= COMPILE(GL_TESS_CONTROL_SHADER, tess_ctrl);
+		if (!sources.tess_eval.empty())
+			error |= COMPILE(GL_TESS_EVALUATION_SHADER, tess_eval);
+		if (!sources.geometry.empty())
+			error |= COMPILE(GL_GEOMETRY_SHADER, geometry);
 		if (!sources.fragment.empty())
 			error |= COMPILE(GL_FRAGMENT_SHADER, fragment);
-		// TODO: handle other stages
-		stages.tess_ctrl = stages.tess_eval = stages.geometry = 0;
 
 		if (error)
 		{
@@ -151,16 +177,13 @@ Program::Program(const ShaderSources &sources, RenderPass::Type pass, const char
 	while (error);
 
 	program = link(stages);
+
+	for (int i(0); i < NUM_STAGES; i++)
+		glCheck(glDeleteShader(stages.stages[i]));
 }
 
 Program::~Program()
 {
 	glCheck(glDeleteProgram(program));
-
-	glCheck(glDeleteShader(stages.vertex));
-	glCheck(glDeleteShader(stages.tess_ctrl));
-	glCheck(glDeleteShader(stages.tess_eval));
-	glCheck(glDeleteShader(stages.geometry));
-	glCheck(glDeleteShader(stages.fragment));
 }
 

@@ -10,7 +10,9 @@ out VS_FS
 	vec3 pos;
 	vec3 normal;
 	vec2 uv;
+#ifdef CAST_SHADOW
 	vec4 pos_light_space;
+#endif
 } out_vs;
 #endif
 
@@ -37,7 +39,9 @@ void main()
 	out_vs.pos = vec3(pos);
 	out_vs.normal = mat3(model) * in_normal;
 	out_vs.uv = in_uv;
+#ifdef CAST_SHADOW
 	out_vs.pos_light_space = MATRIX_LIGHT * pos;
+#endif
 #endif
 
 	gl_Position = MATRIX_VP * pos;

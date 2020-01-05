@@ -2,7 +2,9 @@ in VS_FS {
 	vec3 pos;
 	vec3 normal;
 	vec2 uv;
+#ifdef CAST_SHADOW
 	vec4 pos_light_space;
+#endif
 } in_fs;
 
 // Material
@@ -67,6 +69,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 }
 
 
+#ifdef CAST_SHADOW
 float compute_shadow()
 {
 	vec3 coords = in_fs.pos_light_space.xyz / in_fs.pos_light_space.w;
@@ -74,6 +77,7 @@ float compute_shadow()
 
 	return texture(SHADOW_MAP, coords.xy).r < coords.z ? 0.5 : 1.0;
 }
+#endif
 
 
 void main()
@@ -104,8 +108,11 @@ void main()
 		vec3 H = normalize(V + L);
 
 		// Compute radiance
-		//float attenuation = 1.0f / (distance * distance);
+#ifdef CAST_SHADOW
 		float attenuation = compute_shadow();
+#else
+		float attenuation = 1.0f;
+#endif
 		vec3 radiance = LIGHT_COLOR * attenuation;
 
 		// Cook-Torrance BRDF

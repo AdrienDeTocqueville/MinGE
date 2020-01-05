@@ -12,15 +12,6 @@ struct Program
 	Program(const ShaderSources &sources, RenderPass::Type pass, const char *defines, const char *builtins);
 	~Program();
 
-	struct Stages
-	{
-		unsigned vertex;
-		unsigned tess_ctrl;
-		unsigned tess_eval;
-		unsigned geometry;
-		unsigned fragment;
-	};
-	Stages stages;
 	unsigned program;
 
 	struct Uniform

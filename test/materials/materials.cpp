@@ -8,7 +8,7 @@ void test_materials()
 
 	MeshRef mesh = Mesh::createCube();
 
-	MaterialRef m = Material::getDefault();
+	MaterialRef standard = Material::getDefault();
 	Entity *object = Entity::create("Object", true)
 		->insert<Graphic>(nullptr);
 
@@ -16,23 +16,19 @@ void test_materials()
 	std::vector<MaterialRef> mats(mat_names.size());
 	for (size_t i(0); i < mat_names.size(); i++)
 	{
-		mats[i] = m->clone();
-		mats[i]->define({ "COLOR_MAP", "METALLIC_MAP", "ROUGHNESS_MAP" });
+		mats[i] = standard->clone();
+		mats[i]->define({ "COLOR_MAP", "METALLIC_MAP", "ROUGHNESS_MAP", "MAIN_LIGHT" });
 
 		mats[i]->set("color_map", Texture::get(mat_names[i] + "/albedo.png"));
 		mats[i]->set("metallic_map", Texture::get(mat_names[i] + "/metallic.png"));
 		mats[i]->set("roughness_map", Texture::get(mat_names[i] + "/roughness.png"));
 	}
 
-	m->define("COLOR_MAP");
-	m->set("color_map", Texture::get("Textures/0.png"));
-
 	for (int i(0); i < 41; i++)
 	for (int j(0); j < 21; j++)
 	{
 		auto e = Entity::clone(object, vec3(0.0f, i-20.0f, j-10.0f), vec3(0.0f), vec3(0.5f));
 		e->find<Graphic>()->setMesh(mesh, {mats[Random::next<int>(0, mat_names.size())]});
-		//e->find<Graphic>()->setMesh(mesh);
 	}
 
 	// Camera

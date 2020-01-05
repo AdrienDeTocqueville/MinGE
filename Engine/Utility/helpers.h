@@ -8,8 +8,6 @@
 
 #include <unordered_map>
 #include <vector>
-#include <list>
-#include <map>
 
 #include "Utility/glm.h"
 

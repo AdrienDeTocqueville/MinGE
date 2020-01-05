@@ -12,7 +12,7 @@
 		"macros": [
 			"SKINNED",
 			"COLOR_MAP", "METALLIC_MAP", "ROUGHNESS_MAP",
-			["NO_LIGHT", "MAIN_LIGHT", "SHADOW_MAP"]
+			["CAST_SHADOW", "MAIN_LIGHT", "NO_LIGHT"]
 		],
 
 		"stages": {

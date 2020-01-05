@@ -71,6 +71,12 @@ void Transform::setRotation(vec3 _rotation)
 	toMatrix();
 }
 
+void Transform::setRotation(quat _rotation)
+{
+	rotation = _rotation;
+	toMatrix();
+}
+
 void Transform::setScale(vec3 _scale)
 {
 	scale = _scale;

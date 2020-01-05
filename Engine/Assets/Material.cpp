@@ -4,6 +4,7 @@
 #include "Assets/Shader.inl"
 
 #include "Renderer/Program.h"
+#include "Utility/Error.h"
 
 const Material *Material::bound = nullptr;
 std::weak_ptr<Material> Material::standard;
@@ -113,11 +114,16 @@ bool Material::ifdef(std::string macro) const
 size_t Material::get_location(const std::string &name) const
 {
 	auto it = shader->uniforms_names.find(name);
-	if (it != shader->uniforms_names.end())
-		return it->second;
 
-	std::cout << "Unknown uniform: " << name << std::endl;
-	return -1;
+#ifdef DEBUG
+	if (it == shader->uniforms_names.end())
+	{
+		Error::add(Error::USER, "Unknown uniform: " + name);
+		return -1;
+	}
+#endif
+
+	return it->second;
 }
 
 void Material::update_variant()

@@ -18,7 +18,7 @@ const auto video_mode = desktop;
 const auto style = sf::Style::Fullscreen;
 #endif
 
-int scene = 5;
+int scene = 2;
 std::vector<void (*)()> setups = {
 	test_physic,	// 0
 	test_bvh,	// 1
@@ -36,7 +36,7 @@ void load_scene(Engine *engine)
 
 	auto sun = Entity::create("Light", false, vec3(0))
 		->insert<Light>(Light::Directional, vec3(0.8f), false);
-	sun->find<Transform>()->lookAt(vec3(-0.23171, 0.91854, 0.32032));
+	sun->find<Transform>()->setRotation(glm::rotation(vec3(0, 0, -1), vec3(-0.23171, 0.91854, 0.32032)));
 
 	Input::getWindow()->setTitle("MinGE (test " + names[scene] + ")");
 	setups[scene]();

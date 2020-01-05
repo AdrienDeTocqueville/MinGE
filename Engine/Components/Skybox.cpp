@@ -8,22 +8,22 @@
 #include "Utility/Time.h"
 
 
-static vec3 ABCDE[] = {
-	{ -0.2592f, -0.2608f, -1.4630f },
-	{  0.0008f,  0.0092f,  0.4275f },
-	{  0.2125f,  0.2102f,  5.3251f },
-	{ -0.8989f, -1.6537f, -2.5771f },
-	{  0.0452f,  0.0529f,  0.3703f },
-};
-static vec3 ABCDE_t[] = {
-	{ -0.0193f, -0.0167f,  0.1787f },
-	{ -0.0665f, -0.0950f, -0.3554f },
-	{ -0.0004f, -0.0079f, -0.0227f },
-	{ -0.0641f, -0.0441f,  0.1206f },
-	{ -0.0033f, -0.0109f, -0.0670f },
-};
 static void computePerezCoeff(float _turbidity, vec4 _outPerezCoeff[5])
 {
+	const vec3 ABCDE[] = {
+		{ -0.2592f, -0.2608f, -1.4630f },
+		{  0.0008f,  0.0092f,  0.4275f },
+		{  0.2125f,  0.2102f,  5.3251f },
+		{ -0.8989f, -1.6537f, -2.5771f },
+		{  0.0452f,  0.0529f,  0.3703f },
+	};
+	const vec3 ABCDE_t[] = {
+		{ -0.0193f, -0.0167f,  0.1787f },
+		{ -0.0665f, -0.0950f, -0.3554f },
+		{ -0.0004f, -0.0079f, -0.0227f },
+		{ -0.0641f, -0.0441f,  0.1206f },
+		{ -0.0033f, -0.0109f, -0.0670f },
+	};
 	const vec3 turbidity = vec3(_turbidity);
 	for (uint32_t i = 0; i < 5; ++i)
 	{
@@ -33,7 +33,7 @@ static void computePerezCoeff(float _turbidity, vec4 _outPerezCoeff[5])
 }
 
 
-typedef std::map<float, vec3> KeyMap;
+typedef std::unordered_map<float, vec3> KeyMap;
 static KeyMap skyLuminanceXYZTable = {
 	{  0.0f, { 0.308f,    0.308f,    0.411f    } },
 	{  1.0f, { 0.308f,    0.308f,    0.410f    } },
@@ -94,6 +94,7 @@ Skybox::Skybox():
 	float time = 6.118f;
 
 	sky->set("perezCoeff", perezCoeff, 5);
+	// TODO: compute perez sun
 	sky->set("skyLuminance", getLuminance(time, skyLuminanceXYZTable));
 	sky->set("exposition", 0.1f);
 	sky->set("sunSize", 0.02f);

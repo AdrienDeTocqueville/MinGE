@@ -4,11 +4,13 @@
 
 void test_sky()
 {
-	std::string name = Random::element({"Iron", "Greasy", "Grimy"});
 	MaterialRef m = Material::getDefault();
-	m->set("albedoMap", Texture::get(name + "/albedo.png"));
-	m->set("metallicMap", Texture::get(name + "/metallic.png"));
-	m->set("roughnessMap", Texture::get(name + "/roughness.png"));
+	m->define({ "COLOR_MAP", "METALLIC_MAP", "ROUGHNESS_MAP" });
+
+	std::string name = Random::element({"Iron", "Greasy", "Grimy"});
+	m->set("color_map", Texture::get(name + "/albedo.png"));
+	m->set("metallic_map", Texture::get(name + "/metallic.png"));
+	m->set("roughness_map", Texture::get(name + "/roughness.png"));
 
 
 	MeshRef groundMesh = Mesh::createQuad(MeshData::Basic, vec2(20.0f), uvec2(2), uvec2(2));

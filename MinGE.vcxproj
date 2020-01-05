@@ -271,6 +271,7 @@
       <AdditionalIncludeDirectories>Engine;C:\Users\Adrien\Documents\Programs\C++\libs\glm;C:\Users\Adrien\Documents\Programs\C++\libs\glew-2.1.0\include;C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions>DRAWAABB;DEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>C:\Users\Adrien\Documents\Programs\C++\libs\SFML-2.5.1\lib;%(AdditionalLibraryDirectories);glu32.lib</AdditionalLibraryDirectories>
