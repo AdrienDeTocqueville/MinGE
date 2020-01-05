@@ -201,7 +201,7 @@ static MaterialRef import_material(const json &material)
 	m->set("roughness", roughness);
 
 	// Load textures
-	// ...
+	// TODO...
 
 	return m;
 }
@@ -214,7 +214,7 @@ static Skeleton import_skin(const json &skin, const json &scene, const std::vect
 	json view = scene["bufferViews"][view_id];
 
 	int offset = view["byteOffset"].get<int>();
-	uint8_t* buf = buffers[view["buffer"].get<int>()] + offset;
+	mat4* buf = (mat4*) (buffers[view["buffer"].get<int>()] + offset);
 
 	json joints = skin["joints"];
 	skel.offsets.resize(joints.size());
@@ -222,32 +222,12 @@ static Skeleton import_skin(const json &skin, const json &scene, const std::vect
 	for (size_t i(0); i < joints.size(); i++)
 	{
 		int src = joints[i].get<int>();
-		memcpy(skel.offsets.data() + i, (mat4*)buf + src, sizeof(mat4));
+		memcpy(skel.offsets.data() + src, buf + src, sizeof(mat4));
 	}
 
 	return skel;
 }
 
-/*
-static bool has_offset(Blender::Object *obj)
-{
-	float *p = obj->loc;
-	float *r = obj->rot;
-	float *s = obj->size;
-
-	return	(p[0] == p[1] == p[2] == 0.0f) &&
-		(r[0] == r[1] == r[2] == 0.0f) &&
-		(s[0] == s[1] == s[2] == 0.0f);
-}
-
-static Blender::Object *get_entity(Blender::Object *obj)
-{
-	while (obj->_pad0 == nullptr)
-		obj = obj->parent;
-
-	return obj;
-}
-*/
 
 Scene::Scene(const std::string &file)
 {

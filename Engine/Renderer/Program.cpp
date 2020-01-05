@@ -6,16 +6,13 @@
 
 #include <fstream>
 
-union Stages
+struct Stages
 {
-	struct {
-		unsigned vertex;
-		unsigned tess_ctrl;
-		unsigned tess_eval;
-		unsigned geometry;
-		unsigned fragment;
-	};
-	unsigned stages[];
+	unsigned vertex;
+	unsigned tess_ctrl;
+	unsigned tess_eval;
+	unsigned geometry;
+	unsigned fragment;
 };
 const int NUM_STAGES = sizeof(Stages) / sizeof(unsigned);
 
@@ -109,19 +106,20 @@ static bool check_link(unsigned program)
 static unsigned link(const Stages &stages)
 {
 	unsigned program = glCreateProgram();
+	auto shaders = (unsigned*)&stages;
 
 	for (int i(0); i < NUM_STAGES; i++)
 	{
-		if (stages.stages[i])
-			glCheck(glAttachShader(program, stages.stages[i]));
+		if (shaders[i])
+			glCheck(glAttachShader(program, shaders[i]));
 	}
 
 	glCheck(glLinkProgram(program));
 
 	for (int i(0); i < NUM_STAGES; i++)
 	{
-		if (stages.stages[i])
-			glCheck(glDetachShader(program, stages.stages[i]));
+		if (shaders[i])
+			glCheck(glDetachShader(program, shaders[i]));
 	}
 
 
@@ -150,7 +148,8 @@ Program::Program(const ShaderSources &sources, RenderPass::Type pass, const char
 	char pass_str[64];
 	snprintf(pass_str, 64, "#define %s\n", pass_macro[pass]);
 
-	Stages stages = {0};
+	Stages stages;
+	memset(&stages, 0, sizeof(Stages));
 
 	bool error;
 	do {
@@ -178,8 +177,9 @@ Program::Program(const ShaderSources &sources, RenderPass::Type pass, const char
 
 	program = link(stages);
 
+	auto shaders = (unsigned*)&stages;
 	for (int i(0); i < NUM_STAGES; i++)
-		glCheck(glDeleteShader(stages.stages[i]));
+		glCheck(glDeleteShader(shaders[i]));
 }
 
 Program::~Program()

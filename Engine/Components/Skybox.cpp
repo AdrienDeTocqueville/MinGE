@@ -7,6 +7,7 @@
 
 #include "Utility/Time.h"
 
+#include <map>
 
 static void computePerezCoeff(float _turbidity, vec4 _outPerezCoeff[5])
 {
@@ -33,7 +34,7 @@ static void computePerezCoeff(float _turbidity, vec4 _outPerezCoeff[5])
 }
 
 
-typedef std::unordered_map<float, vec3> KeyMap;
+typedef std::map<float, vec3> KeyMap;
 static KeyMap skyLuminanceXYZTable = {
 	{  0.0f, { 0.308f,    0.308f,    0.411f    } },
 	{  1.0f, { 0.308f,    0.308f,    0.410f    } },

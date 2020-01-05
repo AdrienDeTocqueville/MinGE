@@ -38,7 +38,7 @@ void Light::bind() const
 		Shader::setBuiltin("MATRIX_LIGHT", light_space);
 		Shader::setBuiltin("SHADOW_MAP", target->getColorBuffer());
 	}
-	Shader::setBuiltin("LIGHT_DIR", getDirection());
+	Shader::setBuiltin("LIGHT_DIR", tr->vectorToWorld(vec3(0, 0, 1)));
 	Shader::setBuiltin("LIGHT_COLOR", color);
 }
 

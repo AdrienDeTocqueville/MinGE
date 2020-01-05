@@ -84,7 +84,7 @@ Error::Answer Error::ask(Error::Type _type, std::string _question)
 	if (r == IDNO) return Answer::NO;
 	return Answer::CANCEL;
 #else
-	std::cout << getTitle(_type).c_str() << ": " << _description << " (yes)" << std::endl;
-	return true;
+	std::cout << getTitle(_type).c_str() << ": " << _question << " (cancel)" << std::endl;
+	return Answer::CANCEL;
 #endif
 }

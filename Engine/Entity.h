@@ -170,7 +170,7 @@ private:
 	Transform* tr;
 
 	/// Attributes (static)
-	static std::list<Entity*> entities;
+	static std::vector<Entity*> entities;
 
 	static SizeMap scriptSizes;
 };

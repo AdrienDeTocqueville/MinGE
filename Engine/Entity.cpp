@@ -1,7 +1,7 @@
 #include "MinGE.h"
 #include <cstring>
 
-std::list<Entity*> Entity::entities;
+std::vector<Entity*> Entity::entities;
 SizeMap Entity::scriptSizes;
 
 Entity::Entity(Tag _tag, bool _prototype):
@@ -33,7 +33,12 @@ Entity::~Entity()
 /// Methods (public)
 void Entity::destroy()
 {
-	entities.remove(this);
+	auto it = std::find(entities.begin(), entities.end(), this);
+	if (it != entities.end())
+	{
+		*it = entities.back();
+		entities.pop_back();
+	}
 
 	delete this;
 }

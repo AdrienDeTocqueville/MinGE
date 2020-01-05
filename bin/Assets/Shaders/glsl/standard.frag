@@ -104,7 +104,7 @@ void main()
 	vec3 Lo = vec3(0.0f);
 	{
 		//vec3 L = normalize(lightPosition - in_fs.pos); // Point
-		vec3 L = -LIGHT_DIR; // Directional
+		vec3 L = LIGHT_DIR; // Directional
 		vec3 H = normalize(V + L);
 
 		// Compute radiance

@@ -4,16 +4,21 @@
 
 void test_scene()
 {
+	auto std = Material::getDefault();
+	std->define("MAIN_LIGHT");
+
 	Input::setCursorMode(Input::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
-	Entity::findByTag("Light")->destroy();
-
-	Scene scene("shadow.gltf");
+	Scene scene("skinned2.gltf");
 	scene.instantiate();
 
-	Entity::findByTag("Sun", false)
-		->insert<Graphic>(Mesh::createCube());
+	auto sun = Entity::findByTag("Sun", false);
+	if (sun)
+	{
+		Entity::findByTag("Light")->destroy();
+		sun->insert<Graphic>(Mesh::createCube());
+	}
 
 	// Camera
 	auto cam = Entity::findByTag("MainCamera");

@@ -28,6 +28,8 @@ public:
 	vec3 getDirection() const;
 	vec3 getColor() const { return color; }
 
+	static Light *main;
+
 private:
 	/// Methods (private)
 	virtual void onRegister() override;
@@ -43,5 +45,5 @@ private:
 	RenderTargetRef target;
 	mat4 light_space;
 
-	static Light *main, *bound;
+	static Light *bound;
 };

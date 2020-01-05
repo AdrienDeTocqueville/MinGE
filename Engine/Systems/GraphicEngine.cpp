@@ -106,7 +106,7 @@ void GraphicEngine::addCamera(Camera* _camera)
 void GraphicEngine::addLight(Light* _light)
 {
 	if (Light::main == nullptr && _light->type == Light::Directional)
-		Light::main == _light;
+		Light::main = _light;
 
 	lights.push_back(_light);
 }
@@ -154,7 +154,7 @@ void GraphicEngine::removeLight(Light* _light)
 		{
 			if (l->type == Light::Directional)
 			{
-				Light::main == l;
+				Light::main = l;
 				break;
 			}
 		}

@@ -24,8 +24,8 @@ void DrawElements::submit(uint64_t key, const void *_cmd)
 	Shader::setBuiltin("MATRIX_M", cmd->model);
 	Shader::setBuiltin("MATRIX_N", cmd->model);
 
-	if (pass == RenderPass::Forward)
-		GraphicEngine::get()->getLight(0)->bind();
+	if (pass == RenderPass::Forward && Light::main)
+		Light::main->bind();
 
 	Material::get(material)->bind(pass);
 

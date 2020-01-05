@@ -131,8 +131,20 @@ void Animator::onRegister()
 	int offset = 0;
 	get_bones(tr, bones, offset);
 
-	if (find<Graphic>() == NULL)
-		return Error::add(Error::USER, "Add a graphic before animator");
+	Graphic *g = find<Graphic>();
+	if (g == NULL)
+		return Error::add(Error::USER, "Animator requires a Graphic component.");
+
+	// Enable skinning
+	std::vector<MaterialRef> &materials = g->getMaterials();
+	for (int i(0); i < materials.size(); i++)
+	{
+		if (!materials[i]->ifdef("SKINNED"))
+		{
+			materials[i] = materials[i]->clone();
+			materials[i]->define("SKINNED");
+		}
+	}
 
 	upload();
 	GraphicEngine::get()->addAnimator(this);
@@ -157,15 +169,8 @@ void Animator::upload()
 	if (Graphic *g = find<Graphic>())
 	{
 		std::vector<MaterialRef> &materials = g->getMaterials();
-		for (int i(0); i < materials.size(); i++)
-		{
-			if (!materials[i]->ifdef("SKINNED"))
-			{
-				materials[i] = materials[i]->clone();
-				materials[i]->define("SKINNED");
-			}
-			materials[i]->set("bones", matrices, skeleton.offsets.size());
-		}
+		for (MaterialRef m: g->getMaterials())
+			m->set("bones", matrices, skeleton.offsets.size());
 	}
 }
 

@@ -10,8 +10,9 @@
 
 Camera::Camera(float _FOV, float _zNear, float _zFar, vec3 _clearColor, RenderTargetRef _target, bool _orthographic,
 	vec4 _viewport, unsigned _clearFlags, unsigned _priority):
-	FOV(_FOV), zNear(_zNear), zFar(_zFar), clearColor(_clearColor), orthographic(_orthographic),
-	relViewport(_viewport), clearFlags(_clearFlags), priority(_priority),
+	FOV(_FOV), zNear(_zNear), zFar(_zFar), priority(_priority),
+	clearColor(_clearColor), clearFlags(_clearFlags),
+	orthographic(_orthographic), relViewport(_viewport),
 	renderTarget(_target ? _target : RenderTarget::getDefault())
 {
 	computeViewPort();
