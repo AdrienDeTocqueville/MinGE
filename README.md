@@ -25,13 +25,20 @@ General architecture is heavily inspired from Unity.
 * [GLEW](http://glew.sourceforge.net/index.html)
 * [GLM](https://github.com/g-truc/glm/releases/)
 
-## Build on Linux
+## Build
 
+Install [premake 5](https://premake.github.io/) and download all dependencies.
+Run premake to generate project file.
+
+### Arch Linux
 ```bash
 pacman -S sfml glew glm
-make
+premake5 gmake
 ```
 
-## Build on Windows
+### Windows
 
-Installe dependencies and update path in visual studio project file.
+```bash
+# Update libraries install dir ('LibsDir' and 'IncludeDir') in premake5.lua
+premake5 vs2015
+```

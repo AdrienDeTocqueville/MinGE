@@ -1,22 +1,31 @@
+# Linux
 .vimsession
 .gdb_history
 tags
 cscope*
 
+# Windows
+*.dll
+*.exe
+*.lib
+
+# Codeblocks
 *.layout
 *.depend
+
+# MSVC++
+.vs/
 *.vcxproj.filters
 *.vcxproj.user
-.vs/
-
-obj/
-*.dll
+*.vcxproj
 *.pdb
 *.ipdb
 *.ilk
 *.iobj
 
-bin/*.exe
+
+
+obj/
 
 bin/debug
 bin/dev
