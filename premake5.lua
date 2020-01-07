@@ -9,7 +9,7 @@ filter "system:windows"
 
 workspace "MinGE"
 	architecture "x64"
-	startproject "Tests"
+	startproject "test"
 	characterset "ASCII"
 	flags "MultiProcessorCompile"
 

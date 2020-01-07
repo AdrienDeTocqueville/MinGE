@@ -134,7 +134,7 @@ void Mesh::loadBuffers()
 
 		// EBO
 		glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * data.index_count, data.indices, GL_STATIC_DRAW));
-		glCheck(glVertexArrayElementBuffer(vao, ebo));
+		//glCheck(glVertexArrayElementBuffer(vao, ebo));
 	}
 	GL::BindVertexArray(0);
 }

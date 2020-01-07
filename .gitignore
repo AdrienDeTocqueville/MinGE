@@ -20,6 +20,7 @@ cscope*
 
 # MSVC++
 .vs/
+*.sln
 *.vcxproj.filters
 *.vcxproj.user
 *.vcxproj
