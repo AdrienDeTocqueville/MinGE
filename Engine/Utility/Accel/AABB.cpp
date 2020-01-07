@@ -53,6 +53,7 @@ bool AABB::operator==(const AABB& box)
 #include "Systems/GraphicEngine.h"
 #include "Renderer/GLDriver.h"
 #include "Assets/Shader.h"
+#include "Assets/Shader.inl"
 
 bool AABB::drawAABBs = true;
 

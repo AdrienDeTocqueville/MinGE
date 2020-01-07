@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
+#include <cstring>
 #include <string>
+#include <memory>
 #include <vector>
 
 #include "Renderer/structs.h"

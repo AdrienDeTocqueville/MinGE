@@ -45,5 +45,5 @@ private:
 	RenderTargetRef target;
 	mat4 light_space;
 
-	static Light *bound;
+	static const Light *bound;
 };

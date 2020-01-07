@@ -168,7 +168,6 @@ void Animator::upload()
 
 	if (Graphic *g = find<Graphic>())
 	{
-		std::vector<MaterialRef> &materials = g->getMaterials();
 		for (MaterialRef m: g->getMaterials())
 			m->set("bones", matrices, skeleton.offsets.size());
 	}

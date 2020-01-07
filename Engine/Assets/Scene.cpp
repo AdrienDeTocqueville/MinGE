@@ -240,7 +240,7 @@ Scene::Scene(const std::string &file)
 	try {
 		src >> root;
 	}
-	catch (json::parse_error e) {
+	catch (json::parse_error &e) {
 		Error::add(Error::USER, "JSON parser error");
 		return;
 	}
@@ -351,7 +351,6 @@ Scene::Scene(const std::string &file)
 			if (cam.contains("perspective"))
 			{
 				json perspective = cam["perspective"];
-				float fov = glm::degrees(perspective["yfov"].get<float>());
 				proto->insert<Camera>(
 					perspective["yfov"].get<float>() * 50.0f, // TODO: find real transformation
 					perspective["znear"].get<float>(),

@@ -41,7 +41,7 @@ static bool check_compile(unsigned shader, const std::string &file)
 	return success == GL_TRUE;
 }
 
-static unsigned compile(unsigned type, const std::string &path, const char *pass, const char *defines, const char *builtins)
+static unsigned compile(unsigned type, const std::string &path, const char *pass_define, const char *defines, const char *builtins)
 {
 	std::ifstream file("Assets/Shaders/" + path);
 	if (!file)
@@ -62,8 +62,8 @@ static unsigned compile(unsigned type, const std::string &path, const char *pass
 		sourceCode += line + '\n';
 
 	const GLchar* source[] = {
-		pass,
 		defines,
+		pass_define,
 		builtins,
 		sourceCode.c_str(),
 	};
@@ -136,17 +136,17 @@ Program::Program(const ShaderSources &sources, RenderPass::Type pass, const char
 	program(0)
 {
 	#define COMPILE(type, name) (0 == (stages.name ? stages.name :\
-		(stages.name = compile(type, sources.name, pass_str, defines, builtins)))) \
+		(stages.name = compile(type, sources.name, pass_define, defines, builtins)))) \
 
-	static const char *pass_macro[] = {
+	static const char *pass_defines[] = {
 		"SHADOW_PASS",
 		"FORWARD_PASS",
 		"ADDITIVE_PASS",
 		"SKYBOX_PASS",
 	};
 
-	char pass_str[64];
-	snprintf(pass_str, 64, "#define %s\n", pass_macro[pass]);
+	char pass_define[64];
+	snprintf(pass_define, 64, "#define %s\n", pass_defines[pass]);
 
 	Stages stages;
 	memset(&stages, 0, sizeof(Stages));

@@ -39,6 +39,6 @@ premake5 gmake
 ### Windows
 
 ```bash
-# Update libraries install dir ('LibsDir' and 'IncludeDir') in premake5.lua
+# Modify libraries path if necessary in premake5.lua
 premake5 vs2015
 ```

@@ -12,7 +12,7 @@
 #define SHADOW_DIM 512
 
 Light *Light::main = nullptr;
-Light *Light::bound = nullptr;
+const Light *Light::bound = nullptr;
 
 Light::Light(Light::Type _type, vec3 _color, bool _cast_shadow):
 	type(_type), color(_color), cast_shadow(_cast_shadow), target(NULL)
@@ -31,7 +31,7 @@ void Light::bind() const
 {
 	if (Light::bound == this)
 		return;
-	Light::bound == this;
+	Light::bound = this;
 
 	if (cast_shadow)
 	{

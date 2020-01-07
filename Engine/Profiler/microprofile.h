@@ -1144,7 +1144,7 @@ void MicroProfileInit()
 			S.CategoryInfo[i].pName[0] = '\0';
 			S.CategoryInfo[i].nGroupMask = 0;
 		}
-		strcpy_s(S.CategoryInfo[0].pName, MICROPROFILE_NAME_MAX_LEN, "default");
+		strncpy(S.CategoryInfo[0].pName, "default", MICROPROFILE_NAME_MAX_LEN);
 		S.nCategoryCount = 1;
 		for(int i = 0; i < MICROPROFILE_MAX_TIMERS; ++i)
 		{
@@ -3426,8 +3426,8 @@ void MicroProfileDumpToFile()
 {
 	std::lock_guard<std::recursive_mutex> Lock(MicroProfileMutex());
 
-	FILE* F;
-	if (!fopen_s(&F, S.DumpPath, "w"))
+	FILE* F = fopen(S.DumpPath, "w");
+	if(F)
 	{
 		if(S.eDumpType == MicroProfileDumpTypeHtml)
 			MicroProfileDumpHtml(MicroProfileWriteFile, F, S.nDumpFrames, 0);

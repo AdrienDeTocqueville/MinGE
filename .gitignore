@@ -1,13 +1,18 @@
 # Linux
-.vimsession
+*.a
+*.make
+Makefile
 .gdb_history
-tags
-cscope*
 
 # Windows
 *.dll
 *.exe
 *.lib
+
+# Vim
+.vimsession
+tags
+cscope*
 
 # Codeblocks
 *.layout
@@ -24,7 +29,7 @@ cscope*
 *.iobj
 
 
-
+# Build results
 obj/
 
 bin/debug
