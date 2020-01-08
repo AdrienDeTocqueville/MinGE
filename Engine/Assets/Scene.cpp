@@ -9,6 +9,60 @@
 #include "Utility/IO/json.hpp"
 using json = nlohmann::json;
 
+
+SceneRef Scene::create(const std::string &file)
+{
+	Scene *scene = new Scene();
+	if (scene->load(file))
+		return SceneRef(scene);
+
+	delete scene;
+	return SceneRef(nullptr);
+}
+
+Scene::~Scene()
+{
+	for (Entity *e : nodes)
+		e->destroy();
+}
+
+void Scene::spawn()
+{
+	if (spawned) return;
+
+	entities.reserve(nodes.size());
+	for (Entity *e : roots)
+		entities.push_back(Entity::clone(e));
+}
+
+void Scene::despawn()
+{
+	if (!spawned) return;
+
+	for (Entity *e : entities)
+		e->destroy();
+	entities.clear();
+}
+
+Entity *Scene::find_prototype(const Tag &_tag)
+{
+	for (Entity* proto: nodes)
+		if (proto->tag == _tag) return proto;
+
+	return nullptr;
+}
+
+Entity *Scene::find_entity(const Tag &_tag)
+{
+	for (Entity* entity: entities)
+		if (entity->tag == _tag) return entity;
+
+	return nullptr;
+}
+
+
+// GLTF import stuff
+
 static inline float make_float(const json &n, const char *prop, const float &def)
 {
 	if (!n.contains(prop)) return def;
@@ -229,7 +283,7 @@ static Skeleton import_skin(const json &skin, const json &scene, const std::vect
 }
 
 
-Scene::Scene(const std::string &file)
+bool Scene::load(const std::string &file)
 {
 	std::string path = "Assets/" + file;
 	std::string base = file.substr(0, file.find_last_of("/\\"));
@@ -242,13 +296,14 @@ Scene::Scene(const std::string &file)
 	}
 	catch (json::parse_error &e) {
 		Error::add(Error::USER, "JSON parser error");
-		return;
+		return false;
 	}
 
 	// Scene data
 	json scene = root["scenes"][root["scene"].get<int>()];
-	name = scene["name"].get<std::string>();
+	//name = scene["name"].get<std::string>();
 
+	json ROOTS = scene["nodes"];
 	json BUFFERS = root["buffers"];
 	json MATERIALS = root["materials"];
 	json MESHES = root["meshes"];
@@ -267,17 +322,10 @@ Scene::Scene(const std::string &file)
 	}
 
 	// Import materials
-	std::vector<MaterialRef> materials_ref;
 	materials.reserve(MATERIALS.size());
-	materials_ref.reserve(MATERIALS.size());
 
 	for (auto &material : MATERIALS)
-	{
-		MaterialRef m = import_material(material);
-
-		materials_ref.push_back(m);
-		materials.push_back(m);
-	}
+		materials.push_back(import_material(material));
 
 	// Import skeletons
 	std::vector<Skeleton> skeletons;
@@ -287,21 +335,13 @@ Scene::Scene(const std::string &file)
 		skeletons.push_back(import_skin(skin, root, buffers));
 
 	// Import meshes
-	std::vector<MeshRef> meshes_ref;
 	meshes.reserve(MESHES.size());
-	meshes_ref.reserve(MESHES.size());
 
 	for (auto &mesh : MESHES)
-	{
-		MeshRef m = import_mesh(mesh, root, buffers);
-
-		meshes_ref.push_back(m);
-		meshes.push_back(m);
-	}
+		meshes.push_back(import_mesh(mesh, root, buffers));
 
 	// Import nodes
-	std::vector<Entity*> prototypes;
-	prototypes.reserve(nodes.size());
+	nodes.reserve(NODES.size());
 
 	for (auto &node : NODES)
 	{
@@ -310,14 +350,14 @@ Scene::Scene(const std::string &file)
 			make_quat(node, "rotation", quat(vec3(0))),
 			make_vec3(node, "scale", vec3(1.0f))
 		);
-		prototypes.push_back(proto);
+		nodes.push_back(proto);
 
 		// Read hierarchy
 		if (node.contains("children"))
 		{
 			auto *tr = proto->find<Transform>();
 			for (auto &child : node["children"])
-				prototypes[child.get<int>()]->find<Transform>()->setParent(tr);
+				nodes[child.get<int>()]->find<Transform>()->setParent(tr);
 		}
 
 		// Read components
@@ -326,13 +366,13 @@ Scene::Scene(const std::string &file)
 			int mesh_id = node["mesh"].get<int>();
 			json primitives = MESHES[mesh_id]["primitives"];
 
-			MeshRef mesh = meshes_ref[mesh_id];
+			MeshRef mesh = meshes[mesh_id];
 			std::vector<MaterialRef> mesh_materials;
 
 			for (size_t j(0); j < primitives.size(); j++)
 			{
 				if (primitives[j].contains("material"))
-					mesh_materials.push_back(materials_ref[primitives[j]["material"].get<int>()]);
+					mesh_materials.push_back(materials[primitives[j]["material"].get<int>()]);
 				else
 					mesh_materials.push_back(Material::getDefault());
 			}
@@ -351,8 +391,11 @@ Scene::Scene(const std::string &file)
 			if (cam.contains("perspective"))
 			{
 				json perspective = cam["perspective"];
+				float fov = perspective["yfov"].get<float>();
+				float ratio = make_float(perspective, "aspectRatio", 16.0f / 9.0f);
+
 				proto->insert<Camera>(
-					perspective["yfov"].get<float>() * 50.0f, // TODO: find real transformation
+					glm::degrees(atan(tan(0.5f * fov) * ratio)),
 					perspective["znear"].get<float>(),
 					perspective["zfar"].get<float>()
 				);
@@ -381,17 +424,16 @@ Scene::Scene(const std::string &file)
 		}
 	}
 
-	for (auto &node : scene["nodes"])
-		nodes.push_back(prototypes[node.get<int>()]);
+	// Save root nodes
+	roots.reserve(ROOTS.size());
+
+	for (auto &root : ROOTS)
+		roots.push_back(nodes[root.get<int>()]);
 
 
 	for (size_t i(0); i < buffers.size(); i++)
 		delete[] buffers[i];
 	buffers.clear();
-}
 
-void Scene::instantiate()
-{
-	for (Entity *e : nodes)
-		Entity::clone(e);
+	return true;
 }

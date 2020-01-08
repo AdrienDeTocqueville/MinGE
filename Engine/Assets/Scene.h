@@ -4,15 +4,35 @@
 #include <vector>
 #include <memory>
 
-struct Scene
+#include "Utility/Tag.h"
+
+typedef std::shared_ptr<class Scene> SceneRef;
+
+typedef std::shared_ptr<class Mesh> MeshRef;
+typedef std::shared_ptr<class Material> MaterialRef;
+
+class Scene
 {
-	Scene(const std::string &file);
+public:
+	static SceneRef create(const std::string &file);
 
-	void instantiate();
+	void spawn();
+	void despawn();
 
-	std::string name;
-	std::vector<class Entity*> nodes;
+	class Entity *find_prototype(const Tag &_tag);
+	class Entity *find_entity(const Tag &_tag);
 
-	std::vector<std::weak_ptr<class Mesh>> meshes;
-	std::vector<std::weak_ptr<class Material>> materials;
+	~Scene();
+
+private:
+	Scene(): spawned(false) {}
+	bool load(const std::string &file);
+
+	std::vector<class Entity*> nodes, roots;
+
+	std::vector<MeshRef> meshes;
+	std::vector<MaterialRef> materials;
+
+	std::vector<class Entity*> entities;
+	bool spawned;
 };

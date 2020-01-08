@@ -6,8 +6,7 @@ class CameraScript : public Script
 {
 	public:
 		CameraScript(Transform* _target, float _sensivity = 0.2f, float _distance = 0.01f, vec3 _offset = vec3(0.0f)):
-			target(_target), angles(0.0f), clampAngleY(-0.499f*PI, 0.499f*PI),
-			sensivity(_sensivity), distance(_distance), offset(_offset)
+			target(_target), angles(0.0f), sensivity(_sensivity), distance(_distance), offset(_offset)
 		{ }
 
 		void start() override
@@ -28,12 +27,6 @@ class CameraScript : public Script
 				Input::setCursorMode(Input::Capture);
 			else if (Input::getMouseReleased(sf::Mouse::Left))
 				Input::setCursorMode(Input::Free);
-
-			if (Input::getCursorMode() == Input::Capture)
-			{
-				angles += radians(Input::getMouseDelta() * sensivity);
-				angles.y = clamp(angles.y, clampAngleY.x, clampAngleY.y);
-			}
 
 			distance = max(0.01f, distance + (target ? -1 : 1) * 0.2f*Input::getMouseWheelDelta());
 
@@ -62,23 +55,31 @@ class CameraScript : public Script
 
 		void lateUpdate() override
 		{
+			vec3 euler_angles(0,0,0);
+			if (Input::getCursorMode() == Input::Capture && Input::getMouseDelta() != vec2(0.0f))
+			{
+				float y_limit = 0.5f*PI - EPSILON;
+				angles += radians(Input::getMouseDelta() * sensivity);
+				angles.y = clamp(angles.y, -y_limit, y_limit);
+				euler_angles = vec3(0.0f, angles.y, angles.x);
+			}
+
 			if (target == nullptr) /// FPS
 			{
 				vec3 dir = getMovement(tr->vectorToWorld(vec3(1, 0, 0)));
-				if (dir == vec3(0.0f) && Input::getMouseDelta() == vec2(0.0f))
-					return;
+				if (dir != vec3(0.0f))
+				{
+					float speed = (Input::getKeyDown(sf::Keyboard::LShift) ? 0.5f : 1.0f) * distance * Time::deltaTime;
+					tr->position += dir * speed;
+				}
 
-				float speed = (Input::getKeyDown(sf::Keyboard::LShift)?0.5f:1.0f) * distance * Time::deltaTime;
-
-				tr->position += dir * speed;
-				tr->rotation = quat(vec3(0.0f, angles.y, angles.x));
+				if (euler_angles != vec3(0.0f))
+					tr->rotation = quat(euler_angles);
 			}
 
 			else /// TPS
 			{
-				tr->position = target->toWorld(offset) -
-					quat(vec3(0.0f, angles.y, angles.x)) *
-					vec3(distance, 0.0f, 0.0f);
+				tr->position = target->toWorld(offset) - quat(euler_angles) * vec3(distance, 0.0f, 0.0f);
 				tr->lookAt(target->toWorld(offset));
 			}
 
@@ -116,7 +117,6 @@ class CameraScript : public Script
 		Transform* target;
 
 		vec2 angles;
-		vec2 clampAngleY;
 
 		float sensivity;
 		float distance;

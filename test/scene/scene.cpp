@@ -10,10 +10,11 @@ void test_scene()
 	Input::setCursorMode(Input::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
-	Scene scene("skinned2.gltf");
-	scene.instantiate();
+	SceneRef scene = Scene::create("shadow.gltf");
+	scene->spawn();
 
-	auto sun = Entity::findByTag("Sun", false);
+	// Light
+	auto sun = scene->find_entity("Sun");
 	if (sun)
 	{
 		Entity::findByTag("Light")->destroy();
@@ -21,7 +22,7 @@ void test_scene()
 	}
 
 	// Camera
-	auto cam = Entity::findByTag("MainCamera");
+	auto cam = scene->find_entity("MainCamera");
 	if (!cam)
 	{
 		cam = Entity::create("MainCamera", false, vec3(0.0f, 2.0f, 2.0f))
