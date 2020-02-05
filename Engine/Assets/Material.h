@@ -25,9 +25,9 @@ public:
 	void reload();
 
 	void define(const std::vector<std::string> &macros);
-	void define(std::string macro);
-	void undef(std::string macro);
-	bool ifdef(std::string macro) const;
+	void define(const std::string& macro);
+	void undef(const std::string& macro);
+	bool ifdef(const std::string& macro) const;
 
 	inline uint32_t get_id() const { return id; }
 	size_t get_location(const std::string &name) const;
@@ -89,3 +89,5 @@ private:
 
 template<>
 void Material::set(size_t location, const class Texture *value);
+template<>
+void Material::set(size_t location, class Texture *value);

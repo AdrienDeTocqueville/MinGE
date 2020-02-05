@@ -72,8 +72,6 @@ void GraphicEngine::render()
 	}
 
 
-	//glEnable(GL_SCISSOR_TEST);
-
 	// Lights and cameras
 	uint32_t view_count = 0;
 	{ MICROPROFILE_SCOPEI("SYSTEM_GRAPHIC", "views");
@@ -173,6 +171,4 @@ void GraphicEngine::render()
 #ifdef DEBUG
 	Debug::update();
 #endif
-
-	//glDisable(GL_SCISSOR_TEST);
 }

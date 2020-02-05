@@ -11,6 +11,12 @@ void test_physic()
 	MeshRef cubeMesh = Mesh::createCube();
 	MeshRef boule = Mesh::createSphere();
 
+	MaterialRef standard = Material::getDefault();
+
+	standard->define("MAIN_LIGHT");
+	standard->define("COLOR_MAP");
+	standard->set("color_map", Texture::getDefault());
+
 	// Prototypes
 		Entity* sphere = Entity::create("Ball", true)
 			->insert<Graphic>(boule)

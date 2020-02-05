@@ -8,7 +8,7 @@
 
 sf::RenderWindow* Input::window = nullptr;
 
-vec2 Input::dim(0.0f), Input::center(0.0f);
+ivec2 Input::dim(0), Input::center(0);
 
 vec2 Input::prevMousePos(0.0f), Input::mousePos(0.0f);
 vec2 Input::delta(0.0f);
@@ -34,7 +34,7 @@ void Input::init(sf::RenderWindow* _window)
 	window->setKeyRepeatEnabled(false);
 
 	dim = toVec2(window->getSize());
-	center = ivec2(0.5f*dim);
+	center = ivec2(dim / 2);
 
 	prevMousePos = center;
 	mousePos = center;
@@ -88,8 +88,8 @@ void Input::update()
 			break;
 
 		case sf::Event::Resized:
-			dim = vec2(event.size.width, event.size.height);
-			center = ivec2(0.5f*dim);
+			dim = ivec2(event.size.width, event.size.height);
+			center = ivec2(dim / 2);
 
 			if (mode == Cursor::Capture)
 				prevMousePos = center;
@@ -152,12 +152,12 @@ void Input::update()
 }
 
 /// Methods (private)
-void Input::setWindowSize(vec2 _size)
+void Input::setWindowSize(ivec2 _size)
 {
 	window->setSize(toSFVec2u(_size));
 
 	dim = _size;
-	center = ivec2(0.5f*dim);
+	center = ivec2(dim / 2);
 
 	if (mode == Cursor::Capture)
 		prevMousePos = center;
@@ -226,7 +226,7 @@ sf::RenderWindow* Input::getWindow()
 	return window;
 }
 
-vec2 Input::getWindowSize()
+ivec2 Input::getWindowSize()
 {
 	return dim;
 }

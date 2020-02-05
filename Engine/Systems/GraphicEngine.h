@@ -31,7 +31,7 @@ class GraphicEngine
 
 public:
 	/// Methods (static)
-	static GraphicEngine* get();
+	static GraphicEngine* get() { return instance; }
 
 	/// Methods (public)
 	void addAnimator(Animator* _animator);

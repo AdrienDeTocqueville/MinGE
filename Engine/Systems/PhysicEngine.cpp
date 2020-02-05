@@ -54,11 +54,6 @@ void PhysicEngine::destroy()
 	instance = nullptr;
 }
 
-PhysicEngine* PhysicEngine::get()
-{
-	return instance;
-}
-
 /// Methods (public)
 void PhysicEngine::addRigidBody(RigidBody* _body)
 {

@@ -4,6 +4,7 @@
 #include "Systems/GraphicEngine.h"
 #include "Systems/PhysicEngine.h"
 #include "Systems/ScriptEngine.h"
+#include "Systems/UISystem.h"
 
 #include "Renderer/GLDriver.h"
 
@@ -46,15 +47,17 @@ Engine::Engine(sf::RenderWindow* _window, unsigned _FPS):
 	GraphicEngine::create();
 	PhysicEngine::create();
 	ScriptEngine::create();
+	UISystem::create();
 }
 
 Engine::~Engine()
 {
 	clear();
 
-	GraphicEngine::destroy();
-	PhysicEngine::destroy();
+	UISystem::destroy();
 	ScriptEngine::destroy();
+	PhysicEngine::destroy();
+	GraphicEngine::destroy();
 
 	Input::destroy();
 	JobSystem::destroy();
@@ -123,6 +126,9 @@ bool Engine::update()
 
 	/// Render scene
 	GraphicEngine::get()->render();
+
+	/// Draw UI
+	UISystem::get()->draw();
 
 
 	MicroProfileFlip();

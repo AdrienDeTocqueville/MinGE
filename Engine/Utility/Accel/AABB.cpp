@@ -135,6 +135,7 @@ void AABB::draw()
 	Shader::setBuiltin("MATRIX_M", mat4(1.0f));
 	material->bind(RenderPass::Forward);
 
+	/* TODO : Fix bug with ultralight when enabled
 	glPushAttrib(GL_POLYGON_BIT);
 
 		glDisable(GL_CULL_FACE);
@@ -142,6 +143,7 @@ void AABB::draw()
 		glDrawArrays(GL_QUADS, 0, vertices.size());
 
 	glPopAttrib();
+	*/
 
 	AABB::vertices.clear();
 	AABB::colors.clear();

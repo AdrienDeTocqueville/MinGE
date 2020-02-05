@@ -54,7 +54,7 @@ void Error::add(Error::Type _type, std::string _description)
 
 
 #ifdef _WIN32
-	MessageBox(nullptr, _description.c_str(), getTitle(_type).c_str(), getIcon(_type));
+	MessageBoxA(nullptr, _description.c_str(), getTitle(_type).c_str(), getIcon(_type));
 #else
 	std::cout << getTitle(_type).c_str() << ": " << _description << std::endl;
 #endif
@@ -68,7 +68,7 @@ bool Error::check()
 
 
 #ifdef _WIN32
-	int r = MessageBox(nullptr, "One or more errors occured.\nDo you really want to continue ?",
+	int r = MessageBoxA(nullptr, "One or more errors occured.\nDo you really want to continue ?",
 					   "MinGE: loading error", MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2);
 	return (r == IDNO);
 #else
@@ -79,7 +79,7 @@ bool Error::check()
 Error::Answer Error::ask(Error::Type _type, std::string _question)
 {
 #ifdef _WIN32
-	int r = MessageBox(nullptr, _question.c_str(), getTitle(_type).c_str(), MB_ICONQUESTION | MB_YESNOCANCEL | MB_DEFBUTTON2);
+	int r = MessageBoxA(nullptr, _question.c_str(), getTitle(_type).c_str(), MB_ICONQUESTION | MB_YESNOCANCEL | MB_DEFBUTTON2);
 	if (r == IDYES) return Answer::YES;
 	if (r == IDNO) return Answer::NO;
 	return Answer::CANCEL;

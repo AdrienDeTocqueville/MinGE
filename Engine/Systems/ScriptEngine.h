@@ -14,7 +14,7 @@ class ScriptEngine
 
 	public:
 		/// Methods (static)
-			static ScriptEngine* get();
+			static ScriptEngine* get() { return instance; }
 
 		/// Methods (public)
 			void addComponent(Script* _script);

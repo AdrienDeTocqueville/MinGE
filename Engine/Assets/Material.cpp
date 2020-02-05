@@ -81,7 +81,7 @@ void Material::define(const std::vector<std::string> &macros)
 	update_variant();
 }
 
-void Material::define(std::string macro)
+void Material::define(const std::string& macro)
 {
 	auto it = shader->macros.find(macro);
 	if (it == shader->macros.end())
@@ -91,7 +91,7 @@ void Material::define(std::string macro)
 	update_variant();
 }
 
-void Material::undef(std::string macro)
+void Material::undef(const std::string& macro)
 {
 	auto it = shader->macros.find(macro);
 	if (it == shader->macros.end())
@@ -101,7 +101,7 @@ void Material::undef(std::string macro)
 	update_variant();
 }
 
-bool Material::ifdef(std::string macro) const
+bool Material::ifdef(const std::string& macro) const
 {
 	auto it = shader->macros.find(macro);
 	if (it == shader->macros.end())
@@ -242,7 +242,7 @@ void Material::sync_uniforms()
 			for (const Program::Uniform &var : prgm->uniforms)
 			{
 				if (var.offset >= old_size && var.type == GL_SAMPLER_2D)
-					set(var.offset, (Texture*)NULL);
+					set(var.offset, (const Texture*)NULL);
 			}
 		}
 	}
@@ -253,4 +253,11 @@ void Material::set(size_t location, const Texture *value)
 {
 	if (value == NULL) value = Texture::getDefault();
 	*(Texture**)(uniforms.data() + location) = (Texture*)value;
+}
+
+template<>
+void Material::set(size_t location, Texture *value)
+{
+	if (value == NULL) value = Texture::getDefault();
+	*(Texture**)(uniforms.data() + location) = value;
 }

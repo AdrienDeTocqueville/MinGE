@@ -20,6 +20,7 @@
 #include "Systems/GraphicEngine.h"
 #include "Systems/PhysicEngine.h"
 #include "Systems/ScriptEngine.h"
+#include "Systems/UISystem.h"
 
 #include "Assets/PhysicMaterial.h"
 #include "Assets/Animation.h"
@@ -36,6 +37,7 @@
 #include "Components/Camera.h"
 #include "Components/Skybox.h"
 #include "Components/Script.h"
+#include "Components/UIView.h"
 #include "Components/Light.h"
 
 #include "Components/Cylinder.h"

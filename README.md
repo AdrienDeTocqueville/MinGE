@@ -24,21 +24,24 @@ General architecture is heavily inspired from Unity.
 * [SFML](https://www.sfml-dev.org/download/sfml/2.5.1/)
 * [GLEW](http://glew.sourceforge.net/index.html)
 * [GLM](https://github.com/g-truc/glm/releases/)
+* [Ultralight](https://github.com/ultralight-ux/Ultralight/releases)
 
 ## Build
 
-Install [premake 5](https://premake.github.io/) and download all dependencies.
-Run premake to generate project file.
+Install [premake 5](https://premake.github.io/) and all the above dependencies.
+You may want to modify libraries path in premake5.lua
 
-### Arch Linux
+When ready, run premake with the desired target:
 ```bash
-pacman -S sfml glew glm
+# For unix makefiles
 premake5 gmake
+
+# For visual studio 2017
+premake5 vs2017
 ```
 
-### Windows
+### Installing dependencies on arch
 
 ```bash
-# Modify libraries path if necessary in premake5.lua
-premake5 vs2015
+pacman -S sfml glew glm
 ```

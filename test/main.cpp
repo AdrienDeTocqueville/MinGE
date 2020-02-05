@@ -6,6 +6,7 @@
 #include "animations/animations.h"
 #include "sky/sky.h"
 #include "scene/scene.h"
+#include "ui/ui.h"
 
 
 const auto desktop = sf::VideoMode::getDesktopMode();
@@ -18,16 +19,17 @@ const auto video_mode = desktop;
 const auto style = sf::Style::Fullscreen;
 #endif
 
-int scene = 5;
+int scene = 6;
 std::vector<void (*)()> setups = {
 	test_physic,	// 0
 	test_bvh,	// 1
 	test_materials,	// 2
 	test_animations,// 3
 	test_sky,	// 4
-	test_scene	// 5
+	test_scene,	// 5
+	test_ui,	// 6
 };
-std::vector<std::string> names = {"physic", "bvh", "materials", "animations", "sky", "scene"};
+std::vector<std::string> names = {"physic", "bvh", "materials", "animations", "sky", "scene", "ui"};
 
 void load_scene(Engine *engine)
 {

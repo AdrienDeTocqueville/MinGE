@@ -35,7 +35,7 @@ public:
 	// Window
 	static sf::RenderWindow* getWindow();
 
-	static vec2 getWindowSize();
+	static ivec2 getWindowSize();
 
 	// Keyboard
 	static bool getKeyDown(sf::Keyboard::Key _key);
@@ -66,12 +66,12 @@ private:
 
 	static void update();
 
-	static void setWindowSize(vec2 _size);
+	static void setWindowSize(ivec2 _size);
 
 	/// Attributes (private)
 	static sf::RenderWindow* window;
 
-	static vec2 dim, center;
+	static ivec2 dim, center;
 
 	static vec2 prevMousePos, mousePos;
 	static vec2 delta;

@@ -14,6 +14,8 @@ void glCheckError(const char* file, unsigned int line, const char* expression);
 #define glCheck(expr) expr
 #endif
 
+#define NO_DRIVER_STATE_CACHE false
+
 class GL
 {
 	struct GLState
@@ -80,7 +82,7 @@ public:
 	// Binding
 	static void BindUniformBuffer(GLuint buf)
 	{
-		if (buf != state.ubo)
+		if (buf != state.ubo || NO_DRIVER_STATE_CACHE)
 		{
 			glCheck(glBindBuffer(GL_UNIFORM_BUFFER, buf));
 			state.ubo = buf;
@@ -95,7 +97,7 @@ public:
 
 	static void BindVertexBuffer(GLuint buf)
 	{
-		if (buf != state.vbo)
+		if (buf != state.vbo || NO_DRIVER_STATE_CACHE)
 		{
 			glCheck(glBindBuffer(GL_ARRAY_BUFFER, buf));
 			state.vbo = buf;
@@ -104,7 +106,7 @@ public:
 
 	static void BindElementBuffer(GLuint buf)
 	{
-		if (buf != state.ebo)
+		if (buf != state.ebo || NO_DRIVER_STATE_CACHE)
 		{
 			glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buf));
 			state.ebo = buf;
@@ -113,7 +115,7 @@ public:
 
 	static void BindVertexArray(GLuint vao)
 	{
-		if (vao != state.vao)
+		if (vao != state.vao || NO_DRIVER_STATE_CACHE)
 		{
 			glCheck(glBindVertexArray(vao));
 			state.vao = vao;
@@ -122,7 +124,7 @@ public:
 
 	static void BindFramebuffer(GLuint fbo)
 	{
-		if (fbo != state.fbo)
+		if (fbo != state.fbo || NO_DRIVER_STATE_CACHE)
 		{
 			glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
 			state.fbo = fbo;
@@ -131,7 +133,7 @@ public:
 
 	static void UseProgram(GLuint prog)
 	{
-		if (prog != state.program)
+		if (prog != state.program || NO_DRIVER_STATE_CACHE)
 		{
 			glCheck(glUseProgram(prog));
 			state.program = prog;
@@ -141,27 +143,27 @@ public:
 	// Change state
 	static void ActiveTexture(GLuint slot)
 	{
-		if (slot != state.texture_unit)
+		if (slot != state.texture_unit || NO_DRIVER_STATE_CACHE)
 		{
-			glActiveTexture(slot);
+			glCheck(glActiveTexture(slot));
 			state.texture_unit = slot;
 		}
 	}
 
 	static void Viewport(const ivec4 &view)
 	{
-		if (view != state.view)
+		if (view != state.view || NO_DRIVER_STATE_CACHE)
 		{
-			glViewport(view.x, view.y, view.z, view.w);
+			glCheck(glViewport(view.x, view.y, view.z, view.w));
 			state.view = view;
 		}
 	}
 
 	static void Scissor(const ivec4 &scissor)
 	{
-		if (scissor != state.scissor)
+		if (scissor != state.scissor || NO_DRIVER_STATE_CACHE)
 		{
-			glScissor(scissor.x, scissor.y, scissor.z, scissor.w);
+			glCheck(glScissor(scissor.x, scissor.y, scissor.z, scissor.w));
 			state.scissor = scissor;
 		}
 	}
@@ -169,9 +171,9 @@ public:
 
 	static void ClearColor(const vec4 &color)
 	{
-		if (color != state.clearColor)
+		if (color != state.clearColor || NO_DRIVER_STATE_CACHE)
 		{
-			glClearColor(color.r, color.g, color.b, color.a);
+			glCheck(glClearColor(color.r, color.g, color.b, color.a));
 			state.clearColor = color;
 		}
 	}

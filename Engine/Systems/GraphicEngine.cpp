@@ -29,7 +29,6 @@ GraphicEngine::GraphicEngine()
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_SCISSOR_TEST);
 
 	//glEnable(GL_BLEND);
@@ -76,11 +75,6 @@ void GraphicEngine::destroy()
 {
 	delete instance;
 	instance = nullptr;
-}
-
-GraphicEngine* GraphicEngine::get()
-{
-	return instance;
 }
 
 /// Methods (public)

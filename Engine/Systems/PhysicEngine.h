@@ -16,7 +16,7 @@ class PhysicEngine
 
 	public:
 		/// Methods (static)
-			static PhysicEngine* get();
+			static PhysicEngine* get() { return instance; }
 
 		/// Methods (public)
 			void addRigidBody(RigidBody* _body);

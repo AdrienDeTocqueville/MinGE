@@ -34,11 +34,6 @@ void ScriptEngine::destroy()
 	instance = nullptr;
 }
 
-ScriptEngine* ScriptEngine::get()
-{
-	return instance;
-}
-
 /// Methods (public)
 void ScriptEngine::addComponent(Script* _script)
 {
