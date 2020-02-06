@@ -33,6 +33,9 @@ cscope*
 # Build results
 obj/
 
+
+# App
 bin/debug
 bin/dev
 bin/release
+*.dat

@@ -20,14 +20,11 @@ public:
 	static bool hasFocus();
 	static bool isOpen();
 
-	static bool textIsChar();
-	static bool textIsNum();
-
 	static void close();
 
 	/// Setters
 	static void setCursorMode(Cursor _mode);
-	static void setMousePosition(vec2 _pos);
+	static void setMousePosition(vec2 _pos, bool openGLSpace = true);
 
 	/// Getters
 	static Cursor getCursorMode();
@@ -42,8 +39,6 @@ public:
 	static bool getKeyPressed (sf::Keyboard::Key _key);
 	static bool getKeyReleased(sf::Keyboard::Key _key);
 
-	static char getText();
-
 	// Mouse
 	static bool getMouseDown(sf::Mouse::Button _button);
 	static bool getMousePressed(sf::Mouse::Button _button);
@@ -56,8 +51,6 @@ public:
 	static vec2 getMouseDeltaRelative();
 
 	static int getMouseWheelDelta();
-
-	static sf::Uint32 unicode;
 
 private:
 	/// Methods (private)

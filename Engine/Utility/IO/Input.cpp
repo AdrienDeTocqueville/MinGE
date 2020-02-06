@@ -2,6 +2,7 @@
 #include "Assets/RenderTarget.h"
 
 #include "Profiler/profiler.h"
+#include "Systems/UISystem.h"
 
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -24,8 +25,6 @@ bool Input::mouseCleared = false, Input::keyboardCleared = false;
 
 std::bitset<sf::Mouse::ButtonCount> Input::mouseState[2];
 std::bitset<sf::Keyboard::KeyCount> Input::keyboardState[2];
-
-sf::Uint32 Input::unicode;
 
 /// Methods (private)
 void Input::init(sf::RenderWindow* _window)
@@ -58,13 +57,10 @@ void Input::update()
 	bool mouseEvent = false, keyboardEvent = false;
 
 	wheelDelta = 0;
-	unicode = 0;
 
 	sf::Event event;
 	while (window->pollEvent(event))
 	{
-		MICROPROFILE_SCOPEI("IO_INPUT", "poll");
-
 		switch (event.type)
 		{
 		case sf::Event::Closed:
@@ -75,8 +71,8 @@ void Input::update()
 			mousePos = toVec2(sf::Mouse::getPosition(*window));
 			break;
 
-		case sf::Event::MouseWheelMoved:
-			wheelDelta = event.mouseWheel.delta;
+		case sf::Event::MouseWheelScrolled:
+			wheelDelta = event.mouseWheelScroll.delta;
 			break;
 
 		case sf::Event::LostFocus:
@@ -94,10 +90,6 @@ void Input::update()
 			if (mode == Cursor::Capture)
 				prevMousePos = center;
 			RenderTarget::getDefault()->resize(dim);
-			break;
-
-		case sf::Event::TextEntered:
-			unicode = event.text.unicode;
 			break;
 
 		case sf::Event::MouseButtonPressed:
@@ -126,6 +118,8 @@ void Input::update()
 
 		default: break;
 		}
+
+		UISystem::get()->on_event(event);
 	}
 
 	if (!mouseCleared && !mouseEvent)
@@ -174,16 +168,6 @@ bool Input::isOpen()
 	return !closed;
 }
 
-bool Input::textIsChar()
-{
-	return (unicode >= 32 && unicode < 128);
-}
-
-bool Input::textIsNum()
-{
-	return (unicode >= '0' && unicode <= '9');
-}
-
 void Input::close()
 {
 	window->close();
@@ -209,8 +193,11 @@ void Input::setCursorMode(Input::Cursor _mode)
 		window->setMouseCursorVisible(true);
 }
 
-void Input::setMousePosition(vec2 _pos)
+void Input::setMousePosition(vec2 _pos, bool openGLSpace)
 {
+	if (openGLSpace)
+		_pos.y = window->getSize().y - _pos.y;
+
 	sf::Mouse::setPosition(toSFVec2i(_pos), *window);
 }
 
@@ -251,11 +238,6 @@ bool Input::getKeyReleased(sf::Keyboard::Key _key)
 		return false;
 
 	return !keyboardState[keyboardIndex][_key];
-}
-
-char Input::getText()
-{
-	return static_cast<char>(unicode);
 }
 
 // Mouse

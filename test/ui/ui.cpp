@@ -9,7 +9,7 @@ void test_ui()
 	Material::getDefault()->define("MAIN_LIGHT"); // disable shadows
 
 	// UI
-	//Entity::create("UI") ->insert<UIView>(vec4(0.5f, 0.5f, 0.5f, 0.5f));
+	Entity::create("UI") ->insert<UIView>("http://google.com", vec4(0.5f, 0.5f, 0.5f, 0.5f));
 
 	// Camera
 	Entity::create("MainCamera")

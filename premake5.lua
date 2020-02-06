@@ -88,6 +88,7 @@ project "Engine"
 
 	filter "configurations:dev"
 		defines { "DEBUG", "PROFILE" }
+		symbols "on"
 		optimize "debug"
 
 	filter "configurations:release"
@@ -148,6 +149,7 @@ project "test"
 
 	filter "configurations:dev"
 		defines { "DEBUG", "PROFILE" }
+		symbols "on"
 		optimize "debug"
 
 	filter "configurations:release"

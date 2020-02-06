@@ -25,9 +25,15 @@ class CameraScript : public Script
 		void update() override
 		{
 			if (Input::getMousePressed(sf::Mouse::Left))
+			{
+				mp_saved = Input::getMousePosition();
 				Input::setCursorMode(Input::Capture);
+			}
 			else if (Input::getMouseReleased(sf::Mouse::Left))
+			{
 				Input::setCursorMode(Input::Free);
+				Input::setMousePosition(mp_saved);
+			}
 
 			if (Input::getCursorMode() == Input::Capture)
 			{
@@ -117,6 +123,7 @@ class CameraScript : public Script
 
 		vec2 angles;
 		vec2 clampAngleY;
+		vec2 mp_saved;
 
 		float sensivity;
 		float distance;

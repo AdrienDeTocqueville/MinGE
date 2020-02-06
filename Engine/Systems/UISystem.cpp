@@ -4,7 +4,9 @@
 #include "Renderer/GLDriver.h"
 #include "Profiler/profiler.h"
 #include "Utility/IO/Input.h"
+
 #include "UI/GPUDriverGL.h"
+#include "UI/keycodes.h"
 
 #include "Assets/Material.h"
 #include "Assets/Mesh.h"
@@ -12,6 +14,8 @@
 #include "Assets/Shader.inl"
 
 #include <Ultralight/Ultralight.h>
+
+#include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
 using ultralight::RefPtr;
@@ -25,49 +29,6 @@ std::vector<RefPtr<ultralight::View>> ul_views;
 
 MeshRef fullscreen_quad;
 MaterialRef ui_material;
-
-const char* htmlString() {
-	return R"(
-    <html>
-      <head>
-        <style type="text/css">
-          body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            color: black;
-            font-family: Arial;
-            background: linear-gradient(-45deg, #acb4ff, #f5d4e2);
-          }
-          div {
-            width: 80%;
-            height: 80%;
-            text-align: center;
-            margin: auto;
-            border-radius: 25px;
-            background: linear-gradient(-45deg, #e5eaf9, #f9eaf6);
-            box-shadow: 0 7px 18px -6px #8f8ae1;
-          }
-          h1 {
-            padding: 1em;
-          }
-          p {
-            background: white;
-            padding: 2em;
-            margin: 40px;
-            border-radius: 25px;
-          }
-        </style>
-      </head>
-      <body>
-        <div>
-          <h1>Hello World!</h1>
-          <p>gpu!</p>
-        </div>
-      </body>
-    </html>
-    )";
-}
 
 /*
 struct Listener : public ultralight::LoadListener
@@ -88,16 +49,9 @@ UISystem::UISystem()
 	ui_material = Material::create("ui");
 	driver = new ultralight::GPUDriverGL();
 
-	ultralight::Config config;
-	config.device_scale_hint = 2.0;
-	config.font_family_standard = "Arial";
-
-	ultralight::Platform::instance().set_config(config);
 	ultralight::Platform::instance().set_gpu_driver(driver);
 
 	renderer = ultralight::Renderer::Create();
-
-	//view->set_load_listener(&listener);
 }
 
 UISystem::~UISystem()
@@ -140,7 +94,9 @@ void UISystem::addView(UIView* _view)
 	views.push_back(_view);
 	ul_views.push_back(renderer->CreateView(size.x, size.y, false));
 
-	ul_views.back()->LoadHTML(htmlString());
+	_view->view = ul_views.back().get();
+
+	//ul_views.back()->set_load_listener(&listener);
 }
 
 void UISystem::removeView(const UIView* _view)
@@ -157,6 +113,116 @@ void UISystem::removeView(const UIView* _view)
 			return;
 		}
 	}
+}
+
+void UISystem::on_event(const sf::Event &event)
+{
+	using ultralight::MouseEvent;
+	using ultralight::ScrollEvent;
+	using ultralight::KeyEvent;
+
+	static MouseEvent::Button button_map[3] = {
+		MouseEvent::Button::kButton_Left,
+		MouseEvent::Button::kButton_Right,
+		MouseEvent::Button::kButton_Middle,
+	};
+
+	MouseEvent m;
+	ScrollEvent s;
+	KeyEvent k;
+
+	switch (event.type)
+	{
+	/// Mouse Event
+	case sf::Event::MouseButtonPressed:
+		m.type = MouseEvent::Type::kType_MouseDown;
+		goto mouse_button_event;
+
+	case sf::Event::MouseButtonReleased:
+		m.type = MouseEvent::Type::kType_MouseUp;
+		goto mouse_button_event;
+
+	case sf::Event::MouseMoved:
+		m.type = MouseEvent::Type::kType_MouseMoved;
+		goto mouse_event;
+
+	/// Keyboard Event
+	case sf::Event::KeyPressed:
+		k.type = KeyEvent::Type::kType_KeyDown;
+		goto key_event;
+
+	case sf::Event::KeyReleased:
+		k.type = KeyEvent::Type::kType_KeyUp;
+		goto key_event;
+
+	case sf::Event::TextEntered:
+		k.type = KeyEvent::Type::kType_Char;
+		k.virtual_key_code = event.text.unicode;
+		goto text_event;
+
+	/// Resive Event
+	case sf::Event::Resized:
+		vec2 ws = vec2(event.size.width, event.size.height);
+		for (int i(0); i < views.size(); i++)
+		{
+			ivec2 size = vec2(views[i]->viewport.z, views[i]->viewport.w) * ws;
+			views[i]->view->Resize(size.x, size.y);
+		}
+		return;
+
+	/// Scroll Event
+	case sf::Event::MouseWheelScrolled:
+		s.type = ScrollEvent::Type::kType_ScrollByPixel;
+		s.delta_x = 0;
+		s.delta_y = event.mouseWheelScroll.delta*100;
+
+		for (auto view : ul_views)
+			view->FireScrollEvent(s);
+		return;
+
+	default: return;
+	}
+
+	mouse_button_event:
+		m.button = button_map[event.mouseButton.button];
+	mouse_event:
+		vec2 ws(Input::getWindowSize());
+		ivec2 mb = ivec2(event.mouseButton.x, event.mouseButton.y);
+		for (int i(0); i < views.size(); i++)
+		{
+			vec4 vp = views[i]->viewport;
+			ivec2 origin(vp.x * ws.x, ws.y - (vp.y + vp.w) * ws.y);
+
+			m.x = mb.x - origin.x;
+			m.y = mb.y - origin.y;
+
+			views[i]->view->FireMouseEvent(m);
+		}
+		return;
+
+	key_event:
+		k.virtual_key_code = sf_ul(event.key.code);
+	text_event:
+		if (event.key.control)
+			k.modifiers |= KeyEvent::Modifiers::kMod_CtrlKey;
+		if (event.key.alt)
+			k.modifiers |= KeyEvent::Modifiers::kMod_AltKey;
+		if (event.key.shift)
+			k.modifiers |= KeyEvent::Modifiers::kMod_ShiftKey;
+		if (event.key.system)
+			k.modifiers |= KeyEvent::Modifiers::kMod_MetaKey;
+		char txt[] = {k.virtual_key_code, 0};
+		k.native_key_code = k.virtual_key_code;
+		k.unmodified_text = txt;
+		k.text = k.unmodified_text;
+		GetKeyIdentifierFromVirtualKeyCode(k.virtual_key_code, k.key_identifier);
+		k.is_auto_repeat = false;
+		k.is_system_key = false;
+		k.is_keypad = false;
+
+		for (auto view : ul_views)
+			view->FireKeyEvent(k);
+		return;
 }
 
 void UISystem::draw()
@@ -180,7 +246,7 @@ void UISystem::draw()
 	GL::BindVertexArray(fullscreen_quad->getVAO());
 
 	const int vp_loc = ui_material->get_location("viewport");
-	const int dim_loc = ui_material->get_location("uv_dim");
+	const int uv_vp_loc = ui_material->get_location("uv_viewport");
 	const Submesh submesh = fullscreen_quad->getSubmeshes()[0];
 
 	for (unsigned i(0) ; i < views.size() ; i++)
@@ -190,7 +256,7 @@ void UISystem::draw()
 			rt.height / (float)rt.texture_height);
 
 		ui_material->set(vp_loc, views[i]->viewport);
-		ui_material->set(dim_loc, uv_dim);
+		ui_material->set(uv_vp_loc, rt.uv_coords);
 
 		ui_material->bind(RenderPass::Forward);
 		driver->BindUltralightTexture(rt.texture_id);
