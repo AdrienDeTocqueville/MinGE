@@ -137,6 +137,7 @@ public:
 	static Entity* create(const Tag& _tag, bool _prototype, vec3 _position, quat _rotation, vec3 _scale);
 
 	static Entity* clone(Entity* _entity, vec3 _position, vec3 _rotation = vec3(0.0f), vec3 _scale = vec3(1.0f));
+	static Entity* clone(Entity* _entity, vec3 _position, quat _rotation, vec3 _scale);
 	static Entity* clone(Entity* _entity);
 	static void clear();
 

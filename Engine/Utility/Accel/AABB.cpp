@@ -101,7 +101,7 @@ void AABB::prepare(float padding)
 
 void AABB::draw()
 {
-	if (!drawAABBs)
+	if (!drawAABBs || vertices.empty())
 		return;
 
 	static MaterialRef material = Material::create("debug");

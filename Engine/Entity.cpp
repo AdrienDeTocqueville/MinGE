@@ -54,7 +54,7 @@ Entity* Entity::create(const Tag& _tag, bool _prototype, vec3 _position, quat _r
 	return (new Entity(_tag, _prototype))->insert<Transform>(_position, _rotation, _scale);
 }
 
-Entity* Entity::clone(Entity* _entity, vec3 _position, vec3 _rotation, vec3 _scale)
+Entity* Entity::clone(Entity* _entity, vec3 _position, quat _rotation, vec3 _scale)
 {
 	Entity* e = Entity::create(_entity->tag, false, _position, _rotation, _scale);
 
@@ -97,6 +97,11 @@ Entity* Entity::clone(Entity* _entity, vec3 _position, vec3 _rotation, vec3 _sca
 	}
 
 	return e;
+}
+
+Entity* Entity::clone(Entity* _entity, vec3 _position, vec3 _rotation, vec3 _scale)
+{
+	return Entity::clone(_entity, _position, quat(_rotation), _scale);
 }
 
 Entity* Entity::clone(Entity* _entity)
@@ -150,10 +155,10 @@ void Entity::insertComponent(Component* _component, std::type_index _typeid)
 	components[_typeid].push_back(_component);
 
 	_component->entity = this;
+	_component->tr = tr;
 
 	if (!prototype)
 	{
-		_component->tr = tr;
 		_component->onRegister();
 	}
 }

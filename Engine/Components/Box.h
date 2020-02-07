@@ -7,6 +7,7 @@ class Box : public Collider
 {
 	public:
 		Box(vec3 _halfExtent = vec3(0.5f), vec3 _center = vec3(0.0f), PhysicMaterialRef _material = NULL, bool _isTrigger = false);
+		Box(AABB _aabb, PhysicMaterialRef _material = NULL, bool _isTrigger = false);
 		virtual ~Box();
 
 		/// Methods (public)

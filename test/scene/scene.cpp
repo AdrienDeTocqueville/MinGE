@@ -10,7 +10,7 @@ void test_scene()
 	Input::setCursorMode(Input::Capture);
 	PhysicEngine::get()->setGravity(vec3(0.0f));
 
-	Scene scene("skinned2.gltf");
+	Scene scene("shadow.gltf");
 	scene.instantiate();
 
 	auto sun = Entity::findByTag("Sun", false);

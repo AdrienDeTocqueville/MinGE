@@ -144,7 +144,13 @@ static MeshRef import_mesh(const json &mesh, const json &scene, const std::vecto
 		// Read vertices
 		if (flags & MeshData::Points)	IMPORT(attribs["POSITION"], data.points, vertex_count);
 		if (flags & MeshData::Normals)	IMPORT(attribs["NORMAL"], data.normals, vertex_count);
-		if (flags & MeshData::UVs)	IMPORT(attribs["TEXCOORD_0"], data.uvs, vertex_count);
+		if (flags & MeshData::UVs)
+		{
+			IMPORT(attribs["TEXCOORD_0"], data.uvs, vertex_count);
+			// Tex coords are flipped on the y axis in gltf
+			for (int j(0); j < count; j++)
+				data.uvs[vertex_count + j].y = 1.0f - data.uvs[vertex_count + j].y;
+		}
 		if (flags & MeshData::Bones)
 		{
 			json joints_acc = accessors[attribs["JOINTS_0"].get<int>()];
@@ -185,18 +191,32 @@ static MeshRef import_mesh(const json &mesh, const json &scene, const std::vecto
 	return MeshRef(new Mesh(std::move(data), submeshes));
 }
 
-static MaterialRef import_material(const json &material)
+static Texture *import_texture(const json &texture, const json &scene, const std::vector<uint8_t*> &buffers)
+{
+	json image = scene["images"][texture["source"].get<int>()];
+	return Texture::get("Textures/" + image["name"].get<std::string>() + ".png");
+}
+
+static MaterialRef import_material(const json &material, const std::vector<Texture*> &textures)
 {
 	auto m = Material::create("standard");
 
 	// Load PBR values
 	auto pbr = material["pbrMetallicRoughness"];
 
+	if (pbr.contains("baseColorFactor"))
+		m->set("color", make_vec3(pbr, "baseColorFactor", vec3(0.8f)));
+	else if (pbr.contains("baseColorTexture"))
+	{
+		m->define("COLOR_MAP");
+		Texture *texture = textures[pbr["baseColorTexture"]["index"].get<int>()];
+		m->set("color_map", texture);
+	}
+
 	vec3 color = make_vec3(pbr, "baseColorFactor", vec3(0.8f));
 	float metallic = make_float(pbr, "metallicFactor", 0.0f);
 	float roughness = make_float(pbr, "roughnessFactor", 0.5f);
 
-	m->set("color", color);
 	m->set("metallic", metallic);
 	m->set("roughness", roughness);
 
@@ -250,6 +270,7 @@ Scene::Scene(const std::string &file)
 	name = scene["name"].get<std::string>();
 
 	json BUFFERS = root["buffers"];
+	json TEXTURES = root["textures"];
 	json MATERIALS = root["materials"];
 	json MESHES = root["meshes"];
 	json SKINS = root["skins"];
@@ -266,6 +287,16 @@ Scene::Scene(const std::string &file)
 		buffer.erase("uri");
 	}
 
+	// Import textures
+	std::vector<Texture*> textures;
+	textures.reserve(TEXTURES.size());
+
+	for (auto &texture : TEXTURES)
+	{
+		Texture *t = import_texture(texture, root, buffers);
+		textures.push_back(t);
+	}
+
 	// Import materials
 	std::vector<MaterialRef> materials_ref;
 	materials.reserve(MATERIALS.size());
@@ -273,7 +304,7 @@ Scene::Scene(const std::string &file)
 
 	for (auto &material : MATERIALS)
 	{
-		MaterialRef m = import_material(material);
+		MaterialRef m = import_material(material, textures);
 
 		materials_ref.push_back(m);
 		materials.push_back(m);
@@ -305,7 +336,20 @@ Scene::Scene(const std::string &file)
 
 	for (auto &node : NODES)
 	{
-		auto *proto = Entity::create(node["name"].get<std::string>(), true,
+		std::string name = node["name"].get<std::string>();
+
+		const char *dup_prefix = "Duplication_Offset_";
+		if (strncmp(name.c_str(), dup_prefix, strlen(dup_prefix)) == 0)
+		{
+			prototypes.push_back(nullptr);
+			continue;
+		}
+
+		auto dot = name.rfind('.');
+		if (dot != std::string::npos)
+			name = name.substr(0, dot);
+
+		auto *proto = Entity::create(name, true,
 			make_vec3(node, "translation", vec3(0.0f)),
 			make_quat(node, "rotation", quat(vec3(0))),
 			make_vec3(node, "scale", vec3(1.0f))
@@ -317,7 +361,10 @@ Scene::Scene(const std::string &file)
 		{
 			auto *tr = proto->find<Transform>();
 			for (auto &child : node["children"])
-				prototypes[child.get<int>()]->find<Transform>()->setParent(tr);
+			{
+				if (auto prot = prototypes[child.get<int>()])
+					prot->find<Transform>()->setParent(tr);
+			}
 		}
 
 		// Read components

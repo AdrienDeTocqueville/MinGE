@@ -7,6 +7,11 @@ Box::Box(vec3 _halfExtent, vec3 _center, PhysicMaterialRef _material, bool _isTr
 	halfExtent(_halfExtent)
 { }
 
+Box::Box(AABB _aabb, PhysicMaterialRef _material, bool _isTrigger):
+	Collider(_material, _isTrigger, _aabb.center()),
+	halfExtent(0.5f * _aabb.dim())
+{ }
+
 Box::~Box()
 { }
 
