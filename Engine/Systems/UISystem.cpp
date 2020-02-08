@@ -5,6 +5,7 @@
 #include "Profiler/profiler.h"
 #include "Utility/IO/Input.h"
 
+#include "UI/FileSystemBasic.h"
 #include "UI/GPUDriverGL.h"
 #include "UI/keycodes.h"
 
@@ -22,6 +23,7 @@ using ultralight::RefPtr;
 
 UISystem* UISystem::instance = nullptr;
 
+ultralight::FileSystemBasic *fs = nullptr;
 ultralight::GPUDriverGL *driver = nullptr;
 RefPtr<ultralight::Renderer> renderer = nullptr;
 
@@ -47,8 +49,11 @@ UISystem::UISystem()
 {
 	fullscreen_quad = Mesh::createQuad(MeshData::Points);
 	ui_material = Material::create("ui");
+
+	fs = new ultralight::FileSystemBasic("Assets/");
 	driver = new ultralight::GPUDriverGL();
 
+	ultralight::Platform::instance().set_file_system(fs);
 	ultralight::Platform::instance().set_gpu_driver(driver);
 
 	renderer = ultralight::Renderer::Create();
@@ -62,6 +67,7 @@ UISystem::~UISystem()
 	fullscreen_quad = nullptr;
 	ui_material = nullptr;
 
+	delete fs;
 	delete driver;
 }
 
