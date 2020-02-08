@@ -8,11 +8,11 @@ void test_bvh()
 	MeshRef cubeMesh = Mesh::createCube();
 
 	// Prototypes
-		Entity* cube = Entity::create("Cube", true)
-			->insert<Graphic>(cubeMesh);
+		Entity* cube = Entity::create("Cube", true);
+			cube->insert<Graphic>(cubeMesh);
 
-		Entity* plane = Entity::create("Plane", true)
-			->insert<Graphic>(Mesh::createQuad());
+		Entity* plane = Entity::create("Plane", true);
+			plane->insert<Graphic>(Mesh::createQuad());
 
 	// scene setup
 		Entity::clone(plane,
@@ -30,18 +30,17 @@ void test_bvh()
 
 
 	// Player
-	Entity* player = Entity::create("Player")
-		->insert<Graphic>(cubeMesh)
-		->insert<Box>()
-		->insert<RigidBody>(20.0f)
-		->insert<PlayerScript>(30.0f, 15.0f);
+	Entity* player = Entity::create("Player");
+		player->insert<Graphic>(cubeMesh);
+		player->insert<Box>();
+		player->insert<RigidBody>(20.0f);
+		player->insert<PlayerScript>(30.0f, 15.0f);
 
 	// Camera
-	Entity::create("MainCamera")
-		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
-		->insert<Skybox>()
-
-		->insert<CameraScript>(player->find<Transform>(), 0.2f, 7.0f);
+	Entity *cam = Entity::create("MainCamera");
+		cam->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f));
+		cam->insert<Skybox>();
+		cam->insert<CameraScript>(player->find<Transform>(), 0.2f, 7.0f);
 
 /*
 	// Camera

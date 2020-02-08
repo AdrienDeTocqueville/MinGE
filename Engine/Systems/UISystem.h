@@ -10,6 +10,8 @@ namespace sf {
 class UISystem
 {
 	friend class Engine;
+	friend struct Listener;
+
 public:
 	/// Methods (static)
 	static UISystem* get() { return instance; }
@@ -25,7 +27,7 @@ private:
 	UISystem();
 	~UISystem();
 
-	//void clear();
+	void clear();
 
 	static void create();
 	static void destroy();

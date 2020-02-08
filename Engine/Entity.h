@@ -37,35 +37,38 @@ public:
 	}
 
 	template<typename T, typename... Args>
-	Entity* insert(Args&&... args)
+	T* insert(Args&&... args)
 	{
 		if (typeid(T) == typeid(Transform))
 		{
 			if (tr)
+			{
 				Error::add(Error::USER, "Impossible to insert a Transform component");
+				return nullptr;
+			}
 			else
 			{
 				T* c = new T(args...);
 				c->entity = this;
 
 				tr = reinterpret_cast<Transform*>(c);
+				return c;
 			}
-
-			return this;
 		}
 
-		else if (std::is_base_of<Collider, T>::value)
-			insertComponent(new T(args...), typeid(Collider));
-
-		else
+		if (std::is_base_of<Collider, T>::value)
 		{
-			if (std::is_base_of<Script, T>::value)
-				scriptSizes[typeid(T)] = sizeof(T);
-
-			insertComponent(new T(args...), typeid(T));
+			auto c = new T(args...);
+			insertComponent(c, typeid(Collider));
+			return c;
 		}
 
-		return this;
+		if (std::is_base_of<Script, T>::value)
+			scriptSizes[typeid(T)] = sizeof(T);
+
+		auto c = new T(args...);
+		insertComponent(c, typeid(T));
+		return c;
 	}
 
 	template<typename T>

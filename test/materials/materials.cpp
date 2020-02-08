@@ -9,8 +9,8 @@ void test_materials()
 	MeshRef mesh = Mesh::createCube();
 
 	MaterialRef standard = Material::getDefault();
-	Entity *object = Entity::create("Object", true)
-		->insert<Graphic>(nullptr);
+	Entity *object = Entity::create("Object", true);
+		object->insert<Graphic>(nullptr);
 
 	const std::vector<std::string> mat_names = {"Iron", "Greasy", "Grimy"};
 	std::vector<MaterialRef> mats(mat_names.size());
@@ -32,8 +32,10 @@ void test_materials()
 	}
 
 	// Camera
-	Entity::create("MainCamera", false, vec3(-15.0f, 0.0f, 0.0f))
-		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
-		->insert<Skybox>()
-		->insert<CameraScript>(nullptr, 0.2f, 7.0f, vec3(-0.23171, 0.91854, 0.32032));
+
+	Entity *cam = Entity::create("MainCamera", false, vec3(-15.0f, 0.0f, 0.0f));
+		cam->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f));
+		cam->insert<Skybox>();
+
+		cam->insert<CameraScript>(nullptr, 0.2f, 7.0f, vec3(-0.23171, 0.91854, 0.32032));
 }

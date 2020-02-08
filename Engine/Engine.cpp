@@ -146,6 +146,7 @@ void Engine::clear()
 	GraphicEngine::get()->clear();
 	PhysicEngine::get()->clear();
 	ScriptEngine::get()->clear();
+	UISystem::get()->clear();
 
 	Debug::destroy();
 

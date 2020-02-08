@@ -21,6 +21,7 @@
 
 using ultralight::RefPtr;
 
+
 UISystem* UISystem::instance = nullptr;
 
 ultralight::FileSystemBasic *fs = nullptr;
@@ -30,17 +31,18 @@ RefPtr<ultralight::Renderer> renderer = nullptr;
 MeshRef fullscreen_quad;
 MaterialRef ui_material;
 
-/*
 struct Listener : public ultralight::LoadListener
 {
-	bool finished_loading = false;
+	virtual void OnDOMReady(ultralight::View* caller)
+	{
+		for (auto view: UISystem::get()->views)
+		{
+			if (view->view == caller)
+				view->dom_ready = true;
+		}
+	}
+} listener;
 
-	virtual void OnBeginLoading(ultralight::View* caller)
-	{ finished_loading = false; }
-	virtual void OnFinishLoading(ultralight::View *caller)
-	{ finished_loading = true; }
-};
-*/
 
 /// Methods (private)
 UISystem::UISystem()
@@ -68,10 +70,10 @@ UISystem::~UISystem()
 	delete driver;
 }
 
-//void UISystem::clear()
-//{
-//	views.clear();
-//}
+void UISystem::clear()
+{
+	views.clear();
+}
 
 /// Methods (static)
 void UISystem::create()
@@ -95,12 +97,11 @@ void UISystem::addView(UIView* _view)
 	ivec2 size = vp * vec2(Input::getWindowSize());
 
 	auto ul_view = renderer->CreateView(size.x, size.y, false);
+	ul_view->set_load_listener(&listener);
 	ul_view->AddRef();
 
 	_view->view = ul_view.ptr();
 	views.push_back(_view);
-
-	//ul_views.back()->set_load_listener(&listener);
 }
 
 void UISystem::removeView(const UIView* _view)

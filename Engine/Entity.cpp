@@ -46,12 +46,16 @@ void Entity::destroy()
 /// Methods (static)
 Entity* Entity::create(const Tag& _tag, bool _prototype, vec3 _position, vec3 _rotation, vec3 _scale)
 {
-	return (new Entity(_tag, _prototype))->insert<Transform>(_position, _rotation, _scale);
+	auto e = new Entity(_tag, _prototype);
+	e->insert<Transform>(_position, _rotation, _scale);
+	return e;
 }
 
 Entity* Entity::create(const Tag& _tag, bool _prototype, vec3 _position, quat _rotation, vec3 _scale)
 {
-	return (new Entity(_tag, _prototype))->insert<Transform>(_position, _rotation, _scale);
+	auto e = new Entity(_tag, _prototype);
+	e->insert<Transform>(_position, _rotation, _scale);
+	return e;
 }
 
 Entity* Entity::clone(Entity* _entity, vec3 _position, quat _rotation, vec3 _scale)

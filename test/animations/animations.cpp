@@ -107,10 +107,10 @@ void test_animations()
 	*/
 
 	// Camera
-	Entity::create("MainCamera", false, vec3(0.0f, 2.0f, 2.0f))
-		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
-		->insert<Skybox>()
-		->insert<CameraScript>(nullptr, 0.2f, 0.0f);
-		//->insert<CameraScript>(root->find<Transform>(), 0.2f, 5.0f, vec3(0,0,1/0.0025f));
-		//->insert<CameraScript>(root->find<Transform>(), 0.2f, 5.0f);
+	Entity *cam = Entity::create("MainCamera", false, vec3(0.0f, 2.0f, 2.0f));
+		cam->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f));
+		cam->insert<Skybox>();
+		cam->insert<CameraScript>(nullptr, 0.2f, 0.0f);
+		//cam->insert<CameraScript>(root->find<Transform>(), 0.2f, 5.0f, vec3(0,0,1/0.0025f));
+		//cam->insert<CameraScript>(root->find<Transform>(), 0.2f, 5.0f);
 }

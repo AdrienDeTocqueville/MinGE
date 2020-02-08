@@ -18,25 +18,20 @@ void test_physic()
 	standard->set("color_map", Texture::getDefault());
 
 	// Prototypes
-		Entity* sphere = Entity::create("Ball", true)
-			->insert<Graphic>(boule)
-			->insert<Sphere>(0.5f)
-			->insert<RigidBody>(10.0f);
+		Entity* sphere = Entity::create("Ball", true);
+			sphere->insert<Graphic>(boule);
+			sphere->insert<Sphere>(0.5f);
+			sphere->insert<RigidBody>(10.0f);
 
-		Entity::create("Cube", true)
-			->insert<Graphic>(cubeMesh)
-			->insert<Box>()
-			->insert<RigidBody>(20.0f);
+		//Entity *cube = Entity::create("Cube", true);
+		//	cube->insert<Graphic>(cubeMesh);
+		//	cube->insert<Box>();
+		//	cube->insert<RigidBody>(20.0f);
 
-		Entity::create("Cube2", true)
-			->insert<Graphic>(cubeMesh)
-			->insert<Box>()
-			->insert<RigidBody>(20.0f);
-
-		Entity* plane = Entity::create("Walls", true)
-			->insert<Graphic>(Mesh::createQuad())
-			->insert<Box>(vec3(0.55f, 0.55f, 0.005f), vec3(0, 0, -0.005f))
-			->insert<RigidBody>(0.0f);
+		Entity* plane = Entity::create("Walls", true);
+			plane->insert<Graphic>(Mesh::createQuad());
+			plane->insert<Box>(vec3(0.55f, 0.55f, 0.005f), vec3(0, 0, -0.005f));
+			plane->insert<RigidBody>(0.0f);
 
 	// Playground
 		float dim = 8.0f;
@@ -73,18 +68,18 @@ void test_physic()
 
 
 	// Player
-	Entity* player = Entity::create("Player")
-		->insert<Graphic>(nullptr)
-		->insert<RigidBody>(20.0f)
-		->insert<TestPhysic>(sphere)
-		->insert<PlayerScript>(30.0f, 15.0f);
+	Entity* player = Entity::create("Player");
+		player->insert<Graphic>(nullptr);
+		player->insert<RigidBody>(20.0f);
+		player->insert<TestPhysic>(sphere);
+		player->insert<PlayerScript>(30.0f, 15.0f);
 
 	// Camera
-	Entity::create("MainCamera")
-		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
-		->insert<Skybox>()
+	Entity *cam = Entity::create("MainCamera");
+		cam->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f));
+		cam->insert<Skybox>();
 
-		->insert<CameraScript>(player->find<Transform>(), 0.2f, 7.0f);
+		cam->insert<CameraScript>(player->find<Transform>(), 0.2f, 7.0f);
 }
 
 

@@ -15,6 +15,14 @@ UIView* UIView::clone() const
 	return new UIView(url, viewport);
 }
 
+void UIView::load(const std::string& _url)
+{
+	url = _url;
+	dom_ready = false;
+
+	view->LoadURL(url.c_str());
+}
+
 void UIView::onRegister()
 {
 	UISystem::get()->addView(this);

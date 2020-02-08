@@ -22,9 +22,9 @@ class Component
 				return entity->has<T>();
 			}
 
-			template <typename T> inline void insert() const
+			template<typename T, typename... Args> inline T* insert(Args&&... args) const
 			{
-				entity->insert<T>();
+				return entity->insert<T>(args...);
 			}
 
 			template <typename T> inline void remove() const

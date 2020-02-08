@@ -14,12 +14,12 @@ void test_sky()
 
 
 	MeshRef groundMesh = Mesh::createQuad(MeshData::Basic, vec2(20.0f), uvec2(2), uvec2(2));
-	Entity::create("Ground", false)
-		->insert<Graphic>(groundMesh);
+	Entity *ground = Entity::create("Ground", false);
+		ground->insert<Graphic>(groundMesh);
 
 	// Camera
-	Entity::create("MainCamera", false, vec3(0.0f, 0.0f, 2.0f))
-		->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f))
-		->insert<Skybox>()
-		->insert<CameraScript>(nullptr, 0.2f, 1.0f);
+	Entity *cam = Entity::create("MainCamera", false, vec3(0.0f, 0.0f, 2.0f));
+		cam->insert<Camera>(70, 0.1f, 1000.0f, vec3(0.67f, 0.92f, 1.0f));
+		cam->insert<Skybox>();
+		cam->insert<CameraScript>(nullptr, 0.2f, 1.0f);
 }

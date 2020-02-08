@@ -9,6 +9,7 @@ namespace ultralight {
 class UIView : public Component
 {
 	friend class UISystem;
+	friend struct Listener;
 
 public:
 	UIView(const std::string& _url, vec4 _viewport);
@@ -16,6 +17,9 @@ public:
 
 	/// Methods (public)
 	virtual UIView* clone() const override;
+
+	void load(const std::string& _url);
+	bool is_dom_ready() const { return dom_ready; }
 
 private:
 	/// Methods (private)
@@ -26,4 +30,6 @@ private:
 	vec4 viewport;
 	ultralight::View *view;
 	std::string url;
+
+	bool dom_ready;
 };
