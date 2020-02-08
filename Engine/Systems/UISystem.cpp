@@ -27,8 +27,6 @@ ultralight::FileSystemBasic *fs = nullptr;
 ultralight::GPUDriverGL *driver = nullptr;
 RefPtr<ultralight::Renderer> renderer = nullptr;
 
-std::vector<RefPtr<ultralight::View>> ul_views;
-
 MeshRef fullscreen_quad;
 MaterialRef ui_material;
 
@@ -61,7 +59,6 @@ UISystem::UISystem()
 
 UISystem::~UISystem()
 {
-	ul_views.clear();
 	renderer = nullptr;
 
 	fullscreen_quad = nullptr;
@@ -97,10 +94,11 @@ void UISystem::addView(UIView* _view)
 	vec2 vp(_view->viewport.z, _view->viewport.w);
 	ivec2 size = vp * vec2(Input::getWindowSize());
 
-	views.push_back(_view);
-	ul_views.push_back(renderer->CreateView(size.x, size.y, false));
+	auto ul_view = renderer->CreateView(size.x, size.y, false);
+	ul_view->AddRef();
 
-	_view->view = ul_views.back().get();
+	_view->view = ul_view.ptr();
+	views.push_back(_view);
 
 	//ul_views.back()->set_load_listener(&listener);
 }
@@ -111,10 +109,10 @@ void UISystem::removeView(const UIView* _view)
 	{
 		if (views[i] == _view)
 		{
+			_view->view->Release();
+
 			views[i] = views.back();
 			views.pop_back();
-			ul_views[i] = ul_views.back();
-			ul_views.pop_back();
 
 			return;
 		}
@@ -182,8 +180,8 @@ void UISystem::on_event(const sf::Event &event)
 		s.delta_x = 0;
 		s.delta_y = event.mouseWheelScroll.delta*100;
 
-		for (auto view : ul_views)
-			view->FireScrollEvent(s);
+		for (auto ui_view : views)
+			ui_view->view->FireScrollEvent(s);
 		return;
 
 	default: return;
@@ -226,8 +224,8 @@ void UISystem::on_event(const sf::Event &event)
 		k.is_system_key = false;
 		k.is_keypad = false;
 
-		for (auto view : ul_views)
-			view->FireKeyEvent(k);
+		for (auto ui_view : views)
+			ui_view->view->FireKeyEvent(k);
 		return;
 }
 
@@ -235,7 +233,7 @@ void UISystem::draw()
 {
 	MICROPROFILE_SCOPEI("SYSTEM_UI", "draw");
 
-	if (ul_views.empty())
+	if (views.empty())
 		return;
 
 	renderer->Update();
@@ -257,7 +255,7 @@ void UISystem::draw()
 
 	for (unsigned i(0) ; i < views.size() ; i++)
 	{
-		auto rt = ul_views[i]->render_target();
+		auto rt = views[i]->view->render_target();
 		vec2 uv_dim = vec2(rt.width / (float)rt.texture_width,
 			rt.height / (float)rt.texture_height);
 

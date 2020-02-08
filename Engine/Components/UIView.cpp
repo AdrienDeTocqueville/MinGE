@@ -23,7 +23,6 @@ void UIView::onRegister()
 
 void UIView::onDeregister()
 {
-	view = nullptr;
 	UISystem::get()->removeView(this);
 }
 
