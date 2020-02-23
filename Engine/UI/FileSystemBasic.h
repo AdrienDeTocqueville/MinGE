@@ -20,7 +20,7 @@ namespace ultralight {
  */
 class FileSystemBasic : public FileSystem {
 public:
-	FileSystemBasic(const char* baseDir);
+	FileSystemBasic(const std::string& baseDir) { set_root_dir(baseDir); }
 	virtual ~FileSystemBasic() {}
 
 	virtual bool FileExists(const String16& path);
@@ -74,6 +74,8 @@ public:
 	virtual int64_t ReadFromFile(FileHandle handle, char* data, int64_t length);
 
 	virtual bool CopyFile_(const String16& source_path, const String16& destination_path) { return false; }
+
+	void set_root_dir(const std::string& baseDir);
 
 protected:
 	std::string baseDir_;

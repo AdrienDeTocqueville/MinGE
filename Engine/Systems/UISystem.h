@@ -20,6 +20,7 @@ public:
 	void addView(UIView* _view);
 	void removeView(const UIView* _view);
 
+	void set_root_dir(const std::string& root);
 	void on_event(const sf::Event &event);
 
 private:

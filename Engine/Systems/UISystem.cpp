@@ -20,6 +20,9 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 
 using ultralight::RefPtr;
+using ultralight::String;
+using ultralight::MessageLevel;
+using ultralight::MessageSource;
 
 
 UISystem* UISystem::instance = nullptr;
@@ -31,8 +34,10 @@ RefPtr<ultralight::Renderer> renderer = nullptr;
 MeshRef fullscreen_quad;
 MaterialRef ui_material;
 
-struct Listener : public ultralight::LoadListener
+struct Listener : public ultralight::LoadListener, public ultralight::ViewListener
 {
+	//virtual void OnBeginLoading(ultralight::View* caller) { std::cout << "begin loading" << std::endl; }
+	//virtual void OnFinishLoading(ultralight::View* caller) { std::cout << "finish loading" << std::endl; }
 	virtual void OnDOMReady(ultralight::View* caller)
 	{
 		for (auto view: UISystem::get()->views)
@@ -40,6 +45,14 @@ struct Listener : public ultralight::LoadListener
 			if (view->view == caller)
 				view->dom_ready = true;
 		}
+	}
+
+	virtual void OnAddConsoleMessage(ultralight::View* caller,
+		MessageSource source, MessageLevel level, const String& message,
+		uint32_t line_number, uint32_t column_number, const String& source_id)
+	{
+		ultralight::String8 utf8 = message.utf8();
+		std::cout << "[JS Console]: "  << std::string(utf8.data(), utf8.length()) << std::endl;
 	}
 } listener;
 
@@ -50,7 +63,7 @@ UISystem::UISystem()
 	fullscreen_quad = Mesh::createQuad(MeshData::Points);
 	ui_material = Material::create("ui");
 
-	fs = new ultralight::FileSystemBasic("Assets/");
+	fs = new ultralight::FileSystemBasic("Assets");
 	driver = new ultralight::GPUDriverGL();
 
 	ultralight::Platform::instance().set_file_system(fs);
@@ -98,6 +111,7 @@ void UISystem::addView(UIView* _view)
 
 	auto ul_view = renderer->CreateView(size.x, size.y, false);
 	ul_view->set_load_listener(&listener);
+	ul_view->set_view_listener(&listener);
 	ul_view->AddRef();
 
 	_view->view = ul_view.ptr();
@@ -118,6 +132,11 @@ void UISystem::removeView(const UIView* _view)
 			return;
 		}
 	}
+}
+
+void UISystem::set_root_dir(const std::string& root)
+{
+	fs->set_root_dir(root);
 }
 
 void UISystem::on_event(const sf::Event &event)
@@ -179,7 +198,7 @@ void UISystem::on_event(const sf::Event &event)
 	case sf::Event::MouseWheelScrolled:
 		s.type = ScrollEvent::Type::kType_ScrollByPixel;
 		s.delta_x = 0;
-		s.delta_y = event.mouseWheelScroll.delta*100;
+		s.delta_y = event.mouseWheelScroll.delta * 100.0f;
 
 		for (auto ui_view : views)
 			ui_view->view->FireScrollEvent(s);
@@ -216,7 +235,7 @@ void UISystem::on_event(const sf::Event &event)
 			k.modifiers |= KeyEvent::Modifiers::kMod_ShiftKey;
 		if (event.key.system)
 			k.modifiers |= KeyEvent::Modifiers::kMod_MetaKey;
-		char txt[] = {k.virtual_key_code, 0};
+		char txt[] = {(char)k.virtual_key_code, 0};
 		k.native_key_code = k.virtual_key_code;
 		k.unmodified_text = txt;
 		k.text = k.unmodified_text;
@@ -242,16 +261,15 @@ void UISystem::draw()
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	{
 		renderer->Render();
-		if (driver->HasCommandsPending())
-			driver->DrawCommandList();
+		driver->DrawCommandList();
 	}
 	glPopAttrib();
 
 	GL::BindFramebuffer(0);
 	GL::BindVertexArray(fullscreen_quad->getVAO());
 
-	const int vp_loc = ui_material->get_location("viewport");
-	const int uv_vp_loc = ui_material->get_location("uv_viewport");
+	const size_t vp_loc = ui_material->get_location("viewport");
+	const size_t uv_vp_loc = ui_material->get_location("uv_viewport");
 	const Submesh submesh = fullscreen_quad->getSubmeshes()[0];
 
 	for (unsigned i(0) ; i < views.size() ; i++)

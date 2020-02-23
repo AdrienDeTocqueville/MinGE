@@ -547,6 +547,7 @@ namespace ultralight {
 		glEnable(GL_FRAMEBUFFER_SRGB);
 		glDisable(GL_SCISSOR_TEST);
 		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
 		glDepthFunc(GL_NEVER);
 		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -564,7 +565,6 @@ namespace ultralight {
 		}
 
 		command_list.clear();
-		glDisable(GL_SCISSOR_TEST);
 
 #if ENABLE_OFFSCREEN_GL
 		GLenum format = Platform::instance().config().use_bgra_for_offscreen_rendering ?
@@ -589,7 +589,6 @@ namespace ultralight {
 #endif
 
 		GL::BindFramebuffer(0);
-		CHECK_GL();
 	}
 
 	void GPUDriverGL::BindUltralightTexture(uint32_t ultralight_texture_id) {

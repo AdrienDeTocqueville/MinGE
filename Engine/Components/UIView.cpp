@@ -4,7 +4,7 @@
 #include <Ultralight/Ultralight.h>
 
 UIView::UIView(const std::string& _url, vec4 _viewport):
-	viewport(_viewport), view(nullptr), url(_url)
+	viewport(_viewport), view(nullptr), url(_url), dom_ready(false)
 { }
 
 UIView::~UIView()
@@ -23,9 +23,16 @@ void UIView::load(const std::string& _url)
 	view->LoadURL(url.c_str());
 }
 
+JSContext UIView::get_js_context() const
+{
+	return JSContext(view->js_context());
+}
+
 void UIView::onRegister()
 {
 	UISystem::get()->addView(this);
+
+	dom_ready = false;
 	view->LoadURL(url.c_str());
 }
 

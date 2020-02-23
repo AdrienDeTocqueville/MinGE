@@ -30,6 +30,7 @@ project "Engine"
 	-- Sources
 	files {
 		"%{prj.name}/**.h",
+		"%{prj.name}/**.inl",
 		"%{prj.name}/**.cpp"
 	}
 

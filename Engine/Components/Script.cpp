@@ -14,11 +14,6 @@ Script* Script::clone() const
 	return nullptr;
 }
 
-void Script::start	 () {}
-void Script::update	() {}
-void Script::lateUpdate() {}
-void Script::onDestroy () {}
-
 void Script::onCollision(const Collision&) {}
 void Script::onTrigger  (Collider*) {}
 
@@ -30,6 +25,6 @@ void Script::onRegister()
 
 void Script::onDeregister()
 {
-	onDestroy();
+	destroy();
 	ScriptEngine::get()->removeComponent(this);
 }

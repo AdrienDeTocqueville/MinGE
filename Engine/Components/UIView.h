@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Components/Component.h"
+#include "UI/JSWrapper.h"
 
 namespace ultralight {
 	class View;
@@ -20,6 +21,8 @@ public:
 
 	void load(const std::string& _url);
 	bool is_dom_ready() const { return dom_ready; }
+
+	JSContext get_js_context() const;
 
 private:
 	/// Methods (private)

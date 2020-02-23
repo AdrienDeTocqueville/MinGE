@@ -8,22 +8,28 @@ static const char* FileExtensionToMimeType(const char* ext);
 namespace ultralight {
 
 // Replace all back-slashes with forward-slashes
-static inline void NormalizePath(std::string& str) {
-  if (!str.empty()) {
-    for (size_t i = 0; i < str.length(); ++i) {
-      if (str[i] == '\\')
-        str[i] = '/';
-    }
-  }
+static inline void NormalizePath(std::string& str)
+{
+	if (str.empty())
+		return;
+
+	for (size_t i = 0; i < str.length(); ++i)
+	{
+		if (str[i] == '\\')
+			str[i] = '/';
+	}
 }
 
-FileSystemBasic::FileSystemBasic(const char* baseDir) : baseDir_(baseDir) {
-  NormalizePath(baseDir_);
-  if (!baseDir_.empty()) {
-    // Make sure directory path ends with a slash
-    if (baseDir_[baseDir_.length() - 1] != '/')
-      baseDir_ += std::string("/");
-  }
+void FileSystemBasic::set_root_dir(const std::string& baseDir)
+{
+	baseDir_ = baseDir;
+	if (baseDir_.empty())
+		return;
+
+	NormalizePath(baseDir_);
+	// Make sure directory path ends with a slash
+	if (baseDir_[baseDir_.length() - 1] != '/')
+		baseDir_ += std::string("/");
 }
 
 std::string FileSystemBasic::getRelative(const String16& path) {
