@@ -2,10 +2,23 @@
 
 #include <Ultralight/Ultralight.h>
 
+
+static JSValueRef js_callback(JSContextRef ctx, JSObjectRef function,
+	JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+	printf("here :)");
+	return JSValueMakeNull(ctx);
+}
+
 // JSContext
 JSObject JSContext::window() const
 {
 	return JSObject(ctx, JSContextGetGlobalObject(ctx));
+}
+
+JSObject JSContext::make_null() const
+{
+	return JSObject(ctx, JSValueMakeNull(ctx));
 }
 
 JSObject JSContext::make_array(size_t length) const
@@ -49,10 +62,7 @@ JSProp::JSProp(JSContextRef _ctx, JSObjectRef _obj, unsigned _index):
 void JSProp::assign(JSObject _obj)
 {
 	if (type == PropType::ByName)
-	{
-		assert(JSObjectHasProperty(ctx, obj, name.str), "Object has no such property");
 		JSObjectSetProperty(ctx, obj, name.str, _obj.obj, kJSPropertyAttributeNone, NULL);
-	}
 	else // ByIndex
 		JSObjectSetPropertyAtIndex(ctx, obj, index, _obj.obj, NULL);
 }
@@ -75,21 +85,40 @@ JSObject::JSObject(JSContextRef _ctx, JSObjectRef _obj):
 	ctx(_ctx), obj(_obj)
 { }
 
-JSObject::JSObject(JSContextRef _ctx, JSValueRef _val):
-	ctx(_ctx), obj(JSValueToObject(_ctx, _val, NULL))
+JSObject::JSObject(JSContextRef _ctx, JSValueRef val):
+	ctx(_ctx), obj(JSValueToObject(_ctx, val, NULL))
 { }
 
-JSObject::JSObject(JSContextRef _ctx, int _val):
-	JSObject(_ctx, JSValueMakeNumber(_ctx, (double)_val))
+JSObject::JSObject(JSContextRef _ctx, int val):
+	JSObject(_ctx, JSValueMakeNumber(_ctx, (double)val))
 { }
 
-JSObject::JSObject(JSContextRef _ctx, const std::string& _val):
-	JSObject(_ctx, JSValueMakeString(_ctx, JSString(_val.c_str()).str))
+JSObject::JSObject(JSContextRef _ctx, const std::string& val):
+	JSObject(_ctx, JSValueMakeString(_ctx, JSString(val.c_str()).str))
 { }
+
+JSObject::JSObject(JSContextRef _ctx, JSFunc val):
+	ctx(_ctx), obj(JSObjectMakeFunctionWithCallback(ctx, NULL, js_callback))
+{
+	//auto func = std::bind(val, )
+}
 
 uint32_t JSObject::as_uint32() const
 {
 	return (uint32_t)JSValueToNumber(ctx, obj, nullptr);
+}
+
+std::string JSObject::as_string() const
+{
+	JSStringRef str = JSValueToStringCopy(ctx, obj, NULL);
+
+	size_t max_size = JSStringGetMaximumUTF8CStringSize(str);
+	char* buf = new char[max_size];
+	size_t size = JSStringGetUTF8CString(str, buf, max_size);
+	std::string res = std::string(buf, size - 1);
+	delete[] buf;
+
+	return res;
 }
 
 void *JSObject::get_typedarray_temp_buffer() const

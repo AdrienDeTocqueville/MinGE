@@ -1,13 +1,18 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <cstdint>
+#include <functional>
 #include <initializer_list>
 
 typedef const struct OpaqueJSContext* JSContextRef;
 typedef const struct OpaqueJSValue* JSValueRef;
 typedef struct OpaqueJSValue* JSObjectRef;
 typedef struct OpaqueJSString* JSStringRef;
+
+struct JSObject;
+typedef std::function<JSObject(struct JSContext, const std::vector<JSObject>&)> JSFunc;
 
 namespace js {
 
@@ -39,14 +44,16 @@ struct JSObject
 
 	// Constructors
 	JSObject(JSContextRef _ctx, JSObjectRef _obj);
-	JSObject(JSContextRef _ctx, JSValueRef _val);
+	JSObject(JSContextRef _ctx, JSValueRef val);
 	JSObject(JSContextRef _ctx, int val);
 	JSObject(JSContextRef _ctx, const std::string& val);
+	JSObject(JSContextRef _ctx, JSFunc val);
 
 	~JSObject() { /*js::unprotect(ctx, obj);*/ }
 
 	// Conversions
 	uint32_t as_uint32() const;
+	std::string as_string() const;
 
 	void *get_typedarray_temp_buffer() const;
 
@@ -72,17 +79,18 @@ struct JSProp
 	~JSProp() {}
 
 	template<typename T>
-	JSProp& operator=(T value)
-	{ assign(JSObject(ctx, value)); return *this; }
+	JSProp& operator=(T value) { assign(JSObject(ctx, value)); return *this; }
 
+	template<>
+	JSProp& operator=(JSObject value) { assign(value); return *this; }
+
+	template<typename... Args>
+	JSObject operator()(Args&&... args) const { return JSObject(ctx, value())(args...); }
+
+private:
 	JSValueRef value() const;
 	void assign(JSObject _obj);
 
-	template<typename... Args>
-	JSObject operator()(Args&&... args) const
-	{ return JSObject(ctx, value())(args...); }
-
-private:
 	enum PropType { ByName, ByIndex };
 
 	JSContextRef ctx;
@@ -102,9 +110,9 @@ struct JSContext
 	JSObject window() const;
 
 	template<typename T>
-	JSObject make(T value) const
-	{ return JSObject(ctx, value); }
+	JSObject make(T value) const { return JSObject(ctx, value); }
 
+	JSObject make_null() const;
 	JSObject make_array(size_t length) const;
 	JSObject make_uint32array(size_t length) const;
 
