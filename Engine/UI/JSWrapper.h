@@ -11,24 +11,10 @@ typedef const struct OpaqueJSValue* JSValueRef;
 typedef struct OpaqueJSValue* JSObjectRef;
 typedef struct OpaqueJSString* JSStringRef;
 
+struct JSProp;
 struct JSObject;
 typedef std::function<JSObject(struct JSContext, const std::vector<JSObject>&)> JSFunc;
-
-namespace js {
-
-void unprotect(JSContextRef, JSValueRef);
-
-template<typename T>
-struct TypedArray
-{
-	T &operator[](size_t i) { return buf + i; }
-	~TypedArray() { js::unprotect(ctx, obj); }
-
-	JSObjectRef obj;
-	T *buf;
-};
-
-}
+#define MethodAsJSFunc(func) ((JSFunc)std::bind(func, this, std::placeholders::_1, std::placeholders::_2))
 
 struct JSString
 {
@@ -40,8 +26,6 @@ struct JSString
 
 struct JSObject
 {
-	friend struct JSProp;
-
 	// Constructors
 	JSObject(JSContextRef _ctx, JSObjectRef _obj);
 	JSObject(JSContextRef _ctx, JSValueRef val);
@@ -49,13 +33,15 @@ struct JSObject
 	JSObject(JSContextRef _ctx, const std::string& val);
 	JSObject(JSContextRef _ctx, JSFunc val);
 
-	~JSObject() { /*js::unprotect(ctx, obj);*/ }
+	~JSObject() {}
 
 	// Conversions
 	uint32_t as_uint32() const;
 	std::string as_string() const;
 
 	void *get_typedarray_temp_buffer() const;
+
+	JSValueRef value() const { return obj; }
 
 	// Operators
 	JSProp operator[](const char *prop) const;
@@ -74,8 +60,14 @@ private:
 
 struct JSProp
 {
-	JSProp(JSContextRef _ctx, JSObjectRef _obj, const char *_name);
-	JSProp(JSContextRef _ctx, JSObjectRef _obj, unsigned _index);
+	JSProp(JSContextRef _ctx, JSObjectRef _obj, const char *_name):
+		ctx(_ctx), obj(_obj), type(PropType::ByName), name(_name)
+	{ }
+
+	JSProp(JSContextRef _ctx, JSObjectRef _obj, unsigned _index):
+		ctx(_ctx), obj(_obj), type(PropType::ByIndex), index(_index)
+	{ }
+
 	~JSProp() {}
 
 	template<typename T>
@@ -119,4 +111,3 @@ struct JSContext
 private:
 	JSContextRef ctx;
 };
-

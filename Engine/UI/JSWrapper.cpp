@@ -1,13 +1,24 @@
 #include "ui/JSWrapper.h"
 
+#include <unordered_map>
 #include <Ultralight/Ultralight.h>
 
 
-static JSValueRef js_callback(JSContextRef ctx, JSObjectRef function,
-	JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+static std::unordered_map<JSObjectRef, JSFunc> callbacks;
+static JSValueRef js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef _this,
+	size_t argc, const JSValueRef argv[], JSValueRef*)
 {
-	printf("here :)");
-	return JSValueMakeNull(ctx);
+	auto it = callbacks.find(function);
+	if (it == callbacks.end())
+		return JSValueMakeNull(ctx);
+
+	JSFunc callback(it->second);
+
+	std::vector<JSObject> args;
+	args.reserve(argc);
+	for (int i(0); i < argc; i++)
+		args.push_back(JSObject(ctx, argv[i]));
+	return callback(JSContext(ctx), args).value();
 }
 
 // JSContext
@@ -51,20 +62,12 @@ JSString::~JSString()
 }
 
 // JSProp
-JSProp::JSProp(JSContextRef _ctx, JSObjectRef _obj, const char *_name):
-	ctx(_ctx), obj(_obj), type(PropType::ByName), name(_name)
-{ }
-
-JSProp::JSProp(JSContextRef _ctx, JSObjectRef _obj, unsigned _index):
-	ctx(_ctx), obj(_obj), type(PropType::ByIndex), index(_index)
-{ }
-
 void JSProp::assign(JSObject _obj)
 {
 	if (type == PropType::ByName)
-		JSObjectSetProperty(ctx, obj, name.str, _obj.obj, kJSPropertyAttributeNone, NULL);
+		JSObjectSetProperty(ctx, obj, name.str, _obj.value(), kJSPropertyAttributeNone, NULL);
 	else // ByIndex
-		JSObjectSetPropertyAtIndex(ctx, obj, index, _obj.obj, NULL);
+		JSObjectSetPropertyAtIndex(ctx, obj, index, _obj.value(), NULL);
 }
 
 JSValueRef JSProp::value() const
@@ -100,7 +103,7 @@ JSObject::JSObject(JSContextRef _ctx, const std::string& val):
 JSObject::JSObject(JSContextRef _ctx, JSFunc val):
 	ctx(_ctx), obj(JSObjectMakeFunctionWithCallback(ctx, NULL, js_callback))
 {
-	//auto func = std::bind(val, )
+	callbacks[obj] = val;
 }
 
 uint32_t JSObject::as_uint32() const
@@ -157,12 +160,4 @@ JSObject JSObject::call(std::initializer_list<JSObject> &args) const
 		delete[] argv;
 
 	return JSObject(ctx, ret);
-}
-
-namespace js
-{
-void unprotect(JSContextRef ctx, JSValueRef value)
-{
-	JSValueUnprotect(ctx, value);
-}
 }
