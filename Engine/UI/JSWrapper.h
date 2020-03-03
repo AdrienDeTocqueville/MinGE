@@ -13,13 +13,17 @@ typedef struct OpaqueJSString* JSStringRef;
 
 struct JSProp;
 struct JSObject;
-typedef std::function<JSObject(struct JSContext, const std::vector<JSObject>&)> JSFunc;
+typedef const std::vector<JSObject>& JSArgs;
+typedef std::function<JSObject(struct JSContext, JSArgs)> JSFunc;
 #define MethodAsJSFunc(func) ((JSFunc)std::bind(func, this, std::placeholders::_1, std::placeholders::_2))
 
 struct JSString
 {
 	JSString(const char *_str);
+	JSString(JSStringRef _str): str(_str) {}
 	~JSString();
+
+	std::string to_string() const;
 
 	JSStringRef str;
 };
@@ -32,6 +36,7 @@ struct JSObject
 	JSObject(JSContextRef _ctx, int val);
 	JSObject(JSContextRef _ctx, const std::string& val);
 	JSObject(JSContextRef _ctx, JSFunc val);
+	JSObject(JSProp _prop);
 
 	~JSObject() {}
 
@@ -41,6 +46,7 @@ struct JSObject
 
 	void *get_typedarray_temp_buffer() const;
 
+	JSObjectRef object() const { return obj; }
 	JSValueRef value() const { return obj; }
 
 	// Operators
@@ -60,6 +66,8 @@ private:
 
 struct JSProp
 {
+	friend JSObject;
+
 	JSProp(JSContextRef _ctx, JSObjectRef _obj, const char *_name):
 		ctx(_ctx), obj(_obj), type(PropType::ByName), name(_name)
 	{ }

@@ -21,6 +21,22 @@ static JSValueRef js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRe
 	return callback(JSContext(ctx), args).value();
 }
 
+static void handle_exception(JSContextRef ctx, JSValueRef exception)
+{
+	assert(JSValueGetType(ctx, exception) == kJSTypeObject);
+
+	JSObject obj = JSObject(ctx, exception);
+	uint32_t line = JSObject(obj["line"]).as_uint32();
+	uint32_t column = JSObject(obj["column"]).as_uint32();
+	auto sourceURL = JSObject(obj["sourceURL"]).as_string();
+
+	auto func = JSObject(obj["toString"]);
+	JSValueRef ret = JSObjectCallAsFunction(ctx, func.object(), obj.object(), 0, NULL, NULL);
+	auto error = JSObject(ctx, ret).as_string();
+
+	printf("%s\n\tat %s:%d:%d\n", error.c_str(), sourceURL.c_str(), line, column);
+}
+
 // JSContext
 JSObject JSContext::window() const
 {
@@ -59,6 +75,17 @@ JSString::JSString(const char *_str):
 JSString::~JSString()
 {
 	JSStringRelease(str);
+}
+
+std::string JSString::to_string() const
+{
+	size_t max_size = JSStringGetMaximumUTF8CStringSize(str);
+	char* buf = new char[max_size];
+	size_t size = JSStringGetUTF8CString(str, buf, max_size);
+	std::string res = std::string(buf, size - 1);
+	delete[] buf;
+
+	return res;
 }
 
 // JSProp
@@ -106,6 +133,10 @@ JSObject::JSObject(JSContextRef _ctx, JSFunc val):
 	callbacks[obj] = val;
 }
 
+JSObject::JSObject(JSProp _prop):
+	JSObject(_prop.ctx, _prop.value())
+{ }
+
 uint32_t JSObject::as_uint32() const
 {
 	return (uint32_t)JSValueToNumber(ctx, obj, nullptr);
@@ -114,14 +145,7 @@ uint32_t JSObject::as_uint32() const
 std::string JSObject::as_string() const
 {
 	JSStringRef str = JSValueToStringCopy(ctx, obj, NULL);
-
-	size_t max_size = JSStringGetMaximumUTF8CStringSize(str);
-	char* buf = new char[max_size];
-	size_t size = JSStringGetUTF8CString(str, buf, max_size);
-	std::string res = std::string(buf, size - 1);
-	delete[] buf;
-
-	return res;
+	return JSString(str).to_string();
 }
 
 void *JSObject::get_typedarray_temp_buffer() const
@@ -159,5 +183,7 @@ JSObject JSObject::call(std::initializer_list<JSObject> &args) const
 	if (argc)
 		delete[] argv;
 
+	if (ret == nullptr)
+		handle_exception(ctx, exception);
 	return JSObject(ctx, ret);
 }

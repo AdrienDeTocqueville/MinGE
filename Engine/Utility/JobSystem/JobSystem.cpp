@@ -157,7 +157,8 @@ struct Worker
 void Job::run()
 {
 	function(data);
-	counter->fetch_add(1, std::memory_order_relaxed);
+	if (counter)
+		counter->fetch_add(1, std::memory_order_relaxed);
 }
 
 void worker_main(const int i)
