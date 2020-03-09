@@ -37,6 +37,24 @@ static void handle_exception(JSContextRef ctx, JSValueRef exception)
 	printf("%s\n\tat %s:%d:%d\n", error.c_str(), sourceURL.c_str(), line, column);
 }
 
+static void debug_value(JSContextRef ctx, JSValueRef value)
+{
+	auto type = JSValueGetType(ctx, value);
+
+	if (type == kJSTypeObject)
+	{
+		printf("Object:\n");
+		JSObject obj = JSObject(ctx, value);
+		auto names = JSObjectCopyPropertyNames(ctx, obj.object());
+		auto count = JSPropertyNameArrayGetCount(names);
+		for (size_t i = 0; i < count; i++)
+		{
+			JSStringRef name = JSPropertyNameArrayGetNameAtIndex(names, i);
+			printf(" - %s\n", JSString(name).to_string());
+		}
+	}
+}
+
 // JSContext
 JSObject JSContext::window() const
 {
@@ -112,25 +130,25 @@ JSValueRef JSProp::value() const
 
 // JSObject
 JSObject::JSObject(JSContextRef _ctx, JSObjectRef _obj):
-	ctx(_ctx), obj(_obj)
+	ctx(_ctx), is_value(false), obj(_obj)
 { }
 
-JSObject::JSObject(JSContextRef _ctx, JSValueRef val):
-	ctx(_ctx), obj(JSValueToObject(_ctx, val, NULL))
+JSObject::JSObject(JSContextRef _ctx, JSValueRef _val):
+	ctx(_ctx), is_value(true), val(_val)
 { }
 
-JSObject::JSObject(JSContextRef _ctx, int val):
-	JSObject(_ctx, JSValueMakeNumber(_ctx, (double)val))
+JSObject::JSObject(JSContextRef _ctx, int _val):
+	JSObject(_ctx, JSValueMakeNumber(_ctx, (double)_val))
 { }
 
-JSObject::JSObject(JSContextRef _ctx, const std::string& val):
-	JSObject(_ctx, JSValueMakeString(_ctx, JSString(val.c_str()).str))
+JSObject::JSObject(JSContextRef _ctx, const std::string& _val):
+	JSObject(_ctx, JSValueMakeString(_ctx, JSString(_val.c_str()).str))
 { }
 
-JSObject::JSObject(JSContextRef _ctx, JSFunc val):
+JSObject::JSObject(JSContextRef _ctx, JSFunc _val):
 	ctx(_ctx), obj(JSObjectMakeFunctionWithCallback(ctx, NULL, js_callback))
 {
-	callbacks[obj] = val;
+	callbacks[obj] = _val;
 }
 
 JSObject::JSObject(JSProp _prop):
@@ -139,33 +157,45 @@ JSObject::JSObject(JSProp _prop):
 
 uint32_t JSObject::as_uint32() const
 {
-	return (uint32_t)JSValueToNumber(ctx, obj, nullptr);
+	return (uint32_t)JSValueToNumber(ctx, val, nullptr);
 }
 
 std::string JSObject::as_string() const
 {
-	JSStringRef str = JSValueToStringCopy(ctx, obj, NULL);
+	JSStringRef str = JSValueToStringCopy(ctx, val, NULL);
 	return JSString(str).to_string();
+}
+
+JSObjectRef JSObject::object() const
+{
+	if (is_value)
+		return JSValueToObject(ctx, val, NULL);
+	return obj;
 }
 
 void *JSObject::get_typedarray_temp_buffer() const
 {
-	return JSObjectGetTypedArrayBytesPtr(ctx, obj, nullptr);
+	return JSObjectGetTypedArrayBytesPtr(ctx, object(), nullptr);
+}
+
+bool JSObject::is_number() const
+{
+	return JSValueIsNumber(ctx, val);
 }
 
 JSProp JSObject::operator[](const char *prop) const
 {
-	return JSProp(ctx, obj, prop);
+	return JSProp(ctx, object(), prop);
 }
 
 JSProp JSObject::operator[](unsigned index) const
 {
-	return JSProp(ctx, obj, index);
+	return JSProp(ctx, object(), index);
 }
 
 JSObject JSObject::call(std::initializer_list<JSObject> &args) const
 {
-	assert(JSObjectIsFunction(ctx, obj), "Object is not a function");
+	assert(JSObjectIsFunction(ctx, object()), "Object is not a function");
 
 	JSValueRef exception;
 
@@ -176,9 +206,9 @@ JSObject JSObject::call(std::initializer_list<JSObject> &args) const
 
 	size_t i(0);
 	for (const JSObject& arg : args)
-		argv[i++] = arg.obj;
+		argv[i++] = arg.value();
 
-	JSValueRef ret = JSObjectCallAsFunction(ctx, obj, _this, argc, argv, &exception);
+	JSValueRef ret = JSObjectCallAsFunction(ctx, object(), _this, argc, argv, &exception);
 
 	if (argc)
 		delete[] argv;

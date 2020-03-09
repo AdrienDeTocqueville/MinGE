@@ -32,10 +32,10 @@ struct JSObject
 {
 	// Constructors
 	JSObject(JSContextRef _ctx, JSObjectRef _obj);
-	JSObject(JSContextRef _ctx, JSValueRef val);
-	JSObject(JSContextRef _ctx, int val);
-	JSObject(JSContextRef _ctx, const std::string& val);
-	JSObject(JSContextRef _ctx, JSFunc val);
+	JSObject(JSContextRef _ctx, JSValueRef _val);
+	JSObject(JSContextRef _ctx, int _val);
+	JSObject(JSContextRef _ctx, const std::string& _val);
+	JSObject(JSContextRef _ctx, JSFunc _val);
 	JSObject(JSProp _prop);
 
 	~JSObject() {}
@@ -46,8 +46,10 @@ struct JSObject
 
 	void *get_typedarray_temp_buffer() const;
 
-	JSObjectRef object() const { return obj; }
-	JSValueRef value() const { return obj; }
+	JSObjectRef object() const;
+	JSValueRef value() const { return val; }
+
+	bool is_number() const;
 
 	// Operators
 	JSProp operator[](const char *prop) const;
@@ -61,7 +63,13 @@ private:
 	JSObject call(std::initializer_list<JSObject> &args) const;
 
 	JSContextRef ctx;
-	JSObjectRef obj;
+
+	bool is_value;
+	union
+	{
+		JSObjectRef obj;
+		JSValueRef val;
+	};
 };
 
 struct JSProp
