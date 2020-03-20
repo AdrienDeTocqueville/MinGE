@@ -1,8 +1,6 @@
 #include "Input.h"
-#include "Assets/RenderTarget.h"
 
 #include "Profiler/profiler.h"
-#include "Systems/UISystem.h"
 
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -89,7 +87,6 @@ void Input::update()
 
 			if (mode == Cursor::Capture)
 				prevMousePos = center;
-			RenderTarget::getDefault()->resize(dim);
 			break;
 
 		case sf::Event::MouseButtonPressed:
@@ -118,8 +115,6 @@ void Input::update()
 
 		default: break;
 		}
-
-		UISystem::get()->on_event(event);
 	}
 
 	if (!mouseCleared && !mouseEvent)

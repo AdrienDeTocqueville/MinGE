@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Utility/glm.h"
-#include <SFML/System/Clock.hpp>
 
 namespace sf
 { class RenderWindow; }
@@ -9,30 +8,16 @@ namespace sf
 class Engine
 {
 public:
-	Engine(sf::RenderWindow* _window, unsigned _FPS = 60);
-	~Engine();
+	static void init(sf::RenderWindow* _window, unsigned _FPS = 60);
+	static void destroy();
 
-	/// Methods (static)
-	static Engine* get()	{ return instance; }
+	static void start_frame();
+	static void end_frame();
 
-	/// Methods (public)
-	void start();
-	bool update();
-	void clear();
-
-	/// Setters
-	void setPause(bool _pause);
-	void togglePause();
-	void setWindowSize(vec2 _newSize);
-
-	/// Getters
-	bool getPause() const;
+	static void setWindowSize(vec2 _newSize);
 
 private:
-	/// Attributes
-	sf::Clock clock;
-	bool pause;
+	static uint32_t next_entity;
 
-	/// Attributes (static)
-	static Engine* instance;
+	friend class Entity;
 };

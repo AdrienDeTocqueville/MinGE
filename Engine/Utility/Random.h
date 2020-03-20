@@ -5,50 +5,47 @@
 #include <cstdlib>
 #include <vector>
 
-
-class Random
+namespace Random
 {
-	public:
-		static bool nextBool();
 
-		template <typename T>
-		static typename std::enable_if<!std::is_integral<T>::value, T>::type next(T _min = 0, T _max = 1) // range is [_min, _max[
-		{
-			return _min +  (_max-_min) * (T)rand() / RAND_MAX;
-		}
+void init();
+void set_seed(unsigned _seed);
+unsigned get_seed();
 
-		template <typename T>
-		static typename std::enable_if<std::is_integral<T>::value, T>::type next(T _min = 0, T _max = 2) // range is [_min, _max[
-		{
-			return _min + (rand() % (_max-_min));
-		}
+inline bool next_bool()
+{
+	return (double)rand() / RAND_MAX < 0.5;
+}
 
+template <typename T>
+typename std::enable_if<!std::is_integral<T>::value, T>::type next(T _min = 0, T _max = 1) // range is [_min, _max[
+{
+	return _min + (_max - _min) * (T)rand() / RAND_MAX;
+}
 
-		template <typename T>
-		static const T& element(std::initializer_list<T> _elements)
-		{
-			return *(_elements.begin() + Random::next((size_t)0, _elements.size()));
-		}
-
-		template <typename T>
-		static T& element(std::vector<T>& _elements)
-		{
-			return _elements[ Random::next((size_t)0, _elements.size()) ];
-		}
-
-		template <typename T>
-		static const T& element(const std::vector<T>& _elements)
-		{
-			return _elements[ Random::next((size_t)0, _elements.size()) ];
-		}
+template <typename T>
+typename std::enable_if<std::is_integral<T>::value, T>::type next(T _min = 0, T _max = 2) // range is [_min, _max[
+{
+	return _min + (rand() % (_max - _min));
+}
 
 
-		static void setSeed(long int _seed);
-		static long int getSeed();
+template <typename T>
+const T& element(std::initializer_list<T> _elements)
+{
+	return *(_elements.begin() + Random::next((size_t)0, _elements.size()));
+}
 
-	private:
-		static long int seed;
-		static Random initalizer;
+template <typename T>
+T& element(std::vector<T>& _elements)
+{
+	return _elements[Random::next((size_t)0, _elements.size())];
+}
 
-		Random();
-};
+template <typename T>
+const T& element(const std::vector<T>& _elements)
+{
+	return _elements[Random::next((size_t)0, _elements.size())];
+}
+
+}

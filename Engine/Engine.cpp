@@ -1,15 +1,10 @@
 #include "Engine.h"
-#include "Entity.h"
-
-#include "Systems/GraphicEngine.h"
-#include "Systems/PhysicEngine.h"
-#include "Systems/ScriptEngine.h"
-#include "Systems/UISystem.h"
 
 #include "Renderer/GLDriver.h"
 
 #include "Utility/Time.h"
-#include "Utility/Debug.h"
+//#include "Utility/Debug.h"
+#include "Utility/Random.h"
 #include "Utility/IO/Input.h"
 #include "Utility/JobSystem/JobSystem.h"
 
@@ -17,17 +12,10 @@
 #define MICROPROFILE_IMPL
 #include "Profiler/profiler.h"
 
-#ifdef DEBUG
-#include "Components/Component.h"
-#endif
+uint32_t Engine::next_entity = 0;
 
-Engine* Engine::instance = nullptr;
-
-Engine::Engine(sf::RenderWindow* _window, unsigned _FPS):
-	clock(), pause(false)
+void Engine::init(sf::RenderWindow* _window, unsigned _FPS)
 {
-	instance = this;
-
 	_window->setFramerateLimit(_FPS);
 
 #ifdef PROFILE
@@ -41,28 +29,16 @@ Engine::Engine(sf::RenderWindow* _window, unsigned _FPS):
 #endif
 
 	Time::init();
+	//Debug::init();
+	Random::init();
 	JobSystem::init();
 	Input::init(_window);
-
-	GraphicEngine::create();
-	PhysicEngine::create();
-	ScriptEngine::create();
-	UISystem::create();
 }
 
-Engine::~Engine()
+void Engine::destroy()
 {
-	clear();
-
-	UISystem::destroy();
-	ScriptEngine::destroy();
-	PhysicEngine::destroy();
-	GraphicEngine::destroy();
-
 	Input::destroy();
 	JobSystem::destroy();
-
-	instance = nullptr;
 
 #ifdef PROFILE
 	MicroProfileSetForceEnable(false);
@@ -73,112 +49,21 @@ Engine::~Engine()
 }
 
 /// Methods (public)
-void Engine::start()
-{
-	clock.restart();
-
-	if (Error::check())
-	{
-		delete this;
-
-		exit(EXIT_FAILURE);
-	}
-
-	Debug::init();
-
-	ScriptEngine::get()->start();
-
-	GLenum err;
-	while ( ( err = glGetError() ) != GL_NO_ERROR) {
-		std::cout << "OpenGL error detected: " << err << std::endl;
-	}
-
-#ifdef DEBUG
-	float loadTime = clock.restart().asSeconds();
-	std::cout << "Loaded in " << loadTime << " seconds" << std::endl;
-#endif
-
-	clock.restart();
-}
-
-bool Engine::update()
+void Engine::start_frame()
 {
 	MICROPROFILE_SCOPEI("ENGINE", "update");
 
-	Time::deltaTime = clock.restart().asSeconds() * Time::timeScale;
-	Time::time += Time::deltaTime;
-
-	/// Update events
+	Time::tick();
 	Input::update();
-
-	if (pause)
-		return false;
-
-	/// Update scripts
-	ScriptEngine::get()->start();
-	ScriptEngine::get()->update();
-
-	/// Step physic simulation
-	PhysicEngine::get()->simulate();
-
-	/// Re-update scripts
-	ScriptEngine::get()->lateUpdate();
-
-	/// Render scene
-	GraphicEngine::get()->render();
-
-	/// Draw UI
-	UISystem::get()->draw();
-
-
-	MicroProfileFlip();
-
-	return true;
 }
 
-void Engine::clear()
+void Engine::end_frame()
 {
-	MICROPROFILE_SCOPEI("ENGINE", "clear");
-
-	std::cout << "Entities: "; Entity::clear();
-	std::cout << "done" << std::endl;
-
-	GraphicEngine::get()->clear();
-	PhysicEngine::get()->clear();
-	ScriptEngine::get()->clear();
-	UISystem::get()->clear();
-
-	Debug::destroy();
-
-
-#ifdef DEBUG
-	if (Component::instances != 0)
-	{
-		Component::instances = 0;
-		Error::add(Error::WARNING, "One or more component have not been deleted ("+toString(Component::instances)+")");
-		exit(EXIT_FAILURE);
-	}
-#endif // DEBUG
+	MicroProfileFlip();
 }
 
 /// Setters
-void Engine::setPause(bool _pause)
-{
-	pause = _pause;
-}
-
-void Engine::togglePause()
-{
-	pause = !pause;
-}
-
 void Engine::setWindowSize(vec2 _newSize)
 {
 	Input::setWindowSize(_newSize);
-}
-
-/// Getters
-bool Engine::getPause() const
-{
-	return pause;
 }

@@ -2,27 +2,25 @@
 
 #include <ctime>
 
-long int Random::seed = 0;
-Random Random::initalizer;
-
-bool Random::nextBool()
+namespace Random
 {
-	return (double)rand() / RAND_MAX < 0.5;
+
+static unsigned seed = 0;
+
+void init()
+{
+	set_seed(time(nullptr));
 }
 
-
-Random::Random()
-{
-	setSeed( static_cast<long int>(time(nullptr)) );
-}
-
-void Random::setSeed(long int _seed)
+void set_seed(unsigned _seed)
 {
 	seed = _seed;
 	srand(seed);
 }
 
-long int Random::getSeed()
+unsigned get_seed()
 {
 	return seed;
+}
+
 }

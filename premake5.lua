@@ -1,7 +1,6 @@
 filter "system:windows"
 	-- Update these variables if necessary
 	lib_dir = "../Libs"
-	ultralight_path = lib_dir .. "/ultralight-sdk-1.1.0-win-x64"
 	sfml_path = lib_dir .. "/SFML-2.5.1-windows-vc15-64-bit"
 	glew_path = lib_dir .. "/glew-2.1.0"
 	glm_path  = lib_dir .. "/glm-0.9.9.7"
@@ -21,7 +20,7 @@ project "Engine"
 	targetname "%{prj.name}_%{cfg.buildcfg}"
 	kind "StaticLib"
 	language "C++"
-	cppdialect "C++14"
+	cppdialect "C++11"
 	staticruntime "on"
 
 	targetdir ("bin")
@@ -38,14 +37,12 @@ project "Engine"
 
 	filter "system:windows"
 		includedirs {
-			ultralight_path .. "/include",
 			sfml_path .. "/include",
 			glew_path .. "/include",
 			glm_path,
 		}
 
 		libdirs {
-			ultralight_path .. "/lib",
 			sfml_path .. "/lib",
 			glew_path .. "/lib/Release/x64",
 		}
@@ -72,7 +69,6 @@ project "Engine"
 
 	filter "system:windows"
 		links {
-			"Ultralight", "UltralightCore", "WebCore",
 			"opengl32.lib",
 			"glew32.lib",
 		}
@@ -101,7 +97,7 @@ project "test"
 	targetname "%{cfg.buildcfg}"
 	kind "ConsoleApp"
 	language "C++"
-	cppdialect "C++14"
+	cppdialect "C++11"
 	staticruntime "on"
 
 	targetdir ("bin")
