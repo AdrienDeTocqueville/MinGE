@@ -19,5 +19,5 @@ public:
 private:
 	static uint32_t next_entity;
 
-	friend class Entity;
+	friend struct Entity;
 };

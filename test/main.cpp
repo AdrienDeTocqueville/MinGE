@@ -27,17 +27,20 @@ int main()
 
 	/// Init systems
 	TransformSystem transforms;
-	//RenderSystem graphics(transforms);
+	//GraphicsSystem graphics(transforms);
 
 	/// Create entities
 	Entity entity = Entity::create();
 	transforms.add(entity, vec3(10, 0, 0));
-	//graphics.add(entity, mesh);
+
+	Entity e2 = Entity::create();
+	transforms.add(e2, vec3(9, 1, 0));
+
+	transforms.add_child(entity, e2);
 
 	Transform tr = transforms.get(entity);
 	tr.set_position(tr.position() + vec3(1, 0, 0));
-
-	std::cout << tr.position().x << std::endl;
+	write(transforms.get(e2).world_matrix());
 
 	/// Main loop
 	while (Input::isOpen())
