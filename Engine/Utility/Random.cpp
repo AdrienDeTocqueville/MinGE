@@ -9,7 +9,7 @@ static unsigned seed = 0;
 
 void init()
 {
-	set_seed(time(nullptr));
+	set_seed((unsigned)time(nullptr));
 }
 
 void set_seed(unsigned _seed)

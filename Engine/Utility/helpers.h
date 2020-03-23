@@ -23,10 +23,12 @@ std::string toString(T _number)
 	return os.str();
 }
 
-vec2 toVec2(sf::Vector2i v);
-vec2 toVec2(sf::Vector2u v);
-sf::Vector2i toSFVec2i(vec2 v);
-sf::Vector2u toSFVec2u(vec2 v);
+inline vec2 toVec2(sf::Vector2i v)	{ return vec2(v.x, v.y); }
+inline vec2 toVec2(sf::Vector2u v)	{ return vec2(v.x, v.y); }
+inline sf::Vector2i toSFVec2i(vec2 v)	{ return sf::Vector2i((int)v.x, (int)v.y); }
+inline sf::Vector2i toSFVec2i(ivec2 v)	{ return sf::Vector2i(v.x, v.y); }
+inline sf::Vector2u toSFVec2u(ivec2 v)	{ return sf::Vector2u(v.x, v.y); }
+
 
 vec3 vecClamp(vec3 v);
 
@@ -49,6 +51,3 @@ inline bool epsilonEqual(vec<L, T, Q> const& a, vec<L, T, Q> const& b, T const& 
 }
 
 bool epsilonEqual(const quat& a, const quat& b, float epsilon = EPSILON);
-
-
-void simd_mul(const mat4& a, const mat4& b, mat4& out);

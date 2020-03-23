@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "ECS/Entity.h"
 
 #include "Renderer/GLDriver.h"
 
@@ -12,11 +13,11 @@
 #define MICROPROFILE_IMPL
 #include "Profiler/profiler.h"
 
-uint32_t Engine::next_entity = 0;
+uint32_t Entity::next_index = 1;
 
-void Engine::init(sf::RenderWindow* _window, unsigned _FPS)
+void Engine::init(sf::RenderWindow &window, unsigned _FPS)
 {
-	_window->setFramerateLimit(_FPS);
+	window.setFramerateLimit(_FPS);
 
 #ifdef PROFILE
 	MicroProfileOnThreadCreate("Main");
@@ -32,13 +33,13 @@ void Engine::init(sf::RenderWindow* _window, unsigned _FPS)
 	//Debug::init();
 	Random::init();
 	JobSystem::init();
-	Input::init(_window);
+	Input::init(&window);
 }
 
 void Engine::destroy()
 {
-	Input::destroy();
 	JobSystem::destroy();
+	//Debug::destroy();
 
 #ifdef PROFILE
 	MicroProfileSetForceEnable(false);

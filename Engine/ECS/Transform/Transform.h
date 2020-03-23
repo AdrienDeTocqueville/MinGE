@@ -34,11 +34,14 @@ private:
 struct TransformSystem
 {
 	Transform add(Entity entity, vec3 position, quat rotation, vec3 scale);
+	Transform add_child(Entity parent, Entity entity, vec3 position, quat rotation, vec3 scale);
 	void remove(Entity entity);
-	void add_child(Entity parent, Entity child);
 
 	Transform add(Entity entity, vec3 position = vec3(0.0f), vec3 rotation = vec3(0.0f), vec3 scale = vec3(1.0f))
 	{ return add(entity, position, quat(rotation), scale); }
+
+	Transform add_child(Entity parent, Entity entity, vec3 position = vec3(0.0f), vec3 rotation = vec3(0.0f), vec3 scale = vec3(1.0f))
+	{ return add_child(parent, entity, position, quat(rotation), scale); }
 
 	bool has(Entity entity)
 	{ return (indices.find(entity.id()) != indices.end()); }
@@ -66,7 +69,7 @@ struct TransformSystem
 	{
 		multi_array_t();
 		~multi_array_t();
-		void reserve(uint32_t new_cap);
+		void reserve(uint64_t new_cap);
 		uint32_t add();
 		void remove(uint32_t index);
 
@@ -80,25 +83,7 @@ struct TransformSystem
 	std::unordered_map<uint32_t, uint32_t> indices;
 	multi_array_t data;
 
-	void update_matrices(uint32_t i)
-	{
-		uint32_t child = data.hierarchies[i].first_child;
-		uint32_t parent = data.hierarchies[i].parent;
-
-		data.transforms[i].world = parent
-			? data.transforms[parent].world * glm::translate(data.transforms[i].position)
-			: data.transforms[i].world = glm::translate(data.transforms[i].position);
-
-		data.transforms[i].world *= glm::toMat4(data.transforms[i].rotation);
-		data.transforms[i].world *= glm::scale(data.transforms[i].scale);
-		data.transforms[i].local  = glm::inverse(data.transforms[i].world);
-
-		while (child)
-		{
-			update_matrices(child);
-			child = data.hierarchies[child].next_sibling;
-		}
-	}
+	void update_matrices(uint32_t i);
 };
 
 

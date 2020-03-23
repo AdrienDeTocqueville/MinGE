@@ -3,14 +3,13 @@
 
 const auto desktop = sf::VideoMode::getDesktopMode();
 
-#ifdef DEBUG
+//#ifdef DEBUG
 const auto video_mode = sf::VideoMode(2*desktop.width/3, 2*desktop.height/3);
 const auto style = sf::Style::Default;
-#else
-const auto video_mode = desktop;
-const auto style = sf::Style::Fullscreen;
-#endif
-
+//#else
+//const auto video_mode = desktop;
+//const auto style = sf::Style::Fullscreen;
+//#endif
 
 int main()
 {
@@ -21,24 +20,21 @@ int main()
 	sf::RenderWindow window(video_mode, "MinGE", style, sf::ContextSettings(24, 0, 0, 4, 3));
 	window.setPosition(sf::Vector2i(desktop.width - video_mode.width, desktop.height - video_mode.height) / 2);
 
-
 	/// Init engine
-	Engine::init(&window, 30);
+	Engine::init(window, 30);
 
 	/// Init systems
 	TransformSystem transforms;
 	//GraphicsSystem graphics(transforms);
 
 	/// Create entities
-	Entity entity = Entity::create();
-	transforms.add(entity, vec3(10, 0, 0));
-
+	Entity e1 = Entity::create();
 	Entity e2 = Entity::create();
-	transforms.add(e2, vec3(9, 1, 0));
 
-	transforms.add_child(entity, e2);
+	transforms.add(e1, vec3(9, 1, 0));
+	transforms.add_child(e1, e2);
 
-	Transform tr = transforms.get(entity);
+	Transform tr = transforms.get(e2);
 	tr.set_position(tr.position() + vec3(1, 0, 0));
 	write(transforms.get(e2).world_matrix());
 

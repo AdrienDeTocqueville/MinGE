@@ -15,8 +15,7 @@ int Input::wheelDelta(0);
 
 Input::Cursor Input::mode = Input::Cursor::Free;
 
-bool Input::focus = true;
-bool Input::closed = false;
+bool Input::focus, Input::closed;
 
 int Input::mouseIndex = 0, Input::keyboardIndex = 0;
 bool Input::mouseCleared = false, Input::keyboardCleared = false;
@@ -38,14 +37,6 @@ void Input::init(sf::RenderWindow* _window)
 
 	focus = true;
 	closed = false;
-}
-
-void Input::destroy()
-{
-	window = nullptr;
-
-	focus = true;
-	closed = true;
 }
 
 void Input::update()
@@ -70,7 +61,7 @@ void Input::update()
 			break;
 
 		case sf::Event::MouseWheelScrolled:
-			wheelDelta = event.mouseWheelScroll.delta;
+			wheelDelta = (int)event.mouseWheelScroll.delta;
 			break;
 
 		case sf::Event::LostFocus:

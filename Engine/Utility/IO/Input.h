@@ -55,7 +55,6 @@ public:
 private:
 	/// Methods (private)
 	static void init(sf::RenderWindow* _window);
-	static void destroy();
 
 	static void update();
 

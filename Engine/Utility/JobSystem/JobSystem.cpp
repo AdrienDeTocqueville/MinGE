@@ -17,7 +17,7 @@
 namespace JobSystem
 {
 // Job system
-bool work = true;
+bool work = true; // flag to tell workers to stop working
 
 // Workers
 unsigned num_worker;
@@ -59,7 +59,7 @@ struct Worker
 	static const unsigned MASK = NUMBER_OF_JOBS - 1u;
 
 	std::thread thread;
-	long bottom, top;
+	long bottom = 0, top = 0;
 	Job *jobs[NUMBER_OF_JOBS];
 
 	Job *get_job()
@@ -185,7 +185,7 @@ void set_cpu_affinity(const std::thread::native_handle_type handle, const int cp
 	CPU_SET(cpu, &cpuset);
 	failed = pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
 #elif _WIN32
-	failed = SetThreadAffinityMask(handle, (DWORD_PTR)(1 << cpu)) == 0;
+	failed = SetThreadAffinityMask(handle, uint64_t(1) << cpu) == 0;
 #endif
 
 #ifdef DEBUG
@@ -200,10 +200,7 @@ void init()
 
 	num_worker = std::thread::hardware_concurrency();
 	workers = new Worker[num_worker];
-
 	work = true;
-	for (unsigned i(0); i < num_worker; i++)
-		workers[i].bottom = workers[i].top = 0;
 
 	// Launch threads
 	set_cpu_affinity(THIS_THREAD, 0); // main thread

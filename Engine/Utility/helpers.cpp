@@ -1,22 +1,5 @@
 #include "Utility/helpers.h"
 
-vec2 toVec2(sf::Vector2i v)
-{
-	return vec2(v.x, v.y);
-}
-vec2 toVec2(sf::Vector2u v)
-{
-	return vec2(v.x, v.y);
-}
-sf::Vector2i toSFVec2i(vec2 v)
-{
-	return sf::Vector2i(v.x, v.y);
-}
-sf::Vector2u toSFVec2u(vec2 v)
-{
-	return sf::Vector2u(v.x, v.y);
-}
-
 vec3 vecClamp(vec3 v)
 {
 	for (unsigned i(0) ; i < 3 ; i++)
@@ -55,13 +38,13 @@ bool epsilonEqual(const quat& a, const quat& b, float epsilon)
 #include <immintrin.h>
 #endif // NO_SIMD
 
-void simd_mul(const mat4& a, const mat4& b, mat4& out)
+void simd_mul(mat4& out, const mat4& a, const mat4& b)
 {
 #ifndef NO_SIMD
-	__m128 r0 = _mm_loadu_ps(&a[0][0]);
-	__m128 r1 = _mm_loadu_ps(&a[1][0]);
-	__m128 r2 = _mm_loadu_ps(&a[2][0]);
-	__m128 r3 = _mm_loadu_ps(&a[3][0]);
+	const __m128 r0 = _mm_loadu_ps(&a[0][0]);
+	const __m128 r1 = _mm_loadu_ps(&a[1][0]);
+	const __m128 r2 = _mm_loadu_ps(&a[2][0]);
+	const __m128 r3 = _mm_loadu_ps(&a[3][0]);
 
 	__m128 l = _mm_loadu_ps(&b[0][0]);
 	__m128 t0 = _mm_mul_ps(_mm_shuffle_ps(l,l,_MM_SHUFFLE(0,0,0,0)),r0);

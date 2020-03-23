@@ -14,27 +14,57 @@ Transform TransformSystem::add(Entity entity, vec3 position, quat rotation, vec3
 	data.transforms[i].rotation = rotation;
 	data.transforms[i].scale    = scale;
 
-	data.transforms[i].world  = glm::translate(position);
-	data.transforms[i].world *= glm::toMat4(rotation);
-	data.transforms[i].world *= glm::scale(scale);
+	simd_mul(data.transforms[i].world, glm::translate(position), glm::toMat4(rotation));
+	simd_mul(data.transforms[i].world, data.transforms[i].world, glm::scale(scale));
 	data.transforms[i].local  = glm::inverse(data.transforms[i].world);
 
 	// Init hierarchy
+	data.hierarchies[i].first_child = 0;
 	data.hierarchies[i].parent = 0;
 	data.hierarchies[i].next_sibling = 0;
-	data.hierarchies[i].first_child  = 0;
 
-	return Transform(entity.id(), *this);
+	return Transform(i, *this);
+}
+
+Transform TransformSystem::add_child(Entity parent, Entity entity, vec3 position, quat rotation, vec3 scale)
+{
+	assert(parent.id() != 0, "Invalid parent");
+	assert(has(parent), "Parent has no Transform component");
+
+	assert(entity.id() != 0, "Invalid entity");
+	assert(indices.find(entity.id()) == indices.end(), "Entity already has a Transform component");
+
+	uint32_t p = indices[parent.id()];
+	uint32_t i = data.add();
+	indices[entity.id()] = i;
+
+	// Init transform
+	data.transforms[i].position = position;
+	data.transforms[i].rotation = rotation;
+	data.transforms[i].scale    = scale;
+
+	simd_mul(data.transforms[i].world, data.transforms[p].world, glm::translate(position));
+	simd_mul(data.transforms[i].world, data.transforms[i].world, glm::toMat4(rotation));
+	simd_mul(data.transforms[i].world, data.transforms[i].world, glm::scale(scale));
+	data.transforms[i].local  = glm::inverse(data.transforms[i].world);
+
+	// Init hierarchy
+	data.hierarchies[i].first_child = 0;
+	data.hierarchies[i].parent = p;
+	data.hierarchies[i].next_sibling = data.hierarchies[p].first_child;
+	data.hierarchies[p].first_child = i;
+
+	return Transform(i, *this);
 }
 
 void TransformSystem::remove(Entity entity)
 {
 	auto it = indices.find(entity.id());
-	uint32_t i = it->second;
+	const uint32_t i = it->second;
 	indices.erase(it);
 
 	// Patch parent hierarchy
-	if (uint32_t p = data.hierarchies[i].parent)
+	if (const uint32_t p = data.hierarchies[i].parent)
 	{
 		if (data.hierarchies[p].first_child == i)
 			data.hierarchies[p].first_child = data.hierarchies[i].next_sibling;
@@ -59,19 +89,30 @@ void TransformSystem::remove(Entity entity)
 	data.remove(i);
 }
 
-void TransformSystem::add_child(Entity parent, Entity child)
+void TransformSystem::update_matrices(uint32_t i)
 {
-	assert(has(parent), "Parent entity has no Transform component");
-	assert(has(child), "Child entity has no Transform component");
+	const uint32_t parent = data.hierarchies[i].parent;
+	uint32_t child = data.hierarchies[i].first_child;
 
-	uint32_t p = indices[parent.id()];
-	uint32_t c = indices[child.id()];
+	if (parent)
+	{
+		simd_mul(data.transforms[i].world, data.transforms[parent].world, glm::translate(data.transforms[i].position));
+		simd_mul(data.transforms[i].world, data.transforms[i].world, glm::toMat4(data.transforms[i].rotation));
+		simd_mul(data.transforms[i].world, data.transforms[i].world, glm::scale(data.transforms[i].scale));
+	}
+	else
+	{
+		simd_mul(data.transforms[i].world, glm::translate(data.transforms[i].position), glm::toMat4(data.transforms[i].rotation));
+		simd_mul(data.transforms[i].world, data.transforms[i].world, glm::scale(data.transforms[i].scale));
+	}
+	data.transforms[i].local = glm::inverse(data.transforms[i].world);
 
-	data.hierarchies[c].next_sibling = data.hierarchies[p].first_child;
-	data.hierarchies[c].parent = p;
-	data.hierarchies[p].first_child = c;
 
-	update_matrices(c);
+	while (child)
+	{
+		update_matrices(child);
+		child = data.hierarchies[child].next_sibling;
+	}
 }
 
 // Transform
@@ -119,7 +160,7 @@ const mat4& Transform::local_matrix()
 
 // multi_array_t
 TransformSystem::multi_array_t::multi_array_t():
-	capacity(32), last(0), next_slot(0)
+	capacity(0x1000), last(0), next_slot(0)
 {
 	transforms  = (transform_t*)calloc(capacity, size_sum) - 1;
 	hierarchies = (hierarchy_t*)(transforms + 1 + capacity) - 1;
@@ -130,7 +171,7 @@ TransformSystem::multi_array_t::~multi_array_t()
 	free(transforms + 1);
 }
 
-void TransformSystem::multi_array_t::reserve(uint32_t new_cap)
+void TransformSystem::multi_array_t::reserve(uint64_t new_cap)
 {
 	void *old_alloc = transforms + 1;
 
@@ -142,19 +183,19 @@ void TransformSystem::multi_array_t::reserve(uint32_t new_cap)
 	memcpy(temp, hierarchies + 1, last * sizeof(hierarchy_t));
 	hierarchies = (hierarchy_t*)temp - 1;
 
-	capacity = new_cap;
+	capacity = (uint32_t)new_cap;
 	free(old_alloc);
 }
 
 uint32_t TransformSystem::multi_array_t::add()
 {
-	if (uint32_t ret = next_slot)
+	if (const uint32_t ret = next_slot)
 	{
 		next_slot = *(uint32_t*)(transforms + next_slot);
 		return ret;
 	}
 	if (last + 1 == capacity)
-		reserve(capacity * 2);
+		reserve((uint64_t)capacity * 2);
 	return ++last;
 }
 

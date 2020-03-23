@@ -11,3 +11,6 @@
 #include <glm/gtx/matrix_operation.hpp>
 
 using namespace glm;
+
+
+void simd_mul(mat4& out, const mat4& a, const mat4& b);

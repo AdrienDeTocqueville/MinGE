@@ -8,7 +8,7 @@
 class LinearAllocator
 {
 public:
-	LinearAllocator(size_t _size):
+	LinearAllocator(uint32_t _size):
 		size(_size), pool(new uint8_t[size]), current(0)
 	{
 		assert(current.is_lock_free());
@@ -22,14 +22,14 @@ public:
 	}
 
 	inline uint8_t *getStart() const { return pool; }
-	inline size_t getSize() const { return current; }
+	inline uint32_t getSize() const { return current; }
 
-	void *alloc(size_t bytes, uint32_t alignment = 1);
+	void *alloc(uint32_t bytes, uint32_t alignment = 1);
 
 private:
-	size_t size;
+	uint32_t size;
 	uint8_t *pool;
-	std::atomic<size_t> current;
+	std::atomic<uint32_t> current;
 
 	LinearAllocator(const LinearAllocator&) = delete;
 	void operator=(const LinearAllocator&) = delete;

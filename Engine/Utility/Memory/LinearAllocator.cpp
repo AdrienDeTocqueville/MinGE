@@ -3,9 +3,9 @@
 
 #include <iostream>
 
-void* LinearAllocator::alloc(size_t bytes, uint32_t alignment)
+void* LinearAllocator::alloc(uint32_t bytes, uint32_t alignment)
 {
-	bytes = align(bytes, alignment);
+	bytes = mem::align(bytes, alignment);
 
 	uint32_t index = current.fetch_add(bytes, std::memory_order_relaxed);
 	uint8_t *ptr = pool + index;
