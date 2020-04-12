@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ECS/Entity.h"
-#include "ECS/System.h"
+#include "Core/Entity.h"
+#include "Core/System.h"
 
 #include "Math/glm.h"
 
@@ -92,4 +92,4 @@ struct TransformSystem
 };
 
 
-#include "ECS/Transform/Transform.inl"
+#include "Transform/Transform.inl"

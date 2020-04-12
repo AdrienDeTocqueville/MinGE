@@ -1,5 +1,5 @@
 #include "Core/Engine.h"
-#include "ECS/Entity.h"
+#include "Core/Entity.h"
 
 #include "Renderer/GLDriver.h"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ECS/System.h"
+#include "Core/System.h"
 #include "Math/glm.h"
 
 namespace sf

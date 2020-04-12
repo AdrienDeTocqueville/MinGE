@@ -6,11 +6,11 @@
 #include <memory>
 
 #include "Core/Engine.h"
+#include "Core/Entity.h"
 #include "Core/Scene.h"
 #include "Core/Platform.h"
 
-#include "ECS/Entity.h"
-#include "ECS/Transform/Transform.h"
+#include "Transform/Transform.h"
 
 #include "IO/Input.h"
 #include "Math/Random.h"

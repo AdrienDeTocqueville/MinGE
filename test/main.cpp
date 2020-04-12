@@ -62,9 +62,9 @@ int main()
 
 	/// Init systems
 	Engine::register_system_type(TransformSystem::type);
-	//Engine::register_system_type(SYSTEM_TYPE(GraphicsSystem, 1));
+	//Engine::register_system_type(SYSTEM_TYPE(RenderSystem, 1));
 	auto transforms = (TransformSystem*)Engine::create_system("TransformSystem", NULL);
-	//auto graphics = (GraphicsSystem*)Engine::create_system("GraphicsSystem", {transforms});
+	//auto renderers = (RenderSystem*)Engine::create_system("RenderSystem", {transforms});
 
 	// Open assets
 //	Mesh mesh = Assets::load_mesh("asset:mesh/cube?width=3&height=2");
@@ -73,7 +73,7 @@ int main()
 	/// Create entities
 	Entity e = Entity::create();
 	transforms->add(e, vec3(0, 0, 0));
-	//graphics->add(e, mesh);
+	//renderers->add(e, mesh);
 
 	/// Main loop
 	while (Input::isOpen())
@@ -89,7 +89,7 @@ int main()
 	// Create or clear file 'Assets/level.ge' with Engine serialized data
 	Scene::system_ref_t systems[] = {
 		Scene::system_ref_t{"world", transforms},
-		//{"GraphicsSystem", "world_graphics", graphics},
+		//{"RenderSystem", "world_renderers", renderers},
 	};
 	Scene level(ARRAY_LEN(systems), systems);
 	level.save("Assets/", "level", false);
