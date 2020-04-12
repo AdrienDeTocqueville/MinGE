@@ -154,11 +154,11 @@ struct Worker
 	}
 };
 
-void Job::run()
+static inline void job_run(const Job *job)
 {
-	function(data);
-	if (counter)
-		counter->fetch_add(1, std::memory_order_relaxed);
+	job->function(job->data);
+	if (job->counter)
+		job->counter->fetch_add(1, std::memory_order_relaxed);
 }
 
 void worker_main(const int i)
@@ -168,7 +168,7 @@ void worker_main(const int i)
 	while (true)
 	{
 		if (Job* job = workers[i].get_job())
-			job->run();
+			job_run(job);
 
 		else if (!JobSystem::work) break;
 		else std::this_thread::yield();
@@ -237,7 +237,7 @@ void wait(const std::atomic<int> *counter, const int value)
 	while (counter->load(std::memory_order_relaxed) != value)
 	{
 		if (Job* job = workers[this_worker].get_job())
-			job->run();
+			job_run(job);
 
 		else std::this_thread::yield();
 	}

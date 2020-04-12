@@ -5,8 +5,8 @@ using namespace nlohmann;
 
 Transform TransformSystem::add(Entity entity, vec3 position, quat rotation, vec3 scale)
 {
-	assert(entity.id() != 0, "Invalid entity");
-	assert(indices.find(entity.id()) == indices.end(), "Entity already has a Transform component");
+	assert(entity.id() != 0 && "Invalid entity");
+	assert(indices.find(entity.id()) == indices.end() && "Entity already has a Transform component");
 
 	uint32_t i = data.add();
 	indices[entity.id()] = i;
@@ -30,11 +30,11 @@ Transform TransformSystem::add(Entity entity, vec3 position, quat rotation, vec3
 
 Transform TransformSystem::add_child(Entity parent, Entity entity, vec3 position, quat rotation, vec3 scale)
 {
-	assert(parent.id() != 0, "Invalid parent");
-	assert(has(parent), "Parent has no Transform component");
+	assert(parent.id() != 0 && "Invalid parent");
+	assert(has(parent) && "Parent has no Transform component");
 
-	assert(entity.id() != 0, "Invalid entity");
-	assert(indices.find(entity.id()) == indices.end(), "Entity already has a Transform component");
+	assert(entity.id() != 0 && "Invalid entity");
+	assert(indices.find(entity.id()) == indices.end() && "Entity already has a Transform component");
 
 	uint32_t p = indices[parent.id()];
 	uint32_t i = data.add();
@@ -117,12 +117,14 @@ void TransformSystem::update_matrices(uint32_t i)
 	}
 }
 
-inline json to_json(vec3 v)
+
+/// TYPE DEFINITION
+static inline json to_json(vec3 v)
 {
 	return {{"x", v.x}, {"y", v.y}, {"z", v.z}};
 }
 
-json TransformSystem::serialize(void *system)
+static json serialize(void *system)
 {
 	json dump;
 
@@ -150,5 +152,19 @@ json TransformSystem::serialize(void *system)
 	return dump;
 }
 
-void TransformSystem::deserialize()
+static void deserialize(const nlohmann::json&)
 { }
+
+const system_type_t TransformSystem::type = []() {
+	system_type_t t{};
+	t.name = "TransformSystem";
+	t.size = sizeof(TransformSystem);
+	t.dependency_count = 0;
+
+	t.init = [](void *system) { new (system) TransformSystem(); };
+	t.destroy = [](void *system) { ((TransformSystem*)system)->~TransformSystem(); };
+	t.update = NULL;
+	t.serialize = serialize;
+	t.deserialize = deserialize;
+	return t;
+}();

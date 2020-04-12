@@ -51,7 +51,7 @@ struct TransformSystem
 
 	Transform get(Entity entity)
 	{
-		assert(has(entity), "Entity has no Transform component");
+		assert(has(entity) && "Entity has no Transform component");
 		return Transform(indices[entity.id()], *this);
 	}
 
@@ -87,13 +87,9 @@ struct TransformSystem
 	std::unordered_map<uint32_t, uint32_t> indices;
 	multi_array_t data;
 
+	static const system_type_t type;
+
 	void update_matrices(uint32_t i);
-
-	static void init(void *system) { new (system) TransformSystem(); }
-	static void destroy(void *system) { ((TransformSystem*)system)->~TransformSystem(); }
-
-	static nlohmann::json serialize(void *system);
-	static void deserialize();
 };
 
 

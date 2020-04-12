@@ -61,48 +61,24 @@ int main()
 	//benchmark(50); transform system type is not registered
 
 	/// Init systems
-	Engine::register_system_type(SYSTEM_TYPE(TransformSystem, 0));
+	Engine::register_system_type(TransformSystem::type);
+	//Engine::register_system_type(SYSTEM_TYPE(GraphicsSystem, 1));
 	auto transforms = (TransformSystem*)Engine::create_system("TransformSystem", NULL);
-	//GraphicsSystem graphics(transforms);
+	//auto graphics = (GraphicsSystem*)Engine::create_system("GraphicsSystem", {transforms});
+
+	// Open assets
+//	Mesh mesh = Assets::load_mesh("asset:mesh/cube?width=3&height=2");
+//	Texture texture = Assets::load_texture("asset:///Assets/level1/floor.png?srgb=1");
 
 	/// Create entities
-	Entity e1 = Entity::create();
-	Entity e2 = Entity::create();
-	Entity e3 = Entity::create();
-	Entity _e = Entity::create();
-	Entity e4 = Entity::create();
-	Entity e5 = Entity::create();
-	Entity e6 = Entity::create();
-	Entity e7 = Entity::create();
-	Entity e8 = Entity::create();
-
-	transforms->add(e1, vec3(0, 0, 0));
-
-	transforms->add_child(e1, e2);
-	transforms->add_child(e1, e3);
-	transforms->add_child(e1, e4, vec3(1, 0, 0));
-
-	transforms->add(_e);
-
-	transforms->add_child(e4, e5, vec3(0, 1, 0));
-	transforms->add_child(e4, e6, vec3(1, 0, 0));
-
-	transforms->remove(_e);
-
-	transforms->add_child(e5, e7, vec3(0, 0, 1));
-	transforms->add_child(e5, e8, vec3(0, 1, 0));
-
-	transforms->get(e1).set_position(vec3(0.0f));
-
-	write(transforms->get(e7).world_matrix());
-	write(transforms->get(e8).world_matrix());
+	Entity e = Entity::create();
+	transforms->add(e, vec3(0, 0, 0));
+	//graphics->add(e, mesh);
 
 	/// Main loop
 	while (Input::isOpen())
 	{
 		Engine::start_frame();
-
-		//graphics.draw();
 
 		Engine::end_frame();
 		window.display();

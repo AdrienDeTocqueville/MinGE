@@ -7,7 +7,7 @@
 //#include "Utility/Debug.h"
 #include "Utility/Random.h"
 #include "Utility/IO/Input.h"
-#include "Utility/JobSystem/JobSystem.h"
+#include "Utility/JobSystem/JobSystem.inl"
 
 //#define MICROPROFILE_MAX_FRAME_HISTORY (2<<10)
 #define MICROPROFILE_IMPL
@@ -92,7 +92,7 @@ void *Engine::create_system(const char *type_name, const void **dependencies)
 			auto counters = (std::atomic<int>**)butterfly;
 			for (uint32_t d(0); d < system_types[i].dependency_count; d++)
 				counters[d] = (std::atomic<int>*)(dependencies[d]) - 1;
-			auto *counter = new(butterfly + dependencies_size) std::atomic<int>(0);
+			auto *counter = new(butterfly + dependencies_size) std::atomic<int>(1);
 			void *instance = butterfly + dependencies_size + sizeof(std::atomic<int>);
 
 			system_types[i].init(instance);
@@ -113,6 +113,16 @@ const system_type_t *Engine::get_system_type(void *system)
 	return nullptr;
 }
 
+void sys_update(const void *data)
+{
+	auto sys = (system_t*)data;
+
+	auto counters = (std::atomic<int>**)((uint8_t*)sys->instance - sizeof(std::atomic<int>));
+	for (int32_t d(1); d <= (int32_t)sys->dependency_count; d++)
+		JobSystem::wait(counters[-d], 1);
+	void *instance = sys->instance;
+	system_types[sys->type_index].update(instance);
+}
 
 void Engine::start_frame()
 {
@@ -120,10 +130,27 @@ void Engine::start_frame()
 
 	Time::tick();
 	Input::update();
+
+	// Launch system update jobs
+	for (auto &sys : systems)
+	{
+		if (system_types[sys.type_index].update == NULL)
+			continue;
+		auto counter = (std::atomic<int>*)sys.instance - 1;
+		*counter = 0; // This should be doable in sys_update
+		JobSystem::run(sys_update, &sys, counter);
+	}
 }
 
 void Engine::end_frame()
 {
+	// Wait for all system updates
+	for (auto &sys : systems)
+	{
+		auto *counter = (std::atomic<int>*)sys.instance - 1;
+		JobSystem::wait(counter, 1);
+	}
+
 	MicroProfileFlip();
 }
 

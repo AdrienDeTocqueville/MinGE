@@ -11,14 +11,9 @@ const unsigned cacheline_size = 64;
 
 struct alignas(cacheline_size) Job
 {
-	void run();
-
-private:
 	Work function;
 	std::atomic<int> *counter;
 	uint8_t data[cacheline_size - sizeof(Work) - sizeof(std::atomic<int>*)];
-
-	friend void run(Work func, const void *data, unsigned n, std::atomic<int> *counter);
 };
 static_assert(sizeof(Job) == cacheline_size, "Job size is invalid");
 
