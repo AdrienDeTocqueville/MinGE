@@ -44,7 +44,7 @@ const mat4& Transform::local_matrix()
 
 
 // multi_array_t
-#include "Utility/Memory/Memory.h"
+#include "Memory/Memory.h"
 
 TransformSystem::multi_array_t::multi_array_t():
 	capacity(mem::page_size), last(0), next_slot(0)

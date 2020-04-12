@@ -3,7 +3,7 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <GL/glew.h>
 
-#include "Utility/glm.h"
+#include "Math/glm.h"
 
 #ifdef DEBUG
 #include <iostream>

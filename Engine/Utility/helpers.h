@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SFML/System.hpp>
-#include "Utility/glm.h"
+#include "Math/glm.h"
 
 const float PI = 3.14159265358979323846f;
 const float EPSILON = 0.0001f;

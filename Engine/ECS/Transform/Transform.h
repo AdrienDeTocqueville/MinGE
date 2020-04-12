@@ -3,8 +3,7 @@
 #include "ECS/Entity.h"
 #include "ECS/System.h"
 
-#include "Utility/glm.h"
-#include "Utility/IO/json_fwd.hpp"
+#include "Math/glm.h"
 
 #include <cstdint>
 #include <unordered_map>

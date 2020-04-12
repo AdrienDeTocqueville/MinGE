@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ECS/System.h"
-#include "Utility/glm.h"
+#include "Math/glm.h"
 
 namespace sf
 { class RenderWindow; }

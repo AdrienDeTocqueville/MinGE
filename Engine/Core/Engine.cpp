@@ -3,11 +3,12 @@
 
 #include "Renderer/GLDriver.h"
 
+#include "IO/Input.h"
+#include "Math/Random.h"
+#include "JobSystem/JobSystem.inl"
+
 #include "Utility/Time.h"
 //#include "Utility/Debug.h"
-#include "Utility/Random.h"
-#include "Utility/IO/Input.h"
-#include "Utility/JobSystem/JobSystem.inl"
 
 //#define MICROPROFILE_MAX_FRAME_HISTORY (2<<10)
 #define MICROPROFILE_IMPL
