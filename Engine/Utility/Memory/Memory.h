@@ -25,7 +25,7 @@ inline unsigned long get_page_size()
 
 #endif
 
-const unsigned long page_size = get_page_size();
+const uint32_t page_size = (uint32_t)get_page_size();
 
 
 inline uint32_t align(uint32_t val, uint32_t alignment)

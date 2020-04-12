@@ -1,7 +1,10 @@
 #pragma once
 
 #include "ECS/Entity.h"
+#include "ECS/System.h"
+
 #include "Utility/glm.h"
+#include "Utility/IO/json_fwd.hpp"
 
 #include <cstdint>
 #include <unordered_map>
@@ -10,17 +13,17 @@ struct Transform
 {
 	inline uint32_t id() const { return index; }
 
-	void set_position(vec3 pos);
-	void set_rotation(vec3 rot);
-	void set_rotation(quat rot);
-	void set_scale(vec3 scale);
+	inline void set_position(vec3 pos);
+	inline void set_rotation(vec3 rot);
+	inline void set_rotation(quat rot);
+	inline void set_scale(vec3 scale);
 
-	vec3 position() const;
-	quat rotation() const;
-	vec3 scale() const;
+	inline vec3 position() const;
+	inline quat rotation() const;
+	inline vec3 scale() const;
 
-	const mat4 &world_matrix();
-	const mat4 &local_matrix();
+	inline const mat4 &world_matrix();
+	inline const mat4 &local_matrix();
 
 private:
 	friend struct TransformSystem;
@@ -67,11 +70,12 @@ struct TransformSystem
 	};
 	struct multi_array_t
 	{
-		multi_array_t();
-		~multi_array_t();
-		void reserve(uint64_t new_cap);
-		uint32_t add();
-		void remove(uint32_t index);
+		inline multi_array_t();
+		~multi_array_t() { free(transforms + 1); }
+
+		inline void reserve(uint64_t new_cap);
+		inline uint32_t add();
+		inline void remove(uint32_t index);
 
 		uint32_t next_slot, capacity, last;
 		transform_t *transforms;
@@ -84,6 +88,12 @@ struct TransformSystem
 	multi_array_t data;
 
 	void update_matrices(uint32_t i);
+
+	static void init(void *system) { new (system) TransformSystem(); }
+	static void destroy(void *system) { ((TransformSystem*)system)->~TransformSystem(); }
+
+	static nlohmann::json serialize(void *system);
+	static void deserialize();
 };
 
 

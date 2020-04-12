@@ -25,15 +25,6 @@ void write(const mat4 &x, bool ret)
 	if (ret) putchar('\n');
 }
 
-bool epsilonEqual(const quat& a, const quat& b, float epsilon)
-{
-	for (unsigned i(0) ; i < 4 ; i++)
-	if (!epsilonEqual(a[i], b[i], epsilon))
-		return false;
-
-	return true;
-}
-
 #ifndef NO_SIMD
 #include <immintrin.h>
 #endif // NO_SIMD

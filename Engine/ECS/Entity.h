@@ -4,8 +4,6 @@
 
 struct Entity
 {
-	friend class Engine;
-
 	Entity(): index(0) {}
 	inline uint32_t id() { return index; }
 
@@ -17,4 +15,5 @@ private:
 	uint32_t index;
 
 	static uint32_t next_index;
+	friend class Scene; // for serialization
 };

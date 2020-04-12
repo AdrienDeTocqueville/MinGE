@@ -11,9 +11,6 @@ General architecture is heavily inspired from Unity.
  * [Order your graphics draw calls around!](http://realtimecollisiondetection.net/blog/?p=86)
  * [bgfx](https://github.com/bkaradzic/bgfx)
 
-#### Physic Engine
- * [bullet3](https://github.com/bulletphysics/bullet3)
-
 #### Other
  * [JSON parser](https://github.com/nlohmann/json)
  * [Lock-free job system](https://blog.molecular-matters.com/tag/job-system/)

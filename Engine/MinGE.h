@@ -14,7 +14,9 @@
 
 #include <memory>
 
-#include "Engine.h"
+#include "Core/Engine.h"
+#include "Core/Scene.h"
+#include "Core/Platform.h"
 
 #include "ECS/Entity.h"
 #include "ECS/Transform/Transform.h"

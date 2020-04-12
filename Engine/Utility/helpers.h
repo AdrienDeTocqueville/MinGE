@@ -1,27 +1,11 @@
 #pragma once
 
 #include <SFML/System.hpp>
-
-#include <iostream>
-#include <sstream>
-#include <string>
-
-#include <unordered_map>
-#include <vector>
-
 #include "Utility/glm.h"
 
 const float PI = 3.14159265358979323846f;
 const float EPSILON = 0.0001f;
 
-template <typename T>
-std::string toString(T _number)
-{
-	std::stringstream os;
-	os << _number;
-
-	return os.str();
-}
 
 inline vec2 toVec2(sf::Vector2i v)	{ return vec2(v.x, v.y); }
 inline vec2 toVec2(sf::Vector2u v)	{ return vec2(v.x, v.y); }
@@ -50,4 +34,11 @@ inline bool epsilonEqual(vec<L, T, Q> const& a, vec<L, T, Q> const& b, T const& 
 	return true;
 }
 
-bool epsilonEqual(const quat& a, const quat& b, float epsilon = EPSILON);
+inline bool epsilonEqual(const quat& a, const quat& b, float epsilon = EPSILON)
+{
+	for (unsigned i(0) ; i < 4 ; i++)
+	if (!epsilonEqual(a[i], b[i], epsilon))
+		return false;
+
+	return true;
+}
