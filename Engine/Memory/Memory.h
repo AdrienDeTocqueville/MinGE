@@ -5,22 +5,25 @@ namespace mem
 
 #ifdef __linux__
 #include <sys/mman.h>
-#define PAGE_ALLOC(size) mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0)
-#define PAGE_FREE(address, length) munmap(address, length)
+inline void *alloc_page(size_t size) { return mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0); }
+inline void free_page(void *address, size_t size) { munmap(address, size); }
 
 #include <unistd.h>
-#define get_page_size() sysconf(_SC_PAGESIZE)
+inline long get_page_size()
+{
+	return sysconf(_SC_PAGESIZE);
+}
 
 #elif _WIN32
 #include <Windows.h>
-#define PAGE_ALLOC(size) VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE)
-#define PAGE_FREE(address) VirtualFree(address, 0, MEM_RELEASE)
+inline void *alloc_page(size_t size) { return VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE); }
+inline void free_page(void *address, size_t size) { VirtualFree(address, 0, MEM_RELEASE); }
 
 inline unsigned long get_page_size()
 {
 	SYSTEM_INFO infos;
 	GetSystemInfo(&infos);
-	return infos.dwPageSize;
+	return infos.dwAllocationGranularity;
 }
 
 #endif

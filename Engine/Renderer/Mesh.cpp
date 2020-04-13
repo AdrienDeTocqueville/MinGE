@@ -1,92 +1,33 @@
 #include "Renderer/Mesh.h"
+#include "Renderer/GLDriver.h"
 
 #include "IO/URI.h"
+#include "Utility/Error.h"
 #include "Structures/AABB.h"
-
 #include "Structures/MultiArray.h"
 
-//multi_array_t<mesh_t, mesh_data_t, URI, AABB> mesh_manager;
-//PageAllocator<submesh_t> submeshes;
+#include <vector>
 
-/*
-#include "Systems/GraphicEngine.h"
-#include "Renderer/GLDriver.h"
-#include "Utility/Error.h"
+multi_array_t<mesh_t, mesh_data_t, const char*, AABB> mesh_manager;
+std::vector<submesh_t> submeshes;
 
-multi_array_t meshes;
-
-MeshData::MeshData(uint32_t _vertex_count, uint32_t _index_count, MeshData::Flags _flags):
-	vertex_count(_vertex_count), index_count(_index_count),
-	points(NULL), normals(NULL), uvs(NULL), bones(NULL),
-	indices(NULL)
-{
-	if (_flags & Flags::Points)
-		points = new vec3[vertex_count];
-	if (_flags & Flags::Normals)
-		normals = new vec3[vertex_count];
-	if (_flags & Flags::UVs)
-		uvs = new vec2[vertex_count];
-	if (_flags & Flags::Bones)
-		bones = new BoneWeight[vertex_count];
-
-	indices = new uint16_t[index_count];
-}
-
-MeshData::MeshData(MeshData &&data)
-{
-	memcpy(this, &data, sizeof(MeshData));
-	memset((void*)&data, 0, sizeof(MeshData));
-}
-
-MeshData::~MeshData()
-{
-	delete[] points;
-	delete[] normals;
-	delete[] uvs;
-	delete[] bones;
-
-	delete[] indices;
-}
-
-uint32_t MeshData::stride() const
-{
-	uint32_t stride = 0;
-	if (points)	stride += sizeof(*points);
-	if (normals)	stride += sizeof(*normals);
-	if (uvs)	stride += sizeof(*uvs);
-	if (bones)	stride += sizeof(*bones);
-
-	return stride;
-}
-
-Mesh::Mesh(MeshData &&_data, const std::vector<Submesh> &_submeshes):
-	submeshes(_submeshes), data(std::move(_data)),
-	vao(0), vbo(0), ebo(0)
+static inline void compute_aabb(const mesh_data_t &data, vec3 &b0, vec3 &b1)
 {
 	if (data.points)
 	{
-		vec3 b0(data.points[0]), b1(data.points[0]);
+		b0 = data.points[0];
+		b1 = data.points[0];
 
 		for (size_t i = 1; i < data.vertex_count; i++)
 		{
 			b0 = min(b0, data.points[i]);
 			b1 = max(b1, data.points[i]);
 		}
-		aabb.init(b0, b1);
 	}
-
-	loadBuffers();
+	else b0 = b1 = vec3(0.0f);
 }
 
-Mesh::~Mesh()
-{
-	GL::DeleteVertexArray(vao);
-	GL::DeleteBuffer(vbo);
-	GL::DeleteBuffer(ebo);
-}
-
-/// Methods (protected)
-void Mesh::loadBuffers()
+static inline void load_buffers(const mesh_data_t &data, uint32_t &vao, uint32_t &vbo, uint32_t &ebo)
 {
 	/// VAO
 	vao = GL::GenVertexArray();
@@ -150,268 +91,67 @@ void Mesh::loadBuffers()
 	GL::BindVertexArray(0);
 }
 
-/// Methods (static)
-MeshRef Mesh::createCube(MeshData::Flags flags, vec3 halfExtent)
+Mesh Mesh::import(const char *URI)
 {
-	if (flags & MeshData::Bones)
-		return nullptr;
+	uri_t uri;
+	if (!uri.parse(URI))
+		return Mesh(0);
 
-	const vec3& e = halfExtent;
-	MeshData data(4 * 6, 6 * 6, flags);
+	uint32_t first_submesh = (uint32_t)submeshes.size();
 
-	if (flags & MeshData::Points)
+	mesh_data_t data;
+	if (uri.on_disk)
 	{
-		size_t i(0);
-		// Front Face
-		data.points[i++] = vec3( e.x, -e.y, -e.z);
-		data.points[i++] = vec3( e.x,  e.y, -e.z);
-		data.points[i++] = vec3( e.x,  e.y,  e.z);
-		data.points[i++] = vec3( e.x, -e.y,  e.z);
-
-		// Right Face
-		data.points[i++] = vec3(-e.x, -e.y, -e.z);
-		data.points[i++] = vec3( e.x, -e.y, -e.z);
-		data.points[i++] = vec3( e.x, -e.y,  e.z);
-		data.points[i++] = vec3(-e.x, -e.y,  e.z);
-
-		// Back Face
-		data.points[i++] = vec3(-e.x,  e.y, -e.z);
-		data.points[i++] = vec3(-e.x, -e.y, -e.z);
-		data.points[i++] = vec3(-e.x, -e.y,  e.z);
-		data.points[i++] = vec3(-e.x,  e.y,  e.z);
-
-		// Left Face
-		data.points[i++] = vec3( e.x,  e.y, -e.z);
-		data.points[i++] = vec3(-e.x,  e.y, -e.z);
-		data.points[i++] = vec3(-e.x,  e.y,  e.z);
-		data.points[i++] = vec3( e.x,  e.y,  e.z);
-
-		// Top Face
-		data.points[i++] = vec3(-e.x, -e.y,  e.z);
-		data.points[i++] = vec3( e.x, -e.y,  e.z);
-		data.points[i++] = vec3( e.x,  e.y,  e.z);
-		data.points[i++] = vec3(-e.x,  e.y,  e.z);
-
-		// Bottom Face
-		data.points[i++] = vec3( e.x, -e.y, -e.z);
-		data.points[i++] = vec3(-e.x, -e.y, -e.z);
-		data.points[i++] = vec3(-e.x,  e.y, -e.z);
-		data.points[i++] = vec3( e.x,  e.y, -e.z);
+		return Mesh(0);
 	}
-	if (flags & MeshData::Normals)
+	else
 	{
-		size_t i(0);
-		// Front Face
-		data.normals[i++] = vec3( 1,  0,  0);
-		data.normals[i++] = vec3( 1,  0,  0);
-		data.normals[i++] = vec3( 1,  0,  0);
-		data.normals[i++] = vec3( 1,  0,  0);
+		if (!generate_mesh(uri, data))
+			return Mesh(0);
 
-		// Right Face
-		data.normals[i++] = vec3( 0, -1,  0);
-		data.normals[i++] = vec3( 0, -1,  0);
-		data.normals[i++] = vec3( 0, -1,  0);
-		data.normals[i++] = vec3( 0, -1,  0);
-
-		// Back Face
-		data.normals[i++] = vec3(-1,  0,  0);
-		data.normals[i++] = vec3(-1,  0,  0);
-		data.normals[i++] = vec3(-1,  0,  0);
-		data.normals[i++] = vec3(-1,  0,  0);
-
-		// Left Face
-		data.normals[i++] = vec3( 0,  1,  0);
-		data.normals[i++] = vec3( 0,  1,  0);
-		data.normals[i++] = vec3( 0,  1,  0);
-		data.normals[i++] = vec3( 0,  1,  0);
-
-		// Top Face
-		data.normals[i++] = vec3( 0,  0,  1);
-		data.normals[i++] = vec3( 0,  0,  1);
-		data.normals[i++] = vec3( 0,  0,  1);
-		data.normals[i++] = vec3( 0,  0,  1);
-
-		// Bottom Face
-		data.normals[i++] = vec3( 0,  0, -1);
-		data.normals[i++] = vec3( 0,  0, -1);
-		data.normals[i++] = vec3( 0,  0, -1);
-		data.normals[i++] = vec3( 0,  0, -1);
-	}
-	if (flags & MeshData::UVs)
-	{
-		size_t i(0);
-		// Front Face
-		data.uvs[i++] = vec2(0, 0);
-		data.uvs[i++] = vec2(0, 1);
-		data.uvs[i++] = vec2(1, 1);
-		data.uvs[i++] = vec2(1, 0);
-
-		// Right Face
-		data.uvs[i++] = vec2(0, 0);
-		data.uvs[i++] = vec2(0, 1);
-		data.uvs[i++] = vec2(1, 1);
-		data.uvs[i++] = vec2(1, 0);
-
-		// Back Face
-		data.uvs[i++] = vec2(0, 0);
-		data.uvs[i++] = vec2(0, 1);
-		data.uvs[i++] = vec2(1, 1);
-		data.uvs[i++] = vec2(1, 0);
-
-		// Left Face
-		data.uvs[i++] = vec2(0, 0);
-		data.uvs[i++] = vec2(0, 1);
-		data.uvs[i++] = vec2(1, 1);
-		data.uvs[i++] = vec2(1, 0);
-
-		// Top Face
-		data.uvs[i++] = vec2(0, 0);
-		data.uvs[i++] = vec2(0, 1);
-		data.uvs[i++] = vec2(1, 1);
-		data.uvs[i++] = vec2(1, 0);
-
-		// Bottom Face
-		data.uvs[i++] = vec2(0, 0);
-		data.uvs[i++] = vec2(0, 1);
-		data.uvs[i++] = vec2(1, 1);
-		data.uvs[i++] = vec2(1, 0);
+		submeshes.push_back(submesh_t { GL_TRIANGLES, data.index_count, 0 });
 	}
 
-	static const uint16_t indices[] = {
-		0,  1,  2,  0,  2,  3,
-		4,  5,  6,  4,  6,  7,
-		8,  9,  10, 8,  10, 11,
-		12, 13, 14, 12, 14, 15,
-		16, 17, 18, 16, 18, 19,
-		20, 21, 22, 20, 22, 23,
-	};
-	memcpy(data.indices, indices, sizeof(indices));
+	vec3 b0, b1;
+	compute_aabb(data, b0, b1);
 
-	return MeshRef(new Mesh(std::move(data), {{GL_TRIANGLES, data.index_count}}));
+	uint32_t vao, vbo, ebo;
+	load_buffers(data, vao, vbo, ebo);
+	for (int i(first_submesh); i < submeshes.size(); i++)
+	{
+		submeshes[i].vao = vao;
+		submeshes[i].vbo = vbo;
+		submeshes[i].ebo = ebo;
+	}
+
+	uint32_t i = mesh_manager.add();
+	mesh_manager.get<0>()[i] = mesh_t {first_submesh, (uint32_t)submeshes.size()};
+	mesh_manager.get<1>()[i] = data;
+	mesh_manager.get<2>()[i] = URI;
+	mesh_manager.get<3>()[i].init(b0, b1);
+
+	return Mesh(i);
 }
 
-MeshRef Mesh::createQuad(MeshData::Flags flags, vec2 halfExtent, uvec2 subdiv, vec2 tiling)
+void Mesh::clear()
 {
-	if (flags & MeshData::Bones)
-		return nullptr;
-
-	const vec2& e = halfExtent;
-	MeshData data(subdiv.x * subdiv.y, (subdiv.x - 1) * (subdiv.y - 1) * 6, flags);
-
-	size_t v(0);
-	for (unsigned i = 0; i < subdiv.y; i++)
+	for (uint32_t i(0); i < mesh_manager.size; i++)
 	{
-		for (unsigned j = 0; j < subdiv.x; j++)
-		{
-			vec2 uv(
-				float(j) / (subdiv.x - 1),
-				float(i) / (subdiv.y - 1)
-			);
+		submesh_t sub = submeshes[mesh_manager.get<0>()[i].first_submesh];
+		GL::DeleteVertexArray(sub.vao);
+		GL::DeleteBuffer(sub.vbo);
+		GL::DeleteBuffer(sub.ebo);
 
-			if (flags & MeshData::Points)
-				data.points[v] = vec3(
-					e.x * (uv.x * 2.0f - 1.0f),
-					e.y * (uv.y * 2.0f - 1.0f),
-					0.0f
-				);
-			if (flags & MeshData::Normals)
-				data.normals[v] = vec3(0, 0, 1);
-			if (flags & MeshData::UVs)
-				data.uvs[v] = uv * tiling;
-			v++;
-		}
+		mesh_manager.get<1>()[i].free();
 	}
-
-	v = 0;
-	for (unsigned i = 0; i < subdiv.y - 1; i++)
-	{
-		for (unsigned j = 0; j < subdiv.x - 1; j++)
-		{
-			data.indices[v++] = j + 0 + subdiv.x * (i + 0);
-			data.indices[v++] = j + 1 + subdiv.x * (i + 0);
-			data.indices[v++] = j + 0 + subdiv.x * (i + 1);
-
-			data.indices[v++] = j + 1 + subdiv.x * (i + 0);
-			data.indices[v++] = j + 1 + subdiv.x * (i + 1);
-			data.indices[v++] = j + 0 + subdiv.x * (i + 1);
-		}
-	}
-
-	return MeshRef(new Mesh(std::move(data), {{GL_TRIANGLES, data.index_count}}));
+	submeshes.clear();
+	mesh_manager.clear();
 }
 
-MeshRef Mesh::createSphere(MeshData::Flags flags, float radius, unsigned slices, unsigned stacks)
+
+/*
+MeshRef Mesh::createCylinder(mesh_data_t::Flags flags, float _base, float _top, float _height, unsigned _slices)
 {
-	if (flags & MeshData::Bones)
-		return nullptr;
-
-	const float iStacks = 1.0f/(float)(stacks-1);
-	const float iSlices = 1.0f/(float)(slices-1);
-	MeshData data((slices+1) * (stacks+1), 6 * slices * (stacks-1), flags);
-
-	float slice_step = 2 * PI * iSlices;
-	float stack_step = PI * iStacks;
-	float slice_angle, stack_angle;
-
-	// Generate vertices
-	size_t v(0);
-	for (unsigned i = 0; i <= stacks; ++i)
-	{
-		stack_angle = 0.5f * PI - i * stack_step;
-		float xy = cosf(stack_angle);
-		float z = sinf(stack_angle);
-
-		for (unsigned j = 0; j <= slices; ++j)
-		{
-			slice_angle = j * slice_step;
-
-			vec3 normal(xy * cosf(slice_angle), xy * sinf(slice_angle), z);
-
-			if (flags & MeshData::Points)
-				data.points[v] = normal * radius;
-			if (flags & MeshData::Normals)
-				data.normals[v] = normal;
-			if (flags & MeshData::UVs)
-				data.uvs[v] = vec2(j*iSlices, i*iStacks);
-			v++;
-		}
-	}
-
-	// Generate indices
-	v = 0;
-	for (unsigned i = 0; i < stacks; ++i)
-	{
-		uint16_t k1 = i * (slices + 1);
-		uint16_t k2 = k1 + slices + 1;
-
-		for (unsigned j = 0; j < slices; ++j, ++k1, ++k2)
-		{
-			if (i != 0) {
-				data.indices[v++] = k1;
-				data.indices[v++] = k2;
-				data.indices[v++] = k1 + 1;
-			}
-
-			if (i != (stacks-1)) {
-				data.indices[v++] = k1 + 1;
-				data.indices[v++] = k2;
-				data.indices[v++] = k2 + 1;
-			}
-		}
-	}
-
-	return MeshRef(new Mesh(std::move(data), {{GL_TRIANGLES, data.index_count}}));
-}
-
-MeshRef Mesh::createCylinder(MeshData::Flags flags, float _base, float _top, float _height, unsigned _slices)
-{
-	(void)flags;
-	(void)_base;
-	(void)_top;
-	(void)_height;
-	(void)_slices;
-	return nullptr;
-	/ *
 	const float iSlices = 1/((float)_slices);
 	Mesh* m = new Mesh(_dataFlags);
 
@@ -498,6 +238,5 @@ MeshRef Mesh::createCylinder(MeshData::Flags flags, float _base, float _top, flo
 	m->loadBuffers();
 
 	return MeshRef(m);
-	* /
 }
 */

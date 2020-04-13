@@ -2,10 +2,38 @@
 
 #include <unordered_map>
 #include <string>
+#include <sstream>
 
-struct URI
+struct uri_t
 {
-	static std::unordered_map<std::string, std::string> parse(char *uri);
+	bool parse(const char *uri);
 
-	char *uri;
+	template<typename T>
+	T get_or_default(std::string param, T default_value) const
+	{
+		auto it = params.find(param);
+		return it == params.end() ? default_value : parse_val<T>(it->first);
+	}
+
+	bool on_disk;
+	std::string path;
+	std::unordered_map<std::string, std::string> params;
+
+private:
+	template<typename T>
+	static T parse_val(const std::string &val)
+	{
+		T res;
+		std::istringstream ss(val);
+		ss >> res;
+		return res;
+	}
+
+	template<>
+	static bool parse_val(const std::string &val)
+	{
+		if (val == "true") return true;
+		if (val == "false") return false;
+		return parse_val<int>(val);
+	}
 };

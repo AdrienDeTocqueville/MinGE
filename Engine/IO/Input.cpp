@@ -2,6 +2,7 @@
 
 #include "Profiler/profiler.h"
 
+#include <SFML/System.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
@@ -22,6 +23,14 @@ bool Input::mouseCleared = false, Input::keyboardCleared = false;
 
 std::bitset<sf::Mouse::ButtonCount> Input::mouseState[2];
 std::bitset<sf::Keyboard::KeyCount> Input::keyboardState[2];
+
+
+static inline vec2 toVec2(sf::Vector2i v)	{ return vec2(v.x, v.y); }
+static inline vec2 toVec2(sf::Vector2u v)	{ return vec2(v.x, v.y); }
+static inline sf::Vector2i toSFVec2i(vec2 v)	{ return sf::Vector2i((int)v.x, (int)v.y); }
+static inline sf::Vector2i toSFVec2i(ivec2 v)	{ return sf::Vector2i(v.x, v.y); }
+static inline sf::Vector2u toSFVec2u(ivec2 v)	{ return sf::Vector2u(v.x, v.y); }
+
 
 /// Methods (private)
 void Input::init(sf::RenderWindow* _window)

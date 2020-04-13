@@ -12,10 +12,11 @@
 
 #include "Transform/Transform.h"
 
+#include "Renderer/Mesh.h"
+
 #include "IO/Input.h"
 #include "Math/Random.h"
 #include "Memory/Memory.h"
 
 #include "Utility/Time.h"
 #include "Utility/Error.h"
-#include "Utility/helpers.h"

@@ -1,4 +1,5 @@
-#include "Utility/helpers.h"
+#include "Math/glm.h"
+#include <stdio.h>
 
 vec3 vecClamp(vec3 v)
 {

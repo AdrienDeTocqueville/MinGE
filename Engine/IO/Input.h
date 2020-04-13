@@ -4,7 +4,7 @@
 #include <SFML/Window/Mouse.hpp>
 #include <SFML/Window/Keyboard.hpp>
 
-#include "Utility/helpers.h"
+#include "Math/glm.h"
 
 namespace sf
 { class RenderWindow; }

@@ -1,6 +1,15 @@
 #include "Renderer/GLDriver.h"
 
 GL::GLState GL::state;
+GL::GLState::GLState()
+{
+    ubo = vbo = ebo = vao = fbo = 0;
+    program = 0;
+    texture_unit = 0;
+    
+    view = scissor = ivec4(0);
+    clearColor = vec4(0.0f);
+}
 
 #ifdef DEBUG
 #include <iostream>

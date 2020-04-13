@@ -106,8 +106,8 @@ int main()
 	//auto renderers = (RenderSystem*)Engine::create_system("RenderSystem", {transforms});
 
 	// Open assets
-//	Mesh mesh = Mesh::import("asset:mesh/cube?width=3&height=2");
-//	Texture texture = Texture::import("asset:///Assets/level1/floor.png?srgb=1");
+	Mesh mesh = Mesh::import("asset:mesh/cube?x=3&y=2&z=1");
+//	Texture texture = Texture::import("asset://Assets/level1/floor.png?srgb=1");
 
 	/// Create entities
 	Entity e = Entity::create();

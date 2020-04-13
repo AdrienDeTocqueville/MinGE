@@ -5,9 +5,11 @@
 
 struct Mesh
 {
-	static Mesh import(char *URI);
+	static Mesh import(const char *URI);
+	static void clear();
 
 private:
+	Mesh(uint32_t i): id(i) {}
 	uint32_t id;
 };
 
@@ -15,7 +17,7 @@ private:
 struct mesh_t
 {
 	uint32_t first_submesh;
-	uint32_t submesh_count;
+	uint32_t last_submesh;
 };
 
 struct submesh_t
@@ -44,14 +46,10 @@ struct mesh_data_t
 	};
 
 
-	mesh_data_t(uint32_t _vertex_count, uint32_t _index_count, flags_t _flags = flags_t::BASIC);
-	mesh_data_t(mesh_data_t &&data);
-	~mesh_data_t();
+	void init(uint32_t _vertex_count, uint32_t _index_count, flags_t _flags = flags_t::BASIC);
+	void free();
 
 	uint32_t stride() const;
-
-	mesh_data_t(const mesh_data_t&) = delete;
-	void operator=(const mesh_data_t&) = delete;
 
 	uint32_t vertex_count;
 	uint32_t index_count;
@@ -63,3 +61,5 @@ struct mesh_data_t
 
 	uint16_t *indices;
 };
+
+bool generate_mesh(const struct uri_t &uri, mesh_data_t &data);

@@ -5,12 +5,11 @@
 
 #include "Renderer/GLDriver.h"
 
-#include "IO/Input.h"
+#include "Utility/Time.h"
 #include "Math/Random.h"
 #include "JobSystem/JobSystem.inl"
-
-#include "Utility/Time.h"
-//#include "Utility/Debug.h"
+#include "IO/Input.h"
+#include "Renderer/Renderer.h"
 
 //#define MICROPROFILE_MAX_FRAME_HISTORY (2<<10)
 #define MICROPROFILE_IMPL
@@ -42,10 +41,10 @@ void Engine::init(sf::RenderWindow &window, unsigned _FPS)
 #endif
 
 	Time::init();
-	//Debug::init();
 	Random::init();
 	JobSystem::init();
 	Input::init(&window);
+	Renderer::init();
 
 	// Register builtin systems
 	Engine::register_system_type(TransformSystem::type);

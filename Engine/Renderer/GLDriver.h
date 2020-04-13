@@ -20,6 +20,8 @@ class GL
 {
 	struct GLState
 	{
+        GLState();
+        
 		GLuint ubo, vbo, ebo, vao, fbo;
 		GLuint program;
 		GLuint texture_unit;
