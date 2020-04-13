@@ -9,7 +9,7 @@ public:
 		void *instance;
 	};
 
-	Scene(int _system_count, system_ref_t _systems[]);
+	Scene(system_ref_t _systems[], int _system_count);
 	Scene(const char *path, const char *name);
 	~Scene();
 

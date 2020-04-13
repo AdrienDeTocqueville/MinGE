@@ -12,7 +12,7 @@
 
 using namespace nlohmann;
 
-Scene::Scene(int _system_count, system_ref_t _systems[]):
+Scene::Scene(system_ref_t _systems[], int _system_count):
 	system_count(_system_count)
 {
 	size_t array_size = system_count * sizeof(*systems);

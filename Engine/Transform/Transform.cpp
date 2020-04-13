@@ -11,19 +11,22 @@ Transform TransformSystem::add(Entity entity, vec3 position, quat rotation, vec3
 	uint32_t i = data.add();
 	indices[entity.id()] = i;
 
-	// Init transform
-	data.transforms[i].position = position;
-	data.transforms[i].rotation = rotation;
-	data.transforms[i].scale    = scale;
+	transform_t *transforms = data.get<0>();
+	hierarchy_t *hierarchies = data.get<1>();
 
-	simd_mul(data.transforms[i].world, glm::translate(position), glm::toMat4(rotation));
-	simd_mul(data.transforms[i].world, data.transforms[i].world, glm::scale(scale));
-	data.transforms[i].local  = glm::inverse(data.transforms[i].world);
+	// Init transform
+	transforms[i].position = position;
+	transforms[i].rotation = rotation;
+	transforms[i].scale    = scale;
+
+	simd_mul(transforms[i].world, glm::translate(position), glm::toMat4(rotation));
+	simd_mul(transforms[i].world, transforms[i].world, glm::scale(scale));
+	transforms[i].local  = glm::inverse(transforms[i].world);
 
 	// Init hierarchy
-	data.hierarchies[i].first_child = 0;
-	data.hierarchies[i].parent = 0;
-	data.hierarchies[i].next_sibling = 0;
+	hierarchies[i].first_child = 0;
+	hierarchies[i].parent = 0;
+	hierarchies[i].next_sibling = 0;
 
 	return Transform(i, *this);
 }
@@ -40,21 +43,24 @@ Transform TransformSystem::add_child(Entity parent, Entity entity, vec3 position
 	uint32_t i = data.add();
 	indices[entity.id()] = i;
 
-	// Init transform
-	data.transforms[i].position = position;
-	data.transforms[i].rotation = rotation;
-	data.transforms[i].scale    = scale;
+	transform_t *transforms = data.get<0>();
+	hierarchy_t *hierarchies = data.get<1>();
 
-	simd_mul(data.transforms[i].world, data.transforms[p].world, glm::translate(position));
-	simd_mul(data.transforms[i].world, data.transforms[i].world, glm::toMat4(rotation));
-	simd_mul(data.transforms[i].world, data.transforms[i].world, glm::scale(scale));
-	data.transforms[i].local  = glm::inverse(data.transforms[i].world);
+	// Init transform
+	transforms[i].position = position;
+	transforms[i].rotation = rotation;
+	transforms[i].scale    = scale;
+
+	simd_mul(transforms[i].world, transforms[p].world, glm::translate(position));
+	simd_mul(transforms[i].world, transforms[i].world, glm::toMat4(rotation));
+	simd_mul(transforms[i].world, transforms[i].world, glm::scale(scale));
+	transforms[i].local  = glm::inverse(transforms[i].world);
 
 	// Init hierarchy
-	data.hierarchies[i].first_child = 0;
-	data.hierarchies[i].parent = p;
-	data.hierarchies[i].next_sibling = data.hierarchies[p].first_child;
-	data.hierarchies[p].first_child = i;
+	hierarchies[i].first_child = 0;
+	hierarchies[i].parent = p;
+	hierarchies[i].next_sibling = hierarchies[p].first_child;
+	hierarchies[p].first_child = i;
 
 	return Transform(i, *this);
 }
@@ -65,26 +71,29 @@ void TransformSystem::remove(Entity entity)
 	const uint32_t i = it->second;
 	indices.erase(it);
 
+	transform_t *transforms = data.get<0>();
+	hierarchy_t *hierarchies = data.get<1>();
+
 	// Patch parent hierarchy
-	if (const uint32_t p = data.hierarchies[i].parent)
+	if (const uint32_t p = hierarchies[i].parent)
 	{
-		if (data.hierarchies[p].first_child == i)
-			data.hierarchies[p].first_child = data.hierarchies[i].next_sibling;
+		if (hierarchies[p].first_child == i)
+			hierarchies[p].first_child = hierarchies[i].next_sibling;
 		else
 		{
-			uint32_t child = data.hierarchies[p].first_child;
-			while (data.hierarchies[child].next_sibling != i)
-				child = data.hierarchies[child].next_sibling;
-			data.hierarchies[child].next_sibling = data.hierarchies[i].next_sibling;
+			uint32_t child = hierarchies[p].first_child;
+			while (hierarchies[child].next_sibling != i)
+				child = hierarchies[child].next_sibling;
+			hierarchies[child].next_sibling = hierarchies[i].next_sibling;
 		}
 	}
 	// Patch children
-	if (uint32_t child = data.hierarchies[i].first_child)
+	if (uint32_t child = hierarchies[i].first_child)
 	{
-		while (data.hierarchies[child].next_sibling != 0)
+		while (hierarchies[child].next_sibling != 0)
 		{
-			data.hierarchies[child].parent = 0;
-			child = data.hierarchies[child].next_sibling;
+			hierarchies[child].parent = 0;
+			child = hierarchies[child].next_sibling;
 		}
 	}
 
@@ -93,27 +102,30 @@ void TransformSystem::remove(Entity entity)
 
 void TransformSystem::update_matrices(uint32_t i)
 {
-	const uint32_t parent = data.hierarchies[i].parent;
-	uint32_t child = data.hierarchies[i].first_child;
+	transform_t *transforms = data.get<0>();
+	hierarchy_t *hierarchies = data.get<1>();
+
+	const uint32_t parent = hierarchies[i].parent;
+	uint32_t child = hierarchies[i].first_child;
 
 	if (parent)
 	{
-		simd_mul(data.transforms[i].world, data.transforms[parent].world, glm::translate(data.transforms[i].position));
-		simd_mul(data.transforms[i].world, data.transforms[i].world, glm::toMat4(data.transforms[i].rotation));
-		simd_mul(data.transforms[i].world, data.transforms[i].world, glm::scale(data.transforms[i].scale));
+		simd_mul(transforms[i].world, transforms[parent].world, glm::translate(transforms[i].position));
+		simd_mul(transforms[i].world, transforms[i].world, glm::toMat4(transforms[i].rotation));
+		simd_mul(transforms[i].world, transforms[i].world, glm::scale(transforms[i].scale));
 	}
 	else
 	{
-		simd_mul(data.transforms[i].world, glm::translate(data.transforms[i].position), glm::toMat4(data.transforms[i].rotation));
-		simd_mul(data.transforms[i].world, data.transforms[i].world, glm::scale(data.transforms[i].scale));
+		simd_mul(transforms[i].world, glm::translate(transforms[i].position), glm::toMat4(transforms[i].rotation));
+		simd_mul(transforms[i].world, transforms[i].world, glm::scale(transforms[i].scale));
 	}
-	data.transforms[i].local = glm::inverse(data.transforms[i].world);
+	transforms[i].local = glm::inverse(transforms[i].world);
 
 
 	while (child)
 	{
 		update_matrices(child);
-		child = data.hierarchies[child].next_sibling;
+		child = hierarchies[child].next_sibling;
 	}
 }
 
@@ -129,6 +141,9 @@ static json serialize(void *system)
 	json dump;
 
 	auto sys = (TransformSystem*)system;
+	TransformSystem::transform_t *transforms = sys->data.get<0>();
+	TransformSystem::hierarchy_t *hierarchies = sys->data.get<1>();
+
 	dump["indices"] = json::object();
 	dump["transforms"] = json::array();
 	dump["hierarchies"] = json::array();
@@ -142,11 +157,11 @@ static json serialize(void *system)
 		dump["indices"][std::to_string(pair.second)] = pair.first;
 
 		json transform = json::object();
-		transform["position"] = ::to_json(sys->data.transforms[pair.first].position);
+		transform["position"] = ::to_json(transforms[pair.first].position);
 		dump["transforms"].push_back(transform);
 
 		json hierarchy = json::object();
-		hierarchy["parent"] = sys->data.hierarchies[pair.first].parent;
+		hierarchy["parent"] = hierarchies[pair.first].parent;
 		dump["hierarchies"].push_back(hierarchy);
 	}
 	return dump;

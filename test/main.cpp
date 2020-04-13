@@ -1,4 +1,4 @@
-﻿#include <MinGE.h>
+#include <MinGE.h>
 #include <SFML/Graphics/RenderWindow.hpp>
 
 #include <iostream>
@@ -46,10 +46,50 @@ void benchmark(int iterations)
 	std::cout << time / iterations << "\n";
 }
 
+void test_transforms()
+{
+	auto transforms = (TransformSystem*)Engine::create_system("TransformSystem", NULL);
+
+	/// Create entities
+	Entity e1 = Entity::create();
+	Entity e2 = Entity::create();
+	Entity e3 = Entity::create();
+	Entity _e = Entity::create();
+	Entity e4 = Entity::create();
+	Entity e5 = Entity::create();
+	Entity e6 = Entity::create();
+	Entity e7 = Entity::create();
+	Entity e8 = Entity::create();
+
+	transforms->add(e1, vec3(0, 0, 0));
+
+	transforms->add_child(e1, e2);
+	transforms->add_child(e1, e3);
+	transforms->add_child(e1, e4, vec3(1, 0, 0));
+
+	transforms->add(_e);
+
+	transforms->add_child(e4, e5, vec3(0, 1, 0));
+	transforms->add_child(e4, e6, vec3(1, 0, 0));
+
+	transforms->remove(_e);
+
+	transforms->add_child(e5, e7, vec3(0, 0, 1));
+	transforms->add_child(e5, e8, vec3(0, 1, 0));
+
+	transforms->get(e1).set_position(vec3(0.0f));
+
+
+	Scene::system_ref_t systems[] = {
+		Scene::system_ref_t{"world", transforms},
+	};
+	Scene level(systems, ARRAY_LEN(systems));
+	level.save("Assets/", "level", false);
+}
+
 int main()
 {
 	std::cout << "  -- MinGE --" << std::endl;
-
 
 	/// Create window
 	sf::RenderWindow window(video_mode, "MinGE", style, sf::ContextSettings(24, 0, 0, 4, 3));
@@ -58,17 +98,16 @@ int main()
 	/// Init engine
 	Engine::init(window, 30);
 
-	//benchmark(50); transform system type is not registered
+	//benchmark(50);
+	//test_transforms();
 
 	/// Init systems
-	Engine::register_system_type(TransformSystem::type);
-	//Engine::register_system_type(SYSTEM_TYPE(RenderSystem, 1));
 	auto transforms = (TransformSystem*)Engine::create_system("TransformSystem", NULL);
 	//auto renderers = (RenderSystem*)Engine::create_system("RenderSystem", {transforms});
 
 	// Open assets
-//	Mesh mesh = Assets::load_mesh("asset:mesh/cube?width=3&height=2");
-//	Texture texture = Assets::load_texture("asset:///Assets/level1/floor.png?srgb=1");
+//	Mesh mesh = Mesh::import("asset:mesh/cube?width=3&height=2");
+//	Texture texture = Texture::import("asset:///Assets/level1/floor.png?srgb=1");
 
 	/// Create entities
 	Entity e = Entity::create();
@@ -83,22 +122,6 @@ int main()
 		Engine::end_frame();
 		window.display();
 	}
-
-	// Creates global asset 'level'
-	// Creates backup file 'Assets/level.ge.old' if necessary
-	// Create or clear file 'Assets/level.ge' with Engine serialized data
-	Scene::system_ref_t systems[] = {
-		Scene::system_ref_t{"world", transforms},
-		//{"RenderSystem", "world_renderers", renderers},
-	};
-	Scene level(ARRAY_LEN(systems), systems);
-	level.save("Assets/", "level", false);
-
-	/*
-	// Opens file 'Assets/level.ge'
-	Scene level("Scenes/", "level")
-	TransformSystem *transforms = level.get_system("world");
-	*/
 
 	Engine::destroy();
 

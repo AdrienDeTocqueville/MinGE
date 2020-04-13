@@ -4,6 +4,7 @@
 #include "Core/System.h"
 
 #include "Math/glm.h"
+#include "Structures/MultiArray.h"
 
 #include <cstdint>
 #include <unordered_map>
@@ -67,24 +68,9 @@ struct TransformSystem
 		uint32_t first_child;
 		uint32_t parent, next_sibling;
 	};
-	struct multi_array_t
-	{
-		inline multi_array_t();
-		~multi_array_t() { free(transforms + 1); }
-
-		inline void reserve(uint64_t new_cap);
-		inline uint32_t add();
-		inline void remove(uint32_t index);
-
-		uint32_t next_slot, capacity, last;
-		transform_t *transforms;
-		hierarchy_t *hierarchies;
-
-		static constexpr long size_sum = sizeof(transform_t) + sizeof(hierarchy_t);
-	};
 
 	std::unordered_map<uint32_t, uint32_t> indices;
-	multi_array_t data;
+	multi_array_t<transform_t, hierarchy_t> data;
 
 	static const system_type_t type;
 

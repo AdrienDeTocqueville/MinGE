@@ -1,6 +1,8 @@
 #include "Core/Engine.h"
 #include "Core/Entity.h"
 
+#include "Transform/Transform.h"
+
 #include "Renderer/GLDriver.h"
 
 #include "IO/Input.h"
@@ -44,6 +46,10 @@ void Engine::init(sf::RenderWindow &window, unsigned _FPS)
 	Random::init();
 	JobSystem::init();
 	Input::init(&window);
+
+	// Register builtin systems
+	Engine::register_system_type(TransformSystem::type);
+	//Engine::register_system_type(SYSTEM_TYPE(RenderSystem, 1));
 }
 
 void Engine::destroy()

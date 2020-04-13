@@ -1,5 +1,5 @@
-#include "Utility/Memory/LinearAllocator.h"
-#include "Utility/Memory/Memory.h"
+#include "Memory/LinearAllocator.h"
+#include "Memory/Memory.h"
 
 #include <iostream>
 

@@ -32,5 +32,5 @@ long Time::Chrono::time() const
 {
 	const auto end = std::chrono::high_resolution_clock::now();
         const auto diff = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
-	return diff.count();
+	return (long)diff.count();
 }
