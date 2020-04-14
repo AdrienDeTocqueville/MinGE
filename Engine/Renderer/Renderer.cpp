@@ -32,6 +32,7 @@ void init()
 	glLineWidth(3);
 
 	//Debug::init();
+	//Debug::destroy(); ?
 }
 
 }

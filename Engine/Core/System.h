@@ -16,7 +16,9 @@
 struct system_type_t
 {
 	const char *name;
-	uint32_t size, dependency_count;
+	uint32_t size;
+	uint32_t on_main_thread: 1;
+	uint32_t dependency_count: 31;
 
 	void (*init)(void *instance);
 	void (*destroy)(void *instance);

@@ -174,6 +174,7 @@ const system_type_t TransformSystem::type = []() {
 	system_type_t t{};
 	t.name = "TransformSystem";
 	t.size = sizeof(TransformSystem);
+	t.on_main_thread = 0;
 	t.dependency_count = 0;
 
 	t.init = [](void *system) { new (system) TransformSystem(); };
