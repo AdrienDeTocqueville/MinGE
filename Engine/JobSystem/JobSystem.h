@@ -38,18 +38,16 @@ void destroy();
 void run(Work func, const void *data, unsigned n, std::atomic<int> *counter = nullptr);
 void wait(const std::atomic<int> *counter, const int value);
 
-unsigned worker_count();
-unsigned worker_id();
-
-
-inline unsigned div_ceil(unsigned a, unsigned b)
-{
-	return (a + b - 1) / b;
-}
-
 template <typename D>
 inline void run(Work func, const D *data, std::atomic<int> *counter = nullptr);
 
 template <typename T, typename D>
 unsigned parallel_for(Work func, ParallelFor<T, D> *data, std::atomic<int> *counter = nullptr);
+
+inline unsigned worker_count();
+inline unsigned worker_id();
+
+inline void mark_job(std::atomic<int> *counter);
+
+inline unsigned div_ceil(unsigned a, unsigned b);
 }

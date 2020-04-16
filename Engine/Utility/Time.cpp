@@ -5,14 +5,12 @@
 
 static sf::Clock _clock;
 
-float Time::deltaTime = 0.0;
-float Time::timeScale = 1.0;
+float Time::delta_time = 0.0;
 float Time::time = 0.0;
 
 void Time::init()
 {
-	deltaTime = 0.0f;
-	timeScale = 1.0f;
+	delta_time = 0.0f;
 	time = 0.0f;
 
 	_clock.restart();
@@ -20,8 +18,8 @@ void Time::init()
 
 void Time::tick()
 {
-	deltaTime = _clock.restart().asSeconds() * timeScale;
-	time += deltaTime;
+	delta_time = _clock.restart().asSeconds();
+	time += delta_time;
 }
 
 Time::Chrono::Chrono()

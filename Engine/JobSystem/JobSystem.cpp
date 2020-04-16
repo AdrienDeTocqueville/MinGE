@@ -1,4 +1,4 @@
-#include "JobSystem.h"
+#include "JobSystem.inl"
 #include "Math/Random.h"
 
 #include <cassert>
@@ -29,7 +29,7 @@ const unsigned JOB_POOL_SIZE = 512;
 thread_local Job job_pool[JOB_POOL_SIZE];
 thread_local uint32_t job_pool_index = 0;
 
-Job* allocate_job()
+static inline Job* allocate_job()
 {
 	const uint32_t index = job_pool_index++;
 	return &job_pool[index & (JOB_POOL_SIZE-1u)];
@@ -67,12 +67,14 @@ struct Worker
 		if (Job *j = pop())
 			return j;
 
+#ifndef SINGLE_THREADED
 		// Pick a random worker to steal from
 		unsigned steal_worker = Random::next<int>(0, num_worker - 1);
 		steal_worker += (steal_worker >= this_worker);
 
 		if (Job *j = workers[steal_worker].steal())
 			return j;
+#endif
 
 		return nullptr;
 	}
@@ -158,10 +160,10 @@ static inline void job_run(const Job *job)
 {
 	job->function(job->data);
 	if (job->counter)
-		job->counter->fetch_add(1, std::memory_order_relaxed);
+		mark_job(job->counter);
 }
 
-void worker_main(const int i)
+static void worker_main(const int i)
 {
 	this_worker = i; // TLS
 
@@ -175,7 +177,7 @@ void worker_main(const int i)
 	}
 }
 
-void set_cpu_affinity(const std::thread::native_handle_type handle, const int cpu)
+static void set_cpu_affinity(const std::thread::native_handle_type handle, const int cpu)
 {
 	bool failed;
 
@@ -198,7 +200,12 @@ void init()
 	if (workers)
 		return;
 
+#ifdef SINGLE_THREADED
+	num_worker = 1;
+#else
 	num_worker = std::thread::hardware_concurrency();
+#endif
+
 	workers = new Worker[num_worker];
 	work = true;
 
@@ -234,23 +241,13 @@ void run(Work func, const void *data, unsigned n, std::atomic<int> *counter)
 
 void wait(const std::atomic<int> *counter, const int value)
 {
-	while (counter->load(std::memory_order_relaxed) != value)
+	while (counter->load(std::memory_order_acquire) != value)
 	{
 		if (Job* job = workers[this_worker].get_job())
 			job_run(job);
 
 		else std::this_thread::yield();
 	}
-}
-
-unsigned worker_count()
-{
-	return num_worker;
-}
-
-unsigned worker_id()
-{
-	return this_worker;
 }
 
 } // namespace

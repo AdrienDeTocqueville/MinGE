@@ -2,6 +2,7 @@
 
 namespace JobSystem
 {
+
 template <typename D>
 inline void run(Work func, const D *data, std::atomic<int> *counter)
 {
@@ -32,4 +33,27 @@ unsigned parallel_for(Work func, ParallelFor<T, D> *data, std::atomic<int> *coun
 
 	return i;
 }
+
+unsigned worker_count()
+{
+	extern unsigned num_worker;
+	return num_worker;
+}
+
+unsigned worker_id()
+{
+	extern thread_local unsigned this_worker;
+	return this_worker;
+}
+
+void mark_job(std::atomic<int> *counter)
+{
+	counter->fetch_add(1, std::memory_order_acquire);
+}
+
+unsigned div_ceil(unsigned a, unsigned b)
+{
+	return (a + b - 1) / b;
+}
+
 }

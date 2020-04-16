@@ -1,3 +1,6 @@
+#define MICROPROFILE_IMPL
+#include "Profiler/profiler.h"
+
 #include "Core/Engine.h"
 #include "Core/Entity.h"
 
@@ -11,10 +14,6 @@
 #include "IO/Input.h"
 #include "Renderer/Renderer.h"
 
-//#define MICROPROFILE_MAX_FRAME_HISTORY (2<<10)
-#define MICROPROFILE_IMPL
-#include "Profiler/profiler.h"
-
 uint32_t Entity::next_index = 1;
 
 struct system_t
@@ -25,6 +24,7 @@ struct system_t
 	// after: <system instance>
 
 	inline void *instance() { return this + 1; }
+	static inline system_t *from_instance(const void *i) { return (system_t*)i - 1; }
 };
 
 static std::vector<system_type_t> system_types;
@@ -73,19 +73,19 @@ static inline void sys_destroy(const void *data)
 	// Remove veto from dependencies
 	auto dependencies = (std::atomic<int>**)sys;
 	for (int32_t i(1); i <= (int32_t)sys->dependency_count; i++)
-		dependencies[-i]->fetch_add(1, std::memory_order_relaxed);
+		JobSystem::mark_job(dependencies[-i]);
 }
 
 void Engine::destroy()
 {
 	for (system_t *system : systems)
-		system->job = 0;
+		system->job.store(0, std::memory_order_release);
 	for (system_t *system : systems)
 	{
 		// Add veto to dependencies
 		auto dependencies = (std::atomic<int>**)system;
 		for (int32_t i(1); i <= (int32_t)system->dependency_count; i++)
-			dependencies[-i]->fetch_sub(1, std::memory_order_relaxed);
+			dependencies[-i]->fetch_sub(1, std::memory_order_release);
 	}
 
 	size_t i(0);
@@ -98,7 +98,7 @@ void Engine::destroy()
 	for (; i < systems.size(); i++)
 	{
 		sys_destroy(&systems[i]);
-		systems[i]->job.fetch_add(1, std::memory_order_relaxed);
+		JobSystem::mark_job(&systems[i]->job);
 	}
 
 	// Sync
@@ -108,7 +108,7 @@ void Engine::destroy()
 	// Free allocated memory
 	for (system_t *system : systems)
 	{
-		int dependencies_size = system_types[system->type_index].dependency_count * sizeof(std::atomic<int>*);
+		int dependencies_size = system->dependency_count * sizeof(std::atomic<int>*);
 		auto butterfly = (uint8_t*)system - dependencies_size;
 		free(butterfly);
 	}
@@ -142,23 +142,23 @@ void Engine::register_system_type(const system_type_t &system_type)
 		system_types.push_back(system_type);
 }
 
-void *Engine::create_system(const char *type_name, const void **dependencies)
+void *Engine::create_system(const char *type_name, const void **dependencies, uint32_t dependency_count)
 {
 	auto type = get_type(type_name);
-	if (type == NULL)
-		return NULL;
+	assert(type && "No such system type");
 
-	int dependencies_size = type->dependency_count * sizeof(std::atomic<int>*);
+	int dependencies_size = dependency_count * sizeof(std::atomic<int>*);
 	auto butterfly = (uint8_t*)malloc(dependencies_size + sizeof(system_t) + type->size);
 	auto system = (system_t*)(butterfly + dependencies_size);
 
 	auto counters = (std::atomic<int>**)butterfly;
-	for (uint32_t d(0); d < type->dependency_count; d++)
-		counters[d] = (std::atomic<int>*)(dependencies[d]) - 1;
+	for (uint32_t d(0); d < dependency_count; d++)
+		counters[d] = &system_t::from_instance(dependencies[d])->job;
+
 	new(&system->job) std::atomic<int>();
-	system->type_index = (type - system_types.data()) / sizeof(*type);
-	system->dependency_count = type->dependency_count;
-	type->init(system->instance());
+	system->type_index = (uint32_t)(type - system_types.data());
+	system->dependency_count = dependency_count;
+	if (type->init) type->init(system->instance());
 
 	if (type->on_main_thread)
 		systems.push_back(system);
@@ -172,7 +172,7 @@ void *Engine::create_system(const char *type_name, const void **dependencies)
 
 const system_type_t *Engine::get_system_type(void *system)
 {
-	system_t *sys = (system_t*)system - 1;
+	system_t *sys = system_t::from_instance(system);
 	return &system_types[sys->type_index];
 }
 
@@ -197,17 +197,18 @@ static inline void sys_update(const void *data)
 
 void Engine::start_frame()
 {
-	MICROPROFILE_SCOPEI("ENGINE", "update");
+	MICROPROFILE_SCOPEI("ENGINE", "start_frame");
 
 	Time::tick();
 	Input::update();
 
 	for (system_t *system : systems)
-		system->job = 0;
+		system->job.store(0, std::memory_order_release);
 
 	size_t i = 0;
 
 	// Launch system update jobs
+	{ MICROPROFILE_SCOPEI("ENGINE", "launch_update_jobs");
 	for (; i < first_on_main_thread; i++)
 	{
 		update_data_t data;
@@ -217,9 +218,12 @@ void Engine::start_frame()
 			JobSystem::run(sys_update, &data, &systems[i]->job);
 		}
 		else
-			systems[i]->job.fetch_add(1, std::memory_order_relaxed);
+			JobSystem::mark_job(&systems[i]->job);
 	}
+	}
+
 	// Exec needed systems on main thread
+	{ MICROPROFILE_SCOPEI("ENGINE", "update_main_thread");
 	for (; i < systems.size(); i++)
 	{
 		update_data_t data;
@@ -228,15 +232,18 @@ void Engine::start_frame()
 			data.sys = systems[i];
 			sys_update(&data);
 		}
-		systems[i]->job.fetch_add(1, std::memory_order_relaxed);
+		JobSystem::mark_job(&systems[i]->job);
+	}
 	}
 }
 
 void Engine::end_frame()
 {
 	// Wait for all system updates
+	{ MICROPROFILE_SCOPEI("ENGINE", "wait_update_jobs");
 	for (system_t *system : systems)
 		JobSystem::wait(&system->job, 1);
+	}
 
 	MicroProfileFlip();
 }
@@ -244,5 +251,5 @@ void Engine::end_frame()
 
 void Engine::setWindowSize(vec2 _newSize)
 {
-	Input::setWindowSize(_newSize);
+	Input::set_window_size(_newSize);
 }

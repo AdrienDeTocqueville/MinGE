@@ -7,8 +7,7 @@ class Time
 	friend class Engine;
 
 public:
-	static float deltaTime;
-	static float timeScale;
+	static float delta_time;
 	static float time;
 
 	struct Chrono
