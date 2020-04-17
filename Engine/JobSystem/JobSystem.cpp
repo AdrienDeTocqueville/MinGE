@@ -1,3 +1,5 @@
+#include "Profiler/profiler.h"
+
 #include "JobSystem.inl"
 #include "Math/Random.h"
 
@@ -61,23 +63,6 @@ struct Worker
 	std::thread thread;
 	long bottom = 0, top = 0;
 	Job *jobs[NUMBER_OF_JOBS];
-
-	Job *get_job()
-	{
-		if (Job *j = pop())
-			return j;
-
-#ifndef SINGLE_THREADED
-		// Pick a random worker to steal from
-		unsigned steal_worker = Random::next<int>(0, num_worker - 1);
-		steal_worker += (steal_worker >= this_worker);
-
-		if (Job *j = workers[steal_worker].steal())
-			return j;
-#endif
-
-		return nullptr;
-	}
 
 	void push(Job* job)
 	{
@@ -156,25 +141,91 @@ struct Worker
 	}
 };
 
-static inline void job_run(const Job *job)
+// Returns a job whose dependencies may not be satisfied
+static Job *pop_or_steal()
+{
+	if (Job *j = workers[this_worker].pop())
+		return j;
+
+#ifndef SINGLE_THREADED
+	// Pick a random worker to steal from
+	unsigned steal_worker = Random::next<int>(0, num_worker - 1);
+	steal_worker += (steal_worker >= this_worker);
+
+	if (Job *j = workers[steal_worker].steal())
+		return j;
+#endif
+
+	return nullptr;
+}
+
+static Job *get_job();
+static inline bool is_job_ready(Job *j, Job **alternative)
+{
+	if (j->depen_begin == j->depen_end)
+		return true;
+	if (j->depen_end == NULL) // Only one dependency
+	{
+		if (JobSystem::dependencies_done(j->dependency))
+			return true;
+		*alternative = get_job();
+		return false;
+	}
+	do {
+		if (!JobSystem::dependencies_done(*j->depen_begin))
+		{
+			*alternative = get_job();
+			return false;
+		}
+		j->depen_begin++;
+	}
+	while (j->depen_begin != j->depen_end);
+	return true;
+}
+
+// Returns a job ready to be executed
+static Job *get_job()
+{
+	if (Job *j = pop_or_steal())
+	{
+		Job *alternative;
+		if (is_job_ready(j, &alternative))
+			return j;
+		workers[this_worker].push(j);
+		return alternative;
+	}
+	return nullptr;
+}
+
+static inline void job_run(Job *job)
 {
 	job->function(job->data);
 	if (job->counter)
-		mark_job(job->counter);
+		remove_dependency(job->counter);
 }
 
 static void worker_main(const int i)
 {
 	this_worker = i; // TLS
 
+#ifdef PROFILE
+	char worker_name[16];
+	snprintf(worker_name, sizeof(worker_name), "worker %d", i);
+	MicroProfileOnThreadCreate(worker_name);
+#endif
+
 	while (true)
 	{
-		if (Job* job = workers[i].get_job())
+		if (Job* job = get_job())
 			job_run(job);
 
 		else if (!JobSystem::work) break;
 		else std::this_thread::yield();
 	}
+
+#ifdef PROFILE
+	MicroProfileOnThreadExit();
+#endif
 }
 
 static void set_cpu_affinity(const std::thread::native_handle_type handle, const int cpu)
@@ -227,23 +278,53 @@ void destroy()
 	delete[] workers;
 }
 
-void run(Work func, const void *data, unsigned n, std::atomic<int> *counter)
+void run(Work func, void *data, unsigned n, std::atomic<int> *counter)
 {
 	assert(n <= sizeof(Job::data));
 
 	Job* job = allocate_job();
 	job->function = func;
 	job->counter = counter;
+	job->depen_begin = NULL;
+	job->depen_end = NULL;
 	memcpy(job->data, data, n);
 
 	workers[this_worker].push(job);
 }
 
-void wait(const std::atomic<int> *counter, const int value)
+void run_child(Work func, void *data, unsigned n, std::atomic<int> *dependency, std::atomic<int> *counter)
+{
+	assert(n <= sizeof(Job::data));
+
+	Job* job = allocate_job();
+	job->function = func;
+	job->counter = counter;
+	job->dependency = dependency;
+	job->depen_end = NULL;
+	memcpy(job->data, data, n);
+
+	workers[this_worker].push(job);
+}
+
+void run_child(Work func, void *data, unsigned n, std::atomic<int> **dependencies, uint64_t dependency_count, std::atomic<int> *counter)
+{
+	assert(n <= sizeof(Job::data));
+
+	Job* job = allocate_job();
+	job->function = func;
+	job->counter = counter;
+	job->depen_begin = dependencies;
+	job->depen_end = dependencies + dependency_count;
+	memcpy(job->data, data, n);
+
+	workers[this_worker].push(job);
+}
+
+void wait(const std::atomic<int> *counter, int value)
 {
 	while (counter->load(std::memory_order_acquire) != value)
 	{
-		if (Job* job = workers[this_worker].get_job())
+		if (Job* job = get_job())
 			job_run(job);
 
 		else std::this_thread::yield();

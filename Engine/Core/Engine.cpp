@@ -21,10 +21,13 @@ struct system_t
 	// before: std::atomic<int> *dependencies[dependency_count]
 	std::atomic<int> job;
 	uint32_t type_index, dependency_count;
+	PROFILER(MicroProfileToken token;)
 	// after: <system instance>
 
-	inline void *instance() { return this + 1; }
 	static inline system_t *from_instance(const void *i) { return (system_t*)i - 1; }
+	inline void *instance() { return this + 1; }
+	inline std::atomic<int> **dependencies() const { return (std::atomic<int>**)this - dependency_count; }
+	inline std::atomic<int> **dependencies_end() const { return (std::atomic<int>**)this; }
 };
 
 static std::vector<system_type_t> system_types;
@@ -36,7 +39,7 @@ void Engine::init(sf::RenderWindow &window, unsigned _FPS)
 	window.setFramerateLimit(_FPS);
 
 #ifdef PROFILE
-	MicroProfileOnThreadCreate("Main");
+	MicroProfileOnThreadCreate("main thread");
 
 	MicroProfileSetForceEnable(true);
 	MicroProfileSetEnableAllGroups(true);
@@ -59,51 +62,54 @@ void Engine::init(sf::RenderWindow &window, unsigned _FPS)
 }
 
 
-static inline void sys_destroy(const void *data)
+static inline void sys_destroy(system_t **data)
 {
-	auto sys = *(system_t**)data;
+	system_t *sys = *data;
 
+	// Run callback
 	if (auto destroy = system_types[sys->type_index].destroy)
-	{
-		// Wait for system depending on this one to remove their veto
-		JobSystem::wait(&sys->job, 0);
-		// Run callback
 		destroy(sys->instance());
-	}
-	// Remove veto from dependencies
-	auto dependencies = (std::atomic<int>**)sys;
-	for (int32_t i(1); i <= (int32_t)sys->dependency_count; i++)
-		JobSystem::mark_job(dependencies[-i]);
+	// Remove dependency from dependencies
+	auto dependencies = sys->dependencies();
+	while (dependencies != sys->dependencies_end())
+		JobSystem::remove_dependency(*dependencies++);
 }
 
 void Engine::destroy()
 {
-	for (system_t *system : systems)
-		system->job.store(0, std::memory_order_release);
+	// Here we have to put a dependency on each system dependencies so that
+	// a system doesn't get destroyed after its dependencies
 	for (system_t *system : systems)
 	{
-		// Add veto to dependencies
-		auto dependencies = (std::atomic<int>**)system;
-		for (int32_t i(1); i <= (int32_t)system->dependency_count; i++)
-			dependencies[-i]->fetch_sub(1, std::memory_order_release);
+		// Add dependency to dependencies
+		auto dependencies = system->dependencies();
+		while (dependencies != system->dependencies_end())
+			JobSystem::add_dependency(*dependencies++);
 	}
 
 	size_t i(0);
 
 	// Launch jobs
 	for (; i < first_on_main_thread; i++)
-		JobSystem::run(sys_destroy, &systems[i], &systems[i]->job);
+	{
+		// systems[i]->job == 0 means all systems depending on this one have finished
+		// so this one can be destroyed
+		// use auto-decrement after so that end condition is -1
+		JobSystem::run_child(sys_destroy, &systems[i], &systems[i]->job, &systems[i]->job);
+	}
 
 	// Exec needed on main thread
 	for (; i < systems.size(); i++)
 	{
+		JobSystem::wait(&systems[i]->job);
 		sys_destroy(&systems[i]);
-		JobSystem::mark_job(&systems[i]->job);
+		// manually decrement so that end condition is -1
+		JobSystem::remove_dependency(&systems[i]->job);
 	}
 
 	// Sync
 	for (system_t *system : systems)
-		JobSystem::wait(&system->job, 1);
+		JobSystem::wait(&system->job, -1);
 
 	// Free allocated memory
 	for (system_t *system : systems)
@@ -119,10 +125,9 @@ void Engine::destroy()
 	JobSystem::destroy();
 
 #ifdef PROFILE
-	MicroProfileSetForceEnable(false);
-
-	MicroProfileWebServerStop();
 	MicroProfileShutdown();
+
+	MicroProfileOnThreadExit();
 #endif
 }
 
@@ -155,10 +160,16 @@ void *Engine::create_system(const char *type_name, const void **dependencies, ui
 	for (uint32_t d(0); d < dependency_count; d++)
 		counters[d] = &system_t::from_instance(dependencies[d])->job;
 
-	new(&system->job) std::atomic<int>();
+	new(&system->job) std::atomic<int>(0);
 	system->type_index = (uint32_t)(type - system_types.data());
 	system->dependency_count = dependency_count;
 	if (type->init) type->init(system->instance());
+
+#ifdef PROFILE
+	static char sys_name[256];
+	snprintf(sys_name, sizeof(sys_name), "%s %d", type_name, systems.size());
+	system->token = MicroProfileGetToken(type_name, sys_name, -1);
+#endif
 
 	if (type->on_main_thread)
 		systems.push_back(system);
@@ -183,16 +194,10 @@ struct update_data_t
 	void (*update)(void *instance);
 };
 
-static inline void sys_update(const void *data)
+static inline void sys_update(update_data_t *data)
 {
-	auto d = *(update_data_t*)data;
-
-	// Wait for dependencies
-	auto dependencies = (std::atomic<int>**)d.sys;
-	for (int32_t i(1); i <= (int32_t)d.sys->dependency_count; i++)
-		JobSystem::wait(dependencies[-i], 1);
-	// Run callback
-	d.update(d.sys->instance());
+	MICROPROFILE_SCOPE_TOKEN(data->sys->token);
+	data->update(data->sys->instance());
 }
 
 void Engine::start_frame()
@@ -203,7 +208,7 @@ void Engine::start_frame()
 	Input::update();
 
 	for (system_t *system : systems)
-		system->job.store(0, std::memory_order_release);
+		JobSystem::add_dependency(&system->job);
 
 	size_t i = 0;
 
@@ -215,10 +220,10 @@ void Engine::start_frame()
 		if (data.update = system_types[systems[i]->type_index].update)
 		{
 			data.sys = systems[i];
-			JobSystem::run(sys_update, &data, &systems[i]->job);
+			JobSystem::run_child(sys_update, &data, systems[i]->dependencies(), systems[i]->dependency_count, &systems[i]->job);
 		}
 		else
-			JobSystem::mark_job(&systems[i]->job);
+			JobSystem::remove_dependency(&systems[i]->job);
 	}
 	}
 
@@ -229,10 +234,13 @@ void Engine::start_frame()
 		update_data_t data;
 		if (data.update = system_types[systems[i]->type_index].update)
 		{
+			auto dependencies = systems[i]->dependencies();
+			while (dependencies != systems[i]->dependencies_end())
+				JobSystem::wait(*dependencies++);
 			data.sys = systems[i];
 			sys_update(&data);
 		}
-		JobSystem::mark_job(&systems[i]->job);
+		JobSystem::remove_dependency(&systems[i]->job);
 	}
 	}
 }
@@ -242,7 +250,7 @@ void Engine::end_frame()
 	// Wait for all system updates
 	{ MICROPROFILE_SCOPEI("ENGINE", "wait_update_jobs");
 	for (system_t *system : systems)
-		JobSystem::wait(&system->job, 1);
+		JobSystem::wait(&system->job);
 	}
 
 	MicroProfileFlip();

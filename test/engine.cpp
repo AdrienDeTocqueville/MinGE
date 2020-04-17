@@ -4,8 +4,7 @@
 
 struct TestSystem
 {
-	int x;
-	char *str;
+	char name;
 };
 
 void initializer(void *sys)
@@ -13,20 +12,17 @@ void initializer(void *sys)
 	static int sys_count = 0;
 
 	auto self = (TestSystem*)sys;
-	self->x = sys_count++;
-	self->str = strdup("          ");
-	sprintf(self->str, "updater %d", self->x);
+	self->name = 'a' + sys_count++;
 }
 
 void updater(void *sys)
 {
 	auto self = (TestSystem*)sys;
-	MICROPROFILE_SCOPEI("TestSystem", self->str);
 
 	int time = Random::next(50, 400);
-	std::cout << "start  " << (char)('a'+self->x) << "  (" << time << ")" << std::endl;
+	std::cout << "start  " << self->name << "  (" << time << ")" << std::endl;
 	sf::sleep(sf::milliseconds(time));
-	std::cout << "finish " << (char)('a'+self->x) << std::endl;
+	std::cout << "finish " << self->name << std::endl;
 }
 
 const system_type_t type = []() {
@@ -43,9 +39,18 @@ const system_type_t type = []() {
 	return t;
 }();
 
+const system_type_t type_sync = []() {
+	system_type_t t = type;
+	t.name = "TestSync";
+	t.on_main_thread = 1;
+	return t;
+}();
+
 void test_systems()
 {
 	Engine::register_system_type(type);
+	Engine::register_system_type(type_sync);
+
 	auto a = (TestSystem*)Engine::create_system("TestSystem", NULL, 0);
 	auto b = (TestSystem*)Engine::create_system("TestSystem", NULL, 0);
 	auto c = (TestSystem*)Engine::create_system("TestSystem", NULL, 0);
@@ -54,7 +59,7 @@ void test_systems()
 	auto d = (TestSystem*)Engine::create_system("TestSystem", (const void**)ddeps, 1);
 
 	TestSystem *edeps[] = {a, b};
-	auto e = (TestSystem*)Engine::create_system("TestSystem", (const void**)edeps, 2);
+	auto e = (TestSystem*)Engine::create_system("TestSync", (const void**)edeps, 2);
 
 	TestSystem *fdeps[] = {a, b, c};
 	auto f = (TestSystem*)Engine::create_system("TestSystem", (const void**)fdeps, 3);

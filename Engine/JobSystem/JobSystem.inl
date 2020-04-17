@@ -4,13 +4,25 @@ namespace JobSystem
 {
 
 template <typename D>
-inline void run(Work func, const D *data, std::atomic<int> *counter)
+inline void run(WorkT<D> func, D *data, std::atomic<int> *counter)
 {
-	run(func, data, sizeof(D), counter);
+	run((Work)func, data, sizeof(D), counter);
+}
+
+template <typename D>
+inline void run_child(WorkT<D> func, D *data, std::atomic<int> *dependency, std::atomic<int> *counter)
+{
+	run_child((Work)func, data, sizeof(D), dependency, counter);
+}
+
+template <typename D>
+inline void run_child(WorkT<D> func, D *data, std::atomic<int> **dependencies, uint64_t dependency_count, std::atomic<int> *counter)
+{
+	run_child((Work)func, data, sizeof(D), dependencies, dependency_count, counter);
 }
 
 template <typename T, typename D>
-unsigned parallel_for(Work func, ParallelFor<T, D> *data, std::atomic<int> *counter)
+unsigned parallel_for(WorkT<D> func, ParallelFor<T, D> *data, std::atomic<int> *counter)
 {
 	T *first = data->start;
 	T *last = data->end;
@@ -46,9 +58,24 @@ unsigned worker_id()
 	return this_worker;
 }
 
-void mark_job(std::atomic<int> *counter)
+void add_dependency(std::atomic<int> *counter)
 {
 	counter->fetch_add(1, std::memory_order_acquire);
+}
+
+void remove_dependency(std::atomic<int> *counter)
+{
+	counter->fetch_sub(1, std::memory_order_release);
+}
+
+void reset_dependencies(std::atomic<int> *counter)
+{
+	counter->store(1, std::memory_order_release);
+}
+
+bool dependencies_done(std::atomic<int> *counter)
+{
+	return counter->load(std::memory_order_acquire) == 0;
 }
 
 unsigned div_ceil(unsigned a, unsigned b)
