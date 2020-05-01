@@ -15,6 +15,7 @@ inline long get_page_size()
 }
 
 #elif _WIN32
+#define NOMINMAX
 #include <Windows.h>
 inline void *alloc_page(size_t size) { return VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE); }
 inline void free_page(void *address, size_t size) { VirtualFree(address, 0, MEM_RELEASE); }

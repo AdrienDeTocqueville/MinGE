@@ -1,5 +1,5 @@
-#include "Renderer/Mesh.h"
-#include "Renderer/GLDriver.h"
+#include "Graphics/Mesh/Mesh.h"
+#include "Graphics/GLDriver.h"
 
 #include "IO/URI.h"
 #include "Utility/Error.h"
@@ -8,21 +8,26 @@
 
 #include <vector>
 
-multi_array_t<mesh_t, mesh_data_t, const char*, AABB> mesh_manager;
+multi_array_t<submeshes_t, mesh_data_t, const char*, AABB> mesh_manager;
 std::vector<submesh_t> submeshes;
 
 static inline void compute_aabb(const mesh_data_t &data, vec3 &b0, vec3 &b1)
 {
+	// TODO: check asm diff when using local variables
 	if (data.points)
 	{
-		b0 = data.points[0];
-		b1 = data.points[0];
+		vec3 *points = data.points;
+		vec3 a = points[0];
+		vec3 b = points[0];
 
 		for (size_t i = 1; i < data.vertex_count; i++)
 		{
-			b0 = min(b0, data.points[i]);
-			b1 = max(b1, data.points[i]);
+			a = min(a, points[i]);
+			b = max(b, points[i]);
 		}
+
+		b0 = a;
+		b1 = b;
 	}
 	else b0 = b1 = vec3(0.0f);
 }
@@ -102,6 +107,7 @@ Mesh Mesh::import(const char *URI)
 	mesh_data_t data;
 	if (uri.on_disk)
 	{
+		// remember that submesh_t::offset = _first_index * sizeof(uint16_t)
 		return Mesh(0);
 	}
 	else
@@ -118,14 +124,10 @@ Mesh Mesh::import(const char *URI)
 	uint32_t vao, vbo, ebo;
 	load_buffers(data, vao, vbo, ebo);
 	for (int i(first_submesh); i < submeshes.size(); i++)
-	{
 		submeshes[i].vao = vao;
-		submeshes[i].vbo = vbo;
-		submeshes[i].ebo = ebo;
-	}
 
 	uint32_t i = mesh_manager.add();
-	mesh_manager.get<0>()[i] = mesh_t {first_submesh, (uint32_t)submeshes.size()};
+	mesh_manager.get<0>()[i] = submeshes_t {first_submesh, (uint32_t)submeshes.size(), vbo, ebo};
 	mesh_manager.get<1>()[i] = data;
 	mesh_manager.get<2>()[i] = URI;
 	mesh_manager.get<3>()[i].init(b0, b1);
@@ -137,10 +139,12 @@ void Mesh::clear()
 {
 	for (uint32_t i(0); i < mesh_manager.size; i++)
 	{
-		submesh_t sub = submeshes[mesh_manager.get<0>()[i].first_submesh];
+		submeshes_t subs = mesh_manager.get<0>()[i];
+		submesh_t sub = submeshes[subs.first];
+
 		GL::DeleteVertexArray(sub.vao);
-		GL::DeleteBuffer(sub.vbo);
-		GL::DeleteBuffer(sub.ebo);
+		GL::DeleteBuffer(subs.vbo);
+		GL::DeleteBuffer(subs.ebo);
 
 		mesh_manager.get<1>()[i].free();
 	}

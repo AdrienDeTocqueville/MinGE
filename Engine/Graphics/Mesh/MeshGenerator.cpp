@@ -1,4 +1,4 @@
-#include "Renderer/Mesh.h"
+#include "Graphics/Mesh/Mesh.h"
 
 #include "IO/URI.h"
 #include "Math/glm.h"

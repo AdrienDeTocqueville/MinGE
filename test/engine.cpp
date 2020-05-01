@@ -31,7 +31,6 @@ const system_type_t type = []() {
 	t.size = sizeof(TestSystem);
 	t.on_main_thread = 0;
 
-	t.init = initializer;
 	t.destroy = NULL;
 	t.update = updater;
 	t.serialize = NULL;
@@ -51,21 +50,21 @@ void test_systems()
 	Engine::register_system_type(type);
 	Engine::register_system_type(type_sync);
 
-	auto a = (TestSystem*)Engine::create_system("TestSystem", NULL, 0);
-	auto b = (TestSystem*)Engine::create_system("TestSystem", NULL, 0);
-	auto c = (TestSystem*)Engine::create_system("TestSystem", NULL, 0);
+	auto a = new(Engine::alloc_system("TestSystem", NULL, 0)) TestSystem();
+	auto b = new(Engine::alloc_system("TestSystem", NULL, 0)) TestSystem();
+	auto c = new(Engine::alloc_system("TestSystem", NULL, 0)) TestSystem();
 
 	TestSystem *ddeps[] = {a};
-	auto d = (TestSystem*)Engine::create_system("TestSystem", (const void**)ddeps, 1);
+	auto d = new(Engine::alloc_system("TestSystem", (const void**)ddeps, 1)) TestSystem();
 
 	TestSystem *edeps[] = {a, b};
-	auto e = (TestSystem*)Engine::create_system("TestSync", (const void**)edeps, 2);
+	auto e = new(Engine::alloc_system("TestSync", (const void**)edeps, 2)) TestSystem();
 
 	TestSystem *fdeps[] = {a, b, c};
-	auto f = (TestSystem*)Engine::create_system("TestSystem", (const void**)fdeps, 3);
+	auto f = new(Engine::alloc_system("TestSystem", (const void**)fdeps, 3)) TestSystem();
 
 	TestSystem *gdeps[] = {b};
-	auto g = (TestSystem*)Engine::create_system("TestSystem", (const void**)gdeps, 1);
+	auto g = new(Engine::alloc_system("TestSystem", (const void**)gdeps, 1)) TestSystem();
 
 	while (!Input::window_closed())
 	//for (int i = 0; i < 10 && !Input::window_closed(); i++)

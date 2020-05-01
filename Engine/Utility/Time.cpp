@@ -29,6 +29,6 @@ Time::Chrono::Chrono()
 long Time::Chrono::time() const
 {
 	const auto end = std::chrono::high_resolution_clock::now();
-        const auto diff = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
+	const auto diff = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
 	return (long)diff.count();
 }

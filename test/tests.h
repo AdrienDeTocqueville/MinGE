@@ -1,3 +1,5 @@
+#pragma once
+
 #include <MinGE.h>
 #include <iostream>
 

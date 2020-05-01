@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cassert>
 #include "Memory/Memory.h"
 
 namespace multi_array
@@ -61,6 +62,12 @@ struct multi_array_t
 	template<int i> auto get()
 	{ return multi_array::get<i>(data); }
 
+	template<int i> auto get(uint32_t index)
+	{
+		assert(index != 0 && "invalid index");
+		return multi_array::get<i>(data) + index;
+	}
+
 
 	uint32_t next_slot, size, capacity;
 	multi_array::arrays_t<0, Types...> data;
@@ -70,20 +77,20 @@ struct multi_array_t
 // Implementation
 template<typename... Types>
 multi_array_t<Types...>::multi_array_t():
-        next_slot(0), size(0), capacity(mem::page_size)
+	next_slot(0), size(0), capacity(mem::page_size)
 {
 	// The first array is also used to store the next free slot index
 	static_assert(sizeof(*get<0>()) >= sizeof(uint32_t), "First element type is too small");
 
-        void *alloc = mem::alloc_page((size_t)capacity * data.size());
-        data.init(alloc, capacity);
+	void *alloc = mem::alloc_page((size_t)capacity * data.size());
+	data.init(alloc, capacity);
 }
 
 template<typename... Types>
 void multi_array_t<Types...>::reserve(uint32_t new_cap)
 {
 	void *old_alloc = get<0>() + 1;
-        void *new_alloc = mem::alloc_page((size_t)new_cap * data.size());
+	void *new_alloc = mem::alloc_page((size_t)new_cap * data.size());
 
 	data.move(new_alloc, size, new_cap);
 

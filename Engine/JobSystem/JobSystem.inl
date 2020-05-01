@@ -1,3 +1,5 @@
+#pragma once
+
 #include "JobSystem/JobSystem.h"
 
 namespace JobSystem

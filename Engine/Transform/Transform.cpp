@@ -167,8 +167,8 @@ static json serialize(void *system)
 	return dump;
 }
 
-static void deserialize(const nlohmann::json&)
-{ }
+TransformSystem::TransformSystem(const json &dump)
+{ /*TODO*/ }
 
 const system_type_t TransformSystem::type = []() {
 	system_type_t t{};
@@ -176,10 +176,9 @@ const system_type_t TransformSystem::type = []() {
 	t.size = sizeof(TransformSystem);
 	t.on_main_thread = 0;
 
-	t.init = [](void *system) { new (system) TransformSystem(); };
 	t.destroy = [](void *system) { ((TransformSystem*)system)->~TransformSystem(); };
 	t.update = NULL;
 	t.serialize = serialize;
-	t.deserialize = deserialize;
+	t.deserialize = [](void *system, const json &dump) { new(system) TransformSystem(dump); };
 	return t;
 }();

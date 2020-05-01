@@ -49,9 +49,10 @@ void Scene::save(const char *path, const char *name, bool backup_existing)
 		auto *type = Engine::get_system_type(systems[i].instance);
 
 		json system;
+		if (type->serialize)
+			system["data"] = type->serialize(systems[i].instance);
 		system["type"] = type->name;
 		system["name"] = systems[i].name;
-		system["data"] = type->serialize(systems[i].instance);
 		scene["systems"].push_back(system);
 	}
 

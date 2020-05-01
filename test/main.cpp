@@ -28,20 +28,24 @@ int main()
 
 	//benchmark(50);
 	//test_transforms();
-	test_systems();
+	//test_systems();
 
 	/// Init systems
-	auto transforms = (TransformSystem*)Engine::create_system("TransformSystem", NULL);
-	//auto renderers = (RenderSystem*)Engine::create_system("RenderSystem", {transforms});
+	auto transforms = new(Engine::alloc_system("TransformSystem", NULL)) TransformSystem();
+	auto graphics = new(Engine::alloc_system("GraphicsSystem", (const void**)&transforms, 1)) GraphicsSystem(transforms);
 
 	// Open assets
-	Mesh mesh = Mesh::import("asset:mesh/cube?x=3&y=2&z=1");
+	Mesh mesh = Mesh::import("asset:mesh/cube?x=1&y=3&z=3");
 //	Texture texture = Texture::import("asset://Assets/level1/floor.png?srgb=1");
 
 	/// Create entities
-	Entity e = Entity::create();
-	transforms->add(e, vec3(0, 0, 0));
-	//renderers->add(e, mesh);
+	Entity mesh_ent = Entity::create();
+	transforms->add(mesh_ent, vec3(5, 0, 0));
+	graphics->add_renderer(mesh_ent, mesh);
+
+	Entity camera_ent = Entity::create();
+	transforms->add(camera_ent, vec3(0, 0, 0));
+	graphics->add_camera(camera_ent);
 
 	/// Main loop
 	while (!Input::window_closed())

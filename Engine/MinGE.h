@@ -12,7 +12,7 @@
 
 #include "Transform/Transform.h"
 
-#include "Renderer/Mesh.h"
+#include "Graphics/Graphics.h"
 
 #include "IO/Input.h"
 #include "Math/Random.h"

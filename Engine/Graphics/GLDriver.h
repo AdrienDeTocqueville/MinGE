@@ -20,8 +20,6 @@ class GL
 {
 	struct GLState
 	{
-        GLState();
-        
 		GLuint ubo, vbo, ebo, vao, fbo;
 		GLuint program;
 		GLuint texture_unit;
@@ -33,6 +31,8 @@ class GL
 	static GLState state;
 
 public:
+	static void init();
+
 	// Creation
 	static GLuint GenBuffer()
 	{
@@ -142,7 +142,7 @@ public:
 		}
 	}
 
-	// Change state
+	// State change
 	static void ActiveTexture(GLuint slot)
 	{
 		if (slot != state.texture_unit || NO_DRIVER_STATE_CACHE)

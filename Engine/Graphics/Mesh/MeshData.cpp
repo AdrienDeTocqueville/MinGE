@@ -1,4 +1,4 @@
-#include "Renderer/Mesh.h"
+#include "Graphics/Mesh/Mesh.h"
 
 void mesh_data_t::init(uint32_t _vertex_count, uint32_t _index_count, mesh_data_t::flags_t _flags)
 {

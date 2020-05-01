@@ -35,7 +35,7 @@ void benchmark(int iterations)
 
 void test_transforms()
 {
-	auto transforms = (TransformSystem*)Engine::create_system("TransformSystem", NULL);
+	auto transforms = new(Engine::alloc_system("TransformSystem", NULL)) TransformSystem();
 
 	/// Create entities
 	Entity e1 = Entity::create();

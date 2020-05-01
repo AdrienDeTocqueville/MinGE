@@ -6,13 +6,13 @@
 
 #include "Transform/Transform.h"
 
-#include "Renderer/GLDriver.h"
+#include "Graphics/Graphics.h"
+#include "Graphics/GLDriver.h"
 
 #include "Utility/Time.h"
 #include "Math/Random.h"
 #include "JobSystem/JobSystem.inl"
 #include "IO/Input.h"
-#include "Renderer/Renderer.h"
 
 uint32_t Entity::next_index = 1;
 
@@ -54,11 +54,11 @@ void Engine::init(sf::RenderWindow &window, unsigned _FPS)
 	Random::init();
 	JobSystem::init();
 	Input::init(&window);
-	Renderer::init();
+	RenderEngine::init();
 
 	// Register builtin systems
 	Engine::register_system_type(TransformSystem::type);
-	//Engine::register_system_type(SYSTEM_TYPE(RenderSystem, 1));
+	Engine::register_system_type(GraphicsSystem::type);
 }
 
 
@@ -147,7 +147,7 @@ void Engine::register_system_type(const system_type_t &system_type)
 		system_types.push_back(system_type);
 }
 
-void *Engine::create_system(const char *type_name, const void **dependencies, uint32_t dependency_count)
+void *Engine::alloc_system(const char *type_name, const void **dependencies, uint32_t dependency_count)
 {
 	auto type = get_type(type_name);
 	assert(type && "No such system type");
@@ -163,7 +163,6 @@ void *Engine::create_system(const char *type_name, const void **dependencies, ui
 	new(&system->job) std::atomic<int>(0);
 	system->type_index = (uint32_t)(type - system_types.data());
 	system->dependency_count = dependency_count;
-	if (type->init) type->init(system->instance());
 
 #ifdef PROFILE
 	static char sys_name[256];
@@ -254,10 +253,4 @@ void Engine::end_frame()
 	}
 
 	MicroProfileFlip();
-}
-
-
-void Engine::setWindowSize(vec2 _newSize)
-{
-	Input::set_window_size(_newSize);
 }

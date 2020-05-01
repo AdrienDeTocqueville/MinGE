@@ -8,7 +8,7 @@
 		}
 	},
 
-	"fwd-base": {
+	"forward": {
 		"macros": [
 			"SKINNED",
 			"COLOR_MAP", "METALLIC_MAP", "ROUGHNESS_MAP",

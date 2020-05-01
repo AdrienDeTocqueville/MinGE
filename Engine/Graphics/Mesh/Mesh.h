@@ -5,25 +5,29 @@
 
 struct Mesh
 {
+	Mesh(): index(0) {}
+	inline uint32_t id() { return index; }
+
+	static const Mesh none;
 	static Mesh import(const char *URI);
 	static void clear();
 
 private:
-	Mesh(uint32_t i): id(i) {}
-	uint32_t id;
+	Mesh(uint32_t i): index(i) {}
+	uint32_t index;
 };
 
 
-struct mesh_t
+struct submeshes_t
 {
-	uint32_t first_submesh;
-	uint32_t last_submesh;
+	uint32_t first, last;
+	uint32_t vbo, ebo;
 };
 
 struct submesh_t
 {
 	uint32_t mode, count, offset;
-	uint32_t vao, vbo, ebo;
+	uint32_t vao;
 };
 
 struct mesh_data_t

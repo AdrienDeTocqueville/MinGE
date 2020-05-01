@@ -1,13 +1,13 @@
 #pragma once
 
+#include <cstdint>
+#include <unordered_map>
+
 #include "Core/Entity.h"
 #include "Core/System.h"
 
 #include "Math/glm.h"
 #include "Structures/MultiArray.h"
-
-#include <cstdint>
-#include <unordered_map>
 
 struct Transform
 {
@@ -22,8 +22,10 @@ struct Transform
 	inline quat rotation() const;
 	inline vec3 scale() const;
 
-	inline const mat4 &world_matrix();
-	inline const mat4 &local_matrix();
+	inline const mat4 &world_matrix() const;
+	inline const mat4 &local_matrix() const;
+
+	inline vec3 to_world(vec3 point) const;
 
 private:
 	friend struct TransformSystem;
@@ -36,6 +38,9 @@ private:
 
 struct TransformSystem
 {
+	TransformSystem() = default;
+	TransformSystem(const nlohmann::json &dump);
+
 	Transform add(Entity entity, vec3 position, quat rotation, vec3 scale);
 	Transform add_child(Entity parent, Entity entity, vec3 position, quat rotation, vec3 scale);
 	void remove(Entity entity);

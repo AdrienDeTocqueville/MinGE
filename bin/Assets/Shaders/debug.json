@@ -1,6 +1,6 @@
 {
 "passes": {
-	"fwd-base": {
+	"forward": {
 		"stages": {
 			"vertex": "glsl/debug.vert",
 			"fragment": "glsl/debug.frag"

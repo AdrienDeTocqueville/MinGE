@@ -12,7 +12,7 @@ struct uri_t
 	T get_or_default(std::string param, T default_value) const
 	{
 		auto it = params.find(param);
-		return it == params.end() ? default_value : parse_val<T>(it->first);
+		return it == params.end() ? default_value : parse_val<T>(it->second);
 	}
 
 	bool on_disk;

@@ -10,10 +10,13 @@
 #ifdef __linux__
 #include <pthread.h>
 #elif _WIN32
+#define NOMINMAX
 #include <Windows.h>
 #else
 #error Unsupported OS
 #endif
+
+#define SINGLE_THREADED
 
 
 namespace JobSystem
