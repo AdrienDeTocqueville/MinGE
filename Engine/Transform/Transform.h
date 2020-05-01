@@ -18,7 +18,11 @@ struct Transform
 	inline void set_rotation(quat rot);
 	inline void set_scale(vec3 scale);
 
+	inline void translate(vec3 vec);
+	inline void look_at(vec3 point);
+
 	inline vec3 position() const;
+	inline vec3 euler_angles() const;
 	inline quat rotation() const;
 	inline vec3 scale() const;
 
@@ -26,6 +30,7 @@ struct Transform
 	inline const mat4 &local_matrix() const;
 
 	inline vec3 to_world(vec3 point) const;
+	inline vec3 vec_to_world(vec3 vec) const;
 
 private:
 	friend struct TransformSystem;

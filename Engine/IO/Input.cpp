@@ -160,7 +160,7 @@ void Input::set_window_size(ivec2 _size)
 
 
 // Mouse
-vec2 Input::mouse_delta_relative()
+vec2 Input::mouse_delta_ss()
 {
 	vec2 deltaRel(mouse_pos_delta);
 

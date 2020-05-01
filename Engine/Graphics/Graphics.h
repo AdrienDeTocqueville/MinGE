@@ -24,7 +24,7 @@ struct GraphicsSystem
 {
 	GraphicsSystem(TransformSystem *world);
 
-	Camera add_camera(Entity entity, float FOV = 60.0f, float zNear = 0.1f, float zFar = 1000.0f,
+	Camera add_camera(Entity entity, float FOV = 70.0f, float zNear = 0.1f, float zFar = 1000.0f,
 		bool orthographic = false, vec4 viewport = vec4(0.0f,0.0f,1.0f,1.0f),
 		vec3 clear_color = vec3(0.0f), unsigned clear_flags = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

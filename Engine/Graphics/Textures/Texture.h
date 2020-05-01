@@ -7,6 +7,8 @@ struct Texture: public UID<GLuint>
 {
 	Texture(): UID(0) {}
 
+	static const Texture none;
+
 private:
 	Texture(uint32_t i): UID(i) {}
 };

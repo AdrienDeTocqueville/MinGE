@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "tests.h"
+#include "CameraControl.h"
 
 const auto desktop = sf::VideoMode::getDesktopMode();
 
@@ -21,7 +22,7 @@ int main()
 
 	/// Create window
 	sf::RenderWindow window(video_mode, "MinGE", style, sf::ContextSettings(24, 0, 0, 4, 3));
-	window.setPosition(sf::Vector2i(desktop.width - video_mode.width, desktop.height - video_mode.height) / 2);
+	//window.setPosition(sf::Vector2i(desktop.width - video_mode.width, desktop.height - video_mode.height) / 2);
 
 	/// Init engine
 	Engine::init(window, 30);
@@ -29,10 +30,14 @@ int main()
 	//benchmark(50);
 	//test_transforms();
 	//test_systems();
+	//test_array_list();
+
+	Engine::register_system_type(CameraControl::type);
 
 	/// Init systems
 	auto transforms = new(Engine::alloc_system("TransformSystem", NULL)) TransformSystem();
-	auto graphics = new(Engine::alloc_system("GraphicsSystem", (const void**)&transforms, 1)) GraphicsSystem(transforms);
+	auto controller = new(Engine::alloc_system("CameraControl", (const void**)&transforms, 1)) CameraControl(transforms);
+	auto graphics = new(Engine::alloc_system("GraphicsSystem", (const void**)&controller, 1)) GraphicsSystem(transforms);
 
 	// Open assets
 	Mesh mesh = Mesh::import("asset:mesh/cube?x=1&y=3&z=3");
@@ -40,12 +45,13 @@ int main()
 
 	/// Create entities
 	Entity mesh_ent = Entity::create();
-	transforms->add(mesh_ent, vec3(5, 0, 0));
+	transforms->add(mesh_ent, vec3(10, 0, 0));
 	graphics->add_renderer(mesh_ent, mesh);
 
 	Entity camera_ent = Entity::create();
 	transforms->add(camera_ent, vec3(0, 0, 0));
 	graphics->add_camera(camera_ent);
+	controller->add(camera_ent);
 
 	/// Main loop
 	while (!Input::window_closed())

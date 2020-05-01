@@ -20,7 +20,7 @@ struct array_list_t
 
 	struct slot_t
 	{
-		uint32_t next, slot_count;
+		uint32_t next, avail;
 	};
 };
 
@@ -31,7 +31,7 @@ array_list_t<T>::array_list_t():
 	next_slot(0), size(0), capacity(mem::page_size)
 {
 	// Each element can be used to store the amount of free slots and the next free slot index
-	static_assert(sizeof(*get<0>()) >= sizeof(slot_t), "First element type is too small");
+	static_assert(sizeof(T) >= sizeof(slot_t), "First element type is too small");
 
 	data = (T*)mem::alloc_page((size_t)capacity * sizeof(T)) - 1;
 }
@@ -43,7 +43,7 @@ void array_list_t<T>::reserve(uint32_t new_cap)
 	void *new_alloc = mem::alloc_page((size_t)new_cap * sizeof(T));
 
 	memcpy(new_alloc, old_alloc, size * sizeof(T));
-	data = (T*)alloc - 1;
+	data = (T*)new_alloc - 1;
 
 	mem::free_page(old_alloc, capacity);
 	capacity = new_cap;
@@ -57,15 +57,15 @@ uint32_t array_list_t<T>::add(uint32_t count)
 	while (slot_id)
 	{
 		slot_t *slot = (slot_t*)(data + slot_id);
-		if (slot->slot_count > count) // split slot
+		if (slot->avail > count) // split slot
 		{
 			*prev_slot = slot_id + count;
-			slot_t *new_slot = (slot_t)*(data + slot_id + count);
+			slot_t *new_slot = (slot_t*)(data + slot_id + count);
 			new_slot->next = slot->next;
-			new_slot->slot_count = slot->slot_count - count;
+			new_slot->avail = slot->avail - count;
 			return slot_id;
 		}
-		if (slot->slot_count == count) // use entire slot
+		if (slot->avail == count) // use entire slot
 		{
 			*prev_slot = slot->next;
 			return slot_id;
@@ -83,47 +83,46 @@ uint32_t array_list_t<T>::add(uint32_t count)
 template<typename T>
 void array_list_t<T>::remove(uint32_t index, uint32_t count)
 {
-	if (next_slot > index) // new slot is first
-	{
-		slot_t *slot = (slot_t*)(data + index);
-		if (next_slot == index + count) // merge with next slot
-		{
-			slot_t *merged = (slot_t*)(data + next_slot);
-			slot->next = merged->next;
-			slot->count = count + merged->count;
-		}
-		else // create new slot
-		{
-			slot->next = next_slot;
-			slot->count = count;
-		}
-		next_slot = index;
-	}
-	else
-	{
-		slot_t *slot = (slot_t*)(data + next_slot);
-		while (slot->next != 0 && slot->next < index)
-			slot_t *slot = (slot_t*)(data + slot->next);
+	slot_t *new_slot, *slot = (slot_t*)(&next_slot);
+	while (slot->next != 0 && slot->next < index)
+		slot = (slot_t*)(data + slot->next);
 
-		if ((T*)slot + slot->slot_count == index) // merge with prev slot
-			slot->slot_count += count;
-		else if (slot->next == index + count) // merge with next slot
+	uint32_t slot_id = (T*)slot - data;
+	if (slot != (slot_t*)&next_slot && slot_id + slot->avail == index) // merge with prev slot (but never merge with first slot)
+	{
+		if (slot->next == index + count) // merge with next slot also
 		{
 			slot_t *merged = (slot_t*)(data + slot->next);
-			slot->next = index;
-
-			slot_t *new_slot = (slot_t*)(data + index);
-			new_slot->next = merged->next;
-			new_slot->count = count + merged->count;
+			slot->avail += count + merged->avail;
+			slot->next = merged->next;
 		}
-		else // create new slot
-		{
-			slot_t *new_slot = (slot_t*)(data + index);
-			new_slot->next = slot->next;
-			new_slot->count = count;
-			slot->next = index;
-		}
+		else
+			slot->avail += count;
+		new_slot = slot;
+	}
+	else if (slot->next == index + count) // merge with next slot
+	{
+		slot_t *merged = (slot_t*)(data + slot->next);
+		slot->next = index;
 
+		new_slot = (slot_t*)(data + index);
+		new_slot->next = merged->next;
+		new_slot->avail = count + merged->avail;
+	}
+	else // create new slot
+	{
+		new_slot = (slot_t*)(data + index);
+		new_slot->next = slot->next;
+		new_slot->avail = count;
+		slot->next = index;
+	}
+
+	if (next_slot == 1 && new_slot->avail == size) // everything was removed
+		next_slot = size = 0;
+	else if ((T*)new_slot + new_slot->avail - data == size + 1) // block is at the end of array
+	{
+		size -= new_slot->avail;
+		slot->next = 0;
 	}
 }
 

@@ -15,6 +15,7 @@
 #include "IO/Input.h"
 
 uint32_t Entity::next_index = 1;
+const Entity Entity::none;
 
 struct system_t
 {

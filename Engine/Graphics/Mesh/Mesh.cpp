@@ -8,6 +8,8 @@
 
 #include <vector>
 
+const Mesh Mesh::none;
+
 multi_array_t<submeshes_t, mesh_data_t, const char*, AABB> mesh_manager;
 std::vector<submesh_t> submeshes;
 
@@ -46,7 +48,7 @@ static inline void load_buffers(const mesh_data_t &data, uint32_t &vao, uint32_t
 		// VBO
 		GLsizei stride = data.stride();
 
-		glCheck(glBufferData(GL_ARRAY_BUFFER, stride * data.vertex_count, NULL, GL_STATIC_DRAW));
+		glCheck(glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)stride * data.vertex_count, NULL, GL_STATIC_DRAW));
 		uint8_t* address = (uint8_t*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 		{
 			#define UPLOAD(x) if (x) { \

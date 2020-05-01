@@ -7,6 +7,7 @@
 
 #include "Utility/Error.h"
 
+const Material Material::none;
 multi_array_t<material_t> Material::materials;
 
 Material Material::create(Shader *shader)

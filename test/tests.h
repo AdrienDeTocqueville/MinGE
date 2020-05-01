@@ -11,3 +11,5 @@ void benchmark(int iterations);
 void test_transforms();
 
 void test_systems();
+
+void test_array_list();

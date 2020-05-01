@@ -365,7 +365,7 @@ void Shader::load_uniforms(Program *prgm)
 			else
 			{
 				u.offset = uniform_offset;
-				uniform_offset += u.size * u.num;
+				uniform_offset += (size_t)u.size * u.num;
 
 				uniforms_names.emplace(std::move(var_name), u.offset);
 			}

@@ -7,16 +7,16 @@ struct UID
 {
 	UID(): index(0) {}
 	UID(T _index): index(_index) {}
-	inline T id() { return index; }
+	inline T id() const { return index; }
 
 protected:
 	T index;
 };
 
 template <typename T>
-inline bool operator==(UID<T> &a, UID<T> &b)
+inline bool operator==(const UID<T> &a, const UID<T> &b)
 {
-    return a.id() == b.id();
+	return a.id() == b.id();
 }
 
 using UID32 = UID<uint32_t>;
