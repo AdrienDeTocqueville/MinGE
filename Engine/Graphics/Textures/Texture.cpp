@@ -7,6 +7,8 @@
 struct texture_t
 {
 	uvec2 size;
+	const char *URI;
+	uint32_t gen;
 };
 
 const Texture Texture::none;
@@ -15,18 +17,25 @@ static std::vector<texture_t> textures;
 
 bool Texture::is_valid()
 {
-	return glIsTexture((GLuint)id());
+	assert(id() && "Invalid texture handle");
+
+	return textures[id()].gen == gen();
 }
 
 uvec2 Texture::size()
 {
+	assert(id() && "Invalid texture handle");
+
 	return textures[id()].size;
 }
 
 void Texture::destroy()
 {
+	assert(is_valid() && "Texture is already destroyed");
+
 	GLuint i = (GLuint)id();
 	glCheck(glDeleteTextures(1, &i));
+	textures[id()].gen++;
 }
 
 
@@ -94,17 +103,20 @@ Texture Texture::import(const char *URI)
 		return Texture::none;
 	}
 
-	textures.reserve(id);
+	textures.resize(id + 1);
 	textures[id].size = size;
-	return Texture(id);
+	textures[id].URI = URI;
+	textures[id].gen = 0;
+	return Texture(id, textures[id].gen);
 }
 
 void Texture::clear()
 {
-	for (int i = 0; i < textures.size(); i++)
+	for (unsigned i = 0; i < textures.size(); i++)
 	{
-		Texture t(i);
-		if (t.is_valid()) t.destroy();
+		GLuint id = i;
+		if (glIsTexture(id))
+			glCheck(glDeleteTextures(1, &id));
 	}
 	textures.clear();
 }

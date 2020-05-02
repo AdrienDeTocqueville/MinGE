@@ -7,9 +7,9 @@
 #include <iostream>
 #endif
 
-static std::string getTitle(Error::Type _type)
+static const char *get_title(Error::Type type)
 {
-	switch (_type)
+	switch (type)
 	{
 	case Error::WARNING:
 		return "Warning";
@@ -28,9 +28,9 @@ static std::string getTitle(Error::Type _type)
 }
 
 #ifdef _WIN32
-static int getIcon(Error::Type _type)
+static int get_icon(Error::Type type)
 {
-	switch (_type)
+	switch (type)
 	{
 	case Error::WARNING:
 		return MB_ICONWARNING;
@@ -47,17 +47,22 @@ static int getIcon(Error::Type _type)
 
 bool Error::error = false;
 
-void Error::add(Error::Type _type, std::string _description)
+void Error::add(Error::Type type, std::string description)
 {
-	if (_type >= Error::MAX)
-		_type = Error::MINGE;
+	Error::add(type, description.c_str());
+}
+
+void Error::add(Error::Type type, const char *description)
+{
+	if (type >= Error::MAX)
+		type = Error::MINGE;
 	error = true;
 
 
 #ifdef _WIN32
-	MessageBoxA(nullptr, _description.c_str(), getTitle(_type).c_str(), getIcon(_type));
+	MessageBoxA(nullptr, description, get_title(type), get_icon(type));
 #else
-	std::cout << getTitle(_type).c_str() << ": " << _description << std::endl;
+	std::cout << get_title(type) << ": " << description << std::endl;
 #endif
 }
 
@@ -77,15 +82,15 @@ bool Error::check()
 #endif
 }
 
-Error::Answer Error::ask(Error::Type _type, std::string _question)
+Error::Answer Error::ask(Error::Type type, const char *question)
 {
 #ifdef _WIN32
-	int r = MessageBoxA(nullptr, _question.c_str(), getTitle(_type).c_str(), MB_ICONQUESTION | MB_YESNOCANCEL | MB_DEFBUTTON2);
+	int r = MessageBoxA(nullptr, question, get_title(type), MB_ICONQUESTION | MB_YESNOCANCEL | MB_DEFBUTTON2);
 	if (r == IDYES) return Answer::YES;
 	if (r == IDNO) return Answer::NO;
 	return Answer::CANCEL;
 #else
-	std::cout << getTitle(_type).c_str() << ": " << _question << " (cancel)" << std::endl;
+	std::cout << get_title(type) << ": " << question << " (cancel)" << std::endl;
 	return Answer::CANCEL;
 #endif
 }

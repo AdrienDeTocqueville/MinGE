@@ -91,16 +91,15 @@ public:
 		}
 	}
 
-	/*
-	void lookAt(vec3 _pos)
+	void look_at(vec3 pos)
 	{
-		tr->lookAt(_pos);
-		vec3 ea = eulerAngles(tr->rotation);
+		Transform tr = world->get(cam);
+		tr.look_at(pos);
+		vec3 ea = tr.euler_angles();
 
 		angles.x = ea.z;
 		angles.y = ea.y;
 	}
-	*/
 
 	static vec3 getMovement(vec3 direction)
 	{

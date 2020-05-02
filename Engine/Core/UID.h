@@ -22,9 +22,8 @@ static_assert(sizeof(uid64_t) == 8, "Invalid size");
 template <typename T, typename U>
 struct UID
 {
-	UID() { index = 0; }
-	UID(uint32_t id, uint32_t gen)
-	{ uid.id = id; uid.gen = gen; }
+	UID(): index(0) {}
+	UID(uint32_t id, uint32_t gen): uid{id, gen} {}
 	
 	inline auto id() const { return uid.id; }
 	inline auto gen() const { return uid.gen; }

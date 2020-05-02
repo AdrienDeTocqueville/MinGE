@@ -66,9 +66,3 @@ struct GraphicsSystem
 
 	static const system_type_t type;
 };
-
-
-namespace RenderEngine
-{
-	void init();
-}

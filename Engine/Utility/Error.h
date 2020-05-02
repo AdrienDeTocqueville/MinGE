@@ -15,10 +15,11 @@ public:
 		YES, NO, CANCEL
 	};
 
-	static void add(Error::Type _type, std::string _description);
+	static void add(Error::Type type, std::string description);
+	static void add(Error::Type type, const char *description);
 	static bool check();
 
-	static Answer ask(Error::Type _type, std::string _question);
+	static Answer ask(Error::Type type, const char *question);
 
 private:
 	static bool error;

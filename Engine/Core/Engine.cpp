@@ -8,6 +8,7 @@
 
 #include "Graphics/Graphics.h"
 #include "Graphics/GLDriver.h"
+#include "Graphics/RenderEngine.h"
 
 #include "Utility/Time.h"
 #include "Math/Random.h"
@@ -123,6 +124,7 @@ void Engine::destroy()
 	systems.clear();
 	system_types.clear();
 
+	RenderEngine::destroy();
 	JobSystem::destroy();
 
 #ifdef PROFILE

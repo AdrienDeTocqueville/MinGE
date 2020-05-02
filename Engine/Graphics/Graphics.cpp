@@ -1,7 +1,9 @@
 #include "Graphics/Graphics.h"
-#include "Graphics/Debug.h"
 #include "Graphics/Shaders/Shader.inl"
 #include "Graphics/Shaders/Material.inl"
+#include "Graphics/Textures/Texture.h"
+#include "Graphics/RenderEngine.h"
+#include "Graphics/Debug.h"
 
 #include "Transform/Transform.h"
 
@@ -217,9 +219,8 @@ const system_type_t GraphicsSystem::type = []() {
 	return t;
 }();
 
-namespace RenderEngine
-{
-void init()
+
+void RenderEngine::init()
 {
 	GL::init();
 	Shader::setup_builtins();
@@ -232,7 +233,11 @@ void init()
 	mat.set("roughness", 0.5f);
 }
 
-//TODO
-// Debug::destroy(); ?
-// destroy meshes/materials ?
+void RenderEngine::destroy()
+{
+	Debug::destroy();
+
+	Shader::clear();
+	Texture::clear();
+	// destroy meshes/materials ?
 }

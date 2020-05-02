@@ -16,5 +16,5 @@ struct Texture: public UID64
 	static void clear();
 
 private:
-	Texture(uint32_t i): UID64(i, 0) {}
+	Texture(uint32_t i, uint32_t gen): UID64(i, gen) {}
 };

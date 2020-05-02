@@ -25,14 +25,11 @@ struct ShaderSources
 	std::string fragment;
 };
 
-namespace RenderEngine
-{ void init(); }
-
 class Shader
 {
 	friend struct Material;
 	friend struct material_t;
-	friend void RenderEngine::init();
+	friend struct RenderEngine;
 
 public:
 	static Shader *import(const char *URI);

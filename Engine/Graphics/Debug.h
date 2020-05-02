@@ -2,13 +2,9 @@
 
 #include "Math/glm.h"
 
-namespace RenderEngine
-{ void init(); }
-
 class Debug
 {
-	friend struct GraphicsSystem;
-	friend void RenderEngine::init();
+	friend struct RenderEngine;
 
 public:
 	static void point(vec3 _point, vec3 _color = vec3(1.0f, 0.1f, 0.1f));

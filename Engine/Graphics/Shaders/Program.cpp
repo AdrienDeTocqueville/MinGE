@@ -2,6 +2,10 @@
 #include "Graphics/Shaders/Shader.h"
 #include "Graphics/GLDriver.h"
 
+#define STB_INCLUDE_IMPLEMENTATION
+#define STB_INCLUDE_LINE_GLSL
+#include "Graphics/Shaders/stb_include.h"
+
 #include "Utility/Error.h"
 
 #include <fstream>
@@ -50,26 +54,34 @@ static unsigned compile(unsigned type, const std::string &path, const char *pass
 		return 0;
 	}
 
-	GLuint shader = glCreateShader(type);
-	if (!shader)
+	char error[256];
+	std::string glsl(std::istreambuf_iterator<char>(file), (std::istreambuf_iterator<char>()));
+	char *final_source = stb_include_string(glsl.c_str(), glsl.size(), "Assets/Shaders", path.c_str(), error);
+	if (final_source == NULL)
 	{
-		Error::add(Error::OPENGL, "glCreateShader() returns 0");
+		Error::add(Error::FILE_NOT_FOUND, error);
 		return 0;
 	}
 
-	std::string line, sourceCode;
-	while (getline(file, line))
-		sourceCode += line + '\n';
+	GLuint shader = glCreateShader(type);
+	if (!shader)
+	{
+		free(final_source);
+		Error::add(Error::OPENGL, "glCreateShader() returns 0");
+		return 0;
+	}
 
 	const GLchar* source[] = {
 		defines,
 		pass_define,
 		builtins,
-		sourceCode.c_str(),
+		final_source,
 	};
 
 	glCheck(glShaderSource(shader, 4, source, nullptr));
 	glCheck(glCompileShader(shader));
+
+	free(final_source);
 
 	if (!check_compile(shader, path))
 	{

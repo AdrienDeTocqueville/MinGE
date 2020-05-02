@@ -56,6 +56,7 @@ int main()
 	transforms->add(camera_ent, vec3(5, 10, 8));
 	graphics->add_camera(camera_ent);
 	controller->add(camera_ent);
+	controller->look_at(vec3(5,0,0));
 
 	camera_ent = Entity::create();
 	transforms->add(camera_ent, vec3(-2,0,0));
