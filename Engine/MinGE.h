@@ -13,6 +13,7 @@
 #include "Transform/Transform.h"
 
 #include "Graphics/Graphics.h"
+#include "Graphics/Debug.h"
 
 #include "IO/Input.h"
 #include "Math/Random.h"

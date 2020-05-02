@@ -1,7 +1,9 @@
 #include "Graphics/Graphics.h"
-#include "Transform/Transform.h"
+#include "Graphics/Debug.h"
 #include "Graphics/Shaders/Shader.inl"
 #include "Graphics/Shaders/Material.inl"
+
+#include "Transform/Transform.h"
 
 #include "Utility/Error.h"
 #include "IO/Input.h"
@@ -89,12 +91,15 @@ static void update(void *system)
 	GraphicsSystem *self = (GraphicsSystem*)system;
 	material_t::bound = nullptr;
 
+	struct cam_view_t
+	{ vec3 pos, center; };
+
 	// TODO: LinearAllocator is thread safe (useless in this case but maybe not for everyone) (using a raw array is better here)
 	// TODO: cache allocations between iterations
 	// TODO: mt
 	// TODO: use page allocator
 	std::vector<mat4> matrices(self->renderers.size());
-	vec3 view_pos, view_center;
+	std::vector<cam_view_t> cam_views(self->cameras.size());
 	{
 		//auto lock = transforms.scoped_read_lock();
 		for (int i = 0; i < self->renderers_entities.size(); i++)
@@ -102,9 +107,12 @@ static void update(void *system)
 			Transform tr = self->transforms->get(self->renderers_entities[i]);
 			matrices[i] = tr.world_matrix();
 		}
-		Transform cam_tr = self->transforms->get(self->cameras[0].entity);
-		view_pos = cam_tr.position();
-		view_center = cam_tr.to_world(vec3(1, 0, 0));
+		for (int i = 0; i < self->cameras.size(); i++)
+		{
+			Transform tr = self->transforms->get(self->cameras[i].entity);
+			cam_views[i].pos = tr.position();
+			cam_views[i].center = tr.to_world(vec3(1, 0, 0));
+		}
 	}
 
 	/*
@@ -146,15 +154,19 @@ static void update(void *system)
 	}
 	*/
 
-	// Compute new VP
-	static const vec3 up(0, 0, 1);
-	const mat4 view_matrix = glm::lookAt(view_pos, view_center, up);
-	mat4 view_proj;
-	simd_mul(view_proj, self->cameras[0].projection, view_matrix);
+	for (int i = 0; i < self->cameras.size(); i++)
+	{
+		// Compute new VP
+		static const vec3 up(0, 0, 1);
+		const mat4 view_matrix = glm::lookAt(cam_views[i].pos, cam_views[i].center, up);
+		simd_mul(self->cameras[i].vp, self->cameras[i].projection, view_matrix);
 
-	// Copy data
-	Shader::set_builtin("MATRIX_VP", view_proj);
-	Shader::set_builtin("VIEW_POS", view_pos);
+		self->cameras[i].frustum.init(self->cameras[i].vp);
+	}
+
+	// Setup camera 0
+	Shader::set_builtin("MATRIX_VP", self->cameras[0].vp);
+	Shader::set_builtin("VIEW_POS", cam_views[0].pos);
 
 	GL::Viewport(self->cameras[0].viewport);
 	GL::Scissor (self->cameras[0].viewport);
@@ -168,9 +180,12 @@ static void update(void *system)
 	for (int j = 0; j < self->renderers.size(); j++)
 	{
 		//material_t *material = &materials[self->renderers[j].first_material];
-		material_t *material = Material::materials.get<0>(1);
+		material_t *material = Material::materials.get<0>(2);
 		for (int s = self->renderers[j].submeshes.first; s != self->renderers[j].submeshes.last; s++)
 		{
+			AABB aabb = mesh_manager.get<3>()[self->renderers[j].mesh.id()];
+			aabb.transform(matrices[j]);
+
 			Shader::set_builtin("MATRIX_M", matrices[j]);
 			//Shader::setBuiltin("MATRIX_N", cmd->model);
 
@@ -181,6 +196,12 @@ static void update(void *system)
 			glCheck(glDrawElements(submeshes[s].mode, submeshes[s].count, GL_UNSIGNED_SHORT, (void*)(uint64_t)submeshes[s].offset));
 		}
 	}
+
+	Debug::frustum(self->cameras[1].frustum);
+
+	// TODO: should that be called from somwhere else ?
+	// see after multi thread sync
+	Debug::flush();
 }
 
 const system_type_t GraphicsSystem::type = []() {
@@ -202,9 +223,10 @@ void init()
 {
 	GL::init();
 	Shader::setup_builtins();
-	//Debug::init();
+	Debug::init();
 
-	Material mat = Material::create(Shader::import("assets://Shaders/standard.json"));
+	// TODO: destroy it
+	Material mat = Material::create(Shader::standard());
 	mat.set("color", vec3(0.8f));
 	mat.set("metallic", 0.0f);
 	mat.set("roughness", 0.5f);

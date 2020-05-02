@@ -3,7 +3,7 @@
 
 #include "IO/URI.h"
 #include "Utility/Error.h"
-#include "Structures/AABB.h"
+#include "Structures/Bounds.h"
 #include "Structures/MultiArray.h"
 
 #include <vector>

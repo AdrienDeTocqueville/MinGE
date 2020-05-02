@@ -15,6 +15,7 @@
 
 using json = nlohmann::json;
 
+Shader *Shader::_standard = NULL, *Shader::_debug = NULL;
 
 static const std::unordered_map<std::string, RenderPass::Type> pass_type = {
 	{"shadow",	RenderPass::Shadow},
@@ -296,6 +297,10 @@ void Shader::setup_builtins()
 	// Model
 	add_builtin("MATRIX_M", GL_FLOAT_MAT4);
 	add_builtin("MATRIX_N", GL_FLOAT_MAT4);
+
+
+	Shader::_standard = Shader::import("assets://Shaders/standard.json");
+	Shader::_debug = Shader::import("assets://Shaders/debug.json");
 
 }
 

@@ -36,6 +36,8 @@ class Shader
 
 public:
 	static Shader *import(const char *URI);
+	static Shader *standard() { return _standard; }
+	static Shader *debug() { return _debug; }
 
 	static inline size_t get_builtin_location(const std::string &name);
 
@@ -88,4 +90,6 @@ private:
 
 	static std::vector<uint8_t> builtins; // Contains < update_idx | type | data > sequenced for each builtin
 	static std::unordered_map<std::string, size_t> builtins_names;
+
+	static Shader *_standard, *_debug;
 };

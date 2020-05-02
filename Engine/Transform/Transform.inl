@@ -32,6 +32,12 @@ void Transform::translate(vec3 vec)
 	sys.update_matrices(index);
 }
 
+void Transform::rotate(vec3 axis, float angle)
+{
+	sys.data.get<0>(index)->rotation *= glm::angleAxis(angle, axis);
+	sys.update_matrices(index);
+}
+
 void Transform::look_at(vec3 point)
 {
 	TransformSystem::transform_t *tr = sys.data.get<0>(index);

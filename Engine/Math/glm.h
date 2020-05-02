@@ -9,6 +9,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/matrix_operation.hpp>
+#include <glm/gtc/matrix_access.hpp>
 
 using namespace glm;
 

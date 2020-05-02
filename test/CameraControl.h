@@ -6,7 +6,7 @@
 struct CameraControl
 {
 public:
-	CameraControl(TransformSystem *_world, float _sensivity = 0.2f, float _distance = 0.01f, vec3 _offset = vec3(0.0f)):
+	CameraControl(TransformSystem *_world, float _sensivity = 0.2f, float _distance = 5.0f, vec3 _offset = vec3(0.0f)):
 		world(_world), angles(0.0f), clampAngleY(-0.499f*PI, 0.499f*PI),
 		sensivity(_sensivity), distance(_distance), offset(_offset)
 	{
@@ -51,12 +51,12 @@ public:
 
 		distance = max(0.01f, distance + (target.id() ? -1 : 1) * 0.2f*Input::wheel_scroll());
 
-/*
 #ifdef DEBUG
-		Debug::drawVector(vec3(0.0f), vec3(1, 0, 0), vec3(1, 0, 0));
-		Debug::drawVector(vec3(0.0f), vec3(0, 1, 0), vec3(0, 1, 0));
-		Debug::drawVector(vec3(0.0f), vec3(0, 0, 1), vec3(0, 0, 1));
+		Debug::vector(vec3(0.0f), vec3(1, 0, 0), vec3(1, 0, 0));
+		Debug::vector(vec3(0.0f), vec3(0, 1, 0), vec3(0, 1, 0));
+		Debug::vector(vec3(0.0f), vec3(0, 0, 1), vec3(0, 0, 1));
 
+/*
 		if (Entity *light = Entity::findByTag("Sun", false))
 		{
 			const vec3 view_pos = light->find<Transform>()->getPosition();
@@ -64,8 +64,8 @@ public:
 
 			Debug::drawVector(view_pos, view_dir);
 		}
-#endif
 */
+#endif
 
 		Transform tr = world->get(cam);
 

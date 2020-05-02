@@ -45,20 +45,28 @@ int main()
 
 	/// Create entities
 	Entity mesh_ent = Entity::create();
+	transforms->add(mesh_ent, vec3(2, 0, 0), vec3(0,0,PI*0.25f));
+	graphics->add_renderer(mesh_ent, mesh);
+
+	mesh_ent = Entity::create();
 	transforms->add(mesh_ent, vec3(10, 0, 0));
 	graphics->add_renderer(mesh_ent, mesh);
 
 	Entity camera_ent = Entity::create();
-	transforms->add(camera_ent, vec3(0, 0, 0));
+	transforms->add(camera_ent, vec3(5, 10, 8));
 	graphics->add_camera(camera_ent);
 	controller->add(camera_ent);
+
+	camera_ent = Entity::create();
+	transforms->add(camera_ent, vec3(-1,0,0));
+	graphics->add_camera(camera_ent, 70.0f, 1.0f, 5.0f);
 
 	/// Main loop
 	while (!Input::window_closed())
 	{
 		Engine::start_frame();
-
 		Engine::end_frame();
+		transforms->get(mesh_ent).rotate(vec3(0,0,1), Time::delta_time);
 		window.display();
 	}
 

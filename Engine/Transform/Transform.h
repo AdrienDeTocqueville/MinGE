@@ -19,6 +19,7 @@ struct Transform
 	inline void set_scale(vec3 scale);
 
 	inline void translate(vec3 vec);
+	inline void rotate(vec3 axis, float angle);
 	inline void look_at(vec3 point);
 
 	inline vec3 position() const;

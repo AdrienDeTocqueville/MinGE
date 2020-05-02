@@ -12,7 +12,7 @@
 #include "Graphics/Shaders/Material.h"
 
 #include "Math/glm.h"
-#include "Structures/AABB.h"
+#include "Structures/Bounds.h"
 #include "Structures/MultiArray.h"
 
 using Camera = uint32_t;
@@ -43,7 +43,7 @@ struct GraphicsSystem
 		ivec4 viewport;
 		vec4 ss_viewport;	// screen space (between 0 and 1)
 
-		mat4 projection;
+		mat4 projection, vp;
 		vec3 position;
 		Frustum frustum;
 	};
