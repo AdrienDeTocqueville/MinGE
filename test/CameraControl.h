@@ -51,11 +51,11 @@ public:
 
 		distance = max(0.01f, distance + (target.id() ? -1 : 1) * 0.2f*Input::wheel_scroll());
 
-#ifdef DEBUG
 		Debug::vector(vec3(0.0f), vec3(1, 0, 0), vec3(1, 0, 0));
 		Debug::vector(vec3(0.0f), vec3(0, 1, 0), vec3(0, 1, 0));
 		Debug::vector(vec3(0.0f), vec3(0, 0, 1), vec3(0, 0, 1));
 
+#ifdef DEBUG
 /*
 		if (Entity *light = Entity::findByTag("Sun", false))
 		{

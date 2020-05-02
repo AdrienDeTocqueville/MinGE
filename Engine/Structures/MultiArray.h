@@ -16,7 +16,7 @@ namespace multi_array
 	// Base case: empty
 	template<int i>
 	struct arrays_t<i> {
-		constexpr inline size_t size() { return 0; }
+		constexpr inline size_t size() const { return 0; }
 		constexpr inline void init(void*, uint32_t) { }
 		constexpr inline void move(void*, uint32_t, uint32_t) { }
 	};
@@ -25,7 +25,7 @@ namespace multi_array
 	template<int i, typename T, typename... Types>
 	struct arrays_t<i, T, Types...> : public array_t<i, T>, public arrays_t<i + 1, Types...>
 	{
-		constexpr inline size_t size()
+		constexpr inline size_t size() const
 		{ return sizeof(T) + arrays_t<i+1, Types...>::size(); }
 		constexpr inline void init(void *alloc, uint32_t stride)
 		{
@@ -43,7 +43,7 @@ namespace multi_array
 
 	// get the i-th buffer
 	template<int i, typename T, typename... Types>
-	T *get(arrays_t<i, T, Types...>& arrays)
+	T *get(const arrays_t<i, T, Types...>& arrays)
 	{ return arrays.array_t<i, T>::buf; }
 }
 
@@ -59,7 +59,7 @@ struct multi_array_t
 	inline void clear();
 
 	// get the i-th buffer
-	template<int i> auto get()
+	template<int i> constexpr auto get() const
 	{ return multi_array::get<i>(data); }
 
 	template<int i> auto get(uint32_t index)

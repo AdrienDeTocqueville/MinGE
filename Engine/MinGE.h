@@ -14,6 +14,7 @@
 
 #include "Graphics/Graphics.h"
 #include "Graphics/Debug.h"
+#include "Graphics/Textures/Texture.h"
 
 #include "IO/Input.h"
 #include "Math/Random.h"

@@ -8,8 +8,14 @@ struct uri_t
 {
 	bool parse(const char *uri);
 
+	const char *get(const std::string &param) const
+	{
+		auto it = params.find(param);
+		return it == params.end() ? NULL : it->second.data();
+	}
+
 	template<typename T>
-	T get_or_default(std::string param, T default_value) const
+	T get_or_default(const std::string &param, T default_value) const
 	{
 		auto it = params.find(param);
 		return it == params.end() ? default_value : parse_val<T>(it->second);

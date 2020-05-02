@@ -33,7 +33,7 @@ Material Material::copy(Material src)
 
 void Material::define(const std::vector<std::string> &macros)
 {
-	material_t *m = materials.get<0>(index);
+	material_t *m = materials.get<0>(id());
 	Shader *shader = m->shader;
 	uint32_t hash = m->variant_hash;
 
@@ -50,7 +50,7 @@ void Material::define(const std::vector<std::string> &macros)
 
 void Material::define(const std::string& macro)
 {
-	material_t *m = materials.get<0>(index);
+	material_t *m = materials.get<0>(id());
 	Shader *shader = m->shader;
 	uint32_t hash = m->variant_hash;
 
@@ -64,7 +64,7 @@ void Material::define(const std::string& macro)
 
 void Material::undef(const std::string& macro)
 {
-	material_t *m = materials.get<0>(index);
+	material_t *m = materials.get<0>(id());
 	Shader *shader = m->shader;
 	uint32_t hash = m->variant_hash;
 
@@ -78,7 +78,7 @@ void Material::undef(const std::string& macro)
 
 bool Material::defined(const std::string& macro) const
 {
-	material_t *m = materials.get<0>(index);
+	material_t *m = materials.get<0>(id());
 	Shader *shader = m->shader;
 
 	auto it = shader->macros.find(macro);
@@ -91,7 +91,7 @@ bool Material::defined(const std::string& macro) const
 
 size_t Material::get_location(const std::string &name) const
 {
-	material_t *m = materials.get<0>(index);
+	material_t *m = materials.get<0>(id());
 	Shader *shader = m->shader;
 
 	auto it = shader->uniforms_names.find(name);

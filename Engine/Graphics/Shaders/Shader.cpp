@@ -122,7 +122,7 @@ bool Shader::load(const std::string &path)
 	std::ifstream file(path);
 	if (!file)
 	{
-		Error::add(Error::FILE_NOT_FOUND, "Shader::load() -> " + path);
+		Error::add(Error::FILE_NOT_FOUND, "Shader file not found: " + path);
 		return false;
 	}
 
@@ -142,7 +142,7 @@ bool Shader::load(const std::string &path)
 		auto type = pass_type.find(pass_name);
 		if (type == pass_type.end())
 		{
-			Error::add(Error::USER, "Shader::load() -> unknow pass type '" + pass_name + "'. Skipping...");
+			Error::add(Error::USER, "Unknow pass type '" + pass_name + "'. Skipping...");
 			continue;
 		}
 

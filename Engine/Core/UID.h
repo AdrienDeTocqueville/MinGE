@@ -2,22 +2,45 @@
 
 #include <cstdint>
 
-template <typename T>
-struct UID
+namespace UID
 {
-	UID(): index(0) {}
-	UID(T _index): index(_index) {}
-	inline T id() const { return index; }
-
-protected:
-	T index;
+struct uid32_t
+{
+	uint32_t id: 24;
+	uint32_t gen: 8;
 };
 
-template <typename T>
-inline bool operator==(const UID<T> &a, const UID<T> &b)
+struct uid64_t
 {
-	return a.id() == b.id();
+	uint32_t id;
+	uint32_t gen;
+};
+
+static_assert(sizeof(uid32_t) == 4, "Invalid size");
+static_assert(sizeof(uid64_t) == 8, "Invalid size");
+
+template <typename T, typename U>
+struct UID
+{
+	UID() { index = 0; }
+	UID(uint32_t id, uint32_t gen)
+	{ uid.id = id; uid.gen = gen; }
+	
+	inline auto id() const { return uid.id; }
+	inline auto gen() const { return uid.gen; }
+
+	inline bool operator==(const UID<T, U> &other)
+	{
+		return index == other.index;
+	}
+
+private:
+	union {
+		T uid;
+		U index;
+	};
+};
 }
 
-using UID32 = UID<uint32_t>;
-using UID64 = UID<uint64_t>;
+using UID32 = UID::UID<UID::uid32_t, uint32_t>;
+using UID64 = UID::UID<UID::uid64_t, uint64_t>;

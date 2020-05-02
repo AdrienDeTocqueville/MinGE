@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <unordered_map>
 
 #include "Core/Entity.h"
@@ -9,10 +8,8 @@
 #include "Math/glm.h"
 #include "Structures/MultiArray.h"
 
-struct Transform
+struct Transform: public UID32
 {
-	inline uint32_t id() const { return index; }
-
 	inline void set_position(vec3 pos);
 	inline void set_rotation(vec3 rot);
 	inline void set_rotation(quat rot);
@@ -36,8 +33,7 @@ struct Transform
 private:
 	friend struct TransformSystem;
 
-	Transform(uint32_t id, TransformSystem &system): index(id), sys(system) {}
-	uint32_t index;
+	Transform(uint32_t id, TransformSystem &system): UID32(id, 0), sys(system) {}
 	TransformSystem &sys;
 };
 

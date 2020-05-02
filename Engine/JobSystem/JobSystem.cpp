@@ -16,7 +16,7 @@
 #error Unsupported OS
 #endif
 
-#define SINGLE_THREADED
+//#define SINGLE_THREADED
 
 
 namespace JobSystem

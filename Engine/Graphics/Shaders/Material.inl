@@ -9,7 +9,7 @@
 
 bool Material::has_pass(RenderPass::Type pass) const
 {
-	material_t *m = materials.get<0>(index);
+	material_t *m = materials.get<0>(id());
 	return m->shader->passes[pass].exists;
 }
 
@@ -24,7 +24,7 @@ inline void Material::set(const std::string &name, T value)
 template <typename T>
 inline void Material::set(size_t location, T value)
 {
-	material_t *m = materials.get<0>(index);
+	material_t *m = materials.get<0>(id());
 	memcpy(m->uniforms.data() + location, &value, sizeof(T));
 }
 
@@ -39,7 +39,7 @@ inline void Material::set(const std::string &name, T *values, size_t num)
 template <typename T>
 inline void Material::set(size_t location, T *values, size_t num)
 {
-	material_t *m = materials.get<0>(index);
+	material_t *m = materials.get<0>(id());
 	memcpy(m->uniforms.data() + location, values, sizeof(T) * num);
 }
 

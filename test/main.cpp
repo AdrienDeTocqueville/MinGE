@@ -41,7 +41,7 @@ int main()
 
 	// Open assets
 	Mesh mesh = Mesh::import("asset:mesh/cube?x=1&y=3&z=3");
-//	Texture texture = Texture::import("asset://Assets/level1/floor.png?srgb=1");
+	//Texture texture = Texture::import("asset://Assets/level1/floor.png?format=srgb");
 
 	/// Create entities
 	Entity mesh_ent = Entity::create();
@@ -58,7 +58,7 @@ int main()
 	controller->add(camera_ent);
 
 	camera_ent = Entity::create();
-	transforms->add(camera_ent, vec3(-1,0,0));
+	transforms->add(camera_ent, vec3(-2,0,0));
 	graphics->add_camera(camera_ent, 70.0f, 1.0f, 5.0f);
 
 	/// Main loop

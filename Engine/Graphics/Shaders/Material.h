@@ -26,7 +26,7 @@ struct material_t
 
 struct Material: public UID32
 {
-	Material(): UID32(0) {}
+	Material() {}
 
 	void define(const std::vector<std::string> &macros);
 	void define(const std::string& macro);
@@ -56,5 +56,5 @@ struct Material: public UID32
 	static multi_array_t<material_t> materials;
 
 private:
-	Material(uint32_t i): UID32(i) {}
+	Material(uint32_t i): UID32(i, 0) {}
 };
