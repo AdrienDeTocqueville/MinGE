@@ -5,14 +5,14 @@
 struct AABB
 {
 	inline void init(vec3 _min, vec3 _max);
-	inline void extend(const AABB& box);
-	inline void transform(mat4 matrix);
+	inline void extend(const AABB &box);
+	inline void transform(const mat4 &matrix);
 
 	vec3	center()	const { return 0.5f * (bounds[0] + bounds[1]); }
 	vec3	dim()		const { return bounds[1] - bounds[0]; }
 	float	volume()	const { vec3 d = dim(); return d.x * d.y * d.z; }
 
-	bool operator==(const AABB& box)
+	bool operator==(const AABB &box)
 	{ return (bounds[0] == box.bounds[0]) && (bounds[1] == box.bounds[1]); }
 
 	vec3 bounds[2];
@@ -21,17 +21,21 @@ struct AABB
 struct OBB
 {
 	inline void init(const AABB &box);
-	inline void transform(mat4 matrix);
+	inline void transform(const mat4 &matrix);
 
-	vec3 center, axis[3];
+	vec3	dim()		const { return axis[0] + axis[1] + axis[2]; }
+
+	vec3 base, axis[3];
 };
 
 struct Sphere
 {
 	inline void init(const AABB &box);
+	inline void init(const OBB &box);
+	inline void transform(const mat4 &matrix);
 
 	vec3 center;
-	float radius;
+	float radius2;
 };
 
 struct Frustum
@@ -60,16 +64,24 @@ inline bool collide(const AABB &a, const AABB &b)
 	return true;
 }
 
-inline bool collide(const Frustum &f, const AABB &a)
-{ return false; }
-
-inline bool collide(const AABB &a, const Frustum &f)
-{ return collide(f, a); }
+inline bool collide(const Frustum &f, const Sphere &s)
+{
+	vec3 c = s.center;
+	for (unsigned i(0) ; i < 6 ; i++)
+	{
+		vec4 p = f.planes[i];
+		float d = p.x * c.x + p.y * c.y + p.z * c.z + p.w;
+		if (d < 0 && d*d > s.radius2)
+			return false;
+	}
+	return true;
+}
 
 }
 
 
 
+/// AABB
 inline void AABB::init(vec3 _min, vec3 _max)
 {
 	bounds[0] = _min;
@@ -82,7 +94,7 @@ inline void AABB::extend(const AABB& box)
 	bounds[1] = max(bounds[1], box.bounds[1]);
 }
 
-inline void AABB::transform(mat4 matrix)
+inline void AABB::transform(const mat4 &matrix)
 {
 	vec3 a = bounds[0], b = bounds[1];
 	vec3 points[8] = {
@@ -108,6 +120,50 @@ inline void AABB::transform(mat4 matrix)
 }
 
 
+/// OOBB
+inline void OBB::init(const AABB &box)
+{
+	base = box.bounds[0];
+	vec3 dim = box.dim();
+	axis[0] = vec3(dim.x, 0, 0);
+	axis[1] = vec3(0, dim.y, 0);
+	axis[2] = vec3(0, 0, dim.z);
+}
+
+inline void OBB::transform(const mat4 &matrix)
+{
+	base = vec3(matrix * vec4(base, 1.0f));
+	mat3 rot_scale = mat3(matrix);
+	axis[0] = rot_scale * axis[0];
+	axis[1] = rot_scale * axis[1];
+	axis[2] = rot_scale * axis[2];
+}
+
+
+/// Sphere
+inline void Sphere::init(const AABB &box)
+{
+	vec3 half_dim = 0.5f * box.dim();
+	center = box.bounds[0] + half_dim;
+	radius2 = length2(half_dim);
+}
+
+inline void Sphere::init(const OBB &box)
+{
+	vec3 half_dim = 0.5f * box.dim();
+	center = box.base + half_dim;
+	radius2 = length2(half_dim);
+}
+
+inline void Sphere::transform(const mat4 &m)
+{
+	center = vec3(m * vec4(center, 1.0f));
+	vec3 scale(length2(vec3(m[0])), length2(vec3(m[1])), length2(vec3(m[2])));
+	radius2 *= max(scale.x, max(scale.y, scale.z));
+}
+
+
+/// FRUSTUM
 inline vec4 Frustum::normalize_plane(const vec4 &p)
 {
 	return p / length(vec3(p));

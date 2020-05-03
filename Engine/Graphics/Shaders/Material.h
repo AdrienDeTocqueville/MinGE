@@ -28,6 +28,9 @@ struct Material: public UID32
 {
 	Material() {}
 
+	bool is_valid(){/*TODO*/return true;}
+	void destroy(){/*TODO*/}
+
 	void define(const std::vector<std::string> &macros);
 	void define(const std::string& macro);
 	void undef(const std::string& macro);

@@ -76,5 +76,5 @@ vec3 Transform::to_world(vec3 point) const
 vec3 Transform::vec_to_world(vec3 vec) const
 {
 	TransformSystem::transform_t *tr = sys.data.get<0>(id());
-	return to_world(vec) - tr->position;
+	return mat3(tr->world) * vec;
 }

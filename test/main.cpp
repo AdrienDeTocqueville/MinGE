@@ -53,10 +53,10 @@ int main()
 	graphics->add_renderer(mesh_ent, mesh);
 
 	Entity camera_ent = Entity::create();
-	transforms->add(camera_ent, vec3(5, 10, 8));
+	transforms->add(camera_ent, vec3(5, 13, 10));
 	graphics->add_camera(camera_ent);
+	transforms->get(camera_ent).look_at(vec3(5,0,0));
 	controller->add(camera_ent);
-	controller->look_at(vec3(5,0,0));
 
 	camera_ent = Entity::create();
 	transforms->add(camera_ent, vec3(-2,0,0));

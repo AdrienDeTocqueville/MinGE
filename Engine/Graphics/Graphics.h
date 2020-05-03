@@ -23,6 +23,7 @@ struct TransformSystem;
 struct GraphicsSystem
 {
 	GraphicsSystem(TransformSystem *world);
+	~GraphicsSystem();
 
 	Camera add_camera(Entity entity, float FOV = 70.0f, float zNear = 0.1f, float zFar = 1000.0f,
 		bool orthographic = false, vec4 viewport = vec4(0.0f,0.0f,1.0f,1.0f),
@@ -45,11 +46,14 @@ struct GraphicsSystem
 
 		mat4 projection, vp;
 		vec3 position;
+
 		Frustum frustum;
+		uint8_t *culling_result;
 	};
 
 	std::unordered_map<uint32_t, uint32_t> indices_cameras;
 	std::vector<camera_t> cameras;
+	uint32_t culling_result_size;
 
 	struct renderer_t
 	{

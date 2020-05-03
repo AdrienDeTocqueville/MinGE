@@ -11,48 +11,76 @@ struct Vertex
 static std::vector<Vertex> points, lines;
 
 
-void Debug::point(vec3 _point, vec3 _color)
+void Debug::point(vec3 _point, vec3 color)
 {
-	points.push_back({_point, _color});
+	points.push_back({_point, color});
 }
 
-void Debug::line(vec3 _from, vec3 _to, vec3 _color)
+void Debug::line(vec3 _from, vec3 _to, vec3 color)
 {
-	lines.push_back({_from, _color});
-	lines.push_back({_to, _color});
+	lines.push_back({_from, color});
+	lines.push_back({_to, color});
 }
 
-void Debug::vector(vec3 _point, vec3 _vector, vec3 _color)
+void Debug::vector(vec3 _point, vec3 _vector, vec3 color)
 {
-	line(_point, _point + _vector, _color);
+	line(_point, _point + _vector, color);
 }
 
 void Debug::aabb(const AABB &box, vec3 color)
 {
-	vec3 a = box.bounds[0], b = box.bounds[1];
-	vec3 points[2][4] = {
-	{
-		a,
-		vec3(b.x,a.y,a.z),
-		vec3(b.x,b.y,a.z),
-		vec3(a.x,b.y,a.z),
-	},{
-		b,
-		vec3(a.x,b.y,b.z),
-		vec3(a.x,a.y,b.z),
-		vec3(b.x,a.y,b.z),
-	}
+	OBB o;
+	o.init(box);
+	obb(o, color);
+}
+
+void Debug::obb(const OBB &box, vec3 color)
+{
+	vec3 points[4] = {
+		box.base,
+		box.base + box.axis[1],
+		box.base + box.axis[1] + box.axis[2],
+		box.base + box.axis[2],
 	};
 
-	for (int f = 0; f < 2; f++)
-	{
-		line(points[f][0], points[f][1], color);
-		line(points[f][1], points[f][2], color);
-		line(points[f][2], points[f][3], color);
-		line(points[f][3], points[f][0], color);
-	}
 	for (int p = 0; p < 4; p++)
-		line(points[0][p], points[1][(p+2)%4], color);
+	{
+		line(points[p], points[(p + 1) % 4], color);
+		line(points[p]+box.axis[0], points[(p + 1) % 4]+box.axis[0], color);
+		line(points[p], points[p]+box.axis[0], color);
+	}
+}
+
+void Debug::sphere(const struct Sphere &sphere, vec3 color)
+{
+	point(sphere.center, color);
+
+	float radius(sqrt(sphere.radius2));
+	unsigned slices = 20, stacks = 10;
+
+	const float iStacks = 1.0f / (float)(stacks - 1);
+	const float iSlices = 1.0f / (float)(slices - 1);
+
+	float slice_step = 2 * PI * iSlices;
+	float stack_step = PI * iStacks;
+	float slice_angle, stack_angle;
+
+	// Generate vertices
+	for (unsigned i = 0; i <= stacks; ++i)
+	{
+		stack_angle = 0.5f * PI - i * stack_step;
+		float xy = cosf(stack_angle);
+		float z = sinf(stack_angle);
+
+		for (unsigned j = 0; j <= slices; ++j)
+		{
+			slice_angle = j * slice_step;
+
+			vec3 normal(xy * cosf(slice_angle), xy * sinf(slice_angle), z);
+
+			point(sphere.center + normal * radius, color);
+		}
+	}
 }
 
 inline vec3 intersect_planes(vec4 a, vec4 b, vec4 c)
@@ -99,7 +127,7 @@ void Debug::destroy()
 	GL::DeleteBuffer(vbo);
 	GL::DeleteVertexArray(vao);
 
-	// TODO: destroy material
+	material.destroy();
 }
 
 void flush_points()
@@ -145,7 +173,7 @@ void Debug::flush()
 
 	glPushAttrib(GL_DEPTH_BUFFER_BIT);
 	{
-		glDisable(GL_DEPTH_TEST);
+		//glDisable(GL_DEPTH_TEST);
 
 		if (points.size())	flush_points();
 		if (lines.size())	flush_lines();

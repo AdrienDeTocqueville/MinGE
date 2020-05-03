@@ -9,11 +9,8 @@
 namespace sf
 { class RenderWindow; }
 
-class Input
+struct Input
 {
-friend class Engine;
-
-public:
 	enum Cursor {Free, FreeHidden, Capture};
 
 	// Window
@@ -70,6 +67,8 @@ private:
 
 	static std::bitset<sf::Mouse::ButtonCount> mouse_state[2];
 	static std::bitset<sf::Keyboard::KeyCount> keyboard_state[2];
+
+	friend struct Engine;
 };
 
 // Keyboard

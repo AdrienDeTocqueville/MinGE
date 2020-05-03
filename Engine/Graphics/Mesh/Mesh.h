@@ -1,20 +1,21 @@
 #pragma once
 
-#include <cstdint>
+#include "Core/UID.h"
 #include "Math/glm.h"
 
-struct Mesh
+struct Mesh: public UID32
 {
-	Mesh(): index(0) {}
-	inline uint32_t id() { return index; }
+	Mesh() {}
+
+	bool is_valid(){/*TODO*/return true;}
+	void destroy(){/*TODO*/}
 
 	static const Mesh none;
 	static Mesh import(const char *URI);
 	static void clear();
 
 private:
-	Mesh(uint32_t i): index(i) {}
-	uint32_t index;
+	Mesh(uint32_t i): UID32(i, 0) {}
 };
 
 

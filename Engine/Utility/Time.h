@@ -2,11 +2,8 @@
 
 #include <chrono>
 
-class Time
+struct Time
 {
-	friend class Engine;
-
-public:
 	static float delta_time;
 	static float time;
 
@@ -20,4 +17,6 @@ public:
 private:
 	static void init();
 	static void tick();
+
+	friend struct Engine;
 };

@@ -6,9 +6,8 @@
 namespace sf
 { class RenderWindow; }
 
-class Engine
+struct Engine
 {
-public:
 	static void init(sf::RenderWindow &window, unsigned _FPS = 60);
 	static void destroy();
 

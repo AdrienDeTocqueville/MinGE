@@ -1,24 +1,28 @@
 #include "Graphics/Graphics.h"
 #include "Graphics/Shaders/Shader.inl"
 #include "Graphics/Shaders/Material.inl"
-#include "Graphics/Textures/Texture.h"
 #include "Graphics/RenderEngine.h"
 #include "Graphics/Debug.h"
 
 #include "Transform/Transform.h"
 
-#include "Utility/Error.h"
 #include "IO/Input.h"
 
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <GL/glew.h>
 
 extern multi_array_t<submeshes_t, mesh_data_t, const char*, AABB> mesh_manager;
 extern std::vector<submesh_t> submeshes;
 
 GraphicsSystem::GraphicsSystem(TransformSystem *world):
-	transforms(world)
-{ }
+	transforms(world), culling_result_size(0)
+{
+	//RenderEngine::alloc_cmd_buffer(0);
+}
+
+GraphicsSystem::~GraphicsSystem()
+{
+	for (camera_t &c : cameras)
+		free(c.culling_result);
+}
 
 Camera GraphicsSystem::add_camera(Entity entity, float FOV, float zNear, float zFar,
 	bool orthographic, vec4 viewport, vec3 clear_color, unsigned clear_flags)
@@ -40,6 +44,7 @@ Camera GraphicsSystem::add_camera(Entity entity, float FOV, float zNear, float z
 	cam->ortho	= orthographic;
 	cam->entity	= entity;
 	cam->ss_viewport= viewport;
+	cam->culling_result = (uint8_t*)malloc(culling_result_size);
 
 	vec2 ws = Input::window_size();
 	cam->viewport = ivec4(viewport.x * ws.x,
@@ -90,33 +95,6 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 
 static void update(void *system)
 {
-	GraphicsSystem *self = (GraphicsSystem*)system;
-	material_t::bound = nullptr;
-
-	struct cam_view_t
-	{ vec3 pos, center; };
-
-	// TODO: LinearAllocator is thread safe (useless in this case but maybe not for everyone) (using a raw array is better here)
-	// TODO: cache allocations between iterations
-	// TODO: mt
-	// TODO: use page allocator
-	std::vector<mat4> matrices(self->renderers.size());
-	std::vector<cam_view_t> cam_views(self->cameras.size());
-	{
-		//auto lock = transforms.scoped_read_lock();
-		for (int i = 0; i < self->renderers_entities.size(); i++)
-		{
-			Transform tr = self->transforms->get(self->renderers_entities[i]);
-			matrices[i] = tr.world_matrix();
-		}
-		for (int i = 0; i < self->cameras.size(); i++)
-		{
-			Transform tr = self->transforms->get(self->cameras[i].entity);
-			cam_views[i].pos = tr.position();
-			cam_views[i].center = tr.to_world(vec3(1, 0, 0));
-		}
-	}
-
 	/*
 	// cmd queue construction is single threaded (one thread by camera), see old implementation to multithread it
 
@@ -138,46 +116,86 @@ static void update(void *system)
 //  |   // 	foreach cmd in queue
 //  |   // 		if has opaque pass
 //  v   // 			render
-
-	// Supports only one camera for now
-	// TODO: same as above
-	LinearAllocator render_queue(1024 * 1024);
-	for (int i = 0; i < cameras.size(); i++)
-	{
-		for (int j = 0; j < renderers.size(); j++)
-		{
-			AABB aabb = mesh_manager.get<3>()[renderers[i].mesh.id()];
-			aabb.transform(matrices[i]);
-
-			if (!AABB::collide(cameras[i].frustum, aabb))
-				continue;
-			todo
-		}
-	}
 	*/
 
+
+	GraphicsSystem *self = (GraphicsSystem*)system;
+	material_t::bound = nullptr;
+
+	// Read transform data
+
+	struct cam_view_t
+	{ vec3 pos, center; };
+
+	// TODO: cache allocations between iterations
+	// TODO: mt
+	// TODO: use page allocator
+	std::vector<mat4> matrices(self->renderers.size());
+	std::vector<cam_view_t> cam_views(self->cameras.size());
+	{
+		//auto lock = transforms.scoped_read_lock();
+		for (int i = 0; i < self->renderers_entities.size(); i++)
+		{
+			Transform tr = self->transforms->get(self->renderers_entities[i]);
+			matrices[i] = tr.world_matrix();
+		}
+		for (int i = 0; i < self->cameras.size(); i++)
+		{
+			Transform tr = self->transforms->get(self->cameras[i].entity);
+			cam_views[i].pos = tr.position();
+			cam_views[i].center = tr.to_world(vec3(1, 0, 0));
+		}
+	}
+
+	// Frustum culling
+
+	if (self->culling_result_size < self->renderers.size())
+	{
+		self->culling_result_size = self->renderers.size();
+
+		for (int i = 0; i < self->cameras.size(); i++)
+		{
+			GraphicsSystem::camera_t *cam = &self->cameras[i];
+			free(cam->culling_result);
+			cam->culling_result = (uint8_t*)malloc(self->culling_result_size);
+		}
+	}
+
+	Sphere sphere;
 	for (int i = 0; i < self->cameras.size(); i++)
 	{
+		GraphicsSystem::camera_t *cam = &self->cameras[i];
+
 		// Compute new VP
 		static const vec3 up(0, 0, 1);
 		const mat4 view_matrix = glm::lookAt(cam_views[i].pos, cam_views[i].center, up);
-		simd_mul(self->cameras[i].vp, self->cameras[i].projection, view_matrix);
+		simd_mul(cam->vp, cam->projection, view_matrix);
 
-		self->cameras[i].frustum.init(self->cameras[i].vp);
+		cam->frustum.init(self->cameras[i].vp);
+
+		for (int j = 0; j < self->renderers.size(); j++)
+		{
+			sphere.init(mesh_manager.get<3>()[self->renderers[j].mesh.id()]);
+			sphere.transform(matrices[j]);
+
+			cam->culling_result[j] = Bounds::collide(cam->frustum, sphere);
+		}
 	}
 
+	// todo...
 	// Setup camera 0
-	Shader::set_builtin("MATRIX_VP", self->cameras[0].vp);
+	GraphicsSystem::camera_t *cam = &self->cameras[0];
+	Shader::set_builtin("MATRIX_VP", cam->vp);
 	Shader::set_builtin("VIEW_POS", cam_views[0].pos);
 
-	GL::Viewport(self->cameras[0].viewport);
-	GL::Scissor (self->cameras[0].viewport);
+	GL::Viewport(cam->viewport);
+	GL::Scissor (cam->viewport);
 	glEnable(GL_CULL_FACE);
 
-	GL::ClearColor(vec4(self->cameras[0].clear_color, 0.0f));
+	GL::ClearColor(vec4(cam->clear_color, 0.0f));
 	glCullFace(GL_BACK);
 
-	glClear(self->cameras[0].clear_flags);
+	glClear(cam->clear_flags);
 
 	for (int j = 0; j < self->renderers.size(); j++)
 	{
@@ -185,9 +203,8 @@ static void update(void *system)
 		material_t *material = Material::materials.get<0>(2);
 		for (int s = self->renderers[j].submeshes.first; s != self->renderers[j].submeshes.last; s++)
 		{
-			AABB aabb = mesh_manager.get<3>()[self->renderers[j].mesh.id()];
-			aabb.transform(matrices[j]);
-
+			if (!cam->culling_result[j])
+				continue;
 			Shader::set_builtin("MATRIX_M", matrices[j]);
 			//Shader::setBuiltin("MATRIX_N", cmd->model);
 
@@ -206,6 +223,7 @@ static void update(void *system)
 	Debug::flush();
 }
 
+
 const system_type_t GraphicsSystem::type = []() {
 	system_type_t t{};
 	t.name = "GraphicsSystem";
@@ -218,26 +236,3 @@ const system_type_t GraphicsSystem::type = []() {
 	t.deserialize = NULL;
 	return t;
 }();
-
-
-void RenderEngine::init()
-{
-	GL::init();
-	Shader::setup_builtins();
-	Debug::init();
-
-	// TODO: destroy it
-	Material mat = Material::create(Shader::standard());
-	mat.set("color", vec3(0.8f));
-	mat.set("metallic", 0.0f);
-	mat.set("roughness", 0.5f);
-}
-
-void RenderEngine::destroy()
-{
-	Debug::destroy();
-
-	Shader::clear();
-	Texture::clear();
-	// destroy meshes/materials ?
-}

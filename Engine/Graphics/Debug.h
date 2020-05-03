@@ -2,17 +2,16 @@
 
 #include "Math/glm.h"
 
-class Debug
+struct Debug
 {
-	friend struct RenderEngine;
+	static void point(vec3 _point, vec3 color = vec3(1.0f, 0.1f, 0.1f));
 
-public:
-	static void point(vec3 _point, vec3 _color = vec3(1.0f, 0.1f, 0.1f));
-
-	static void line(vec3 _from, vec3 _to, vec3 _color = vec3(1.0f));
-	static void vector(vec3 _point, vec3 _vector, vec3 _color = vec3(1.0f));
+	static void line(vec3 _from, vec3 _to, vec3 color = vec3(1.0f));
+	static void vector(vec3 _point, vec3 _vector, vec3 color = vec3(1.0f));
 
 	static void aabb(const struct AABB &box, vec3 color = vec3(1.0f));
+	static void obb(const struct OBB &box, vec3 color = vec3(1.0f));
+	static void sphere(const struct Sphere &sphere, vec3 color = vec3(1.0f));
 	static void frustum(const struct Frustum &f, vec3 color = vec3(1.0f));
 
 	static void flush();
@@ -20,4 +19,6 @@ public:
 private:
 	static void init();
 	static void destroy();
+
+	friend struct RenderEngine;
 };
