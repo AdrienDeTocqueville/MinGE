@@ -8,28 +8,67 @@
 #include "Utility/Error.h"
 
 const Material Material::none;
-multi_array_t<material_t> Material::materials;
+multi_array_t<material_t, uint8_t> Material::materials;
+
+
+void Material::destroy()
+{
+	assert(is_valid() && "Invalid Material handle");
+
+	auto *uniforms = &materials.get<0>(id())->uniforms;
+	uniforms->~vector<uint8_t>();
+
+	materials.get<0>(id())->shader = NULL;
+
+	++(*materials.get<1>(id()));
+	materials.remove(id());
+}
+
 
 Material Material::create(Shader *shader)
 {
+	uint32_t prev_size = materials.size;
 	uint32_t i = materials.add();
+
 	materials.get<0>(i)->variant_hash = 0;
 	materials.get<0>(i)->variant_idx = 0;
 	materials.get<0>(i)->shader = shader;
 	new (&materials.get<0>(i)->uniforms) std::vector<uint8_t>();
 	materials.get<0>(i)->sync_uniforms();
 
-	return Material(i);
+	if (prev_size != materials.size)
+		materials.get<1>()[i] = 0;
+
+	return Material(i, materials.get<1>()[i]);
 }
 
 Material Material::copy(Material src)
 {
+	uint32_t prev_size = materials.size;
 	uint32_t i = materials.add();
+
 	std::memcpy(materials.get<0>(i), materials.get<0>(src.id()), sizeof(material_t));
 	new (&materials.get<0>(i)->uniforms) std::vector<uint8_t>(materials.get<0>(src.id())->uniforms);
 
-	return Material(i);
+	if (prev_size != materials.size)
+		materials.get<1>()[i] = 0;
+
+	return Material(i, materials.get<1>()[i]);
 }
+
+void Material::clear()
+{
+	for (uint32_t i(1); i <= materials.size; i++)
+	{
+		if (materials.get<0>(i)->shader == NULL)
+			continue;
+
+		auto *uniforms = &materials.get<0>(i)->uniforms;
+		uniforms->~vector<uint8_t>();
+	}
+	materials.clear();
+}
+
 
 void Material::define(const std::vector<std::string> &macros)
 {

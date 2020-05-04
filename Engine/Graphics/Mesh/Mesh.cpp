@@ -4,14 +4,36 @@
 #include "IO/URI.h"
 #include "Utility/Error.h"
 #include "Structures/Bounds.h"
-#include "Structures/MultiArray.h"
 
-#include <vector>
 
 const Mesh Mesh::none;
+multi_array_t<submeshes_t, mesh_data_t, const char*, AABB, uint8_t> Mesh::meshes;
+array_list_t<submesh_t> Mesh::submeshes;
 
-multi_array_t<submeshes_t, mesh_data_t, const char*, AABB> mesh_manager;
-std::vector<submesh_t> submeshes;
+
+void Mesh::destroy()
+{
+	assert(is_valid() && "Invalid Mesh handle");
+
+	submeshes_t subs = *meshes.get<0>(id());
+	submesh_t sub = submeshes[subs.first];
+
+	GL::DeleteVertexArray(sub.vao);
+	GL::DeleteBuffer(subs.vbo);
+	GL::DeleteBuffer(subs.ebo);
+	submeshes.remove(subs.first, subs.count);
+
+	meshes.get<1>(id())->free();
+	*meshes.get<2>(id()) = NULL;
+	++(*meshes.get<4>(id()));
+
+	// Return to pool, generation will be
+	// kept if the slot gets recycled
+	meshes.remove(id());
+}
+
+
+bool generate_mesh(const struct uri_t &uri, mesh_data_t &data);
 
 static inline void compute_aabb(const mesh_data_t &data, vec3 &b0, vec3 &b1)
 {
@@ -102,22 +124,24 @@ Mesh Mesh::import(const char *URI)
 {
 	uri_t uri;
 	if (!uri.parse(URI))
-		return Mesh(0);
+		return Mesh::none;
 
-	uint32_t first_submesh = (uint32_t)submeshes.size();
+	uint32_t first_submesh, submesh_count;
 
 	mesh_data_t data;
 	if (uri.on_disk)
 	{
 		// remember that submesh_t::offset = _first_index * sizeof(uint16_t)
-		return Mesh(0);
+		return Mesh::none;
 	}
 	else
 	{
 		if (!generate_mesh(uri, data))
-			return Mesh(0);
+			return Mesh::none;
 
-		submeshes.push_back(submesh_t { GL_TRIANGLES, data.index_count, 0 });
+		submesh_count = 1;
+		first_submesh = submeshes.add(1);
+		submeshes[first_submesh] = submesh_t { GL_TRIANGLES, data.index_count, 0 };
 	}
 
 	vec3 b0, b1;
@@ -125,33 +149,44 @@ Mesh Mesh::import(const char *URI)
 
 	uint32_t vao, vbo, ebo;
 	load_buffers(data, vao, vbo, ebo);
-	for (int i(first_submesh); i < submeshes.size(); i++)
+
+	uint32_t last_submesh = first_submesh + submesh_count;
+	for (int i = first_submesh; i < last_submesh; i++)
 		submeshes[i].vao = vao;
 
-	uint32_t i = mesh_manager.add();
-	mesh_manager.get<0>()[i] = submeshes_t {first_submesh, (uint32_t)submeshes.size(), vbo, ebo};
-	mesh_manager.get<1>()[i] = data;
-	mesh_manager.get<2>()[i] = URI;
-	mesh_manager.get<3>()[i].init(b0, b1);
+	uint32_t prev_size = meshes.size;
+	uint32_t i = meshes.add();
+	meshes.get<0>()[i] = submeshes_t {first_submesh, submesh_count, vbo, ebo};
+	meshes.get<1>()[i] = data;
+	meshes.get<2>()[i] = URI;
+	meshes.get<3>()[i].init(b0, b1);
 
-	return Mesh(i);
+	// Only initialize generation if new memory is allocated
+	// If a slot is recycled, we got to keep the generation index
+	if (prev_size != meshes.size)
+		meshes.get<4>()[i] = 0;
+
+	return Mesh(i, meshes.get<4>()[i]);
 }
 
 void Mesh::clear()
 {
-	for (uint32_t i(0); i < mesh_manager.size; i++)
+	for (uint32_t i(1); i <= meshes.size; i++)
 	{
-		submeshes_t subs = mesh_manager.get<0>()[i];
+		if (meshes.get<2>(i) == NULL)
+			continue;
+
+		submeshes_t subs = *meshes.get<0>(i);
 		submesh_t sub = submeshes[subs.first];
 
 		GL::DeleteVertexArray(sub.vao);
 		GL::DeleteBuffer(subs.vbo);
 		GL::DeleteBuffer(subs.ebo);
 
-		mesh_manager.get<1>()[i].free();
+		meshes.get<1>(i)->free();
 	}
 	submeshes.clear();
-	mesh_manager.clear();
+	meshes.clear();
 }
 
 

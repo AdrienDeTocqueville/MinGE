@@ -18,8 +18,6 @@ const float EPSILON = 0.0001f;
 
 void simd_mul(mat4& out, const mat4& a, const mat4& b);
 
-vec3 vecClamp(vec3 v);
-
 void write(const vec3 &x, bool ret = true);
 void write(const mat4 &x, bool ret = true);
 

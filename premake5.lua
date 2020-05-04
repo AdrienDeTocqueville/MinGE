@@ -9,7 +9,7 @@ filter "system:windows"
 
 workspace "MinGE"
 	architecture "x64"
-	startproject "test"
+	startproject "graphics_tests"
 	flags "MultiProcessorCompile"
 
 	configurations { "debug", "dev", "release" }
@@ -93,8 +93,69 @@ project "Engine"
 		optimize "speed"
 
 
-project "test"
+project "graphics_tests"
 	targetname "%{cfg.buildcfg}"
+	kind "ConsoleApp"
+	language "C++"
+	cppdialect "C++11"
+	staticruntime "on"
+
+	targetdir ("bin")
+	objdir ("obj")
+	debugdir ("bin")
+
+	-- Sources
+	files {
+		"%{prj.name}/**.h",
+		"%{prj.name}/**.cpp"
+	}
+
+	includedirs { "Engine" }
+
+	filter "system:windows"
+		includedirs {
+			sfml_path .. "/include",
+			glew_path .. "/include",
+			glm_path
+		}
+
+	filter {} -- Reset filters
+
+	-- Libraries
+	links { "Engine" }
+
+	filter "system:linux"
+		links {
+			"GL", "GLEW", "pthread",
+			"sfml-audio",
+			"sfml-graphics",
+			"sfml-window",
+			"sfml-network",
+			"sfml-system"
+		}
+
+	-- Defines and flags
+	filter "system:windows"
+		systemversion "latest"
+		defines "_CRT_SECURE_NO_DEPRECATE"
+
+	filter "configurations:debug"
+		defines { "DEBUG", "DRAWAABB" }
+		symbols "on"
+		optimize "off"
+
+	filter "configurations:dev"
+		defines { "DEBUG", "PROFILE" }
+		symbols "on"
+		optimize "debug"
+
+	filter "configurations:release"
+		defines "NDEBUG"
+		optimize "speed"
+
+
+project "unit_tests"
+	targetname "%{cfg.buildcfg}_unit_tests"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++11"

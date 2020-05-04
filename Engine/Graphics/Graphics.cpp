@@ -2,6 +2,8 @@
 #include "Graphics/Shaders/Shader.inl"
 #include "Graphics/Shaders/Material.inl"
 #include "Graphics/RenderEngine.h"
+#include "Graphics/CommandBuffer.h"
+#include "Graphics/CommandKey.h"
 #include "Graphics/Debug.h"
 
 #include "Transform/Transform.h"
@@ -9,19 +11,36 @@
 #include "IO/Input.h"
 
 
-extern multi_array_t<submeshes_t, mesh_data_t, const char*, AABB> mesh_manager;
-extern std::vector<submesh_t> submeshes;
-
 GraphicsSystem::GraphicsSystem(TransformSystem *world):
-	transforms(world), culling_result_size(0)
+	prev_submesh_count(0), submesh_count(0),
+	prev_submesh_alloc(0),
+	prev_renderer_count(0),
+	matrices(NULL), transforms(world)
 {
-	//RenderEngine::alloc_cmd_buffer(0);
+	RenderEngine::alloc_cmd_buffer();
 }
 
 GraphicsSystem::~GraphicsSystem()
 {
 	for (camera_t &c : cameras)
-		free(c.culling_result);
+	{
+		free(c.draw_order_indices);
+		free(c.renderer_keys);
+	}
+	free(matrices);
+}
+
+static uint32_t *compute_indices(uint32_t count, const std::vector<GraphicsSystem::renderer_t> &renderers)
+{
+	uint32_t *__restrict indices = (uint32_t*)malloc(count * sizeof(uint32_t));
+	uint32_t i = 0;
+
+	for (int j = 0; j < renderers.size(); j++)
+	{
+		for (int s = renderers[j].first_submesh; s != renderers[j].last_submesh; s++)
+			indices[i++] = s;
+	}
+	return indices;
 }
 
 Camera GraphicsSystem::add_camera(Entity entity, float FOV, float zNear, float zFar,
@@ -44,7 +63,9 @@ Camera GraphicsSystem::add_camera(Entity entity, float FOV, float zNear, float z
 	cam->ortho	= orthographic;
 	cam->entity	= entity;
 	cam->ss_viewport= viewport;
-	cam->culling_result = (uint8_t*)malloc(culling_result_size);
+
+	cam->draw_order_indices	= compute_indices(submesh_count, renderers);
+	cam->renderer_keys	= (uint64_t*)malloc(submeshes.size * sizeof(uint64_t));
 
 	vec2 ws = Input::window_size();
 	cam->viewport = ivec4(viewport.x * ws.x,
@@ -74,69 +95,83 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 	assert(indices_renderers.find(entity.id()) == indices_renderers.end() && "Entity already has a Renderer component");
 
 	uint32_t i = renderers.size();
-	renderers_entities.emplace_back(entity);
 	indices_renderers[entity.id()] = i;
 
-	submeshes_t submeshes = mesh_manager.get<0>()[mesh.id()];
+	submeshes_t subs = Mesh::meshes.get<0>()[mesh.id()];
 
-	uint32_t first_material = 1; // 1 is standard material
-	if (submeshes.last - submeshes.first != 1)
+	uint32_t first = submeshes.add(subs.count);
+	submesh_count += subs.count;
+
+	for (int s = 0; s < subs.count; s++)
 	{
-		// todo
-		//first_material = materials.size();
-		//for (; submeshes.first < submeshes.last; submeshes.first++)
-		//	materials.push_back(default);
+		submeshes[i].submesh = Mesh::submeshes[subs.first + s];
+		submeshes[i].material = 2; // TODO: default material
+		submeshes[i].renderer = i;
 	}
 
-	renderers.emplace_back(renderer_t {mesh, submeshes, first_material});
+	renderers.emplace_back(renderer_t {first, first + subs.count, entity, mesh});
 
 	return i;
 }
 
 static void update(void *system)
 {
-	/*
-	// cmd queue construction is single threaded (one thread by camera), see old implementation to multithread it
-
-//  ^   // foreach camera
-//  |   // 	// Culling
-//  |   // 	foreach renderer
-//  MT  // 		if visible
-//  |   // 			add to queue
-//  |   //
-//  |   //	// Sorting
-//  v   //	sort queue based on distance, material, mesh index
-//	//
-//  ^   //	// Depth prepass
-//  |   // 	foreach cmd in queue
-//  |   // 		if has depth prepass
-//  |   // 			render
-//  ST  //
-//  |   //	// Opaque pass
-//  |   // 	foreach cmd in queue
-//  |   // 		if has opaque pass
-//  v   // 			render
-	*/
-
-
-	GraphicsSystem *self = (GraphicsSystem*)system;
 	material_t::bound = nullptr;
+	GraphicsSystem *self = (GraphicsSystem*)system;
 
-	// Read transform data
+	auto &renderers = self->renderers;
+	auto &submeshes = self->submeshes;
+
+	/// Resize persistent alloc if needed
+
+	if (self->prev_submesh_count < self->submesh_count)
+	{
+		self->prev_submesh_count = self->submesh_count;
+
+		for (int i = 0; i < self->cameras.size(); i++)
+		{
+			GraphicsSystem::camera_t *cam = &self->cameras[i];
+
+			free(cam->draw_order_indices);
+			cam->draw_order_indices = compute_indices(self->submesh_count, renderers);
+		}
+	}
+	if (self->prev_submesh_alloc < submeshes.size)
+	{
+		self->prev_submesh_alloc = submeshes.size;
+
+		for (int i = 0; i < self->cameras.size(); i++)
+		{
+			GraphicsSystem::camera_t *cam = &self->cameras[i];
+
+			free(cam->renderer_keys);
+			cam->renderer_keys = (uint64_t*)malloc(self->prev_submesh_alloc * sizeof(uint64_t));
+		}
+	}
+	if (self->prev_renderer_count < renderers.size())
+	{
+		self->prev_renderer_count = renderers.size();
+
+		free(self->matrices);
+		self->matrices = (mat4*)malloc(self->prev_renderer_count * sizeof(mat4));
+	}
+
+	mat4 *matrices = self->matrices;
+
+	/// Read transform data
 
 	struct cam_view_t
 	{ vec3 pos, center; };
 
-	// TODO: cache allocations between iterations
+	// TODO: cache allocation between iterations
 	// TODO: mt
 	// TODO: use page allocator
-	std::vector<mat4> matrices(self->renderers.size());
 	std::vector<cam_view_t> cam_views(self->cameras.size());
 	{
 		//auto lock = transforms.scoped_read_lock();
-		for (int i = 0; i < self->renderers_entities.size(); i++)
+		for (int i = 0; i < renderers.size(); i++)
 		{
-			Transform tr = self->transforms->get(self->renderers_entities[i]);
+			Transform tr = self->transforms->get(renderers[i].entity);
 			matrices[i] = tr.world_matrix();
 		}
 		for (int i = 0; i < self->cameras.size(); i++)
@@ -147,42 +182,108 @@ static void update(void *system)
 		}
 	}
 
-	// Frustum culling
-
-	if (self->culling_result_size < self->renderers.size())
-	{
-		self->culling_result_size = self->renderers.size();
-
-		for (int i = 0; i < self->cameras.size(); i++)
-		{
-			GraphicsSystem::camera_t *cam = &self->cameras[i];
-			free(cam->culling_result);
-			cam->culling_result = (uint8_t*)malloc(self->culling_result_size);
-		}
-	}
+	/// Build command buffers
 
 	Sphere sphere;
 	for (int i = 0; i < self->cameras.size(); i++)
 	{
+		uint32_t cmd_count = renderers.size();
 		GraphicsSystem::camera_t *cam = &self->cameras[i];
+		uint64_t *renderer_keys = cam->renderer_keys;
+		float scale = 1.0f / (cam->zFar - cam->zNear);
 
-		// Compute new VP
+		/// Compute new VP
+
 		static const vec3 up(0, 0, 1);
 		const mat4 view_matrix = glm::lookAt(cam_views[i].pos, cam_views[i].center, up);
 		simd_mul(cam->vp, cam->projection, view_matrix);
 
+		/// Frustum culling
+
 		cam->frustum.init(self->cameras[i].vp);
 
-		for (int j = 0; j < self->renderers.size(); j++)
+		for (int j = 0; j < renderers.size(); j++)
 		{
-			sphere.init(mesh_manager.get<3>()[self->renderers[j].mesh.id()]);
+			// TODO: don't recompute sphere for each camera
+			sphere.init(Mesh::meshes.get<3>()[renderers[j].mesh.id()]);
 			sphere.transform(matrices[j]);
 
-			cam->culling_result[j] = Bounds::collide(cam->frustum, sphere);
+			// TODO: SIMDify
+			if (Bounds::collide(cam->frustum, sphere))
+			{
+				union float_int_t {
+					float_int_t(int32_t x): as_int(x) {}
+					float as_float;
+					int32_t as_int;
+				};
+				static float_int_t max_dist(0x3FFFFFFF);
+
+				vec4 p = cam->frustum.planes[Frustum::Near];
+				vec3 c = sphere.center;
+				float distance = p.x * c.x + p.y * c.y + p.z * c.z + p.w;
+				distance = glm::clamp(distance * scale + 1.0f, 1.0f, max_dist.as_float);
+
+				for (int s = renderers[j].first_submesh; s != renderers[j].last_submesh; s++)
+				{
+					submesh_data_t *data = &submeshes[s];
+					renderer_keys[s] = CommandKey::encode(data->material, 0, distance); // TODO
+				}
+			}
+			else
+			{
+				// frustum culled
+				uint32_t first = renderers[j].first_submesh, last = renderers[j].last_submesh;
+				memset(renderer_keys + first, ~0, (last - first) * sizeof(uint64_t));
+				cmd_count -= last - first;
+			}
 		}
+
+		/// Sort renderers
+
+		std::sort(cam->draw_order_indices, cam->draw_order_indices + self->submesh_count,
+			[renderer_keys](uint32_t a, uint32_t b) { return renderer_keys[a] < renderer_keys[b]; }
+		);
+
+		/// Submit to backend
+
+		//cmd_buffer.draw_renderers(submeshes, self->materials, matrices, RenderPass::Depth,
+		//		cam->draw_order_indices, cmd_count);
+
+
+		if (i != 1) continue;
+
+		Shader::set_builtin("MATRIX_VP", cam->vp);
+		Shader::set_builtin("VIEW_POS", cam_views[0].pos);
+
+		GL::Viewport(cam->viewport);
+		GL::Scissor (cam->viewport);
+		glEnable(GL_CULL_FACE);
+
+		GL::ClearColor(vec4(cam->clear_color, 0.0f));
+		glCullFace(GL_BACK);
+
+		glClear(cam->clear_flags);
+
+		vec3 color(1,0,0);
+		for (int c = 0; c < cmd_count; c++)
+		{
+			uint32_t s = cam->draw_order_indices[c];
+			submesh_data_t *data = &self->submeshes[s];
+
+			sphere.init(Mesh::meshes.get<3>()[renderers[data->renderer].mesh.id()]);
+			sphere.transform(matrices[data->renderer]);
+
+			Debug::sphere(sphere, color);
+			color += vec3(0,1,0);
+		}
+
+		Debug::frustum(cam->frustum);
 	}
 
-	// todo...
+
+
+
+
 	// Setup camera 0
 	GraphicsSystem::camera_t *cam = &self->cameras[0];
 	Shader::set_builtin("MATRIX_VP", cam->vp);
@@ -197,26 +298,22 @@ static void update(void *system)
 
 	glClear(cam->clear_flags);
 
-	for (int j = 0; j < self->renderers.size(); j++)
+	for (int j = 0; j < renderers.size(); j++)
 	{
-		//material_t *material = &materials[self->renderers[j].first_material];
-		material_t *material = Material::materials.get<0>(2);
-		for (int s = self->renderers[j].submeshes.first; s != self->renderers[j].submeshes.last; s++)
+		for (int s = renderers[j].first_submesh; s != renderers[j].last_submesh; s++)
 		{
-			if (!cam->culling_result[j])
-				continue;
-			Shader::set_builtin("MATRIX_M", matrices[j]);
+			submesh_data_t *data = &self->submeshes[s];
+
+			Shader::set_builtin("MATRIX_M", matrices[data->renderer]);
 			//Shader::setBuiltin("MATRIX_N", cmd->model);
 
+			material_t *material = Material::materials.get<0>(data->material);
 			material->bind(RenderPass::Forward);
-			material++;
 
-			GL::BindVertexArray(submeshes[s].vao);
-			glCheck(glDrawElements(submeshes[s].mode, submeshes[s].count, GL_UNSIGNED_SHORT, (void*)(uint64_t)submeshes[s].offset));
+			GL::BindVertexArray(data->submesh.vao);
+			glCheck(glDrawElements(data->submesh.mode, data->submesh.count, GL_UNSIGNED_SHORT, (void*)(uint64_t)data->submesh.offset));
 		}
 	}
-
-	Debug::frustum(self->cameras[1].frustum);
 
 	// TODO: should that be called from somwhere else ?
 	// see after multi thread sync

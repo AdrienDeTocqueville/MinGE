@@ -63,18 +63,17 @@ Shader* Shader::import(const char *URI)
 
 	if (uri.on_disk)
 	{
-		std::string path = "Assets/" + uri.path;
-		auto it = shaders.find(path);
+		auto it = shaders.find(uri.path);
 		if (it != shaders.end())
 			return it->second;
 
 		Shader *s = new Shader();
-		if (!s->load(path))
+		if (!s->load(uri.path))
 		{
 			delete s;
 			return nullptr;
 		}
-		shaders.emplace(path, s);
+		shaders.emplace(uri.path, s);
 		return s;
 	}
 	else
@@ -149,7 +148,7 @@ bool Shader::load(const std::string &path)
 		passes[type->second].exists = true;
 		passes[type->second].mask = 0;
 
-		// Parser variants
+		// Parse variants
 		for (auto &macro : PASS["macros"])
 		{
 			if (macro.is_array())
@@ -299,8 +298,8 @@ void Shader::setup_builtins()
 	add_builtin("MATRIX_N", GL_FLOAT_MAT4);
 
 
-	Shader::_standard = Shader::import("assets://Shaders/standard.json");
-	Shader::_debug = Shader::import("assets://Shaders/debug.json");
+	Shader::_standard = Shader::import("assets://Assets/Shaders/standard.json");
+	Shader::_debug = Shader::import("assets://Assets/Shaders/debug.json");
 
 }
 

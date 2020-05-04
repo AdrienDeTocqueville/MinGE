@@ -1,15 +1,6 @@
 #include "Math/glm.h"
 #include <stdio.h>
 
-vec3 vecClamp(vec3 v)
-{
-	for (unsigned i(0) ; i < 3 ; i++)
-		if (epsilonEqual(v[i], 0.0f, EPSILON))
-			v[i] = 0.0f;
-
-	return v;
-}
-
 void write(const vec3 &x, bool ret)
 {
 	printf("(%f, %f, %f)", x[0], x[1], x[2]);

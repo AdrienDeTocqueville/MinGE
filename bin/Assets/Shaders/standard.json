@@ -8,6 +8,14 @@
 		}
 	},
 
+	"depth": {
+		"macros": [ "SKINNED" ],
+		"stages": {
+			"vertex": "glsl/standard.vert",
+			"fragment": "glsl/empty.frag"
+		}
+	},
+
 	"forward": {
 		"macros": [
 			"SKINNED",

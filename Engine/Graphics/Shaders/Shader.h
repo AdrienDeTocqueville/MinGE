@@ -6,15 +6,7 @@
 #include <vector>
 #include <unordered_map>
 
-struct RenderPass
-{
-	enum Type {
-		Shadow,
-		Depth,
-		Forward,
-		Count
-	};
-};
+#include "Graphics/RenderPass.h"
 
 struct ShaderSources
 {

@@ -3,25 +3,12 @@
 #include "Core/UID.h"
 #include "Math/glm.h"
 
-struct Mesh: public UID32
-{
-	Mesh() {}
-
-	bool is_valid(){/*TODO*/return true;}
-	void destroy(){/*TODO*/}
-
-	static const Mesh none;
-	static Mesh import(const char *URI);
-	static void clear();
-
-private:
-	Mesh(uint32_t i): UID32(i, 0) {}
-};
-
+#include "Structures/ArrayList.h"
+#include "Structures/MultiArray.h"
 
 struct submeshes_t
 {
-	uint32_t first, last;
+	uint32_t first, count;
 	uint32_t vbo, ebo;
 };
 
@@ -67,4 +54,21 @@ struct mesh_data_t
 	uint16_t *indices;
 };
 
-bool generate_mesh(const struct uri_t &uri, mesh_data_t &data);
+struct Mesh: public UID32
+{
+	Mesh() {}
+
+	bool is_valid() { return id() && *meshes.get<4>(id()) == gen(); }
+	void destroy();
+
+	static const Mesh none;
+	static Mesh import(const char *URI);
+	static void clear();
+
+	// submeshes, mesh data, URI, AABB, generation
+	static multi_array_t<submeshes_t, mesh_data_t, const char*, struct AABB, uint8_t> meshes;
+	static array_list_t<submesh_t> submeshes;
+
+private:
+	Mesh(uint32_t i, uint32_t g): UID32(i, g) {}
+};

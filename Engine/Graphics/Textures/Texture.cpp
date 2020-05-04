@@ -12,13 +12,11 @@ struct texture_t
 };
 
 const Texture Texture::none;
-static std::vector<texture_t> textures;
+static std::vector<texture_t> textures = { texture_t { uvec2{0,0}, NULL, 1 } };
 
 
 bool Texture::is_valid()
 {
-	assert(id() && "Invalid texture handle");
-
 	return textures[id()].gen == gen();
 }
 
@@ -31,7 +29,7 @@ uvec2 Texture::size()
 
 void Texture::destroy()
 {
-	assert(is_valid() && "Texture is already destroyed");
+	assert(is_valid() && "Invalid texture handle");
 
 	GLuint i = (GLuint)id();
 	glCheck(glDeleteTextures(1, &i));
@@ -83,7 +81,7 @@ Texture Texture::import(const char *URI)
 	if (uri.on_disk)
 	{
 		sf::Image image;
-		if (!image.loadFromFile("Assets/" + uri.path))
+		if (!image.loadFromFile(uri.path))
 		{
 			Error::add(Error::USER, "Cannot import texture: " + uri.path);
 			glCheck(glDeleteTextures(1, &id));
@@ -106,7 +104,6 @@ Texture Texture::import(const char *URI)
 	textures.resize(id + 1);
 	textures[id].size = size;
 	textures[id].URI = URI;
-	textures[id].gen = 0;
 	return Texture(id, textures[id].gen);
 }
 

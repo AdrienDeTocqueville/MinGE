@@ -1,6 +1,7 @@
 #include "Graphics/Debug.h"
 #include "Graphics/GLDriver.h"
 #include "Graphics/Shaders/Material.h"
+#include "Graphics/Shaders/Shader.h"
 
 #include "Structures/Bounds.h"
 

@@ -1,10 +1,13 @@
 #include "Graphics/RenderEngine.h"
+#include "Graphics/CommandBuffer.h"
 
 #include "Graphics/Debug.h"
 #include "Graphics/Shaders/Shader.h"
 #include "Graphics/Shaders/Material.inl"
 #include "Graphics/Textures/Texture.h"
 
+
+static std::vector<cmd_buffer_t> buffers;
 
 void RenderEngine::init()
 {
@@ -25,5 +28,12 @@ void RenderEngine::destroy()
 
 	Shader::clear();
 	Texture::clear();
-	// destroy meshes/materials ?
+	Mesh::clear();
+	Material::clear();
+}
+
+cmd_buffer_t *RenderEngine::alloc_cmd_buffer()
+{
+	buffers.emplace_back();
+	return &buffers.back();
 }

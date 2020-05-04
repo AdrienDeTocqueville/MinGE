@@ -6,7 +6,7 @@
 struct CameraControl
 {
 public:
-	CameraControl(TransformSystem *_world, float _sensivity = 0.2f, float _distance = 5.0f, vec3 _offset = vec3(0.0f)):
+	CameraControl(TransformSystem *_world, float _sensivity = 0.2f, float _distance = 15.0f, vec3 _offset = vec3(0.0f)):
 		world(_world), angles(0.0f), clampAngleY(-0.499f*PI, 0.499f*PI),
 		sensivity(_sensivity), distance(_distance), offset(_offset)
 	{

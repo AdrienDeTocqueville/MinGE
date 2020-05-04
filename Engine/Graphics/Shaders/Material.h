@@ -4,7 +4,7 @@
 
 #include "Core/UID.h"
 #include "Structures/MultiArray.h"
-#include "Graphics/Shaders/Shader.h"
+#include "Graphics/RenderPass.h"
 
 
 struct material_t
@@ -28,8 +28,8 @@ struct Material: public UID32
 {
 	Material() {}
 
-	bool is_valid(){/*TODO*/return true;}
-	void destroy(){/*TODO*/}
+	bool is_valid() { return id() && *materials.get<1>(id()) == gen(); }
+	void destroy();
 
 	void define(const std::vector<std::string> &macros);
 	void define(const std::string& macro);
@@ -53,11 +53,12 @@ struct Material: public UID32
 
 
 	static const Material none;
-	static Material create(Shader *shader);
+	static Material create(class Shader *shader);
 	static Material copy(Material src);
+	static void clear();
 
-	static multi_array_t<material_t> materials;
+	static multi_array_t<material_t, uint8_t> materials;
 
 private:
-	Material(uint32_t i): UID32(i, 0) {}
+	Material(uint32_t i, uint32_t g): UID32(i, g) {}
 };

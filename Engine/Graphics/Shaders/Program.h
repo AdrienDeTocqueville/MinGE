@@ -5,11 +5,11 @@
 #include <string>
 #include <vector>
 
-#include "Graphics/Shaders/Shader.h"
+#include "Graphics/RenderPass.h"
 
 struct Program
 {
-	Program(const ShaderSources &sources, RenderPass::Type pass, const char *defines, const char *builtins);
+	Program(const struct ShaderSources &sources, RenderPass::Type pass, const char *defines, const char *builtins);
 	~Program();
 
 	unsigned program;

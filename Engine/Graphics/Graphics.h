@@ -13,6 +13,7 @@
 
 #include "Math/glm.h"
 #include "Structures/Bounds.h"
+#include "Structures/ArrayList.h"
 #include "Structures/MultiArray.h"
 
 using Camera = uint32_t;
@@ -31,6 +32,7 @@ struct GraphicsSystem
 
 	Renderer add_renderer(Entity entity, Mesh mesh);
 
+	// Cameras
 	struct camera_t
 	{
 		float fov, zNear, zFar;
@@ -48,23 +50,31 @@ struct GraphicsSystem
 		vec3 position;
 
 		Frustum frustum;
-		uint8_t *culling_result;
+		uint32_t *draw_order_indices;
+		uint64_t *renderer_keys;
 	};
 
 	std::unordered_map<uint32_t, uint32_t> indices_cameras;
 	std::vector<camera_t> cameras;
-	uint32_t culling_result_size;
 
+	// Renderers
 	struct renderer_t
 	{
+		uint32_t first_submesh, last_submesh;
+		Entity entity;
 		Mesh mesh;
-		submeshes_t submeshes;
-		uint32_t first_material;
 	};
 
 	std::unordered_map<uint32_t, uint32_t> indices_renderers;
-	std::vector<Entity> renderers_entities;
 	std::vector<renderer_t> renderers;
+	array_list_t<struct submesh_data_t> submeshes;
+
+
+	// System data
+	uint32_t prev_submesh_count, submesh_count;
+	uint32_t prev_submesh_alloc;
+	uint32_t prev_renderer_count;
+	mat4 *matrices;
 
 	TransformSystem *transforms;
 

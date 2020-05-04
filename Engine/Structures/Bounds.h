@@ -163,7 +163,7 @@ inline void Sphere::transform(const mat4 &m)
 }
 
 
-/// FRUSTUM
+/// Frustum
 inline vec4 Frustum::normalize_plane(const vec4 &p)
 {
 	return p / length(vec3(p));
