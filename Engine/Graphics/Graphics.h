@@ -71,7 +71,7 @@ struct GraphicsSystem
 
 
 	// System data
-	uint32_t prev_submesh_count, submesh_count;
+	uint32_t prev_submesh_count;
 	uint32_t prev_submesh_alloc;
 	uint32_t prev_renderer_count;
 	mat4 *matrices;

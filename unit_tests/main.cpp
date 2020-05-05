@@ -33,8 +33,6 @@ int main()
 
 	Engine::destroy();
 
-#ifdef _WIN32
-	system("pause");
-#endif
+	std::cin.get();
 	return 0;
 }

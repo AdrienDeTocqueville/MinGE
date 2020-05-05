@@ -36,14 +36,22 @@ struct array_list_t
 	T &operator[](uint32_t index)
 	{ return data[index]; }
 
-	uint32_t size, capacity;
+	// 64 bit
+	union {
+		S next_slot;
+		struct {
+			uint32_t _padding;
+			uint32_t capacity;
+		};
+	};
+
+	uint32_t count, size;
 	T *data;
-	S next_slot;
 };
 
 template<typename T, typename S>
 array_list_t<T, S>::array_list_t():
-	size(0), capacity(mem::page_size)
+	capacity(mem::page_size), count(0), size(0)
 {
 	// Each element can be used to store the amount of free slots and the next free slot index
 	static_assert(sizeof(T) >= sizeof(S), "First element type is too small");
@@ -67,6 +75,7 @@ void array_list_t<T, S>::reserve(uint32_t new_cap)
 template<typename T, typename S>
 uint32_t array_list_t<T, S>::add(uint32_t count)
 {
+	this->count += count;
 	uint32_t slot_id = next_slot.next;
 	S *prev_slot = &next_slot;
 	while (slot_id != invalid_id())
@@ -98,6 +107,7 @@ uint32_t array_list_t<T, S>::add(uint32_t count)
 template<typename T, typename S>
 void array_list_t<T, S>::remove(uint32_t index, uint32_t count)
 {
+	this->count -= count;
 	S *new_slot, *slot = &next_slot;
 	while (slot->next != invalid_id() && slot->next < index)
 		slot = (S*)(data + slot->next);
@@ -145,7 +155,7 @@ template<typename T, typename S>
 void array_list_t<T, S>::clear()
 {
 	next_slot.next = -1;
-	size = 0;
+	size = count = 0;
 }
 }
 

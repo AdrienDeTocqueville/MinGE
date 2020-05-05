@@ -12,7 +12,7 @@
 
 
 GraphicsSystem::GraphicsSystem(TransformSystem *world):
-	prev_submesh_count(0), submesh_count(0),
+	prev_submesh_count(0),
 	prev_submesh_alloc(0),
 	prev_renderer_count(0),
 	matrices(NULL), transforms(world)
@@ -64,7 +64,7 @@ Camera GraphicsSystem::add_camera(Entity entity, float FOV, float zNear, float z
 	cam->entity	= entity;
 	cam->ss_viewport= viewport;
 
-	cam->draw_order_indices	= compute_indices(submesh_count, renderers);
+	cam->draw_order_indices	= compute_indices(submeshes.count, renderers);
 	cam->renderer_keys	= (uint64_t*)malloc(submeshes.size * sizeof(uint64_t));
 
 	vec2 ws = Input::window_size();
@@ -98,9 +98,7 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 	indices_renderers[entity.id()] = i;
 
 	submeshes_t subs = Mesh::meshes.get<0>()[mesh.id()];
-
 	uint32_t first = submeshes.add(subs.count);
-	submesh_count += subs.count;
 
 	for (int s = 0; s < subs.count; s++)
 	{
@@ -124,16 +122,16 @@ static void update(void *system)
 
 	/// Resize persistent alloc if needed
 
-	if (self->prev_submesh_count < self->submesh_count)
+	if (self->prev_submesh_count < self->submeshes.count)
 	{
-		self->prev_submesh_count = self->submesh_count;
+		self->prev_submesh_count = self->submeshes.count;
 
 		for (int i = 0; i < self->cameras.size(); i++)
 		{
 			GraphicsSystem::camera_t *cam = &self->cameras[i];
 
 			free(cam->draw_order_indices);
-			cam->draw_order_indices = compute_indices(self->submesh_count, renderers);
+			cam->draw_order_indices = compute_indices(self->submeshes.count, renderers);
 		}
 	}
 	if (self->prev_submesh_alloc < submeshes.size)
@@ -240,7 +238,7 @@ static void update(void *system)
 
 		/// Sort renderers
 
-		std::sort(cam->draw_order_indices, cam->draw_order_indices + self->submesh_count,
+		std::sort(cam->draw_order_indices, cam->draw_order_indices + self->submeshes.count,
 			[renderer_keys](uint32_t a, uint32_t b) { return renderer_keys[a] < renderer_keys[b]; }
 		);
 
