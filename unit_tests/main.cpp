@@ -29,10 +29,11 @@ int main()
 	//benchmark(50);
 	//test_transforms();
 	//test_systems();
-	test_array_list();
+	test_structures();
 
 	Engine::destroy();
 
+	printf("\n\nAll tests passed.\nPress enter to quit...");
 	std::cin.get();
 	return 0;
 }

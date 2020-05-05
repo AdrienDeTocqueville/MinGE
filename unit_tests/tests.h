@@ -29,4 +29,4 @@ void test_transforms();
 
 void test_systems();
 
-void test_array_list();
+void test_structures();

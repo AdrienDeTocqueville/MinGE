@@ -5,6 +5,17 @@
 #include "Graphics/Mesh/Mesh.h"
 #include "Graphics/RenderPass.h"
 
+struct camera_data_t
+{
+	ivec4 viewport;
+	vec4 clear_color;
+
+	mat4 view_proj;
+	vec3 position;
+
+	uint32_t clear_flags;
+};
+
 struct submesh_data_t
 {
 	submesh_t submesh;

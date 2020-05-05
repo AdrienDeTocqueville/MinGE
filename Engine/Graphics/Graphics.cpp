@@ -22,10 +22,10 @@ GraphicsSystem::GraphicsSystem(TransformSystem *world):
 
 GraphicsSystem::~GraphicsSystem()
 {
-	for (camera_t &c : cameras)
+	for (int i = 0; i < cameras.size; i++)
 	{
-		free(c.draw_order_indices);
-		free(c.renderer_keys);
+		free(cameras.get<0>()[i].draw_order_indices);
+		free(cameras.get<0>()[i].renderer_keys);
 	}
 	free(matrices);
 }
@@ -49,17 +49,15 @@ Camera GraphicsSystem::add_camera(Entity entity, float FOV, float zNear, float z
 	assert(entity.id() != 0 && "Invalid entity");
 	assert(indices_cameras.find(entity.id()) == indices_cameras.end() && "Entity already has a Camera component");
 
-	uint32_t i = cameras.size();
-	cameras.emplace_back(camera_t {});
+	uint32_t i = cameras.add();
 	indices_cameras[entity.id()] = i;
 
-	camera_t *cam = cameras.data() + i;
+
+	camera_t *cam = cameras.get<0>() + i;
 
 	cam->fov	= FOV;
 	cam->zNear	= zNear;
 	cam->zFar	= zFar;
-	cam->clear_color= clear_color;
-	cam->clear_flags= clear_flags;
 	cam->ortho	= orthographic;
 	cam->entity	= entity;
 	cam->ss_viewport= viewport;
@@ -67,26 +65,33 @@ Camera GraphicsSystem::add_camera(Entity entity, float FOV, float zNear, float z
 	cam->draw_order_indices	= compute_indices(submeshes.count, renderers);
 	cam->renderer_keys	= (uint64_t*)malloc(submeshes.size * sizeof(uint64_t));
 
+
+	camera_data_t *cam_data = cameras.get<1>() + i;
+
 	vec2 ws = Input::window_size();
-	cam->viewport = ivec4(viewport.x * ws.x,
+	cam_data->viewport = ivec4(viewport.x * ws.x,
 		viewport.y * ws.y,
 		viewport.z * ws.x,
 		viewport.w * ws.y
 	);
 
+	cam_data->clear_color	= vec4(clear_color, 0.0f);
+	cam_data->clear_flags	= clear_flags;
+
+
 	if (orthographic)
 	{
 		float half_width = FOV * 0.5f;
-		float half_height = half_width * cam->viewport.w / (float)cam->viewport.z;
+		float half_height = half_width * cam_data->viewport.w / (float)cam_data->viewport.z;
 		cam->projection = ortho(-half_width, half_width, -half_height, half_height, zNear, zFar);
 	}
 	else
 	{
-		float aspect_ratio = (float)cam->viewport.z / (float)cam->viewport.w;
+		float aspect_ratio = (float)cam_data->viewport.z / (float)cam_data->viewport.w;
 		cam->projection = perspective(FOV, aspect_ratio, zNear, zFar);
 	}
 
-	return i;
+	return i; // TODO: handle generation
 }
 
 Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
@@ -126,9 +131,9 @@ static void update(void *system)
 	{
 		self->prev_submesh_count = self->submeshes.count;
 
-		for (int i = 0; i < self->cameras.size(); i++)
+		for (int i = 0; i < self->cameras.size; i++)
 		{
-			GraphicsSystem::camera_t *cam = &self->cameras[i];
+			GraphicsSystem::camera_t *cam = self->cameras.get<0>() + i;
 
 			free(cam->draw_order_indices);
 			cam->draw_order_indices = compute_indices(self->submeshes.count, renderers);
@@ -138,9 +143,9 @@ static void update(void *system)
 	{
 		self->prev_submesh_alloc = submeshes.size;
 
-		for (int i = 0; i < self->cameras.size(); i++)
+		for (int i = 0; i < self->cameras.size; i++)
 		{
-			GraphicsSystem::camera_t *cam = &self->cameras[i];
+			GraphicsSystem::camera_t *cam = self->cameras.get<0>() + i;
 
 			free(cam->renderer_keys);
 			cam->renderer_keys = (uint64_t*)malloc(self->prev_submesh_alloc * sizeof(uint64_t));
@@ -158,13 +163,7 @@ static void update(void *system)
 
 	/// Read transform data
 
-	struct cam_view_t
-	{ vec3 pos, center; };
-
-	// TODO: cache allocation between iterations
 	// TODO: mt
-	// TODO: use page allocator
-	std::vector<cam_view_t> cam_views(self->cameras.size());
 	{
 		//auto lock = transforms.scoped_read_lock();
 		for (int i = 0; i < renderers.size(); i++)
@@ -172,33 +171,36 @@ static void update(void *system)
 			Transform tr = self->transforms->get(renderers[i].entity);
 			matrices[i] = tr.world_matrix();
 		}
-		for (int i = 0; i < self->cameras.size(); i++)
+		for (int i = 0; i < self->cameras.size; i++)
 		{
-			Transform tr = self->transforms->get(self->cameras[i].entity);
-			cam_views[i].pos = tr.position();
-			cam_views[i].center = tr.to_world(vec3(1, 0, 0));
+			Transform tr = self->transforms->get(self->cameras.get<0>()[i].entity);
+			vec3 pos = tr.position();
+
+			self->cameras.get<0>()[i].center_point = tr.vec_to_world(vec3(1, 0, 0)) + pos;
+			self->cameras.get<1>()[i].position = pos;
 		}
 	}
 
 	/// Build command buffers
 
 	Sphere sphere;
-	for (int i = 0; i < self->cameras.size(); i++)
+	for (int i = 0; i < self->cameras.size; i++)
 	{
 		uint32_t cmd_count = renderers.size();
-		GraphicsSystem::camera_t *cam = &self->cameras[i];
+		GraphicsSystem::camera_t *cam = self->cameras.get<0>() + i;
+		camera_data_t *cam_data = self->cameras.get<1>() + i;
 		uint64_t *renderer_keys = cam->renderer_keys;
 		float scale = 1.0f / (cam->zFar - cam->zNear);
 
 		/// Compute new VP
 
 		static const vec3 up(0, 0, 1);
-		const mat4 view_matrix = glm::lookAt(cam_views[i].pos, cam_views[i].center, up);
-		simd_mul(cam->vp, cam->projection, view_matrix);
+		const mat4 view_matrix = glm::lookAt(cam_data->position, cam->center_point, up);
+		simd_mul(cam_data->view_proj, cam->projection, view_matrix);
 
 		/// Frustum culling
 
-		cam->frustum.init(self->cameras[i].vp);
+		cam->frustum.init(cam_data->view_proj);
 
 		for (int j = 0; j < renderers.size(); j++)
 		{
@@ -214,11 +216,13 @@ static void update(void *system)
 					float as_float;
 					int32_t as_int;
 				};
-				static float_int_t max_dist(0x3FFFFFFF);
+				static float_int_t max_dist(0x3FFFFFFF); // last float before 2.0f
 
 				vec4 p = cam->frustum.planes[Frustum::Near];
 				vec3 c = sphere.center;
 				float distance = p.x * c.x + p.y * c.y + p.z * c.z + p.w;
+				// floats between 1.0f and 2.0f only use the first 23 bits
+				// and can be compared as uint
 				distance = glm::clamp(distance * scale + 1.0f, 1.0f, max_dist.as_float);
 
 				for (int s = renderers[j].first_submesh; s != renderers[j].last_submesh; s++)
@@ -250,17 +254,14 @@ static void update(void *system)
 
 		if (i != 1) continue;
 
-		Shader::set_builtin("MATRIX_VP", cam->vp);
-		Shader::set_builtin("VIEW_POS", cam_views[0].pos);
+		Shader::set_builtin("MATRIX_VP", cam_data->view_proj);
+		Shader::set_builtin("VIEW_POS", cam_data->position);
 
-		GL::Viewport(cam->viewport);
-		GL::Scissor (cam->viewport);
-		glEnable(GL_CULL_FACE);
+		GL::Viewport(cam_data->viewport);
+		GL::Scissor (cam_data->viewport);
 
-		GL::ClearColor(vec4(cam->clear_color, 0.0f));
-		glCullFace(GL_BACK);
-
-		glClear(cam->clear_flags);
+		GL::ClearColor(cam_data->clear_color);
+		glClear(cam_data->clear_flags);
 
 		vec3 color(1,0,0);
 		for (int c = 0; c < cmd_count; c++)
@@ -283,18 +284,17 @@ static void update(void *system)
 
 
 	// Setup camera 0
-	GraphicsSystem::camera_t *cam = &self->cameras[0];
-	Shader::set_builtin("MATRIX_VP", cam->vp);
-	Shader::set_builtin("VIEW_POS", cam_views[0].pos);
+	GraphicsSystem::camera_t *cam = self->cameras.get<0>() + 0;
+	camera_data_t *cam_data = self->cameras.get<1>() + 0;
 
-	GL::Viewport(cam->viewport);
-	GL::Scissor (cam->viewport);
-	glEnable(GL_CULL_FACE);
+	Shader::set_builtin("MATRIX_VP", cam_data->view_proj);
+	Shader::set_builtin("VIEW_POS", cam_data->position);
 
-	GL::ClearColor(vec4(cam->clear_color, 0.0f));
-	glCullFace(GL_BACK);
+	GL::Viewport(cam_data->viewport);
+	GL::Scissor (cam_data->viewport);
 
-	glClear(cam->clear_flags);
+	GL::ClearColor(cam_data->clear_color);
+	glClear(cam_data->clear_flags);
 
 	for (int j = 0; j < renderers.size(); j++)
 	{

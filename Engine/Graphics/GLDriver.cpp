@@ -25,6 +25,7 @@ void GL::init()
 	glEnable(GL_SCISSOR_TEST);
 	
 	glDepthFunc(GL_LEQUAL);
+	glCullFace(GL_BACK);
 	glPointSize(7);
 	glLineWidth(3);
 }

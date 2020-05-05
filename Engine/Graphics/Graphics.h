@@ -13,6 +13,7 @@
 
 #include "Math/glm.h"
 #include "Structures/Bounds.h"
+#include "Structures/SOA.h"
 #include "Structures/ArrayList.h"
 #include "Structures/MultiArray.h"
 
@@ -35,27 +36,22 @@ struct GraphicsSystem
 	// Cameras
 	struct camera_t
 	{
-		float fov, zNear, zFar;
-
-		vec3 clear_color;
-		unsigned clear_flags;
-
-		bool ortho;
-		Entity entity;
-
-		ivec4 viewport;
-		vec4 ss_viewport;	// screen space (between 0 and 1)
-
-		mat4 projection, vp;
-		vec3 position;
-
-		Frustum frustum;
 		uint32_t *draw_order_indices;
 		uint64_t *renderer_keys;
+
+		mat4 projection;
+		Frustum frustum;
+		float zNear, zFar;
+		vec3 center_point;
+
+		float fov;
+		Entity entity;
+		vec4 ss_viewport;	// screen space (between 0 and 1)
+		bool ortho;
 	};
 
 	std::unordered_map<uint32_t, uint32_t> indices_cameras;
-	std::vector<camera_t> cameras;
+	soa_t<camera_t, struct camera_data_t> cameras; // TODO: don't need a whole page
 
 	// Renderers
 	struct renderer_t
