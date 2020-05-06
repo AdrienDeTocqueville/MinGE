@@ -36,9 +36,6 @@ struct GraphicsSystem
 	// Cameras
 	struct camera_t
 	{
-		uint32_t *draw_order_indices;
-		uint64_t *renderer_keys;
-
 		mat4 projection;
 		Frustum frustum;
 		float zNear, zFar;
@@ -67,9 +64,14 @@ struct GraphicsSystem
 
 
 	// System data
-	uint32_t prev_submesh_count;
-	uint32_t prev_submesh_alloc;
+	uint32_t cmd_buffer;
+
+	uint32_t prev_index_count;
+	uint32_t prev_key_count;
 	uint32_t prev_renderer_count;
+
+	uint32_t *draw_order_indices;
+	uint64_t *renderer_keys;
 	mat4 *matrices;
 
 	TransformSystem *transforms;

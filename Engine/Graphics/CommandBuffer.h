@@ -25,13 +25,48 @@ struct submesh_data_t
 
 struct cmd_buffer_t
 {
-	enum Type { DrawRenderers };
+	cmd_buffer_t(): size(0), capacity(32) { buffer = (uint8_t*)malloc(capacity); }
 
-	cmd_buffer_t(): buffer(NULL), size(0), capacity(0) {}
+	void draw_batch(submesh_data_t *submeshes, mat4 *matrices, uint32_t *sorted_indices,
+			RenderPass::Type pass, uint32_t count);
+	void setup_camera(camera_data_t *camera);
 
-	void draw_renderers(submesh_data_t *submeshes, struct Material *materials, mat4 *matrices,
-			RenderPass::Type pass, uint32_t *sorted_indices, uint32_t count);
+	void flush();
 
 	uint8_t *buffer;
 	uint32_t size, capacity;
+
+private:
+	enum Type { DrawBatch, SetupCamera };
+
+	template <typename T>
+	void store(Type type, T data)
+	{
+		uint32_t new_size = size + sizeof(Type) + sizeof(T);
+		if (new_size > capacity)
+		{
+			capacity *= 2;
+			buffer = (uint8_t*)realloc(buffer, capacity);
+		}
+		*(Type*)(buffer + size) = type;
+		memcpy(buffer + size + sizeof(Type), &data, sizeof(T));
+		size = new_size;
+	}
+
+	template <typename T>
+	T &consume(uint32_t &pos)
+	{
+		uint8_t *data = buffer + pos;
+		pos += sizeof(T);
+		return *(T*)data;
+	}
+
+	struct draw_batch_t
+	{
+		submesh_data_t *submeshes;
+		mat4 *matrices;
+		uint32_t *sorted_indices;
+		RenderPass::Type pass;
+		uint32_t count;
+	};
 };

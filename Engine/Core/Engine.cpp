@@ -255,5 +255,7 @@ void Engine::end_frame()
 		JobSystem::wait(&system->job);
 	}
 
+	RenderEngine::flush();
+
 	MicroProfileFlip();
 }

@@ -1,14 +1,20 @@
 #pragma once
 
+#include <cstdint>
+
 struct cmd_buffer_t;
 
 struct RenderEngine
 {
-	static cmd_buffer_t *alloc_cmd_buffer();
+	static uint32_t create_cmd_buffer();
+	static cmd_buffer_t &get_cmd_buffer(uint32_t i);
+	static void destroy_cmd_buffer(uint32_t i);
 
 private:
 	static void init();
 	static void destroy();
+
+	static void flush();
 
 	friend struct Engine;
 };
