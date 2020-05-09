@@ -67,18 +67,19 @@ public:
 */
 #endif
 
+		Engine::read_lock(world);
 		Transform tr = world->get(cam);
 
 		if (target == Entity::none) /// FPS
 		{
 			vec3 dir = getMovement(tr.vec_to_world(vec3(1, 0, 0)));
-			if (dir == vec3(0.0f) && Input::mouse_delta() == vec2(0.0f))
-				return;
+			if (dir != vec3(0.0f) || Input::mouse_delta() != vec2(0.0f))
+			{
+				float speed = (Input::key_down(sf::Keyboard::LShift) ? 0.5f : 1.0f) * distance * Time::delta_time;
 
-			float speed = (Input::key_down(sf::Keyboard::LShift)?0.5f:1.0f) * distance * Time::delta_time;
-
-			tr.translate(dir * speed);
-			tr.set_rotation(quat(vec3(0.0f, angles.y, angles.x)));
+				tr.translate(dir * speed);
+				tr.set_rotation(quat(vec3(0.0f, angles.y, angles.x)));
+			}
 		}
 
 		else /// TPS
@@ -89,6 +90,7 @@ public:
 				vec3(distance, 0.0f, 0.0f));
 			tr.look_at(obj.to_world(offset));
 		}
+		Engine::read_unlock(world);
 	}
 
 	void look_at(vec3 pos)

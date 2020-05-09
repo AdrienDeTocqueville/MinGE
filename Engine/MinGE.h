@@ -2,8 +2,7 @@
 
 #pragma once
 
-
-#include <memory>
+#include "Profiler/profiler.h"
 
 #include "Core/Engine.h"
 #include "Core/Entity.h"

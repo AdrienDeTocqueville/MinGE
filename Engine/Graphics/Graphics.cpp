@@ -1,4 +1,5 @@
 #include "Profiler/profiler.h"
+#include "Core/Engine.h"
 
 #include "Graphics/Graphics.h"
 #include "Graphics/RenderEngine.h"
@@ -109,6 +110,7 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 
 static void update(GraphicsSystem *self)
 {
+	Engine::write_lock(self);
 	material_t::bound = nullptr;
 
 	auto &renderers = self->renderers;
@@ -157,22 +159,25 @@ static void update(GraphicsSystem *self)
 
 	{
 		MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "sync_transform");
-		//auto lock = transforms.scoped_read_lock();
+		auto transforms = self->transforms;
+		Engine::read_lock(transforms);
 
 		// TODO: transforms don't need to be fetched every time
 		for (int i = 0; i < renderers.size(); i++)
 		{
-			Transform tr = self->transforms->get(renderers[i].entity);
+			Transform tr = transforms->get(renderers[i].entity);
 			matrices[i] = tr.world_matrix();
 		}
 		for (uint32_t i = 0; i < self->cameras.size; i++)
 		{
-			Transform tr = self->transforms->get(self->cameras.get<0>()[i].entity);
+			Transform tr = transforms->get(self->cameras.get<0>()[i].entity);
 			vec3 pos = tr.position();
 
 			self->cameras.get<0>()[i].center_point = tr.vec_to_world(vec3(1, 0, 0)) + pos;
 			self->cameras.get<1>()[i].position = pos;
 		}
+
+		Engine::read_unlock(transforms);
 	}
 
 	/// Build command buffers
@@ -277,6 +282,7 @@ static void update(GraphicsSystem *self)
 		cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Forward, cmd_count);
 		}
 	}
+	Engine::write_unlock(self);
 }
 
 

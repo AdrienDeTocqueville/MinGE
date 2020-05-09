@@ -22,6 +22,7 @@ struct system_t
 {
 	uint32_t type_index;
 	JobSystem::Semaphore counter;
+	std::atomic<uint32_t> readers;
 	IF_PROFILE(MicroProfileToken token;)
 	// after: <system instance>
 
@@ -64,7 +65,11 @@ void Engine::destroy()
 	for (system_t *system : systems)
 	{
 		if (auto callback = system_types[system->type_index].destroy)
-			JobSystem::run(callback, system->instance(), &system->counter IF_PROFILE(, system->token));
+#ifdef PROFILE
+			JobSystem::run(callback, system->instance(), &system->counter, system->token);
+#else
+			JobSystem::run(callback, system->instance(), &system->counter);
+#endif
 	}
 	}
 
@@ -115,6 +120,7 @@ void *Engine::alloc_system(const char *type_name)
 	auto system = (system_t*)malloc(sizeof(system_t) + type->size);
 	system->type_index = (uint32_t)(type - system_types.data());
 	new (&system->counter) JobSystem::Semaphore();
+	new (&system->readers) std::atomic<uint32_t>{0};
 
 #ifdef PROFILE
 	static char sys_name[256];
@@ -125,6 +131,49 @@ void *Engine::alloc_system(const char *type_name)
 	systems.push_back(system);
 	return system->instance();
 }
+
+void Engine::read_lock(void *system)
+{
+	auto *readers = &system_t::from_instance(system)->readers;
+
+	while (true)
+	{
+		uint32_t prev_readers = *readers;
+		if (prev_readers != -1)
+		{
+			uint32_t new_readers = prev_readers + 1;
+			if (readers->compare_exchange_weak(prev_readers, new_readers))
+				return;
+		}
+
+		JobSystem::yield();
+	}
+}
+
+void Engine::read_unlock(void *system)
+{
+	system_t::from_instance(system)->readers--;
+}
+
+void Engine::write_lock(void *system)
+{
+	auto *readers = &system_t::from_instance(system)->readers;
+
+	while (true)
+	{
+		uint32_t prev_readers = 0;
+		if (readers->compare_exchange_weak(prev_readers, -1))
+			return;
+
+		JobSystem::yield();
+	}
+}
+
+void Engine::write_unlock(void *system)
+{
+	system_t::from_instance(system)->readers = 0;
+}
+
 
 const system_type_t *Engine::get_system_type(void *system)
 {
