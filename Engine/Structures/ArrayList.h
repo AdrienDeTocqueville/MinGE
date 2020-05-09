@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 #include "Memory/Memory.h"
 
 namespace array_list
@@ -112,7 +112,7 @@ void array_list_t<T, S>::remove(uint32_t index, uint32_t count)
 	while (slot->next != invalid_id() && slot->next < index)
 		slot = (S*)(data + slot->next);
 
-	uint32_t slot_id = (T*)slot - data;
+	uint32_t slot_id = (uint32_t)((T*)slot - data);
 	if (slot != &next_slot && slot_id + slot->avail == index) // merge with prev slot (but never merge with first slot)
 	{
 		if (slot->next == index + count) // merge with next slot also

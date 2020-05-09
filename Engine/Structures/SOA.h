@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
-#include <cassert>
+#include <stdint.h>
+#include <assert.h>
 #include "Memory/Memory.h"
 
 namespace soa

@@ -2,9 +2,9 @@
 #include "Core/Engine.h"
 #include "Core/Entity.h"
 
-#include <cstdlib>
-#include <cstring>
-#include <cstdio>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include <fstream>
 #include <iomanip>
 

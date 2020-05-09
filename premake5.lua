@@ -86,7 +86,7 @@ project "Engine"
 	filter "configurations:dev"
 		defines { "DEBUG", "PROFILE" }
 		symbols "on"
-		optimize "debug"
+		optimize "speed"
 
 	filter "configurations:release"
 		defines "NDEBUG"
@@ -147,7 +147,7 @@ project "graphics_tests"
 	filter "configurations:dev"
 		defines { "DEBUG", "PROFILE" }
 		symbols "on"
-		optimize "debug"
+		optimize "speed"
 
 	filter "configurations:release"
 		defines "NDEBUG"
@@ -208,7 +208,7 @@ project "unit_tests"
 	filter "configurations:dev"
 		defines { "DEBUG", "PROFILE" }
 		symbols "on"
-		optimize "debug"
+		optimize "speed"
 
 	filter "configurations:release"
 		defines "NDEBUG"

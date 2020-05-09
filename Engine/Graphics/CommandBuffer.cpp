@@ -30,7 +30,7 @@ case DrawBatch:
 {
 	draw_batch_t &batch = consume<draw_batch_t>(i);
 
-	for (int c = 0; c < batch.count; c++)
+	for (uint32_t c = 0; c < batch.count; c++)
 	{
 		uint32_t s = batch.sorted_indices[c];
 		submesh_data_t *data = batch.submeshes + s;

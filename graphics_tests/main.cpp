@@ -29,9 +29,9 @@ int main()
 	Engine::register_system_type(CameraControl::type);
 
 	/// Init systems
-	auto transforms = new(Engine::alloc_system("TransformSystem", NULL)) TransformSystem();
-	auto controller = new(Engine::alloc_system("CameraControl", (const void**)&transforms, 1)) CameraControl(transforms);
-	auto graphics = new(Engine::alloc_system("GraphicsSystem", (const void**)&controller, 1)) GraphicsSystem(transforms);
+	auto transforms = new(Engine::alloc_system("TransformSystem")) TransformSystem();
+	auto controller = new(Engine::alloc_system("CameraControl")) CameraControl(transforms);
+	auto graphics = new(Engine::alloc_system("GraphicsSystem")) GraphicsSystem(transforms);
 
 	// Open assets
 	Mesh cube = Mesh::import("asset:mesh/cube?x=1&y=3&z=3");
@@ -61,8 +61,7 @@ int main()
 	/// Main loop
 	while (!Input::window_closed())
 	{
-		Engine::start_frame();
-		Engine::end_frame();
+		Engine::update();
 		transforms->get(mesh_ent).rotate(vec3(0,0,1), Time::delta_time);
 		window.display();
 	}

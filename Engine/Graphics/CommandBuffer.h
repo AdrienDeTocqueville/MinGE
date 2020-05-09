@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 
 #include "Graphics/Mesh/Mesh.h"
 #include "Graphics/RenderPass.h"

@@ -2,7 +2,7 @@
 
 #include <initializer_list>
 #include <type_traits>
-#include <cstdlib>
+#include <stdlib.h>
 #include <vector>
 
 namespace Random

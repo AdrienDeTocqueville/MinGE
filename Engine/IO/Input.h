@@ -46,7 +46,7 @@ struct Input
 private:
 	/// Methods (private)
 	static void init(sf::RenderWindow* _window);
-	static void update();
+	static void poll_events();
 
 	/// Attributes (private)
 	static sf::RenderWindow* win;

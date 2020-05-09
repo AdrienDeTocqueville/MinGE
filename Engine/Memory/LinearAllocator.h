@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstdint>
-#include <cstddef>
+#include <stdint.h>
+#include <stddef.h>
+#include <assert.h>
 #include <atomic>
-#include <cassert>
 
 class LinearAllocator
 {

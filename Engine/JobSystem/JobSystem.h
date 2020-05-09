@@ -1,30 +1,36 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 #include <atomic>
+
+#include "Profiler/profiler.h"
 
 namespace JobSystem
 {
 
 using Work = void (*)(void*);
-template <typename D>
-using WorkT = void (*)(D*);
+template <typename T>
+using WorkT = void (*)(T);
 
-const unsigned cacheline_size = 64;
+const unsigned job_alignment = 64;
 
-struct alignas(cacheline_size) Job
+// Not really a semaphore I think
+struct Semaphore
 {
-	Work function;
-	std::atomic<int> *counter;
-	union { // determine value of union if depen_end is NULL
-		std::atomic<int> *dependency;
-		struct {
-			std::atomic<int> **depen_begin, **depen_end;
-		};
-	};
-	uint8_t data[cacheline_size - sizeof(Work) - 3*sizeof(std::atomic<int>*)];
+	Semaphore(): n(0) {}
+	void wait();
+	std::atomic<int> n;
 };
-static_assert(sizeof(Job) == cacheline_size, "Job size is invalid");
+
+struct alignas(job_alignment) Job
+{
+	void *fiber;
+	Work function;
+	Semaphore *counter;
+	void *data;
+	uint8_t scratch[job_alignment - 2*sizeof(void*) - sizeof(Work) - sizeof(Semaphore*)];
+};
+static_assert(sizeof(Job) == job_alignment, "Job size is invalid");
 
 template <typename T, typename D>
 struct ParallelFor
@@ -44,28 +50,25 @@ struct ParallelFor
 void init();
 void destroy();
 
-void run(Work func, void *data, unsigned n, std::atomic<int> *counter = nullptr);
-void run_child(Work func, void *data, unsigned n, std::atomic<int> *dependency, std::atomic<int> *counter = nullptr);
-void run_child(Work func, void *data, unsigned n, std::atomic<int> **dependencies, uint64_t dependency_count, std::atomic<int> *counter = nullptr);
-void wait(const std::atomic<int> *counter, int value = 0);
+void yield();
 
-template <typename D>
-inline void run(WorkT<D> func, D *data, std::atomic<int> *counter = nullptr);
-template <typename D>
-inline void run_child(WorkT<D> func, D *data, std::atomic<int> *dependency, std::atomic<int> *counter = nullptr);
-template <typename D>
-inline void run_child(WorkT<D> func, D *data, std::atomic<int> **dependencies, uint64_t dependency_count, std::atomic<int> *counter = nullptr);
+void run(Work func, void *data, void *scratch, size_t n, Semaphore *counter = nullptr);
 
-template <typename T, typename D>
-unsigned parallel_for(WorkT<D> func, ParallelFor<T, D> *data, std::atomic<int> *counter = nullptr);
+template <typename S>
+inline void run(WorkT<S*> func, S &scratch, Semaphore *counter = nullptr);
+template <typename D>
+inline void run(WorkT<D*> func, D *data, Semaphore *counter = nullptr);
+
+#ifdef PROFILE
+template <typename D>
+inline void run(WorkT<D*> func, D *data, Semaphore *counter, MicroProfileToken token);
+#endif
+
+//template <typename T, typename D>
+//unsigned parallel_for(WorkT<D> func, ParallelFor<T, D> *data, Semaphore *counter = nullptr);
 
 inline unsigned worker_count();
 inline unsigned worker_id();
-
-inline void add_dependency(std::atomic<int> *counter);
-inline void remove_dependency(std::atomic<int> *counter);
-inline void reset_dependencies(std::atomic<int> *counter);
-inline bool dependencies_done(std::atomic<int> *counter);
 
 inline unsigned div_ceil(unsigned a, unsigned b);
 }

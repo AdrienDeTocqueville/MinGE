@@ -1,6 +1,6 @@
 #include "Math/Random.h"
 
-#include <ctime>
+#include <time.h>
 
 namespace Random
 {

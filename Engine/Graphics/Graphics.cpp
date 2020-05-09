@@ -1,7 +1,6 @@
 #include "Profiler/profiler.h"
 
 #include "Graphics/Graphics.h"
-#include "Graphics/Shaders/Shader.inl"
 #include "Graphics/RenderEngine.h"
 #include "Graphics/CommandBuffer.h"
 #include "Graphics/CommandKey.h"
@@ -10,7 +9,6 @@
 #include "Transform/Transform.h"
 
 #include "IO/Input.h"
-
 
 GraphicsSystem::GraphicsSystem(TransformSystem *world):
 	prev_index_count(0), prev_key_count(0), prev_renderer_count(0),
@@ -97,7 +95,7 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 	submeshes_t subs = Mesh::meshes.get<0>()[mesh.id()];
 	uint32_t first = submeshes.add(subs.count);
 
-	for (int s = 0; s < subs.count; s++)
+	for (uint32_t s = 0; s < subs.count; s++)
 	{
 		submeshes[i].submesh = Mesh::submeshes[subs.first + s];
 		submeshes[i].material = 2; // TODO: default material
@@ -109,10 +107,9 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 	return i;
 }
 
-static void update(void *system)
+static void update(GraphicsSystem *self)
 {
 	material_t::bound = nullptr;
-	GraphicsSystem *self = (GraphicsSystem*)system;
 
 	auto &renderers = self->renderers;
 	auto &submeshes = self->submeshes;
@@ -133,7 +130,7 @@ static void update(void *system)
 	{
 		recompute_indices:
 		init_indices(self->draw_order_indices, renderers);
-		for (int i = 1; i < self->cameras.size; i++)
+		for (uint32_t i = 1; i < self->cameras.size; i++)
 			memcpy(self->draw_order_indices + i * submeshes.count, self->draw_order_indices, submeshes.count * sizeof(uint32_t));
 	}
 
@@ -168,7 +165,7 @@ static void update(void *system)
 			Transform tr = self->transforms->get(renderers[i].entity);
 			matrices[i] = tr.world_matrix();
 		}
-		for (int i = 0; i < self->cameras.size; i++)
+		for (uint32_t i = 0; i < self->cameras.size; i++)
 		{
 			Transform tr = self->transforms->get(self->cameras.get<0>()[i].entity);
 			vec3 pos = tr.position();
@@ -182,7 +179,7 @@ static void update(void *system)
 
 	Sphere sphere;
 	auto &cmd = RenderEngine::get_cmd_buffer(self->cmd_buffer);
-	for (int i = 0; i < self->cameras.size; i++)
+	for (uint32_t i = 0; i < self->cameras.size; i++)
 	{
 		MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "camera_setup");
 
@@ -256,18 +253,8 @@ static void update(void *system)
 		{
 			MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "debug");
 
-			// TODO: clean includes when removed
-			Shader::set_builtin("MATRIX_VP", cam_data->view_proj);
-			Shader::set_builtin("VIEW_POS", cam_data->position);
-
-			GL::Viewport(cam_data->viewport);
-			GL::Scissor(cam_data->viewport);
-
-			GL::ClearColor(cam_data->clear_color);
-			glClear(cam_data->clear_flags);
-
 			vec3 color(1, 0, 0);
-			for (int c = 0; c < cmd_count; c++)
+			for (uint32_t c = 0; c < cmd_count; c++)
 			{
 				uint32_t s = draw_order_indices[c];
 				submesh_data_t *data = &self->submeshes[s];
@@ -297,10 +284,9 @@ const system_type_t GraphicsSystem::type = []() {
 	system_type_t t{};
 	t.name = "GraphicsSystem";
 	t.size = sizeof(GraphicsSystem);
-	t.on_main_thread = 1;
 
 	t.destroy = [](void *system) { ((GraphicsSystem*)system)->~GraphicsSystem(); };
-	t.update = update;
+	t.update = (void(*)(void*))update;
 	t.serialize = NULL;
 	t.deserialize = NULL;
 	return t;

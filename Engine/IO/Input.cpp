@@ -48,7 +48,7 @@ void Input::init(sf::RenderWindow* _window)
 	closed = false;
 }
 
-void Input::update()
+void Input::poll_events()
 {
 	MICROPROFILE_SCOPEI("IO_INPUT", "update");
 

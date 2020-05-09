@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef PROFILE
-# define PROFILER(x) x
+# define IF_PROFILE(x) x
 
 # define MICROPROFILE_ENABLED	 1
 # define MICROPROFILE_WEBSERVER	 1
@@ -11,7 +11,7 @@
 //# define MICROPROFILE_WEBSERVER_MAXFRAMES	10
 //# define MICROPROFILE_MAX_FRAME_HISTORY	(2<<10)
 #else
-# define PROFILER(x)
+# define IF_PROFILE(x)
 # define MICROPROFILE_ENABLED 0
 #endif
 

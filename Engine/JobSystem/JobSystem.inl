@@ -5,26 +5,30 @@
 namespace JobSystem
 {
 
-template <typename D>
-inline void run(WorkT<D> func, D *data, std::atomic<int> *counter)
+template <typename S>
+inline void run(WorkT<S*> func, S &scratch, Semaphore *counter)
 {
-	run((Work)func, data, sizeof(D), counter);
+	run((Work)func, NULL, &scratch, sizeof(S), counter);
 }
 
 template <typename D>
-inline void run_child(WorkT<D> func, D *data, std::atomic<int> *dependency, std::atomic<int> *counter)
+inline void run(WorkT<D*> func, D *data, Semaphore *counter)
 {
-	run_child((Work)func, data, sizeof(D), dependency, counter);
+	run((Work)func, data, NULL, 0, counter);
 }
 
+#ifdef PROFILE
 template <typename D>
-inline void run_child(WorkT<D> func, D *data, std::atomic<int> **dependencies, uint64_t dependency_count, std::atomic<int> *counter)
+inline void run(WorkT<D*> func, D *data, Semaphore *counter, MicroProfileToken token)
 {
-	run_child((Work)func, data, sizeof(D), dependencies, dependency_count, counter);
+	run((Work)func, data, &token, 0, counter);
 }
+#endif
 
+
+/*
 template <typename T, typename D>
-unsigned parallel_for(WorkT<D> func, ParallelFor<T, D> *data, std::atomic<int> *counter)
+unsigned parallel_for(WorkT<D> func, ParallelFor<T, D> *data, Semaphore *counter)
 {
 	T *first = data->start;
 	T *last = data->end;
@@ -47,6 +51,7 @@ unsigned parallel_for(WorkT<D> func, ParallelFor<T, D> *data, std::atomic<int> *
 
 	return i;
 }
+*/
 
 unsigned worker_count()
 {
@@ -58,26 +63,6 @@ unsigned worker_id()
 {
 	extern thread_local unsigned this_worker;
 	return this_worker;
-}
-
-void add_dependency(std::atomic<int> *counter)
-{
-	counter->fetch_add(1, std::memory_order_acquire);
-}
-
-void remove_dependency(std::atomic<int> *counter)
-{
-	counter->fetch_sub(1, std::memory_order_release);
-}
-
-void reset_dependencies(std::atomic<int> *counter)
-{
-	counter->store(1, std::memory_order_release);
-}
-
-bool dependencies_done(std::atomic<int> *counter)
-{
-	return counter->load(std::memory_order_acquire) == 0;
 }
 
 unsigned div_ceil(unsigned a, unsigned b)

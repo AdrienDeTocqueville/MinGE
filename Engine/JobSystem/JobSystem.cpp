@@ -3,8 +3,8 @@
 #include "JobSystem.inl"
 #include "Math/Random.h"
 
-#include <cassert>
-#include <cstring>
+#include <assert.h>
+#include <string.h>
 #include <thread>
 
 #ifdef __linux__
@@ -28,6 +28,7 @@ bool work = true; // flag to tell workers to stop working
 unsigned num_worker;
 struct Worker *workers = nullptr;
 thread_local unsigned this_worker;
+thread_local void *this_fiber;
 
 // Job pools
 const unsigned JOB_POOL_SIZE = 512;
@@ -144,67 +145,125 @@ struct Worker
 	}
 };
 
-// Returns a job whose dependencies may not be satisfied
-static Job *pop_or_steal()
+inline Job *pop()
 {
-	if (Job *j = workers[this_worker].pop())
-		return j;
+	return workers[this_worker].pop();
+}
 
-#ifndef SINGLE_THREADED
+inline Job *steal()
+{
+#ifdef SINGLE_THREADED
+	return nullptr;
+#else
 	// Pick a random worker to steal from
 	unsigned steal_worker = Random::next<int>(0, num_worker - 1);
 	steal_worker += (steal_worker >= this_worker);
 
-	if (Job *j = workers[steal_worker].steal())
+	return workers[steal_worker].steal();
+#endif
+}
+
+static Job *pop_or_steal()
+{
+	if (Job *j = pop())
 		return j;
+	return steal();
+}
+
+static Job *steal_or_pop()
+{
+	if (Job *j = steal())
+		return j;
+	return pop();
+}
+
+__declspec(noinline) void *get_this_fiber_fls()
+{
+	return this_fiber;
+}
+
+// Not inlined because this_fiber is TLS and it could cause problems
+void yield()
+{
+	SwitchToFiber(this_fiber);
+}
+
+static void job_run(Job *job)
+{
+	IF_PROFILE(MicroProfileToken token = 0);
+
+reset_fiber:
+
+	{
+#ifdef PROFILE
+	if (job->data != job->scratch)
+		token = *(MicroProfileToken*)job->scratch;
+	MICROPROFILE_SCOPE_TOKEN(token);
 #endif
 
-	return nullptr;
-}
-
-static Job *get_job();
-static inline bool is_job_ready(Job *j, Job **alternative)
-{
-	if (j->depen_begin == j->depen_end)
-		return true;
-	if (j->depen_end == NULL) // Only one dependency
-	{
-		if (JobSystem::dependencies_done(j->dependency))
-			return true;
-		*alternative = get_job();
-		return false;
-	}
-	do {
-		if (!JobSystem::dependencies_done(*j->depen_begin))
-		{
-			*alternative = get_job();
-			return false;
-		}
-		j->depen_begin++;
-	}
-	while (j->depen_begin != j->depen_end);
-	return true;
-}
-
-// Returns a job ready to be executed
-static Job *get_job()
-{
-	if (Job *j = pop_or_steal())
-	{
-		Job *alternative;
-		if (is_job_ready(j, &alternative))
-			return j;
-		workers[this_worker].push(j);
-		return alternative;
-	}
-	return nullptr;
-}
-
-static inline void job_run(Job *job)
-{
 	job->function(job->data);
-	if (job->counter)
-		remove_dependency(job->counter);
+	}
+
+	job->function = NULL;
+	job->counter->n.fetch_sub(1, std::memory_order_release);
+
+	SwitchToFiber(get_this_fiber_fls());
+	goto reset_fiber;
+}
+
+void run(Work func, void *data, void *scratch, size_t n, Semaphore *counter)
+{
+	MICROPROFILE_SCOPEI("JOB_SYSTEM", "run");
+
+	Job* job = allocate_job();
+	job->function = func;
+	job->counter = counter;
+
+	if (data && scratch)
+	{
+		job->data = data;
+		IF_PROFILE(memcpy(job->scratch, scratch, sizeof(MicroProfileToken)));
+	}
+	else if (scratch)
+	{
+		assert(n <= sizeof(Job::scratch));
+		job->data = job->scratch;
+		memcpy(job->scratch, scratch, n);
+	}
+	else
+		job->data = data;
+
+	if (counter && counter->n == 0) counter->n = 1;
+
+	workers[this_worker].push(job);
+}
+
+#define EXEC_WHILE(condition) 						\
+{									\
+	Job *job = NULL;						\
+	if (condition) while (true) {					\
+		if (job || (job = pop_or_steal()))			\
+		{							\
+			SwitchToFiber(job->fiber);			\
+			if (!(condition)) break;			\
+			if (job->function == NULL)			\
+				job = pop_or_steal();			\
+			else /* Job yielded */				\
+			{						\
+				workers[this_worker].push(job);		\
+				job = steal_or_pop();			\
+			}						\
+		}							\
+									\
+		else if (!(condition)) break;				\
+		else if (!JobSystem::work) break;			\
+		else std::this_thread::yield();				\
+	}								\
+}
+
+void Semaphore::wait()
+{
+	EXEC_WHILE(n.load(std::memory_order_acquire) != 0);
 }
 
 static void worker_main(const int i)
@@ -217,14 +276,15 @@ static void worker_main(const int i)
 	MicroProfileOnThreadCreate(worker_name);
 #endif
 
-	while (true)
-	{
-		if (Job* job = get_job())
-			job_run(job);
+#ifdef _WIN32
+	this_fiber = ConvertThreadToFiber(0);
+#endif
 
-		else if (!JobSystem::work) break;
-		else std::this_thread::yield();
-	}
+	EXEC_WHILE(true);
+
+#ifdef _WIN32
+	ConvertFiberToThread();
+#endif
 
 #ifdef PROFILE
 	MicroProfileOnThreadExit();
@@ -270,6 +330,12 @@ void init()
 		workers[i].thread = std::thread(worker_main, i);
 		set_cpu_affinity(workers[i].thread.native_handle(), i);
 	}
+
+#ifdef _WIN32
+	this_fiber = ConvertThreadToFiber(0);
+	for (unsigned i(0); i < JOB_POOL_SIZE; i++)
+		job_pool[i].fiber = CreateFiber(0, (Work)job_run, job_pool + i);
+#endif
 }
 
 void destroy()
@@ -279,59 +345,12 @@ void destroy()
 	for (unsigned i(1); i < num_worker; i++)
 		workers[i].thread.join();
 	delete[] workers;
-}
 
-void run(Work func, void *data, unsigned n, std::atomic<int> *counter)
-{
-	assert(n <= sizeof(Job::data));
-
-	Job* job = allocate_job();
-	job->function = func;
-	job->counter = counter;
-	job->depen_begin = NULL;
-	job->depen_end = NULL;
-	memcpy(job->data, data, n);
-
-	workers[this_worker].push(job);
-}
-
-void run_child(Work func, void *data, unsigned n, std::atomic<int> *dependency, std::atomic<int> *counter)
-{
-	assert(n <= sizeof(Job::data));
-
-	Job* job = allocate_job();
-	job->function = func;
-	job->counter = counter;
-	job->dependency = dependency;
-	job->depen_end = NULL;
-	memcpy(job->data, data, n);
-
-	workers[this_worker].push(job);
-}
-
-void run_child(Work func, void *data, unsigned n, std::atomic<int> **dependencies, uint64_t dependency_count, std::atomic<int> *counter)
-{
-	assert(n <= sizeof(Job::data));
-
-	Job* job = allocate_job();
-	job->function = func;
-	job->counter = counter;
-	job->depen_begin = dependencies;
-	job->depen_end = dependencies + dependency_count;
-	memcpy(job->data, data, n);
-
-	workers[this_worker].push(job);
-}
-
-void wait(const std::atomic<int> *counter, int value)
-{
-	while (counter->load(std::memory_order_acquire) != value)
-	{
-		if (Job* job = get_job())
-			job_run(job);
-
-		else std::this_thread::yield();
-	}
+#ifdef _WIN32
+	for (unsigned i(0); i < JOB_POOL_SIZE; i++)
+		DeleteFiber(job_pool[i].fiber);
+	ConvertFiberToThread();
+#endif
 }
 
 } // namespace

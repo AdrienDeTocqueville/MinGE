@@ -1,3 +1,5 @@
+#include <mutex>
+
 #include "Graphics/Debug.h"
 #include "Graphics/GLDriver.h"
 #include "Graphics/Shaders/Material.h"
@@ -9,16 +11,19 @@ struct Vertex
 {
 	vec3 pos, color;
 };
+static std::mutex points_lock, lines_lock;
 static std::vector<Vertex> points, lines;
 
 
 void Debug::point(vec3 _point, vec3 color)
 {
+	const std::lock_guard<std::mutex> lock(points_lock);
 	points.push_back({_point, color});
 }
 
 void Debug::line(vec3 _from, vec3 _to, vec3 color)
 {
+	const std::lock_guard<std::mutex> lock(lines_lock);
 	lines.push_back({_from, color});
 	lines.push_back({_to, color});
 }

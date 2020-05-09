@@ -26,10 +26,10 @@ int main()
 	/// Init engine
 	Engine::init(window, 30);
 
-	//benchmark(50);
+	benchmark(50);
 	//test_transforms();
 	//test_systems();
-	test_structures();
+	//test_structures();
 
 	Engine::destroy();
 

@@ -139,7 +139,6 @@ const system_type_t CameraControl::type = []() {
 	system_type_t t{};
 	t.name = "CameraControl";
 	t.size = sizeof(CameraControl);
-	t.on_main_thread = 0;
 
 	t.destroy = [](void *system) { ((CameraControl*)system)->~CameraControl(); };
 	t.update = [](void *system) { ((CameraControl*)system)->update(); };

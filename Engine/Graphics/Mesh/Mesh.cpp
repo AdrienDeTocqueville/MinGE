@@ -151,7 +151,7 @@ Mesh Mesh::import(const char *URI)
 	load_buffers(data, vao, vbo, ebo);
 
 	uint32_t last_submesh = first_submesh + submesh_count;
-	for (int i = first_submesh; i < last_submesh; i++)
+	for (uint32_t i = first_submesh; i < last_submesh; i++)
 		submeshes[i].vao = vao;
 
 	uint32_t prev_size = meshes.size;
