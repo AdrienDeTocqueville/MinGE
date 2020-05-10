@@ -146,7 +146,7 @@ static json serialize(void *system)
 
 	std::map<uint32_t, uint32_t> components;
 	const auto &indices = sys->indices;
-	for (int i = 0; i < indices.size; i++)
+	for (uint32_t i = 0; i < indices.size; i++)
 	{
 		if (indices.indices[i]) components[indices.indices[i]] = i;
 	}

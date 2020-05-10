@@ -2677,7 +2677,7 @@ int MicroProfileFormatCounter(int eFormat, int64_t nCounter, char* pOut, uint32_
 		{
 			nLen = snprintf(pOut, nBufferSize - 1, "%lld%s", (long long)nCounter, pExt[nShift]);
 		}
-		nLen = strlen(pOut);
+		nLen = (int)strlen(pOut);
 	}
 	break;
 	}

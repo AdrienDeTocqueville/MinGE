@@ -28,7 +28,7 @@ GraphicsSystem::~GraphicsSystem()
 
 static void init_indices(uint32_t *__restrict indices, const GraphicsSystem::renderer_t *renderers, uint32_t count)
 {
-	for (int j = 0; j < count; j++)
+	for (uint32_t j = 0; j < count; j++)
 	{
 		for (int s = renderers->first_submesh; s != renderers->last_submesh; s++)
 			*indices++ = s;
@@ -85,7 +85,7 @@ static void update(GraphicsSystem *self)
 		Engine::read_lock(transforms);
 
 		// TODO: transforms don't need to be fetched every time
-		for (int i = 0; i < renderer_count; i++)
+		for (uint32_t i = 0; i < renderer_count; i++)
 		{
 			Transform tr = transforms->get(renderers[i].entity);
 			matrices[i] = tr.world_matrix();
@@ -127,7 +127,7 @@ static void update(GraphicsSystem *self)
 
 		cam->frustum.init(cam_data->view_proj);
 
-		for (int j = 0; j < renderer_count; j++)
+		for (uint32_t j = 0; j < renderer_count; j++)
 		{
 			// TODO: don't recompute sphere for each camera
 			sphere.init(Mesh::meshes.get<3>()[renderers[j].mesh.id()]);

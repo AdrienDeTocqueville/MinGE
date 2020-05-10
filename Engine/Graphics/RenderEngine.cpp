@@ -55,7 +55,7 @@ void RenderEngine::flush()
 uint32_t RenderEngine::create_cmd_buffer()
 {
 	buffers.emplace_back();
-	return buffers.size() - 1;
+	return (uint32_t)buffers.size() - 1;
 }
 
 cmd_buffer_t &RenderEngine::get_cmd_buffer(uint32_t i)

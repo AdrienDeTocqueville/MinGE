@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "Core/Entity.h"
 
 template<int N>

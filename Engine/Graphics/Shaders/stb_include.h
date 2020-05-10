@@ -134,7 +134,7 @@ static int stb_include_find_includes(const char *text, include_info **plist)
 						while (*s != '\r' && *s != '\n' && *s != 0)
 							++s;
 						// s points to the newline, so s-start is everything except the newline
-						list = stb_include_append_include(list, inc_count++, start - text, s - text, filename, line_count + 1);
+						list = stb_include_append_include(list, inc_count++, (int)(start - text), (int)(s - text), filename, line_count + 1);
 					}
 				}
 			}

@@ -24,13 +24,13 @@ static const std::unordered_map<std::string, RenderPass::Type> pass_type = {
 };
 
 static const std::unordered_map<GLuint, uint8_t> uniform_type_size = {
-	{GL_FLOAT,	sizeof(float)},
-	{GL_FLOAT_VEC2, sizeof(vec2)},
-	{GL_FLOAT_VEC3, sizeof(vec3)},
-	{GL_FLOAT_VEC4, sizeof(vec4)},
-	{GL_FLOAT_MAT3, sizeof(mat3)},
-	{GL_FLOAT_MAT4, sizeof(mat4)},
-	{GL_SAMPLER_2D, sizeof(Texture)},
+	{GL_FLOAT,	(uint8_t)sizeof(float)},
+	{GL_FLOAT_VEC2, (uint8_t)sizeof(vec2)},
+	{GL_FLOAT_VEC3, (uint8_t)sizeof(vec3)},
+	{GL_FLOAT_VEC4, (uint8_t)sizeof(vec4)},
+	{GL_FLOAT_MAT3, (uint8_t)sizeof(mat3)},
+	{GL_FLOAT_MAT4, (uint8_t)sizeof(mat4)},
+	{GL_SAMPLER_2D, (uint8_t)sizeof(Texture)},
 };
 
 static const std::unordered_map<GLuint, const char*> uniform_type_names = {
@@ -270,7 +270,7 @@ uint32_t Shader::get_variant(uint32_t hash)
 		}
 	}
 
-	variant_idx.emplace(hash, variants.size() - 1);
+	variant_idx.emplace(hash, (uint32_t)variants.size() - 1);
 	return (uint32_t)(variants.size() - 1);
 }
 

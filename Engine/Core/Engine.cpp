@@ -109,7 +109,7 @@ void *Engine::alloc_system(const char *type_name)
 
 #ifdef PROFILE
 	static char sys_name[256];
-	snprintf(sys_name, sizeof(sys_name), "%s %d", type_name, systems.size());
+	snprintf(sys_name, sizeof(sys_name), "%s %zd", type_name, systems.size());
 	system->token = MicroProfileGetToken(type_name, sys_name, -1);
 #endif
 

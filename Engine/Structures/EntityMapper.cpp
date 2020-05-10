@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <string.h>
+
 #include "Structures/EntityMapper.h"
 #include "Memory/Memory.h"
 

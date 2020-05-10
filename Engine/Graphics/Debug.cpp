@@ -149,7 +149,7 @@ void flush_points()
 		glCheck(glEnableVertexAttribArray(1));
 		glCheck(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)sizeof(vec3)));
 
-	glDrawArrays(GL_POINTS, 0, points.size());
+	glDrawArrays(GL_POINTS, 0, (GLsizei)points.size());
 	points.clear();
 }
 
@@ -166,7 +166,7 @@ void flush_lines()
 		glCheck(glEnableVertexAttribArray(1));
 		glCheck(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)sizeof(vec3)));
 
-	glDrawArrays(GL_LINES, 0, lines.size());
+	glDrawArrays(GL_LINES, 0, (GLsizei)lines.size());
 	lines.clear();
 }
 
