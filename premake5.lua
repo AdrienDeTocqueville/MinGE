@@ -94,7 +94,7 @@ project "Engine"
 
 
 project "graphics_tests"
-	targetname "%{cfg.buildcfg}"
+	targetname "%{prj.name}_%{cfg.buildcfg}"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++11"
@@ -155,7 +155,7 @@ project "graphics_tests"
 
 
 project "unit_tests"
-	targetname "%{cfg.buildcfg}_unit_tests"
+	targetname "%{prj.name}_%{cfg.buildcfg}"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++11"

@@ -26,12 +26,13 @@ GraphicsSystem::~GraphicsSystem()
 	free(matrices);
 }
 
-static void init_indices(uint32_t *indices, const std::vector<GraphicsSystem::renderer_t> &renderers)
+static void init_indices(uint32_t *__restrict indices, const GraphicsSystem::renderer_t *renderers, uint32_t count)
 {
-	for (int j = 0; j < renderers.size(); j++)
+	for (int j = 0; j < count; j++)
 	{
-		for (int s = renderers[j].first_submesh; s != renderers[j].last_submesh; s++)
+		for (int s = renderers->first_submesh; s != renderers->last_submesh; s++)
 			*indices++ = s;
+		renderers++;
 	}
 }
 
@@ -40,7 +41,8 @@ static void update(GraphicsSystem *self)
 	Engine::write_lock(self);
 	material_t::bound = nullptr;
 
-	auto &renderers = self->renderers;
+	auto renderer_count = self->renderers.size;
+	auto *renderers = self->renderers.get<0>();
 	auto &submeshes = self->submeshes;
 
 	/// Resize persistent alloc if needed
@@ -50,15 +52,13 @@ static void update(GraphicsSystem *self)
 	if (self->prev_index_count < new_index_count)
 	{
 		self->prev_index_count = mem::next_power_of_two(new_index_count);
-
-		free(self->draw_order_indices);
-		self->draw_order_indices = (uint32_t*)malloc(self->prev_index_count * sizeof(uint32_t));
+		self->draw_order_indices = (uint32_t*)realloc(self->draw_order_indices, self->prev_index_count * sizeof(uint32_t));
 		goto recompute_indices;
 	}
-	if (self->prev_renderer_count != renderers.size())
+	if (self->prev_renderer_count != renderer_count)
 	{
 		recompute_indices:
-		init_indices(self->draw_order_indices, renderers);
+		init_indices(self->draw_order_indices, renderers, renderer_count);
 		for (uint32_t i = 1; i < self->cameras.size; i++)
 			memcpy(self->draw_order_indices + i * submeshes.count, self->draw_order_indices, submeshes.count * sizeof(uint32_t));
 	}
@@ -66,31 +66,26 @@ static void update(GraphicsSystem *self)
 	if (self->prev_key_count < submeshes.size * self->cameras.size)
 	{
 		self->prev_key_count = mem::next_power_of_two(submeshes.size * self->cameras.size);
-
-		free(self->renderer_keys);
-		self->renderer_keys = (uint64_t*)malloc(self->prev_key_count * sizeof(uint64_t));
+		self->renderer_keys = (uint64_t*)realloc(self->renderer_keys, self->prev_key_count * sizeof(uint64_t));
 	}
 
-	if (self->prev_renderer_count < renderers.size())
+	if (self->prev_renderer_count < renderer_count)
 	{
-		self->prev_renderer_count = renderers.size();
-
-		free(self->matrices);
-		self->matrices = (mat4*)malloc(self->prev_renderer_count * sizeof(mat4));
+		self->prev_renderer_count = mem::next_power_of_two(renderer_count);
+		self->matrices = (mat4*)realloc(self->matrices, self->prev_renderer_count * sizeof(mat4));
 	}
 	}
 
 	mat4 *matrices = self->matrices;
 
 	/// Read transform data
+	{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "sync_transform");
 
-	{
-		MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "sync_transform");
 		auto transforms = self->transforms;
 		Engine::read_lock(transforms);
 
 		// TODO: transforms don't need to be fetched every time
-		for (int i = 0; i < renderers.size(); i++)
+		for (int i = 0; i < renderer_count; i++)
 		{
 			Transform tr = transforms->get(renderers[i].entity);
 			matrices[i] = tr.world_matrix();
@@ -115,7 +110,7 @@ static void update(GraphicsSystem *self)
 	{
 		MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "camera_setup");
 
-		uint32_t cmd_count = renderers.size();
+		uint32_t cmd_count = renderer_count;
 		uint64_t *renderer_keys = self->renderer_keys + i * submeshes.size;
 		GraphicsSystem::camera_t *cam = self->cameras.get<0>() + i;
 		camera_data_t *cam_data = self->cameras.get<1>() + i;
@@ -132,7 +127,7 @@ static void update(GraphicsSystem *self)
 
 		cam->frustum.init(cam_data->view_proj);
 
-		for (int j = 0; j < renderers.size(); j++)
+		for (int j = 0; j < renderer_count; j++)
 		{
 			// TODO: don't recompute sphere for each camera
 			sphere.init(Mesh::meshes.get<3>()[renderers[j].mesh.id()]);

@@ -79,13 +79,13 @@ bool Input::key_down(sf::Keyboard::Key _key)
 
 bool Input::key_pressed(sf::Keyboard::Key _key)
 {
-	return (keyboard_state[keyboard_index][_key] != keyboard_state[1-keyboard_index][_key]) &&
+	return (keyboard_state[keyboard_index][_key] != keyboard_state[1-keyboard_index][_key]) &
 		keyboard_state[keyboard_index][_key];
 }
 
 bool Input::key_released(sf::Keyboard::Key _key)
 {
-	return (keyboard_state[keyboard_index][_key] != keyboard_state[1-keyboard_index][_key]) &&
+	return (keyboard_state[keyboard_index][_key] != keyboard_state[1-keyboard_index][_key]) &
 		!keyboard_state[keyboard_index][_key];
 }
 
@@ -97,12 +97,12 @@ bool Input::button_down(sf::Mouse::Button _button)
 
 bool Input::button_pressed(sf::Mouse::Button _button)
 {
-	return (mouse_state[mouse_index][_button] != mouse_state[1-mouse_index][_button]) &&
+	return (mouse_state[mouse_index][_button] != mouse_state[1-mouse_index][_button]) &
 		mouse_state[mouse_index][_button];
 }
 
 bool Input::button_released(sf::Mouse::Button _button)
 {
-	return (mouse_state[mouse_index][_button] != mouse_state[1-mouse_index][_button]) &&
+	return (mouse_state[mouse_index][_button] != mouse_state[1-mouse_index][_button]) &
 		!mouse_state[mouse_index][_button];
 }

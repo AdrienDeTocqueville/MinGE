@@ -5,11 +5,8 @@ using namespace nlohmann;
 
 Transform TransformSystem::add(Entity entity, vec3 position, quat rotation, vec3 scale)
 {
-	assert(entity.id() != 0 && "Invalid entity");
-	assert(indices.find(entity.id()) == indices.end() && "Entity already has a Transform component");
-
 	uint32_t i = data.add();
-	indices[entity.id()] = i;
+	indices.map(entity, i);
 
 	transform_t *transforms = data.get<0>();
 	hierarchy_t *hierarchies = data.get<1>();
@@ -33,15 +30,9 @@ Transform TransformSystem::add(Entity entity, vec3 position, quat rotation, vec3
 
 Transform TransformSystem::add_child(Entity parent, Entity entity, vec3 position, quat rotation, vec3 scale)
 {
-	assert(parent.id() != 0 && "Invalid parent");
-	assert(has(parent) && "Parent has no Transform component");
-
-	assert(entity.id() != 0 && "Invalid entity");
-	assert(indices.find(entity.id()) == indices.end() && "Entity already has a Transform component");
-
-	uint32_t p = indices[parent.id()];
+	uint32_t p = indices.get(parent);
 	uint32_t i = data.add();
-	indices[entity.id()] = i;
+	indices.map(entity, i);
 
 	transform_t *transforms = data.get<0>();
 	hierarchy_t *hierarchies = data.get<1>();
@@ -67,9 +58,8 @@ Transform TransformSystem::add_child(Entity parent, Entity entity, vec3 position
 
 void TransformSystem::remove(Entity entity)
 {
-	auto it = indices.find(entity.id());
-	const uint32_t i = it->second;
-	indices.erase(it);
+	uint32_t i = indices.get(entity);
+	indices.unmap(entity);
 
 	transform_t *transforms = data.get<0>();
 	hierarchy_t *hierarchies = data.get<1>();
@@ -155,8 +145,11 @@ static json serialize(void *system)
 	dump["hierarchies"] = json::array();
 
 	std::map<uint32_t, uint32_t> components;
-	for (auto &pair : sys->indices)
-		components[pair.second] = pair.first;
+	const auto &indices = sys->indices;
+	for (int i = 0; i < indices.size; i++)
+	{
+		if (indices.indices[i]) components[indices.indices[i]] = i;
+	}
 
 	for (auto &pair : components)
 	{

@@ -101,7 +101,8 @@ Texture Texture::import(const char *URI)
 		return Texture::none;
 	}
 
-	textures.resize(id + 1);
+	if (textures.size() <= id)
+		textures.resize(id + 1);
 	textures[id].size = size;
 	textures[id].URI = URI;
 	return Texture(id, textures[id].gen);

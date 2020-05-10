@@ -24,7 +24,7 @@
 	std::cin.get(); exit(-1); }
 #endif
 
-void benchmark(int iterations);
+void benchmark_transforms(int iterations);
 void test_transforms();
 
 void test_systems();

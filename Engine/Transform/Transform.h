@@ -1,12 +1,11 @@
 #pragma once
 
-#include <unordered_map>
-
 #include "Core/Entity.h"
 #include "Core/System.h"
 
 #include "Math/glm.h"
 #include "Structures/MultiArray.h"
+#include "Structures/EntityMapper.h"
 
 struct Transform: public UID32
 {
@@ -53,14 +52,8 @@ struct TransformSystem
 	Transform add_child(Entity parent, Entity entity, vec3 position = vec3(0.0f), vec3 rotation = vec3(0.0f), vec3 scale = vec3(1.0f))
 	{ return add_child(parent, entity, position, quat(rotation), scale); }
 
-	bool has(Entity entity)
-	{ return (indices.find(entity.id()) != indices.end()); }
-
-	Transform get(Entity entity)
-	{
-		assert(has(entity) && "Entity has no Transform component");
-		return Transform(indices[entity.id()], *this);
-	}
+	bool has(Entity entity)	const	{ return indices.has(entity); }
+	Transform get(Entity entity)	{ return Transform(indices.get(entity), *this); }
 
 
 	struct transform_t
@@ -76,7 +69,7 @@ struct TransformSystem
 		uint32_t parent, next_sibling;
 	};
 
-	std::unordered_map<uint32_t, uint32_t> indices;
+	entity_mapper_t<1> indices;
 	multi_array_t<transform_t, hierarchy_t> data;
 
 	static const system_type_t type;

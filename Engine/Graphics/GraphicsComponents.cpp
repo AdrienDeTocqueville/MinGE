@@ -6,11 +6,8 @@
 Camera GraphicsSystem::add_camera(Entity entity, float FOV, float zNear, float zFar,
 	bool orthographic, vec4 viewport, vec3 clear_color, unsigned clear_flags)
 {
-	assert(entity.id() != 0 && "Invalid entity");
-	assert(indices_cameras.find(entity.id()) == indices_cameras.end() && "Entity already has a Camera component");
-
 	uint32_t i = cameras.add();
-	indices_cameras[entity.id()] = i;
+	indices.map<0>(entity, i);
 
 
 	camera_t *cam = cameras.get<0>() + i;
@@ -53,11 +50,8 @@ Camera GraphicsSystem::add_camera(Entity entity, float FOV, float zNear, float z
 
 Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 {
-	assert(entity.id() != 0 && "Invalid entity");
-	assert(indices_renderers.find(entity.id()) == indices_renderers.end() && "Entity already has a Renderer component");
-
-	uint32_t i = renderers.size();
-	indices_renderers[entity.id()] = i;
+	uint32_t i = renderers.add();
+	indices.map<1>(entity, i);
 
 	submeshes_t subs = Mesh::meshes.get<0>()[mesh.id()];
 	uint32_t first = submeshes.add(subs.count);
@@ -69,12 +63,12 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 		submeshes[i].renderer = i;
 	}
 
-	renderers.emplace_back(renderer_t {first, first + subs.count, entity, mesh});
+	renderers.get<0>()[i] = renderer_t {first, first + subs.count, entity, mesh};
 
 	return i;
 }
 
-Light add_point_light(Entity entity, vec3 color)
+Light GraphicsSystem::add_point_light(Entity entity, vec3 color)
 {
 	return 0;
 }

@@ -1,8 +1,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <vector>
-#include <unordered_map>
 
 #include "Core/Entity.h"
 #include "Core/System.h"
@@ -16,6 +14,7 @@
 #include "Structures/SOA.h"
 #include "Structures/ArrayList.h"
 #include "Structures/MultiArray.h"
+#include "Structures/EntityMapper.h"
 
 // TODO: like seriously
 using Camera = uint32_t;
@@ -51,7 +50,6 @@ struct GraphicsSystem
 		bool ortho;
 	};
 
-	std::unordered_map<uint32_t, uint32_t> indices_cameras;
 	soa_t<camera_t, struct camera_data_t> cameras; // TODO: don't need a whole page
 
 	// Renderers
@@ -62,12 +60,13 @@ struct GraphicsSystem
 		Mesh mesh;
 	};
 
-	std::unordered_map<uint32_t, uint32_t> indices_renderers;
-	std::vector<renderer_t> renderers;
+	soa_t<renderer_t> renderers;
 	array_list_t<struct submesh_data_t> submeshes;
 
 
 	// System data
+	entity_mapper_t<3> indices;
+
 	uint32_t cmd_buffer;
 
 	uint32_t prev_index_count;

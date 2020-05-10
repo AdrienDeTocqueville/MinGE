@@ -27,9 +27,9 @@ int main()
 	Engine::init(window, 30);
 
 	test_structures();
-	//test_transforms();
+	test_transforms();
 	//test_systems();
-	benchmark(50);
+	benchmark_transforms(50);
 
 	Engine::destroy();
 	window.close();

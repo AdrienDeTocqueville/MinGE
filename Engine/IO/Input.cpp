@@ -50,7 +50,7 @@ void Input::init(sf::RenderWindow* _window)
 
 void Input::poll_events()
 {
-	MICROPROFILE_SCOPEI("IO_INPUT", "update");
+	MICROPROFILE_SCOPEI("IO_INPUT", "poll_events");
 
 	bool mouseEvent = false, keyboardEvent = false;
 
@@ -117,12 +117,12 @@ void Input::poll_events()
 		}
 	}
 
-	if (!mouse_cleared && !mouseEvent)
+	if (!mouse_cleared & !mouseEvent)
 	{
 		mouse_cleared = true;
 		mouse_state[1-mouse_index] = mouse_state[mouse_index];
 	}
-	if (!keyboardCleared && !keyboardEvent)
+	if (!keyboardCleared & !keyboardEvent)
 	{
 		keyboardCleared = true;
 		keyboard_state[1-keyboard_index] = keyboard_state[keyboard_index];
