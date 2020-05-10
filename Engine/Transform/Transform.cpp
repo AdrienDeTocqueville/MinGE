@@ -129,6 +129,12 @@ void TransformSystem::update_matrices(uint32_t i)
 	}
 }
 
+void TransformSystem::clear()
+{
+	indices.clear();
+	data.clear();
+}
+
 
 /// TYPE DEFINITION
 static inline json to_json(vec3 v)

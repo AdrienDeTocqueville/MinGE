@@ -2,11 +2,30 @@
 
 #include "Structures/SOA.h"
 #include "Structures/ArrayList.h"
+#include "Structures/MultiArray.h"
 
-template <typename T, typename S>
+
+static void test_multi_array()
+{
+	multi_array_t<uint64_t> arr;
+
+	TEST(arr.add() == 1);
+	TEST(arr.add() == 2);
+	TEST(arr.add() == 3);
+	TEST(arr.add() == 4);
+
+	TEST(arr.size == 4);
+
+	arr.remove(2);
+	TEST(arr.add() == 2);
+}
+
+
+
+template <typename ArrayType>
 static void test_array_list()
 {
-	array_list::array_list_t<T, S> arr;
+	ArrayType arr;
 
 	TEST(arr.add(3) == 0);
 	TEST(arr.add(3) == 3);
@@ -64,8 +83,10 @@ static void test_soa()
 
 void test_structures()
 {
-	test_array_list<uint32_t, array_list::slot32_t>();
-	test_array_list<uint64_t, array_list::slot64_t>();
+	test_multi_array();
+
+	test_array_list<array_list32_t<uint32_t>>();
+	test_array_list<array_list_t<uint64_t>>();
 
 	test_soa();
 

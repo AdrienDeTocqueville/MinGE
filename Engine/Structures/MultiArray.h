@@ -53,7 +53,7 @@ struct multi_array_t
 	inline multi_array_t();
 	~multi_array_t() { mem::free_page(get<0>() + 1, capacity); }
 
-	void reserve(uint32_t new_cap);
+	void realloc(uint32_t new_alloc_size);
 	uint32_t add();
 	inline void remove(uint32_t index);
 	inline void clear();
@@ -69,7 +69,7 @@ struct multi_array_t
 	}
 
 
-	uint32_t next_slot, size, capacity;
+	uint32_t next_slot, size, stride, capacity;
 	multi_array::arrays_t<0, Types...> data;
 };
 
@@ -82,20 +82,22 @@ multi_array_t<Types...>::multi_array_t():
 	// The first array is also used to store the next free slot index
 	static_assert(sizeof(*get<0>()) >= sizeof(uint32_t), "First element type is too small");
 
-	void *alloc = mem::alloc_page((size_t)capacity * data.size());
-	data.init(alloc, capacity);
+	stride = capacity / (uint32_t)data.size();
+	void *alloc = mem::alloc_page((size_t)capacity);
+	data.init(alloc, stride);
 }
 
 template<typename... Types>
-void multi_array_t<Types...>::reserve(uint32_t new_cap)
+void multi_array_t<Types...>::realloc(uint32_t new_alloc_size)
 {
 	void *old_alloc = get<0>() + 1;
-	void *new_alloc = mem::alloc_page((size_t)new_cap * data.size());
+	void *new_alloc = mem::alloc_page((size_t)new_alloc_size);
 
-	data.move(new_alloc, size, new_cap);
-
+	stride = new_alloc_size / (uint32_t)data.size();
+	data.move(new_alloc, size, stride);
 	mem::free_page(old_alloc, capacity);
-	capacity = new_cap;
+
+	capacity = new_alloc_size;
 }
 
 template<typename... Types>
@@ -106,8 +108,8 @@ uint32_t multi_array_t<Types...>::add()
 		next_slot = *(uint32_t*)(get<0>() + next_slot);
 		return ret;
 	}
-	if (size == capacity)
-		reserve(capacity * 2);
+	if (size == stride)
+		realloc(capacity * 2);
 	return ++size;
 }
 

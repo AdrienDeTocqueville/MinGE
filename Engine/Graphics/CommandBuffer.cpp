@@ -1,5 +1,6 @@
-#include "Graphics/CommandBuffer.h"
+#include "Profiler/profiler.h"
 
+#include "Graphics/CommandBuffer.h"
 #include "Graphics/Shaders/Shader.inl"
 #include "Graphics/Shaders/Material.inl"
 
@@ -41,9 +42,11 @@ case DrawBatch:
 		material_t *material = Material::materials.get<0>(data->material);
 		material->bind(batch.pass);
 
+		{ MICROPROFILE_SCOPEGPUI("DrawElements", -1);
 		GL::BindVertexArray(data->submesh.vao);
 		glCheck(glDrawElements(data->submesh.mode, data->submesh.count, GL_UNSIGNED_SHORT,
 					(void*)(uint64_t)data->submesh.offset));
+		}
 	}
 	break;
 }

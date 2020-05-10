@@ -17,6 +17,8 @@ void RenderEngine::init()
 	Shader::setup_builtins();
 	Debug::init();
 
+	IF_PROFILE(MicroProfileGpuInitGL());
+
 	// TODO: destroy it
 	Material mat = Material::create(Shader::standard());
 	mat.set("color", vec3(0.8f));

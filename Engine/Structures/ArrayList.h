@@ -22,7 +22,7 @@ struct array_list_t
 	inline array_list_t();
 	~array_list_t() { mem::free_page(data, capacity); }
 
-	void reserve(uint32_t new_cap);
+	void realloc(uint32_t new_cap);
 	uint32_t add(uint32_t count);
 	void remove(uint32_t index, uint32_t count);
 	inline void clear();
@@ -56,14 +56,14 @@ array_list_t<T, S>::array_list_t():
 	// Each element can be used to store the amount of free slots and the next free slot index
 	static_assert(sizeof(T) >= sizeof(S), "First element type is too small");
 
-	data = (T*)mem::alloc_page((size_t)capacity * sizeof(T));
+	data = (T*)mem::alloc_page((size_t)capacity);
 	next_slot.next = -1;
 }
 
 template<typename T, typename S>
-void array_list_t<T, S>::reserve(uint32_t new_cap)
+void array_list_t<T, S>::realloc(uint32_t new_cap)
 {
-	void *new_alloc = mem::alloc_page((size_t)new_cap * sizeof(T));
+	void *new_alloc = mem::alloc_page((size_t)new_cap);
 
 	memcpy(new_alloc, data, size * sizeof(T));
 	mem::free_page(data, capacity);
@@ -97,8 +97,8 @@ uint32_t array_list_t<T, S>::add(uint32_t count)
 		slot_id = slot->next;
 		prev_slot = slot;
 	}
-	if (size + count > capacity)
-		reserve(capacity * 2);
+	if ((size + count) * sizeof(T) > capacity)
+		realloc(capacity * 2);
 	slot_id = size;
 	size += count;
 	return slot_id;

@@ -28,7 +28,11 @@ struct alignas(job_alignment) Job
 	Work function;
 	Semaphore *counter;
 	void *data;
+
+	union {
 	uint8_t scratch[job_alignment - 2*sizeof(void*) - sizeof(Work) - sizeof(Semaphore*)];
+	IF_PROFILE(struct { MicroProfileToken token; uint64_t tick; });
+	};
 };
 static_assert(sizeof(Job) == job_alignment, "Job size is invalid");
 

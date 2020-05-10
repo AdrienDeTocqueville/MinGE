@@ -59,7 +59,7 @@ struct soa_t
 	inline soa_t();
 	~soa_t() { mem::free_page(get<0>(), capacity); }
 
-	void reserve(uint32_t new_cap);
+	void realloc(uint32_t new_cap);
 	uint32_t add();
 	inline void remove(uint32_t index);
 	inline void clear();
@@ -78,17 +78,17 @@ template<typename... Types>
 soa_t<Types...>::soa_t():
 	size(0), capacity(mem::page_size)
 {
-	void *alloc = mem::alloc_page((size_t)capacity * data.size());
-	data.init(alloc, capacity);
+	void *alloc = mem::alloc_page((size_t)capacity);
+	data.init(alloc, capacity / (uint32_t)data.size());
 }
 
 template<typename... Types>
-void soa_t<Types...>::reserve(uint32_t new_cap)
+void soa_t<Types...>::realloc(uint32_t new_cap)
 {
 	void *old_alloc = get<0>();
-	void *new_alloc = mem::alloc_page((size_t)new_cap * data.size());
+	void *new_alloc = mem::alloc_page((size_t)new_cap);
 
-	data.move(new_alloc, size, new_cap);
+	data.move(new_alloc, size, new_cap / (uint32_t)data.size());
 	mem::free_page(old_alloc, capacity);
 
 	capacity = new_cap;
@@ -97,8 +97,8 @@ void soa_t<Types...>::reserve(uint32_t new_cap)
 template<typename... Types>
 uint32_t soa_t<Types...>::add()
 {
-	if (size == capacity)
-		reserve(capacity * 2);
+	if (size * data.size() >= capacity)
+		realloc(capacity * 2);
 	return size++;
 }
 

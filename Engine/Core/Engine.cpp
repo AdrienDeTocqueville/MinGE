@@ -1,4 +1,6 @@
+#include "Graphics/GLDriver.h"
 #define MICROPROFILE_IMPL
+#define MICROPROFILE_GPU_TIMERS_GL 1
 #include "Profiler/profiler.h"
 
 #include "Core/Engine.h"
@@ -7,7 +9,6 @@
 #include "Transform/Transform.h"
 
 #include "Graphics/Graphics.h"
-#include "Graphics/GLDriver.h"
 #include "Graphics/RenderEngine.h"
 
 #include "Utility/Time.h"
@@ -36,16 +37,6 @@ static std::vector<system_t*> systems;
 void Engine::init(sf::RenderWindow &window, unsigned _FPS)
 {
 	window.setFramerateLimit(_FPS);
-
-#ifdef PROFILE
-	MicroProfileOnThreadCreate("main thread");
-
-	MicroProfileSetForceEnable(true);
-	MicroProfileSetEnableAllGroups(true);
-	MicroProfileSetForceMetaCounters(true);
-
-	MicroProfileWebServerStart();
-#endif
 
 	Time::init();
 	Random::init();
@@ -88,12 +79,6 @@ void Engine::destroy()
 
 	RenderEngine::destroy();
 	JobSystem::destroy();
-
-#ifdef PROFILE
-	MicroProfileShutdown();
-
-	MicroProfileOnThreadExit();
-#endif
 }
 
 static inline system_type_t *get_type(const char *name)

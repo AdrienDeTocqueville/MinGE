@@ -82,6 +82,7 @@ struct TransformSystem
 	static const system_type_t type;
 
 	void update_matrices(uint32_t i);
+	void clear();
 };
 
 

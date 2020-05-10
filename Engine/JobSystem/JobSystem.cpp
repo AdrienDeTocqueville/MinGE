@@ -185,24 +185,34 @@ __declspec(noinline) void *get_this_fiber_fls()
 // Not inlined because this_fiber is TLS and it could cause problems
 void yield()
 {
+#ifdef PROFILE
+	Job *job = (Job*)GetFiberData();
+	if (job->data != job->scratch && job->token)
+		MicroProfileLeave(job->token, job->tick);
+#endif
+
 	SwitchToFiber(this_fiber);
+
+#ifdef PROFILE
+	if (job->data != job->scratch && job->token)
+		job->tick = MicroProfileEnter(job->token);
+#endif
 }
 
 static void job_run(Job *job)
 {
-	IF_PROFILE(MicroProfileToken token = 0);
-
 reset_fiber:
 
-	{
 #ifdef PROFILE
-	if (job->data != job->scratch)
-		token = *(MicroProfileToken*)job->scratch;
-	MICROPROFILE_SCOPE_TOKEN(token);
+	if (job->data != job->scratch && job->token)
+	{
+		job->tick = MicroProfileEnter(job->token);
+		job->function(job->data);
+		MicroProfileLeave(job->token, job->tick);
+	} else
 #endif
 
 	job->function(job->data);
-	}
 
 	job->function = NULL;
 	job->counter->n.fetch_sub(1, std::memory_order_release);
@@ -231,7 +241,10 @@ void run(Work func, void *data, void *scratch, size_t n, Semaphore *counter)
 		memcpy(job->scratch, scratch, n);
 	}
 	else
+	{
 		job->data = data;
+		IF_PROFILE(memset(job->scratch, 0, sizeof(MicroProfileToken)));
+	}
 
 	if (counter && counter->n == 0) counter->n = 1;
 
@@ -320,6 +333,16 @@ void init()
 	num_worker = std::thread::hardware_concurrency();
 #endif
 
+#ifdef PROFILE
+	MicroProfileOnThreadCreate("main thread");
+
+	MicroProfileSetForceEnable(true);
+	MicroProfileSetEnableAllGroups(true);
+	MicroProfileSetForceMetaCounters(true);
+
+	MicroProfileWebServerStart();
+#endif
+
 	workers = new Worker[num_worker];
 	work = true;
 
@@ -350,6 +373,11 @@ void destroy()
 	for (unsigned i(0); i < JOB_POOL_SIZE; i++)
 		DeleteFiber(job_pool[i].fiber);
 	ConvertFiberToThread();
+#endif
+
+#ifdef PROFILE
+	MicroProfileShutdown();
+	MicroProfileOnThreadExit();
 #endif
 }
 

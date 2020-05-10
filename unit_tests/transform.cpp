@@ -3,9 +3,9 @@
 void benchmark(int iterations)
 {
 	long time = 0;
+	TransformSystem transforms;
 	for (int i = 0; i < iterations; i++)
 	{
-		TransformSystem transforms;
 		Entity entities[1000];
 
 		Time::Chrono timer;
@@ -29,6 +29,7 @@ void benchmark(int iterations)
 			transforms.get(entities[j]).set_position(vec3(0.0f));
 		}
 		time += timer.time();
+		transforms.clear();
 	}
 	std::cout << time / iterations << "\n";
 }

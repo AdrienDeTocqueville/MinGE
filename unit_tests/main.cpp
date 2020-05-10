@@ -26,12 +26,13 @@ int main()
 	/// Init engine
 	Engine::init(window, 30);
 
-	benchmark(50);
+	test_structures();
 	//test_transforms();
 	//test_systems();
-	//test_structures();
+	benchmark(50);
 
 	Engine::destroy();
+	window.close();
 
 	printf("\n\nAll tests passed.\nPress enter to quit...");
 	std::cin.get();

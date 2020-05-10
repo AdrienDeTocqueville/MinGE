@@ -17,8 +17,10 @@
 #include "Structures/ArrayList.h"
 #include "Structures/MultiArray.h"
 
+// TODO: like seriously
 using Camera = uint32_t;
 using Renderer = uint32_t;
+using Light = uint32_t;
 
 struct TransformSystem;
 
@@ -32,6 +34,8 @@ struct GraphicsSystem
 		vec3 clear_color = vec3(0.0f), unsigned clear_flags = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	Renderer add_renderer(Entity entity, Mesh mesh);
+
+	Light add_point_light(Entity entity, vec3 color = vec3(150.0f / 255.0f));
 
 	// Cameras
 	struct camera_t
