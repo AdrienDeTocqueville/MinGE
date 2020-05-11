@@ -49,7 +49,7 @@ project "Engine"
 
 	-- Libraries
 	filter "system:windows"
-		filter "configurations:debug or dev"
+		filter "configurations:debug"
 			links {
 				"sfml-audio-d.lib",
 				"sfml-graphics-d.lib",
@@ -58,7 +58,7 @@ project "Engine"
 				"sfml-system-d.lib",
 			}
 
-		filter "configurations:release"
+		filter "configurations:release or dev"
 			links {
 				"sfml-audio.lib",
 				"sfml-graphics.lib",
@@ -86,7 +86,7 @@ project "Engine"
 	filter "configurations:dev"
 		defines { "DEBUG", "PROFILE" }
 		symbols "on"
-		optimize "speed"
+		optimize "size"
 
 	filter "configurations:release"
 		defines "NDEBUG"
@@ -147,7 +147,7 @@ project "graphics_tests"
 	filter "configurations:dev"
 		defines { "DEBUG", "PROFILE" }
 		symbols "on"
-		optimize "speed"
+		optimize "size"
 
 	filter "configurations:release"
 		defines "NDEBUG"
@@ -208,7 +208,7 @@ project "unit_tests"
 	filter "configurations:dev"
 		defines { "DEBUG", "PROFILE" }
 		symbols "on"
-		optimize "speed"
+		optimize "size"
 
 	filter "configurations:release"
 		defines "NDEBUG"

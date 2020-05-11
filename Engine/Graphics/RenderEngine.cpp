@@ -8,6 +8,8 @@
 #include "Graphics/Shaders/Material.inl"
 #include "Graphics/Textures/Texture.h"
 
+#include "IO/Input.h"
+
 
 static std::vector<cmd_buffer_t> buffers;
 
@@ -17,7 +19,10 @@ void RenderEngine::init()
 	Shader::setup_builtins();
 	Debug::init();
 
-	IF_PROFILE(MicroProfileGpuInitGL());
+#ifdef PROFILE
+	MicroProfileDrawInitGL();
+	MicroProfileGpuInitGL();
+#endif
 
 	// TODO: destroy it
 	Material mat = Material::create(Shader::standard());
@@ -43,13 +48,28 @@ void RenderEngine::flush()
 	for (auto &cmd : buffers)
 	{
 		MICROPROFILE_SCOPEI("RENDER_ENGINE", "cmd_buffer");
+		MICROPROFILE_SCOPEGPUI("cmd_buffer", -1);
 		cmd.flush();
 	}
 
-	{ MICROPROFILE_SCOPEI("RENDER_ENGINE", "debug_draw");
 	// TODO: this will draw on the last camera
 	Debug::flush();
+
+#ifdef PROFILE
+	{
+		MicroProfileFlip();
+
+		MICROPROFILE_SCOPEI("RENDER_ENGINE", "profiler");
+		MICROPROFILE_SCOPEGPUI("profiler", -1);
+
+		ivec2 size = Input::window_size();
+		MicroProfileBeginDraw(size.x, size.y, 1.f);
+
+		MicroProfileDraw(size.x, size.y);
+
+		MicroProfileEndDraw();
 	}
+#endif
 }
 
 uint32_t RenderEngine::create_cmd_buffer()

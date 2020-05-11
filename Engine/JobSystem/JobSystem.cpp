@@ -299,9 +299,7 @@ static void worker_main(const int i)
 	ConvertFiberToThread();
 #endif
 
-#ifdef PROFILE
-	MicroProfileOnThreadExit();
-#endif
+	IF_PROFILE(MicroProfileOnThreadExit());
 }
 
 static void set_cpu_affinity(const std::thread::native_handle_type handle, const int cpu)
@@ -336,11 +334,8 @@ void init()
 #ifdef PROFILE
 	MicroProfileOnThreadCreate("main thread");
 
-	MicroProfileSetForceEnable(true);
 	MicroProfileSetEnableAllGroups(true);
 	MicroProfileSetForceMetaCounters(true);
-
-	MicroProfileWebServerStart();
 #endif
 
 	workers = new Worker[num_worker];
@@ -375,10 +370,7 @@ void destroy()
 	ConvertFiberToThread();
 #endif
 
-#ifdef PROFILE
-	MicroProfileShutdown();
-	MicroProfileOnThreadExit();
-#endif
+	IF_PROFILE(MicroProfileShutdown());
 }
 
 } // namespace

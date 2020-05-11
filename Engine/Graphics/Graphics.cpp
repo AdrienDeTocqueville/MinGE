@@ -9,6 +9,8 @@
 
 #include "Transform/Transform.h"
 
+#include "Graphics/Shaders/Shader.inl"
+
 GraphicsSystem::GraphicsSystem(TransformSystem *world):
 	prev_index_count(0), prev_key_count(0), prev_renderer_count(0),
 	draw_order_indices(NULL), renderer_keys(NULL), matrices(NULL),
@@ -38,12 +40,16 @@ static void init_indices(uint32_t *__restrict indices, const GraphicsSystem::ren
 
 static void update(GraphicsSystem *self)
 {
-	Engine::write_lock(self);
+	Engine::read_lock(self);
 	material_t::bound = nullptr;
 
 	auto renderer_count = self->renderers.size;
 	auto *renderers = self->renderers.get<0>();
 	auto &submeshes = self->submeshes;
+
+	MICROPROFILE_COUNTER_SET("GRAPHICS/renderers", renderer_count);
+	MICROPROFILE_COUNTER_SET("GRAPHICS/cameras", self->cameras.size);
+	MICROPROFILE_COUNTER_SET("GRAPHICS/point_lights", self->point_lights.size());
 
 	/// Resize persistent alloc if needed
 	{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "realloc");
@@ -97,6 +103,12 @@ static void update(GraphicsSystem *self)
 
 			self->cameras.get<0>()[i].center_point = tr.vec_to_world(vec3(1, 0, 0)) + pos;
 			self->cameras.get<1>()[i].position = pos;
+		}
+		for (uint32_t i = 0; i < self->point_lights.size(); i++)
+		{
+			Transform tr = transforms->get(self->point_lights[i].entity);
+			Shader::set_builtin("LIGHT_DIR", tr.position());
+			Shader::set_builtin("LIGHT_COLOR", self->point_lights[i].color);
 		}
 
 		Engine::read_unlock(transforms);
@@ -192,8 +204,6 @@ static void update(GraphicsSystem *self)
 				Debug::sphere(sphere, color);
 				color += vec3(0, 1, 0);
 			}
-
-			Debug::frustum(cam->frustum);
 			continue;
 		}
 
@@ -204,7 +214,7 @@ static void update(GraphicsSystem *self)
 		cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Forward, cmd_count);
 		}
 	}
-	Engine::write_unlock(self);
+	Engine::read_unlock(self);
 }
 
 

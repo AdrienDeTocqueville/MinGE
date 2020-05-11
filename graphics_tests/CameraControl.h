@@ -2,27 +2,33 @@
 
 #include <MinGE.h>
 #include "Transform/Transform.h"
+#include "Graphics/Graphics.h"
 
 struct CameraControl
 {
 public:
-	CameraControl(TransformSystem *_world, float _sensivity = 0.2f, float _distance = 15.0f, vec3 _offset = vec3(0.0f)):
-		world(_world), angles(0.0f), clampAngleY(-0.499f*PI, 0.499f*PI),
+	CameraControl(TransformSystem *_world, GraphicsSystem *_graphics, float _sensivity = 0.2f, float _distance = 15.0f, vec3 _offset = vec3(0.0f)):
+		world(_world), graphics(_graphics), angles(0.0f), clampAngleY(-0.499f*PI, 0.499f*PI),
 		sensivity(_sensivity), distance(_distance), offset(_offset)
-	{
-		Input::set_cursor_mode(Input::Free);
-	}
+	{ }
+
+	std::vector<Entity> cameras;
+	int curr = 0;
 
 	void add(Entity camera)
 	{
-		cam = camera;
-		set_target(Entity::none);
+		cameras.push_back(camera);
+		if (cam == Entity::none)
+		{
+			cam = camera;
+			set_target(Entity::none);
+		}
 	}
 
 	void set_target(Entity e)
 	{
 		target = e;
-		if (target == Entity::none)
+		if (e == Entity::none)
 		{
 			vec3 ea = world->get(cam).euler_angles();
 			angles = vec2(ea.z, ea.y);
@@ -32,6 +38,16 @@ public:
 	/// Methods (public)
 	void update()
 	{
+		if (Input::key_pressed(sf::Keyboard::Tab))
+		{
+			curr = (curr + 1) % cameras.size();
+			cam = cameras[curr];
+			set_target(Entity::none);
+		}
+
+		if (cam == Entity::none)
+			return;
+
 		if (Input::button_pressed(sf::Mouse::Left))
 		{
 			mp_saved = Input::mouse_position();
@@ -66,6 +82,14 @@ public:
 		}
 */
 #endif
+
+		Engine::read_lock(graphics);
+		for (int i = 1; i < cameras.size(); i++)
+		{
+			uint32_t c = graphics->indices.get<0>(cameras[i]);
+			Debug::frustum(graphics->cameras.get<0>()[c].frustum, cam == cameras[i] ? vec3(0,1,0) : vec3(1));
+		}
+		Engine::read_unlock(graphics);
 
 		Engine::read_lock(world);
 		Transform tr = world->get(cam);
@@ -121,6 +145,7 @@ public:
 	}
 
 	TransformSystem *world;
+	GraphicsSystem *graphics;
 
 	Entity cam;
 	Entity target;

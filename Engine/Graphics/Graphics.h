@@ -63,6 +63,14 @@ struct GraphicsSystem
 	soa_t<renderer_t> renderers;
 	array_list_t<struct submesh_data_t> submeshes;
 
+	// Lights
+	struct point_light_t
+	{
+		vec3 color;
+		Entity entity;
+	};
+
+	std::vector<point_light_t> point_lights;
 
 	// System data
 	entity_mapper_t<3> indices;

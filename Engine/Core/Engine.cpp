@@ -1,5 +1,7 @@
 #include "Graphics/GLDriver.h"
 #define MICROPROFILE_IMPL
+#define MICROPROFILEUI_IMPL
+#define MICROPROFILEDRAW_IMPL
 #define MICROPROFILE_GPU_TIMERS_GL 1
 #include "Profiler/profiler.h"
 
@@ -169,7 +171,7 @@ const system_type_t *Engine::get_system_type(void *system)
 
 void Engine::update()
 {
-	{ MICROPROFILE_SCOPEI("ENGINE", "update");
+	MICROPROFILE_SCOPEI("ENGINE", "frame");
 
 	Time::tick();
 	Input::poll_events();
@@ -194,7 +196,4 @@ void Engine::update()
 	}
 
 	RenderEngine::flush();
-	}
-
-	MicroProfileFlip();
 }

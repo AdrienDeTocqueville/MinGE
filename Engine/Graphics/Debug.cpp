@@ -1,5 +1,7 @@
 #include <mutex>
 
+#include "Profiler/profiler.h"
+
 #include "Graphics/Debug.h"
 #include "Graphics/GLDriver.h"
 #include "Graphics/Shaders/Material.h"
@@ -138,6 +140,8 @@ void Debug::destroy()
 
 void flush_points()
 {
+	MICROPROFILE_SCOPEGPUI("debug_points", -1);
+
 	GL::BindVertexArray(vao);
 	GL::BindVertexBuffer(vbo);
 
@@ -155,6 +159,8 @@ void flush_points()
 
 void flush_lines()
 {
+	MICROPROFILE_SCOPEGPUI("debug_lines", -1);
+
 	GL::BindVertexArray(vao);
 	GL::BindVertexBuffer(vbo);
 
@@ -174,6 +180,9 @@ void Debug::flush()
 {
 	if (!points.size() && !lines.size())
 		return;
+
+	MICROPROFILE_SCOPEI("RENDER_ENGINE", "debug_draw");
+	MICROPROFILE_SCOPEGPUI("debug_draw", -1);
 
 	Material::materials.get<0>(material.id())->bind(RenderPass::Forward);
 

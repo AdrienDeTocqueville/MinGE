@@ -55,19 +55,18 @@ void main()
 	float roughness = texture(roughness_map, in_fs.uv).x;
 #endif
 
-	vec3 albedo = pow(color, vec3(2.2f));
 	float ao        = 1.0f;
 
 	vec3 N = normalize(in_fs.normal);
 	vec3 V = normalize(VIEW_POS - in_fs.pos);
 
 	vec3 F0 = vec3(0.04f);
-	F0 = mix(F0, albedo, metallic);
+	F0 = mix(F0, color, metallic);
 
 	vec3 Lo = vec3(0.0f);
 	{
-		//vec3 L = normalize(lightPosition - in_fs.pos); // Point
-		vec3 L = LIGHT_DIR; // Directional
+		vec3 L = normalize(LIGHT_DIR - in_fs.pos); // Point
+		//vec3 L = LIGHT_DIR; // Directional
 		vec3 H = normalize(V + L);
 
 		// Compute radiance
@@ -92,11 +91,11 @@ void main()
 		kD *= 1.0 - metallic;
 
 		float NdotL = max(dot(N, L), 0.0);
-		Lo += (kD * albedo / PI + specular) * radiance * NdotL;
+		Lo += (kD * color / PI + specular) * radiance * NdotL;
 	}
 
 
-	vec3 ambient = vec3(0.03) * albedo * ao;
+	vec3 ambient = vec3(0.03) * color * ao;
 	vec3 final = ambient + Lo;
 
 	// HDR tonemapping

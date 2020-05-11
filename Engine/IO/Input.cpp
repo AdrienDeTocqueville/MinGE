@@ -138,6 +138,12 @@ void Input::poll_events()
 		sf::Mouse::setPosition(toSFVec2i(center), *win);
 	else
 		prev_mouse_pos = mouse_pos;
+
+
+	/// Profiler
+	MicroProfileMouseButton(button_pressed(sf::Mouse::Left), button_pressed(sf::Mouse::Right));
+	MicroProfileMousePosition(mouse_pos.x, mouse_pos.y, mouse_wheel_delta);
+	MicroProfileModKey(key_down(sf::Keyboard::LShift));
 }
 
 

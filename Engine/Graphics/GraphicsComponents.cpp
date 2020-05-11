@@ -70,5 +70,10 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 
 Light GraphicsSystem::add_point_light(Entity entity, vec3 color)
 {
-	return 0;
+	uint32_t i = point_lights.size();
+	indices.map<2>(entity, i);
+
+	point_lights.emplace_back(point_light_t { color, entity });
+
+	return i;
 }
