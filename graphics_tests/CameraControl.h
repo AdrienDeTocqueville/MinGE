@@ -48,20 +48,9 @@ public:
 		if (cam == Entity::none)
 			return;
 
-		if (Input::button_pressed(sf::Mouse::Left))
+		if (Input::button_down(sf::Mouse::Middle))
 		{
-			mp_saved = Input::mouse_position();
-			Input::set_cursor_mode(Input::Capture);
-		}
-		else if (Input::button_released(sf::Mouse::Left))
-		{
-			Input::set_cursor_mode(Input::Free);
-			Input::set_mouse_position(mp_saved);
-		}
-
-		if (Input::cursor_mode() == Input::Capture)
-		{
-			angles += radians(Input::mouse_delta() * sensivity);
+			angles += radians((vec2)Input::mouse_delta() * sensivity);
 			angles.y = clamp(angles.y, clampAngleY.x, clampAngleY.y);
 		}
 
@@ -97,7 +86,7 @@ public:
 		if (target == Entity::none) /// FPS
 		{
 			vec3 dir = getMovement(tr.vec_to_world(vec3(1, 0, 0)));
-			if (dir != vec3(0.0f) || Input::mouse_delta() != vec2(0.0f))
+			if (dir != vec3(0.0f) || Input::mouse_delta() != ivec2(0))
 			{
 				float speed = (Input::key_down(sf::Keyboard::LShift) ? 0.5f : 1.0f) * distance * Time::delta_time;
 
@@ -152,7 +141,6 @@ public:
 
 	vec2 angles;
 	vec2 clampAngleY;
-	vec2 mp_saved;
 
 	float sensivity;
 	float distance;

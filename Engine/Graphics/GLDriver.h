@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Window.hpp>
 #include <GL/glew.h>
 
 #include "Math/glm.h"
@@ -16,8 +16,11 @@ void glCheckError(const char* file, unsigned int line, const char* expression);
 
 #define NO_DRIVER_STATE_CACHE false
 
-class GL
+struct GL
 {
+	enum Capability { CullFace, Blend, DepthTest, ScissorTest, CAP_COUNT };
+
+private:
 	struct GLState
 	{
 		GLuint ubo, vbo, ebo, vao, fbo;
@@ -26,12 +29,41 @@ class GL
 
 		ivec4 view, scissor;
 		vec4 clearColor;
+
+		bool caps[GL::CAP_COUNT];
 	};
 
 	static GLState state;
 
+	static inline GLenum cap_to_gl(Capability cap)
+	{
+		static const GLenum gl_caps[GL::CAP_COUNT] = {
+			GL_CULL_FACE, GL_BLEND, GL_DEPTH_TEST, GL_SCISSOR_TEST
+		};
+		return gl_caps[cap];
+	}
+
 public:
 	static void init();
+
+	// Capabilities
+	static void Enable(Capability cap)
+	{
+		if (state.caps[cap] == false)
+		{
+			glEnable(cap_to_gl(cap));
+			state.caps[cap] = true;
+		}
+	}
+
+	static void Disable(Capability cap)
+	{
+		if (state.caps[cap] == true)
+		{
+			glDisable(cap_to_gl(cap));
+			state.caps[cap] = false;
+		}
+	}
 
 	// Creation
 	static GLuint GenBuffer()

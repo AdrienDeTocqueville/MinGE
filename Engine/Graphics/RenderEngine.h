@@ -14,6 +14,7 @@ private:
 	static void init();
 	static void destroy();
 
+	static void start_frame();
 	static void flush();
 
 	friend struct Engine;

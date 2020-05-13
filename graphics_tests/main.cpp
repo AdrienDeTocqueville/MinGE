@@ -1,5 +1,5 @@
 #include <MinGE.h>
-#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Window.hpp>
 
 #include <iostream>
 
@@ -21,7 +21,7 @@ int main()
 	std::cout << "  -- MinGE --" << std::endl;
 
 	/// Create window
-	sf::RenderWindow window(video_mode, "MinGE", style, sf::ContextSettings(24, 0, 0, 4, 3));
+	sf::Window window(video_mode, "MinGE", style, sf::ContextSettings(24, 0, 0, 4, 3));
 	//window.setPosition(sf::Vector2i(desktop.width - video_mode.width, desktop.height - video_mode.height) / 2);
 	window.setPosition(sf::Vector2i(-1920 + (1920-video_mode.width)/2, 350));
 

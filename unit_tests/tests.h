@@ -9,8 +9,7 @@
 #include <MinGE.h>
 #include <iostream>
 
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/System.hpp>
+#include <SFML/Window.hpp>
 
 #if _WIN32
 #define TEST(x) if (!(x)) { std::stringstream str; \

@@ -229,10 +229,10 @@ void MicroProfileBeginDraw(uint32_t nWidth, uint32_t nHeight, float* pfProjectio
 	if (!S.bInitialized)
 		return;
 
-	glEnable(GL_BLEND);
+	GL::Enable(GL::Blend);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
+	GL::Disable(GL::DepthTest);
+	GL::Disable(GL::CullFace);
 
 	if (S.nVAO)
 		GL::BindVertexArray(S.nVAO);
@@ -351,10 +351,6 @@ void MicroProfileEndDraw()
 	glDisableVertexAttribArray(S.nAttributePosition);
 	glDisableVertexAttribArray(S.nAttributeColor);
 	glDisableVertexAttribArray(S.nAttributeTexture);
-
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
 }
 
 void MicroProfileRender(uint32_t nWidth, uint32_t nHeight, float fScale)

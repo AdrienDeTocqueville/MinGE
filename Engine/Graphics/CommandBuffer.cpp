@@ -55,6 +55,10 @@ case SetupCamera:
 {
 	camera_data_t *&camera = consume<camera_data_t*>(i);
 
+	GL::Enable(GL::CullFace);
+	GL::Enable(GL::DepthTest);
+	GL::Enable(GL::ScissorTest);
+
 	GL::Viewport(camera->viewport);
 	GL::Scissor (camera->viewport);
 	GL::ClearColor(camera->clear_color);

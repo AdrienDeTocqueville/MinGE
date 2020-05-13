@@ -1,4 +1,5 @@
 #include "Graphics/GLDriver.h"
+
 #define MICROPROFILE_IMPL
 #define MICROPROFILEUI_IMPL
 #define MICROPROFILEDRAW_IMPL
@@ -36,7 +37,7 @@ struct system_t
 static std::vector<system_type_t> system_types;
 static std::vector<system_t*> systems;
 
-void Engine::init(sf::RenderWindow &window, unsigned _FPS)
+void Engine::init(sf::Window &window, unsigned _FPS)
 {
 	window.setFramerateLimit(_FPS);
 
@@ -175,6 +176,7 @@ void Engine::update()
 
 	Time::tick();
 	Input::poll_events();
+	RenderEngine::start_frame();
 
 	// Launch system update jobs
 	{ MICROPROFILE_SCOPEI("ENGINE", "launch_update_jobs");

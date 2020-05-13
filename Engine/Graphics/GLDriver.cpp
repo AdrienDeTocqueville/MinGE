@@ -20,10 +20,6 @@ void GL::init()
 	printf("GLSL   version: (%s)\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 #endif
 	
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_SCISSOR_TEST);
-	
 	glDepthFunc(GL_LEQUAL);
 	glCullFace(GL_BACK);
 	glPointSize(7);

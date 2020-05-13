@@ -2,16 +2,14 @@
 
 #include "Profiler/profiler.h"
 
-#include <SFML/System.hpp>
-#include <SFML/Window/Event.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Window.hpp>
 
-sf::RenderWindow* Input::win = nullptr;
+sf::Window* Input::win = nullptr;
 
 ivec2 Input::dim(0), Input::center(0);
 
-vec2 Input::prev_mouse_pos(0.0f), Input::mouse_pos(0.0f);
-vec2 Input::mouse_pos_delta(0.0f);
+ivec2 Input::prev_mouse_pos(0), Input::mouse_pos(0);
+ivec2 Input::mouse_pos_delta(0);
 int Input::mouse_wheel_delta(0);
 
 Input::Cursor Input::mode = Input::Cursor::Free;
@@ -25,21 +23,21 @@ std::bitset<sf::Mouse::ButtonCount> Input::mouse_state[2];
 std::bitset<sf::Keyboard::KeyCount> Input::keyboard_state[2];
 
 
-static inline vec2 toVec2(sf::Vector2i v)	{ return vec2(v.x, v.y); }
-static inline vec2 toVec2(sf::Vector2u v)	{ return vec2(v.x, v.y); }
-static inline sf::Vector2i toSFVec2i(vec2 v)	{ return sf::Vector2i((int)v.x, (int)v.y); }
-static inline sf::Vector2i toSFVec2i(ivec2 v)	{ return sf::Vector2i(v.x, v.y); }
-static inline sf::Vector2u toSFVec2u(ivec2 v)	{ return sf::Vector2u(v.x, v.y); }
+static inline ivec2 to_glm(sf::Vector2i v)	{ return ivec2(v.x, v.y); }
+static inline uvec2 to_glm(sf::Vector2u v)	{ return uvec2(v.x, v.y); }
+static inline sf::Vector2f to_sf(vec2 v)	{ return sf::Vector2f(v.x, v.y); }
+static inline sf::Vector2i to_sf(ivec2 v)	{ return sf::Vector2i(v.x, v.y); }
+static inline sf::Vector2u to_sf(uvec2 v)	{ return sf::Vector2u(v.x, v.y); }
 
 
 /// Methods (private)
-void Input::init(sf::RenderWindow* _window)
+void Input::init(sf::Window* _window)
 {
 	win = _window;
 	win->setKeyRepeatEnabled(false);
 
-	dim = toVec2(win->getSize());
-	center = ivec2(dim / 2);
+	dim = to_glm(win->getSize());
+	center = dim / 2;
 
 	prev_mouse_pos = center;
 	mouse_pos = center;
@@ -66,7 +64,8 @@ void Input::poll_events()
 			break;
 
 		case sf::Event::MouseMoved:
-			mouse_pos = toVec2(sf::Mouse::getPosition(*win));
+			mouse_pos = ivec2(event.mouseMove.x, event.mouseMove.y);
+			//mouse_pos = to_glm(sf::Mouse::getPosition(*win));
 			break;
 
 		case sf::Event::MouseWheelScrolled:
@@ -83,7 +82,7 @@ void Input::poll_events()
 
 		case sf::Event::Resized:
 			dim = ivec2(event.size.width, event.size.height);
-			center = ivec2(dim / 2);
+			center = dim / 2;
 
 			if (mode == Cursor::Capture)
 				prev_mouse_pos = center;
@@ -135,15 +134,9 @@ void Input::poll_events()
 
 
 	if (mode == Cursor::Capture)
-		sf::Mouse::setPosition(toSFVec2i(center), *win);
+		sf::Mouse::setPosition(to_sf(center), *win);
 	else
 		prev_mouse_pos = mouse_pos;
-
-
-	/// Profiler
-	MicroProfileMouseButton(button_pressed(sf::Mouse::Left), button_pressed(sf::Mouse::Right));
-	MicroProfileMousePosition(mouse_pos.x, mouse_pos.y, mouse_wheel_delta);
-	MicroProfileModKey(key_down(sf::Keyboard::LShift));
 }
 
 
@@ -155,10 +148,10 @@ void Input::close_window()
 
 void Input::set_window_size(ivec2 _size)
 {
-	win->setSize(toSFVec2u(_size));
+	win->setSize({(unsigned)_size.x, (unsigned)_size.y});
 
 	dim = _size;
-	center = ivec2(dim / 2);
+	center = dim / 2;
 
 	if (mode == Cursor::Capture)
 		prev_mouse_pos = center;
@@ -166,57 +159,35 @@ void Input::set_window_size(ivec2 _size)
 
 
 // Mouse
-vec2 Input::mouse_delta_ss()
-{
-	vec2 deltaRel(mouse_pos_delta);
-
-	deltaRel.x /= win->getSize().x;
-	deltaRel.y = 1.0f - deltaRel.y/win->getSize().y;
-
-	return deltaRel*2.0f - 1.0f;
-}
-
-vec2 Input::mouse_position(bool openGLSpace)
-{
-	if (openGLSpace)
-		return vec2(mouse_pos.x, win->getSize().y - mouse_pos.y);
-
-	return mouse_pos;
-}
-
-vec2 Input::mouse_position_relative()
+vec2 Input::mouse_position_ss()
 {
 	vec2 mousePosRel(mouse_pos);
 
-	mousePosRel.x /= win->getSize().x;
-	mousePosRel.y = 1.0f - mousePosRel.y/win->getSize().y;
+	mousePosRel.x /= dim.x;
+	mousePosRel.y = 1.0f - mousePosRel.y/dim.y;
 
 	return mousePosRel*2.0f - 1.0f;
 }
 
-void Input::set_mouse_position(vec2 _pos, bool openGLSpace)
+void Input::set_mouse_position(ivec2 _pos, bool openGLSpace)
 {
 	if (openGLSpace)
-		_pos.y = win->getSize().y - _pos.y;
+		_pos.y = dim.y - _pos.y;
 
-	sf::Mouse::setPosition(toSFVec2i(_pos), *win);
+	sf::Mouse::setPosition(to_sf(_pos), *win);
 }
 
-void Input::set_cursor_mode(Input::Cursor _mode)
+void Input::set_cursor_mode(Input::Cursor _mode, bool _visible)
 {
+	win->setMouseCursorVisible(_visible);
+
 	if (mode == _mode)
 		return;
-
 	mode = _mode;
 
-	sf::Mouse::setPosition(toSFVec2i(center), *win);
-	mouse_pos_delta = vec2(0.0f);
+	sf::Mouse::setPosition(to_sf(center), *win);
+	mouse_pos_delta = ivec2(0);
 
 	if (mode == Cursor::Capture)
 		prev_mouse_pos = center;
-
-	if (mode == Cursor::FreeHidden || mode == Cursor::Capture)
-		win->setMouseCursorVisible(false);
-	else
-		win->setMouseCursorVisible(true);
 }

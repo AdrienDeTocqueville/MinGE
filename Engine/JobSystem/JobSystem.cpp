@@ -223,6 +223,8 @@ reset_fiber:
 
 void run(Work func, void *data, void *scratch, size_t n, Semaphore *counter)
 {
+	assert(this_worker == 0 && "TODO: init fibers on other threads");
+
 	MICROPROFILE_SCOPEI("JOB_SYSTEM", "run");
 
 	Job* job = allocate_job();

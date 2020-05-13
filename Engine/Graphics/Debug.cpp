@@ -186,13 +186,8 @@ void Debug::flush()
 
 	Material::materials.get<0>(material.id())->bind(RenderPass::Forward);
 
-	glPushAttrib(GL_DEPTH_BUFFER_BIT);
-	{
-		//glDisable(GL_DEPTH_TEST);
+	//GL::Disable(GL::DepthTest);
 
-		if (points.size())	flush_points();
-		if (lines.size())	flush_lines();
-
-	}
-	glPopAttrib();
+	if (points.size())	flush_points();
+	if (lines.size())	flush_lines();
 }

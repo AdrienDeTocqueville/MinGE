@@ -1,4 +1,5 @@
 #include "Profiler/profiler.h"
+#include "UI/ui.h"
 
 #include "Graphics/RenderEngine.h"
 #include "Graphics/CommandBuffer.h"
@@ -18,6 +19,7 @@ void RenderEngine::init()
 	GL::init();
 	Shader::setup_builtins();
 	Debug::init();
+	UI::init();
 
 #ifdef PROFILE
 	MicroProfileDrawInitGL();
@@ -41,6 +43,19 @@ void RenderEngine::destroy()
 	Material::clear();
 }
 
+
+void RenderEngine::start_frame()
+{
+	/// Profiler
+	ivec2 mouse_pos = Input::mouse_position(false);
+	MicroProfileMouseButton(Input::button_pressed(sf::Mouse::Left), Input::button_pressed(sf::Mouse::Right));
+	MicroProfileMousePosition(mouse_pos.x, mouse_pos.y, -Input::wheel_scroll());
+	MicroProfileModKey(Input::key_down(sf::Keyboard::LShift));
+
+	/// UI
+	UI::send_inputs();
+}
+
 void RenderEngine::flush()
 {
 	MICROPROFILE_SCOPEI("RENDER_ENGINE", "flush");
@@ -54,6 +69,8 @@ void RenderEngine::flush()
 
 	// TODO: this will draw on the last camera
 	Debug::flush();
+
+	UI::flush();
 
 #ifdef PROFILE
 	{
