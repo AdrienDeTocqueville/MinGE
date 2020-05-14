@@ -1,19 +1,40 @@
+-- Modify this section
+local prj_names = {"Editor", "graphics_tests", "unit_tests"}
+
 filter "system:windows"
-	-- Update these variables if necessary
 	lib_dir = "../Libs"
 	sfml_path = lib_dir .. "/SFML-2.5.1-windows-vc15-64-bit"
 	glew_path = lib_dir .. "/glew-2.1.0"
 	glm_path  = lib_dir .. "/glm-0.9.9.7"
 
+function build_settings()
+	filter "system:windows"
+		systemversion "latest"
+		defines "_CRT_SECURE_NO_DEPRECATE"
+
+	filter "configurations:debug"
+		defines { "DEBUG", "DRAWAABB" }
+		symbols "on"
+		optimize "off"
+
+	filter "configurations:dev"
+		defines { "DEBUG", "PROFILE" }
+		symbols "on"
+		optimize "size"
+
+	filter "configurations:release"
+		defines "NDEBUG"
+		optimize "speed"
+end
+-- End of modifiable section
 
 
 workspace "MinGE"
 	architecture "x64"
-	startproject "graphics_tests"
+	startproject(prj_names[1])
 	flags "MultiProcessorCompile"
 
 	configurations { "debug", "dev", "release" }
-
 
 
 project "Engine"
@@ -73,144 +94,92 @@ project "Engine"
 			"glew32.lib",
 		}
 
-	-- Defines and flags
-	filter "system:windows"
-		systemversion "latest"
-		defines "_CRT_SECURE_NO_DEPRECATE"
-
-	filter "configurations:debug"
-		defines { "DEBUG", "DRAWAABB" }
-		symbols "on"
-		optimize "off"
-
-	filter "configurations:dev"
-		defines { "DEBUG", "PROFILE" }
-		symbols "on"
-		optimize "size"
-
-	filter "configurations:release"
-		defines "NDEBUG"
-		optimize "speed"
+	build_settings()
 
 
-project "graphics_tests"
-	targetname "%{prj.name}_%{cfg.buildcfg}"
-	kind "ConsoleApp"
-	language "C++"
-	cppdialect "C++11"
-	staticruntime "on"
+for i = 1, #prj_names do
+	project (prj_names[i])
+		targetname "%{prj.name}_%{cfg.buildcfg}"
+		kind "ConsoleApp"
+		language "C++"
+		cppdialect "C++11"
+		staticruntime "on"
 
-	targetdir ("bin")
-	objdir ("obj")
-	debugdir ("bin")
+		targetdir "bin"
+		objdir "obj"
+		debugdir "bin"
 
-	-- Sources
-	files {
-		"%{prj.name}/**.h",
-		"%{prj.name}/**.cpp"
-	}
-
-	includedirs { "Engine" }
-
-	filter "system:windows"
-		includedirs {
-			sfml_path .. "/include",
-			glew_path .. "/include",
-			glm_path
+		-- Sources
+		files {
+			"%{prj.name}/**.h",
+			"%{prj.name}/**.cpp"
 		}
 
-	filter {} -- Reset filters
+		includedirs { "Engine" }
 
-	-- Libraries
-	links { "Engine" }
+		filter "system:windows"
+			includedirs {
+				sfml_path .. "/include",
+				glew_path .. "/include",
+				glm_path
+			}
 
-	filter "system:linux"
-		links {
-			"GL", "GLEW", "pthread",
-			"sfml-audio",
-			"sfml-graphics",
-			"sfml-window",
-			"sfml-network",
-			"sfml-system"
-		}
+		filter {} -- Reset filters
 
-	-- Defines and flags
-	filter "system:windows"
-		systemversion "latest"
-		defines "_CRT_SECURE_NO_DEPRECATE"
+		-- Libraries
+		links { "Engine" }
 
-	filter "configurations:debug"
-		defines { "DEBUG", "DRAWAABB" }
-		symbols "on"
-		optimize "off"
+		filter "system:linux"
+			links {
+				"GL", "GLEW", "pthread",
+				"sfml-audio",
+				"sfml-graphics",
+				"sfml-window",
+				"sfml-network",
+				"sfml-system"
+			}
 
-	filter "configurations:dev"
-		defines { "DEBUG", "PROFILE" }
-		symbols "on"
-		optimize "size"
-
-	filter "configurations:release"
-		defines "NDEBUG"
-		optimize "speed"
+			build_settings()
+end
 
 
-project "unit_tests"
-	targetname "%{prj.name}_%{cfg.buildcfg}"
-	kind "ConsoleApp"
-	language "C++"
-	cppdialect "C++11"
-	staticruntime "on"
+-- Clean projects
 
-	targetdir ("bin")
-	objdir ("obj")
-	debugdir ("bin")
+function getfilename(prj, pattern)
+	local fname = pattern:gsub("%%%%", prj.name)
+	fname = path.join(prj.location, fname)
+	return path.getrelative(os.getcwd(), fname)
+end
 
-	-- Sources
-	files {
-		"%{prj.name}/**.h",
-		"%{prj.name}/**.cpp"
-	}
+function cleanfile(name)
+	os.remove(name)
+	print("Removed " .. name .. "...")
+end
 
-	includedirs { "Engine" }
+function cleandir(name)
+	os.rmdir(name)
+	print("Removed " .. name .. "...")
+end
 
-	filter "system:windows"
-		includedirs {
-			sfml_path .. "/include",
-			glew_path .. "/include",
-			glm_path
-		}
+newaction {
+	trigger = "clean",
+	description = "Remove project files",
 
-	filter {} -- Reset filters
+	onWorkspace = function(wks)
+		cleanfile(wks.name .. ".sln")
+	end,
 
-	-- Libraries
-	links { "Engine" }
+	onProject = function(prj)
+		if os.istarget("windows") then
+			cleanfile(getfilename(prj, "%%.vcxproj"))
+			cleanfile(getfilename(prj, "%%.vcxproj.filters"))
+			cleanfile(getfilename(prj, "%%.vcxproj.user"))
+		elseif os.istarget("linux") then
+				print("TODO");
+		end
+	end,
 
-	filter "system:linux"
-		links {
-			"GL", "GLEW", "pthread",
-			"sfml-audio",
-			"sfml-graphics",
-			"sfml-window",
-			"sfml-network",
-			"sfml-system"
-		}
-
-	-- Defines and flags
-	filter "system:windows"
-		systemversion "latest"
-		defines "_CRT_SECURE_NO_DEPRECATE"
-
-	filter "configurations:debug"
-		defines { "DEBUG", "DRAWAABB" }
-		symbols "on"
-		optimize "off"
-
-	filter "configurations:dev"
-		defines { "DEBUG", "PROFILE" }
-		symbols "on"
-		optimize "size"
-
-	filter "configurations:release"
-		defines "NDEBUG"
-		optimize "speed"
-
+	execute = function()
+		cleandir("obj");
+	end
+}
