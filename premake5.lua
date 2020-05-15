@@ -3,7 +3,7 @@ local prj_names = {"Editor", "graphics_tests", "unit_tests"}
 
 filter "system:windows"
 	lib_dir = "../Libs"
-	sfml_path = lib_dir .. "/SFML-2.5.1-windows-vc15-64-bit"
+	sdl_path = lib_dir .. "/SDL2-2.0.12"
 	glew_path = lib_dir .. "/glew-2.1.0"
 	glm_path  = lib_dir .. "/glm-0.9.9.7"
 
@@ -58,40 +58,24 @@ project "Engine"
 
 	filter "system:windows"
 		includedirs {
-			sfml_path .. "/include",
+			sdl_path .. "/include",
 			glew_path .. "/include",
 			glm_path,
 		}
 
 		libdirs {
-			sfml_path .. "/lib",
+			sdl_path .. "/lib/x64",
 			glew_path .. "/lib/Release/x64",
 		}
 
 	-- Libraries
 	filter "system:windows"
-		filter "configurations:debug"
-			links {
-				"sfml-audio-d.lib",
-				"sfml-graphics-d.lib",
-				"sfml-window-d.lib",
-				"sfml-network-d.lib",
-				"sfml-system-d.lib",
-			}
-
-		filter "configurations:release or dev"
-			links {
-				"sfml-audio.lib",
-				"sfml-graphics.lib",
-				"sfml-window.lib",
-				"sfml-network.lib",
-				"sfml-system.lib",
-			}
-
-	filter "system:windows"
 		links {
-			"opengl32.lib",
+			"SDL2.lib",
+			"SDL2main.lib",
+
 			"glew32.lib",
+			"opengl32.lib",
 		}
 
 	build_settings()
@@ -119,7 +103,7 @@ for i = 1, #prj_names do
 
 		filter "system:windows"
 			includedirs {
-				sfml_path .. "/include",
+				sdl_path .. "/include",
 				glew_path .. "/include",
 				glm_path
 			}
@@ -132,14 +116,10 @@ for i = 1, #prj_names do
 		filter "system:linux"
 			links {
 				"GL", "GLEW", "pthread",
-				"sfml-audio",
-				"sfml-graphics",
-				"sfml-window",
-				"sfml-network",
-				"sfml-system"
+				"SDL2main", "SDL2"
 			}
 
-			build_settings()
+		build_settings()
 end
 
 

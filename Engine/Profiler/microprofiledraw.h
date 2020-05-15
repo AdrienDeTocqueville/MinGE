@@ -229,6 +229,7 @@ void MicroProfileBeginDraw(uint32_t nWidth, uint32_t nHeight, float* pfProjectio
 	if (!S.bInitialized)
 		return;
 
+	GL::Scissor(ivec4(0, 0, nWidth, nHeight));
 	GL::Enable(GL::Blend);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	GL::Disable(GL::DepthTest);
@@ -293,7 +294,7 @@ void MicroProfileFlush()
 	if(S.nVertexPos == 0)
 		return;
 
-	MICROPROFILE_SCOPEI("MicroProfile", "Flush", 0xffff3456);
+	MICROPROFILE_SCOPEI_COLOR("MicroProfile", "Flush", 0xffff3456);
 
 	glBufferSubData(GL_ARRAY_BUFFER, 0, S.nVertexPos * sizeof(MicroProfileDrawVertex), S.nVertices);
 
@@ -362,7 +363,7 @@ void MicroProfileRender(uint32_t nWidth, uint32_t nHeight, float fScale)
 
 void MicroProfileDrawText(int nX, int nY, uint32_t nColor, const char* pText, uint32_t nLen)
 {
-	MICROPROFILE_SCOPEI("MicroProfile", "TextDraw", 0xff88ee);
+	MICROPROFILE_SCOPEI_COLOR("MicroProfile", "TextDraw", 0xff88ee);
 
 	const float fOffsetU = 5.f / 1024.f;
 	MP_ASSERT(nLen <= strlen(pText));

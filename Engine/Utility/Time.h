@@ -7,6 +7,8 @@ struct Time
 	static float delta_time;
 	static float time;
 
+	static float frame_duration();
+
 	struct Chrono
 	{
 		Chrono();

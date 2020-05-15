@@ -1,6 +1,5 @@
 #pragma once
 
-#include <SFML/Window.hpp>
 #include <GL/glew.h>
 
 #include "Math/glm.h"
@@ -19,6 +18,9 @@ void glCheckError(const char* file, unsigned int line, const char* expression);
 struct GL
 {
 	enum Capability { CullFace, Blend, DepthTest, ScissorTest, CAP_COUNT };
+
+	typedef void *SDL_GLContext;
+	static SDL_GLContext context;
 
 private:
 	struct GLState
@@ -43,9 +45,12 @@ private:
 		return gl_caps[cap];
 	}
 
-public:
 	static void init();
+	static void destroy();
 
+	friend struct RenderEngine;
+
+public:
 	// Capabilities
 	static void Enable(Capability cap)
 	{
@@ -111,6 +116,13 @@ public:
 		glCheck(glDeleteFramebuffers(1, &fbo));
 		if (state.fbo == fbo)
 			GL::BindFramebuffer(0);
+	}
+
+	static void DeleteProgram(GLuint prog)
+	{
+		glCheck(glDeleteProgram(prog));
+		if (state.program == prog)
+			GL::UseProgram(0);
 	}
 
 	// Binding

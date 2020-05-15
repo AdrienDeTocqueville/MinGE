@@ -1,97 +1,142 @@
-#include "Profiler/profiler.h"
-
-#define NK_IMPLEMENTATION
-#include "UI/ui.h"
+#include <SDL.h>
 
 #include "Graphics/GLDriver.h"
-#include "UI/nuklear_sfml_gl3.h"
-
+#include "Profiler/profiler.h"
+#include "Utility/Time.h"
 #include "IO/Input.h"
 
-#define MAX_VERTEX_BUFFER 512 * 1024
-#define MAX_ELEMENT_BUFFER 128 * 1024
+#include "UI/UI.h"
+#include "UI/imgui/imgui_impl_opengl3.h"
 
-struct nk_context *UI::ctx;
+IMGUI_IMPL_API bool	ImGui_ImplSDL2_Init(struct SDL_Window* window);
+IMGUI_IMPL_API void     ImGui_ImplSDL2_Shutdown();
+IMGUI_IMPL_API void	ImGui_ImplSDL2_UpdateMouseCursor();
+
+void set_style()
+{
+	ImGuiStyle* style = &ImGui::GetStyle();
+
+	style->WindowPadding = ImVec2(15, 15);
+	style->WindowRounding = 0.0f;
+	style->WindowBorderSize = 1.0f;
+	style->FrameRounding = 2.0f;
+	style->ItemSpacing = ImVec2(12, 8);
+	style->ItemInnerSpacing = ImVec2(8, 6);
+	style->IndentSpacing = 25.0f;
+	style->ScrollbarSize = 15.0f;
+	style->ScrollbarRounding = 9.0f;
+	style->GrabMinSize = 5.0f;
+	style->GrabRounding = 3.0f;
+
+	style->Colors[ImGuiCol_Text] = ImVec4(0.80f, 0.80f, 0.83f, 1.00f);
+	style->Colors[ImGuiCol_TextDisabled] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
+	style->Colors[ImGuiCol_PopupBg] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
+	style->Colors[ImGuiCol_TitleBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+	style->Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(1.00f, 0.98f, 0.95f, 0.75f);
+	style->Colors[ImGuiCol_TitleBgActive] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
+	style->Colors[ImGuiCol_MenuBarBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+	style->Colors[ImGuiCol_ScrollbarBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+	style->Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
+	style->Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
+	style->Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
+	style->Colors[ImGuiCol_CheckMark] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
+	style->Colors[ImGuiCol_SliderGrab] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
+	style->Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
+
+	style->Colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
+	style->Colors[ImGuiCol_Border] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+	style->Colors[ImGuiCol_BorderShadow] = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
+
+	style->Colors[ImGuiCol_FrameBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+	style->Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
+	style->Colors[ImGuiCol_FrameBgActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
+
+	style->Colors[ImGuiCol_Button] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+	style->Colors[ImGuiCol_ButtonHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
+	style->Colors[ImGuiCol_ButtonActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
+
+	style->Colors[ImGuiCol_Header] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+	style->Colors[ImGuiCol_HeaderHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
+	style->Colors[ImGuiCol_HeaderActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
+
+	style->Colors[ImGuiCol_ResizeGrip] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	style->Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
+	style->Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
+	style->Colors[ImGuiCol_PlotLines] = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
+	style->Colors[ImGuiCol_PlotLinesHovered] = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
+	style->Colors[ImGuiCol_PlotHistogram] = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
+	style->Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
+	style->Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.25f, 1.00f, 0.00f, 0.43f);
+	style->Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(1.00f, 0.98f, 0.95f, 0.73f);
+}
 
 void UI::init()
 {
-	ctx = nk_sfml_init(Input::window());
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
 
-	/* Load Fonts: if none of these are loaded a default font will be used  */
-	/* Load Cursor: if you uncomment cursor loading please hide the cursor */
-	struct nk_font_atlas *atlas;
-	nk_sfml_font_stash_begin(&atlas);
-	/*struct nk_font *droid = nk_font_atlas_add_from_file(atlas, "../../../extra_font/DroidSans.ttf", 14, 0);*/
-	/*struct nk_font *roboto = nk_font_atlas_add_from_file(atlas, "../../../extra_font/Roboto-Regular.ttf", 14, 0);*/
-	/*struct nk_font *future = nk_font_atlas_add_from_file(atlas, "../../../extra_font/kenvector_future_thin.ttf", 13, 0);*/
-	/*struct nk_font *clean = nk_font_atlas_add_from_file(atlas, "../../../extra_font/ProggyClean.ttf", 12, 0);*/
-	/*struct nk_font *tiny = nk_font_atlas_add_from_file(atlas, "../../../extra_font/ProggyTiny.ttf", 10, 0);*/
-	/*struct nk_font *cousine = nk_font_atlas_add_from_file(atlas, "../../../extra_font/Cousine-Regular.ttf", 13, 0);*/
-	nk_sfml_font_stash_end();
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	io.Fonts->AddFontFromFileTTF("Assets/fonts/Ruda-Bold.ttf", 12);
 
-	/*nk_style_load_all_cursors(ctx, atlas->cursors);*/
-	/*nk_style_set_font(ctx, &droid->handle);*/
+	set_style();
+
+	ImGui_ImplSDL2_Init(Input::window());
+	ImGui_ImplOpenGL3_Init("#version 130");
 }
 
 void UI::destroy()
 {
-	nk_sfml_shutdown();
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 }
 
 void UI::send_inputs()
 {
-	ivec2 mouse_pos = Input::mouse_position(false);
-	int wheel_scroll = Input::wheel_scroll();
+	vec2 size = Input::window_size();
+	ivec2 mp = Input::mouse_position(false);
 
-	nk_input_begin(ctx);
-	nk_input_motion(ctx, mouse_pos.x, mouse_pos.y);
-        nk_input_scroll(ctx, nk_vec2(0, wheel_scroll));
-	nk_input_button(ctx, NK_BUTTON_LEFT, mouse_pos.x, mouse_pos.y, Input::button_down(sf::Mouse::Button::Left));
-	nk_input_button(ctx, NK_BUTTON_MIDDLE, mouse_pos.x, mouse_pos.y, Input::button_down(sf::Mouse::Button::Middle));
-	nk_input_button(ctx, NK_BUTTON_RIGHT, mouse_pos.x, mouse_pos.y, Input::button_down(sf::Mouse::Button::Right));
-	nk_input_end(ctx);
+	ImGuiIO& io = ImGui::GetIO();
+	io.DeltaTime = Time::delta_time;
+	io.DisplaySize = ImVec2(size.x, size.y);
+        io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+
+	io.MousePos = ImVec2((float)mp.x, (float)mp.y);
+	io.MouseWheel += Input::wheel_scroll();
+	io.MouseDown[0] = Input::button_down(Button::Left);
+	io.MouseDown[1] = Input::button_down(Button::Right);
+	io.MouseDown[2] = Input::button_down(Button::Middle);
+
+	/*
+	int key = event->key.keysym.scancode;
+	IM_ASSERT(key >= 0 && key < IM_ARRAYSIZE(io.KeysDown));
+	io.KeysDown[key] = (event->type == SDL_KEYDOWN);
+	io.KeyShift = ((SDL_GetModState() & KMOD_SHIFT) != 0);
+	io.KeyCtrl = ((SDL_GetModState() & KMOD_CTRL) != 0);
+	io.KeyAlt = ((SDL_GetModState() & KMOD_ALT) != 0);
+#ifdef _WIN32
+	io.KeySuper = false;
+#else
+	io.KeySuper = ((SDL_GetModState() & KMOD_GUI) != 0);
+#endif
+	*/
+
+	ImGui_ImplSDL2_UpdateMouseCursor();
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui::NewFrame();
+
+	bool show_demo_window = true;
+	ImGui::ShowDemoWindow(&show_demo_window);
+
 }
 
 void UI::flush()
 {
-	if (nk_begin(ctx, "Demo", nk_rect(50, 50, 230, 250),
-		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
-		NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
-	{
-		enum { EASY, HARD };
-		static int op = EASY;
-		static int property = 20;
-		static struct nk_colorf bg;
+	MICROPROFILE_SCOPEI("RENDER_ENGINE", "UI");
+	MICROPROFILE_SCOPEGPUI("imgui", -1);
 
-		nk_layout_row_static(ctx, 30, 80, 1);
-		if (nk_button_label(ctx, "button"))
-			fprintf(stdout, "button pressed\n");
-
-		nk_layout_row_dynamic(ctx, 30, 2);
-		if (nk_option_label(ctx, "easy", op == EASY)) op = EASY;
-		if (nk_option_label(ctx, "hard", op == HARD)) op = HARD;
-
-		nk_layout_row_dynamic(ctx, 25, 1);
-		nk_property_int(ctx, "Compression:", 0, &property, 100, 10, 1);
-
-		nk_layout_row_dynamic(ctx, 20, 1);
-		nk_label(ctx, "background:", NK_TEXT_LEFT);
-		nk_layout_row_dynamic(ctx, 25, 1);
-		if (nk_combo_begin_color(ctx, nk_rgb_cf(bg), nk_vec2(nk_widget_width(ctx), 400))) {
-			nk_layout_row_dynamic(ctx, 120, 1);
-			bg = nk_color_picker(ctx, bg, NK_RGBA);
-			nk_layout_row_dynamic(ctx, 25, 1);
-			bg.r = nk_propertyf(ctx, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f);
-			bg.g = nk_propertyf(ctx, "#G:", 0, bg.g, 1.0f, 0.01f, 0.005f);
-			bg.b = nk_propertyf(ctx, "#B:", 0, bg.b, 1.0f, 0.01f, 0.005f);
-			bg.a = nk_propertyf(ctx, "#A:", 0, bg.a, 1.0f, 0.01f, 0.005f);
-			nk_combo_end(ctx);
-		}
-	}
-	nk_end(ctx);
-
-	MICROPROFILE_SCOPEI("RENDER_ENGINE", "ui");
-	MICROPROFILE_SCOPEGPUI("nuklear", -1);
-
-	nk_sfml_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

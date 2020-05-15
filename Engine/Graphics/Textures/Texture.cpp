@@ -2,7 +2,8 @@
 #include "Utility/Error.h"
 #include "IO/URI.h"
 
-#include <SFML/Graphics/Image.hpp>
+#define STB_IMAGE_IMPLEMENTATION
+#include "Graphics/Textures/stb_image.h"
 
 struct texture_t
 {
@@ -41,9 +42,9 @@ GLint parse_wrap_mode(const char *mode)
 {
 	if (mode)
 	{
-		if (strcmp(mode, "clamp"))	return GL_CLAMP_TO_EDGE;
-		if (strcmp(mode, "mirror"))	return GL_MIRRORED_REPEAT;
-		if (strcmp(mode, "repeat"))	return GL_REPEAT;
+		if (!strcmp(mode, "clamp"))	return GL_CLAMP_TO_EDGE;
+		if (!strcmp(mode, "mirror"))	return GL_MIRRORED_REPEAT;
+		if (!strcmp(mode, "repeat"))	return GL_REPEAT;
 	}
 	return GL_REPEAT;
 }
@@ -52,13 +53,24 @@ GLint parse_format(const char *format)
 {
 	if (format)
 	{
-		if (strcmp(format, "red"))	return GL_RED;
-		if (strcmp(format, "rgb"))	return GL_RGB;
-		if (strcmp(format, "rgba"))	return GL_RGBA;
-		if (strcmp(format, "srgb"))	return GL_SRGB;
-		if (strcmp(format, "srgba"))	return GL_SRGB_ALPHA;
+		if (!strcmp(format, "red"))	return GL_RED;
+		if (!strcmp(format, "rgb"))	return GL_RGB;
+		if (!strcmp(format, "rgba"))	return GL_RGBA;
+		if (!strcmp(format, "srgb"))	return GL_SRGB;
+		if (!strcmp(format, "srgba"))	return GL_SRGB_ALPHA;
 	}
 	return GL_RGB;
+}
+
+GLenum channels_to_format(int n)
+{
+	switch (n)
+	{
+	case 1:	 return GL_RED;
+	case 2:	 return GL_RG;
+	case 3:	 return GL_RGB;
+	default: return GL_RGBA;
+	}
 }
 
 Texture Texture::import(const char *URI)
@@ -80,20 +92,21 @@ Texture Texture::import(const char *URI)
 
 	if (uri.on_disk)
 	{
-		sf::Image image;
-		if (!image.loadFromFile(uri.path))
+		int x, y, n;
+		unsigned char *data = stbi_load(uri.path.c_str(), &x, &y, &n, 0);
+		if (data == NULL)
 		{
 			Error::add(Error::USER, "Cannot import texture: " + uri.path);
 			glCheck(glDeleteTextures(1, &id));
 			return Texture::none;
 		}
 
-		image.flipVertically();
-		size = uvec2(image.getSize().x, image.getSize().y);
-		glTexImage2D(GL_TEXTURE_2D, 0, parse_format(uri.get("format")),
-			size.x, size.y, 0,
-			GL_RGBA, GL_UNSIGNED_BYTE, image.getPixelsPtr());
+		size = uvec2(x, y);
+		glTexImage2D(GL_TEXTURE_2D, 0, parse_format(uri.get("format")), x, y, 0,
+			channels_to_format(n), GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
+
+		stbi_image_free(data);
 	}
 	else
 	{

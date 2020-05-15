@@ -1,5 +1,8 @@
+#include <chrono>
+#include <SDL.h>
+
 #include "Profiler/profiler.h"
-#include "UI/ui.h"
+#include "UI/UI.h"
 
 #include "Graphics/RenderEngine.h"
 #include "Graphics/CommandBuffer.h"
@@ -10,7 +13,7 @@
 #include "Graphics/Textures/Texture.h"
 
 #include "IO/Input.h"
-
+#include "Utility/Time.h"
 
 static std::vector<cmd_buffer_t> buffers;
 
@@ -35,12 +38,15 @@ void RenderEngine::init()
 
 void RenderEngine::destroy()
 {
+	UI::destroy();
 	Debug::destroy();
 
 	Shader::clear();
 	Texture::clear();
 	Mesh::clear();
 	Material::clear();
+
+	GL::destroy();
 }
 
 
@@ -48,9 +54,9 @@ void RenderEngine::start_frame()
 {
 	/// Profiler
 	ivec2 mouse_pos = Input::mouse_position(false);
-	MicroProfileMouseButton(Input::button_pressed(sf::Mouse::Left), Input::button_pressed(sf::Mouse::Right));
+	MicroProfileModKey(Input::key_down(Key::LeftShift));
 	MicroProfileMousePosition(mouse_pos.x, mouse_pos.y, -Input::wheel_scroll());
-	MicroProfileModKey(Input::key_down(sf::Keyboard::LShift));
+	MicroProfileMouseButton(Input::button_down(Button::Left), Input::button_down(Button::Right));
 
 	/// UI
 	UI::send_inputs();
@@ -87,6 +93,13 @@ void RenderEngine::flush()
 		MicroProfileEndDraw();
 	}
 #endif
+
+	{
+		MICROPROFILE_SCOPEI("RENDER_ENGINE", "swap");
+
+		SDL_Delay(1000 / 30 - Time::frame_duration());
+		SDL_GL_SwapWindow(Input::window());
+	}
 }
 
 uint32_t RenderEngine::create_cmd_buffer()

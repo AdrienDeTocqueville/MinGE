@@ -39,3 +39,4 @@ bin/debug
 bin/dev
 bin/release
 *.dat
+*.ini

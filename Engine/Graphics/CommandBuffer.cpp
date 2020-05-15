@@ -58,6 +58,7 @@ case SetupCamera:
 	GL::Enable(GL::CullFace);
 	GL::Enable(GL::DepthTest);
 	GL::Enable(GL::ScissorTest);
+	GL::Disable(GL::Blend);
 
 	GL::Viewport(camera->viewport);
 	GL::Scissor (camera->viewport);

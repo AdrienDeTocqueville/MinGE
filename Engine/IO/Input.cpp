@@ -2,9 +2,9 @@
 
 #include "Profiler/profiler.h"
 
-#include <SFML/Window.hpp>
+#include <SDL.h>
 
-sf::Window* Input::win = nullptr;
+SDL_Window *Input::win = nullptr;
 
 ivec2 Input::dim(0), Input::center(0);
 
@@ -12,31 +12,55 @@ ivec2 Input::prev_mouse_pos(0), Input::mouse_pos(0);
 ivec2 Input::mouse_pos_delta(0);
 int Input::mouse_wheel_delta(0);
 
-Input::Cursor Input::mode = Input::Cursor::Free;
-
 bool Input::has_focus, Input::closed;
 
 int Input::mouse_index = 0, Input::keyboard_index = 0;
 bool Input::mouse_cleared = false, Input::keyboardCleared = false;
 
-std::bitset<sf::Mouse::ButtonCount> Input::mouse_state[2];
-std::bitset<sf::Keyboard::KeyCount> Input::keyboard_state[2];
+std::bitset<Button::COUNT> Input::mouse_state[2];
+std::bitset<Key::COUNT> Input::keyboard_state[2];
 
+static const int scancode_map[256] = {
+	Key::Unknown, Key::Unknown, Key::Unknown, Key::Unknown,
 
-static inline ivec2 to_glm(sf::Vector2i v)	{ return ivec2(v.x, v.y); }
-static inline uvec2 to_glm(sf::Vector2u v)	{ return uvec2(v.x, v.y); }
-static inline sf::Vector2f to_sf(vec2 v)	{ return sf::Vector2f(v.x, v.y); }
-static inline sf::Vector2i to_sf(ivec2 v)	{ return sf::Vector2i(v.x, v.y); }
-static inline sf::Vector2u to_sf(uvec2 v)	{ return sf::Vector2u(v.x, v.y); }
+	Key::A, Key::B, Key::C, Key::D, Key::E, Key::F, Key::G,
+	Key::H, Key::I, Key::J, Key::K, Key::L, Key::M, Key::N,
+	Key::O, Key::P, Key::Q, Key::R, Key::S, Key::T, Key::U,
+	Key::V, Key::W, Key::X, Key::Y, Key::Z,
 
+	Key::Num1, Key::Num2, Key::Num3, Key::Num4, Key::Num5,
+	Key::Num6, Key::Num7, Key::Num8, Key::Num9, Key::Num0,
+
+	Key::Return, Key::Escape, Key::Backspace, Key::Tab, Key::Space,
+	Key::Minus, Key::Equal, Key::LeftBracket, Key::RightBracket, Key::Backslash,
+	Key::Unknown,
+	Key::Semicolon, Key::Quote, Key::Backquote,
+	Key::Comma, Key::Period, Key::Slash,
+	Key::Unknown,
+
+	Key::F1, Key::F2, Key::F3, Key::F4, Key::F5, Key::F6,
+	Key::F7, Key::F8, Key::F9, Key::F10, Key::F11, Key::F12,
+
+	Key::Unknown, Key::Unknown, Key::Unknown, Key::Unknown,
+
+	Key::Home, Key::PageUp, Key::Delete, Key::End, Key::PageDown,
+	Key::Right, Key::Left, Key::Down, Key::Up,
+
+	Key::Unknown
+};
+
+static const int button_map[] = {
+	Button::Unknown,
+	Button::Left, Button::Middle, Button::Right,
+	Button::Unknown, Button::Unknown
+};
 
 /// Methods (private)
-void Input::init(sf::Window* _window)
+void Input::init(SDL_Window *window)
 {
-	win = _window;
-	win->setKeyRepeatEnabled(false);
+	win = window;
 
-	dim = to_glm(win->getSize());
+	SDL_GetWindowSize(win, &dim.x, &dim.y);
 	center = dim / 2;
 
 	prev_mouse_pos = center;
@@ -54,67 +78,66 @@ void Input::poll_events()
 
 	mouse_wheel_delta = 0;
 
-	sf::Event event;
-	while (win->pollEvent(event))
+	SDL_Event event;
+	while (SDL_PollEvent(&event))
 	{
 		switch (event.type)
 		{
-		case sf::Event::Closed:
+		case SDL_QUIT:
 			closed = true;
 			break;
 
-		case sf::Event::MouseMoved:
-			mouse_pos = ivec2(event.mouseMove.x, event.mouseMove.y);
-			//mouse_pos = to_glm(sf::Mouse::getPosition(*win));
+		case SDL_MOUSEMOTION:
+			mouse_pos = ivec2(event.motion.x, event.motion.y);
 			break;
 
-		case sf::Event::MouseWheelScrolled:
-			mouse_wheel_delta = (int)event.mouseWheelScroll.delta;
+		case SDL_MOUSEWHEEL:
+			mouse_wheel_delta = event.wheel.y;
 			break;
 
-		case sf::Event::LostFocus:
-			has_focus = false;
-			break;
-
-		case sf::Event::GainedFocus:
-			has_focus = true;
-			break;
-
-		case sf::Event::Resized:
-			dim = ivec2(event.size.width, event.size.height);
-			center = dim / 2;
-
-			if (mode == Cursor::Capture)
-				prev_mouse_pos = center;
-			break;
-
-		case sf::Event::MouseButtonPressed:
-		case sf::Event::MouseButtonReleased:
-			if (!mouseEvent) {
-				mouseEvent = true;
-				mouse_cleared = false;
-				mouse_index = 1-mouse_index;
-				mouse_state[mouse_index] = mouse_state[1-mouse_index];
-			}
-			mouse_state[mouse_index][event.mouseButton.button] = (event.type == sf::Event::MouseButtonPressed);
-			break;
-
-		case sf::Event::KeyPressed:
-		case sf::Event::KeyReleased:
-			if (event.key.code == sf::Keyboard::Unknown)
+		case SDL_WINDOWEVENT:
+			switch (event.window.event) {
+			case SDL_WINDOWEVENT_FOCUS_GAINED:
+				has_focus = true;
 				break;
+
+			case SDL_WINDOWEVENT_FOCUS_LOST:
+				has_focus = false;
+				break;
+
+			case SDL_WINDOWEVENT_RESIZED:
+				dim = ivec2(event.window.data1, event.window.data2);
+				center = dim / 2;
+				break;
+			}
+			break;
+
+		case SDL_KEYUP:
+		case SDL_KEYDOWN:
 			if (!keyboardEvent) {
 				keyboardEvent = true;
 				keyboardCleared = false;
 				keyboard_index = 1-keyboard_index;
 				keyboard_state[keyboard_index] = keyboard_state[1-keyboard_index];
 			}
-			keyboard_state[keyboard_index][event.key.code] = (event.type == sf::Event::KeyPressed);
+			keyboard_state[keyboard_index][event.key.keysym.sym < 128 ?
+				event.key.keysym.sym : scancode_map[event.key.keysym.scancode]] = (event.key.state == SDL_PRESSED);
+			break;
+
+		case SDL_MOUSEBUTTONUP:
+		case SDL_MOUSEBUTTONDOWN:
+			if (!mouseEvent) {
+				mouseEvent = true;
+				mouse_cleared = false;
+				mouse_index = 1-mouse_index;
+				mouse_state[mouse_index] = mouse_state[1-mouse_index];
+			}
+			mouse_state[mouse_index][button_map[event.button.button]] = (event.button.state == SDL_PRESSED);
 			break;
 
 		default: break;
 		}
-	}
+        }
 
 	if (!mouse_cleared & !mouseEvent)
 	{
@@ -127,34 +150,25 @@ void Input::poll_events()
 		keyboard_state[1-keyboard_index] = keyboard_state[keyboard_index];
 	}
 
-
 	/// Mouse move
 	mouse_pos_delta = mouse_pos - prev_mouse_pos;
 	mouse_pos_delta.x *= -1;
-
-
-	if (mode == Cursor::Capture)
-		sf::Mouse::setPosition(to_sf(center), *win);
-	else
-		prev_mouse_pos = mouse_pos;
+	prev_mouse_pos = mouse_pos;
 }
 
 
 // Window
 void Input::close_window()
 {
-	win->close();
+	closed = true;
 }
 
 void Input::set_window_size(ivec2 _size)
 {
-	win->setSize({(unsigned)_size.x, (unsigned)_size.y});
+	SDL_SetWindowSize(win, _size.x, _size.y);
 
 	dim = _size;
 	center = dim / 2;
-
-	if (mode == Cursor::Capture)
-		prev_mouse_pos = center;
 }
 
 
@@ -174,20 +188,5 @@ void Input::set_mouse_position(ivec2 _pos, bool openGLSpace)
 	if (openGLSpace)
 		_pos.y = dim.y - _pos.y;
 
-	sf::Mouse::setPosition(to_sf(_pos), *win);
-}
-
-void Input::set_cursor_mode(Input::Cursor _mode, bool _visible)
-{
-	win->setMouseCursorVisible(_visible);
-
-	if (mode == _mode)
-		return;
-	mode = _mode;
-
-	sf::Mouse::setPosition(to_sf(center), *win);
-	mouse_pos_delta = ivec2(0);
-
-	if (mode == Cursor::Capture)
-		prev_mouse_pos = center;
+	SDL_WarpMouseInWindow(win, _pos.x, _pos.y);
 }

@@ -38,7 +38,7 @@ public:
 	/// Methods (public)
 	void update()
 	{
-		if (Input::key_pressed(sf::Keyboard::Tab))
+		if (Input::key_pressed(Key::Tab))
 		{
 			curr = (curr + 1) % cameras.size();
 			cam = cameras[curr];
@@ -48,7 +48,7 @@ public:
 		if (cam == Entity::none)
 			return;
 
-		if (Input::button_down(sf::Mouse::Middle))
+		if (Input::button_down(Button::Middle))
 		{
 			angles += radians((vec2)Input::mouse_delta() * sensivity);
 			angles.y = clamp(angles.y, clampAngleY.x, clampAngleY.y);
@@ -88,7 +88,7 @@ public:
 			vec3 dir = getMovement(tr.vec_to_world(vec3(1, 0, 0)));
 			if (dir != vec3(0.0f) || Input::mouse_delta() != ivec2(0))
 			{
-				float speed = (Input::key_down(sf::Keyboard::LShift) ? 0.5f : 1.0f) * distance * Time::delta_time;
+				float speed = (Input::key_down(Key::LeftShift) ? 0.5f : 1.0f) * distance * Time::delta_time;
 
 				tr.translate(dir * speed);
 				tr.set_rotation(quat(vec3(0.0f, angles.y, angles.x)));
@@ -123,12 +123,12 @@ public:
 		vec3 up = vec3(0, 0, 1);
 		vec3 right = normalize(cross(direction, up));
 
-		if (Input::key_down(sf::Keyboard::Z))	dir += direction;
-		if (Input::key_down(sf::Keyboard::S))	dir -= direction;
-		if (Input::key_down(sf::Keyboard::D))	dir += right;
-		if (Input::key_down(sf::Keyboard::Q))	dir -= right;
-		if (Input::key_down(sf::Keyboard::Space))	dir += up;
-		if (Input::key_down(sf::Keyboard::LControl))	dir -= up;
+		if (Input::key_down(Key::Z))	dir += direction;
+		if (Input::key_down(Key::S))	dir -= direction;
+		if (Input::key_down(Key::D))	dir += right;
+		if (Input::key_down(Key::Q))	dir -= right;
+		if (Input::key_down(Key::Space))	dir += up;
+		if (Input::key_down(Key::LeftControl))	dir -= up;
 
 		return dir;
 	}

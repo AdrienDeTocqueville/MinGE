@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "Profiler/profiler.h"
 #include "Core/Engine.h"
 

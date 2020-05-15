@@ -1,30 +1,36 @@
 #include <MinGE.h>
-#include <SFML/Window.hpp>
 
 #include <iostream>
 
 #include "tests.h"
 
-const auto desktop = sf::VideoMode::getDesktopMode();
+SDL_Window* window;
 
-//#ifdef DEBUG
-const auto video_mode = sf::VideoMode(2*desktop.width/3, 2*desktop.height/3);
-const auto style = sf::Style::Default;
-//#else
-//const auto video_mode = desktop;
-//const auto style = sf::Style::Fullscreen;
-//#endif
+void open_window()
+{
+	// OpenGL 4
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
-int main()
+	// Create window with graphics context
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+	window = SDL_CreateWindow("MinGE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1440, 810, window_flags);
+}
+
+int main(int, char**)
 {
 	std::cout << "  -- MinGE --" << std::endl;
 
 	/// Create window
-	sf::Window window(video_mode, "MinGE", style, sf::ContextSettings(24, 0, 0, 4, 3));
-	//window.setPosition(sf::Vector2i(desktop.width - video_mode.width, desktop.height - video_mode.height) / 2);
+	open_window();
 
 	/// Init engine
-	Engine::init(window, 30);
+	Engine::init(window);
 
 	test_structures();
 	test_transforms();
@@ -32,7 +38,9 @@ int main()
 	benchmark_transforms(50);
 
 	Engine::destroy();
-	window.close();
+
+	SDL_DestroyWindow(window);
+	SDL_Quit();
 
 	printf("\n\nAll tests passed.\nPress enter to quit...");
 	std::cin.get();

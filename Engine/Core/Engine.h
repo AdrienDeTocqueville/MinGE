@@ -3,12 +3,9 @@
 #include "Core/System.h"
 #include "Math/glm.h"
 
-namespace sf
-{ class Window; }
-
 struct Engine
 {
-	static void init(sf::Window &window, unsigned _FPS = 60);
+	static void init(struct SDL_Window *window);
 	static void destroy();
 
 	static void register_system_type(const system_type_t &system_type);
@@ -21,5 +18,5 @@ struct Engine
 
 	static const system_type_t *get_system_type(void *system);
 
-	static void update();
+	static void frame();
 };

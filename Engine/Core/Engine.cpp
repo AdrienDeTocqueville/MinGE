@@ -37,14 +37,12 @@ struct system_t
 static std::vector<system_type_t> system_types;
 static std::vector<system_t*> systems;
 
-void Engine::init(sf::Window &window, unsigned _FPS)
+void Engine::init(struct SDL_Window *window)
 {
-	window.setFramerateLimit(_FPS);
-
 	Time::init();
 	Random::init();
 	JobSystem::init();
-	Input::init(&window);
+	Input::init(window);
 	RenderEngine::init();
 
 	// Register builtin systems
@@ -170,7 +168,7 @@ const system_type_t *Engine::get_system_type(void *system)
 }
 
 
-void Engine::update()
+void Engine::frame()
 {
 	MICROPROFILE_SCOPEI("ENGINE", "frame");
 

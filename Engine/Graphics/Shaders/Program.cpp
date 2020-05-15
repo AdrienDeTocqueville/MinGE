@@ -137,7 +137,7 @@ static unsigned link(const Stages &stages)
 
 	if (!check_link(program))
 	{
-		glCheck(glDeleteProgram(program));
+		GL::DeleteProgram(program);
 		return 0;
 	}
 
@@ -196,6 +196,6 @@ Program::Program(const ShaderSources &sources, RenderPass::Type pass, const char
 
 Program::~Program()
 {
-	glCheck(glDeleteProgram(program));
+	GL::DeleteProgram(program);
 }
 

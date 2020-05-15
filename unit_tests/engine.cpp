@@ -21,7 +21,7 @@ void updater(void *sys)
 
 	int time = Random::next(50, 400);
 	std::cout << "start  " << self->name << "  (" << time << ")" << std::endl;
-	sf::sleep(sf::milliseconds(time));
+	//sf::sleep(sf::milliseconds(time));
 	std::cout << "finish " << self->name << std::endl;
 }
 
@@ -68,7 +68,6 @@ void test_systems()
 	//for (int i = 0; i < 10 && !Input::window_closed(); i++)
 	{
 		std::cout << "\n\n=================\n";
-		Engine::update();
-		Input::window()->display();
+		Engine::frame();
 	}
 }

@@ -1,25 +1,34 @@
 #include "Utility/Time.h"
 
-#include <SFML/System/Clock.hpp>
-#include <iostream>
+#include <chrono>
 
-static sf::Clock _clock;
+using namespace std::chrono;
 
-float Time::delta_time = 0.0;
-float Time::time = 0.0;
+static time_point<high_resolution_clock> prev;
+
+float Time::delta_time = 0.0f;
+float Time::time = 0.0f;
 
 void Time::init()
 {
 	delta_time = 0.0f;
 	time = 0.0f;
 
-	_clock.restart();
+	prev = high_resolution_clock::now();
 }
 
 void Time::tick()
 {
-	delta_time = _clock.restart().asSeconds();
+	auto now = high_resolution_clock::now();
+	delta_time = duration<float>(now - prev).count();
 	time += delta_time;
+	prev = now;
+}
+
+float Time::frame_duration()
+{
+	auto now = high_resolution_clock::now();
+	return duration<float>(now - prev).count();
 }
 
 Time::Chrono::Chrono()

@@ -1,12 +1,20 @@
+#include <SDL.h>
+
 #include "Graphics/GLDriver.h"
 #include "Utility/Error.h"
+#include "IO/Input.h"
 
+SDL_GLContext GL::context = nullptr;
 GL::GLState GL::state;
 
 void GL::init()
 {
 	memset(&state, 0, sizeof(GLState));
 	state.clearColor = vec4(0.0f);
+
+	context = SDL_GL_CreateContext(Input::window());
+	SDL_GL_MakeCurrent(Input::window(), context);
+	SDL_GL_SetSwapInterval(1); // Enable vsync
 
 	if (GLenum error = glewInit() != GLEW_OK)
 	{
@@ -24,6 +32,11 @@ void GL::init()
 	glCullFace(GL_BACK);
 	glPointSize(7);
 	glLineWidth(3);
+}
+
+void GL::destroy()
+{
+	SDL_GL_DeleteContext(context);
 }
 
 
