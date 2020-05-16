@@ -25,10 +25,11 @@ void Time::tick()
 	prev = now;
 }
 
-float Time::frame_duration()
+uint32_t Time::frame_duration()
 {
 	auto now = high_resolution_clock::now();
-	return duration<float>(now - prev).count();
+	auto test = duration_cast<milliseconds>(now - prev);
+	return test.count();
 }
 
 Time::Chrono::Chrono()

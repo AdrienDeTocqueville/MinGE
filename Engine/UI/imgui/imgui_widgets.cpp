@@ -2970,7 +2970,7 @@ bool ImGui::TempInputScalar(const ImRect& bb, ImGuiID id, const char* label, ImG
             DataTypeClamp(data_type, p_data, p_clamp_min, p_clamp_max);
 
         // Only mark as edited if new value is different
-        value_changed = memcmp(&data_type, p_data, data_type_size) != 0;
+        value_changed = memcmp(&data_backup, p_data, data_type_size) != 0;
         if (value_changed)
             MarkItemEdited(id);
     }
@@ -5752,7 +5752,7 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
         hovered = true;
     if (hovered || selected)
     {
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
+        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
         RenderFrame(bb_enlarged.Min, bb_enlarged.Max, col, false, 0.0f);
         RenderNavHighlight(bb_enlarged, id, ImGuiNavHighlightFlags_TypeThin | ImGuiNavHighlightFlags_NoRounding);
     }

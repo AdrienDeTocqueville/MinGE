@@ -64,6 +64,7 @@ void main()
 	F0 = mix(F0, color, metallic);
 
 	vec3 Lo = vec3(0.0f);
+#ifndef NO_LIGHT
 	{
 		vec3 L = normalize(LIGHT_DIR - in_fs.pos); // Point
 		//vec3 L = LIGHT_DIR; // Directional
@@ -93,7 +94,7 @@ void main()
 		float NdotL = max(dot(N, L), 0.0);
 		Lo += (kD * color / PI + specular) * radiance * NdotL;
 	}
-
+#endif
 
 	vec3 ambient = vec3(0.03) * color * ao;
 	vec3 final = ambient + Lo;

@@ -173,11 +173,7 @@ MICROPROFILEUI_API void MicroProfileCustomGroup(const char* pCustomName, uint32_
 MICROPROFILEUI_API void MicroProfileCustomGroupAddTimer(const char* pCustomName, const char* pGroup, const char* pTimer);
 
 #ifdef MICROPROFILEUI_IMPL
-#ifdef _WIN32
-#if !defined(_MSC_VER) || _MSC_VER < 1900 // VS2015 includes proper snprintf
-#define snprintf _snprintf
-#endif
-#endif
+#define snprintf stbsp_snprintf
 #include <cstdlib>
 #include <cstdarg>
 #include <cmath>

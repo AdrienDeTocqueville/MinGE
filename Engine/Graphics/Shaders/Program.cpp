@@ -7,6 +7,7 @@
 #include "Graphics/Shaders/stb_include.h"
 
 #include "Utility/Error.h"
+#include "Utility/stb_sprintf.h"
 
 #include <fstream>
 
@@ -158,7 +159,7 @@ Program::Program(const ShaderSources &sources, RenderPass::Type pass, const char
 	static_assert(sizeof(pass_defines) / sizeof(*pass_defines) == RenderPass::Count, "Invalid pass count");
 
 	char pass_define[64];
-	snprintf(pass_define, 64, "#define %s\n", pass_defines[pass]);
+	stbsp_snprintf(pass_define, 64, "#define %s\n", pass_defines[pass]);
 
 	Stages stages;
 	memset(&stages, 0, sizeof(Stages));

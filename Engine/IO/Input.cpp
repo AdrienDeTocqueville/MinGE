@@ -15,10 +15,10 @@ int Input::mouse_wheel_delta(0);
 bool Input::has_focus, Input::closed;
 
 int Input::mouse_index = 0, Input::keyboard_index = 0;
-bool Input::mouse_cleared = false, Input::keyboardCleared = false;
+bool Input::mouse_cleared = false, Input::keyboard_cleared = false;
 
-std::bitset<Button::COUNT> Input::mouse_state[2];
-std::bitset<Key::COUNT> Input::keyboard_state[2];
+bool Input::mouse_state[2][Button::COUNT];
+bool Input::keyboard_state[2][Key::COUNT];
 
 static const int scancode_map[256] = {
 	Key::Unknown, Key::Unknown, Key::Unknown, Key::Unknown,
@@ -46,7 +46,23 @@ static const int scancode_map[256] = {
 	Key::Home, Key::PageUp, Key::Delete, Key::End, Key::PageDown,
 	Key::Right, Key::Left, Key::Down, Key::Up,
 
-	Key::Unknown
+	Key::Unknown,
+
+	Key::Multiply, Key::Divide, Key::Minus, Key::Plus, Key::Enter,
+	Key::Numpad1, Key::Numpad2, Key::Numpad3, Key::Numpad4, Key::Numpad5,
+	Key::Numpad6, Key::Numpad7, Key::Numpad8, Key::Numpad9, Key::Numpad0,
+	Key::Period,
+
+	// 100
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0,
+
+	// 224
+	Key::LeftControl, Key::LeftShift, Key::LeftAlt, Key::Unknown,
+	Key::RightControl, Key::RightShift, Key::RightAlt, Key::Unknown,
 };
 
 static const int button_map[] = {
@@ -74,7 +90,7 @@ void Input::poll_events()
 {
 	MICROPROFILE_SCOPEI("IO_INPUT", "poll_events");
 
-	bool mouseEvent = false, keyboardEvent = false;
+	bool mouse_event = false, keyboard_event = false;
 
 	mouse_wheel_delta = 0;
 
@@ -114,11 +130,11 @@ void Input::poll_events()
 
 		case SDL_KEYUP:
 		case SDL_KEYDOWN:
-			if (!keyboardEvent) {
-				keyboardEvent = true;
-				keyboardCleared = false;
+			if (!keyboard_event) {
+				keyboard_event = true;
+				keyboard_cleared = false;
 				keyboard_index = 1-keyboard_index;
-				keyboard_state[keyboard_index] = keyboard_state[1-keyboard_index];
+				memcpy(keyboard_state + keyboard_index, keyboard_state + (1-keyboard_index), Key::COUNT * sizeof(bool));
 			}
 			keyboard_state[keyboard_index][event.key.keysym.sym < 128 ?
 				event.key.keysym.sym : scancode_map[event.key.keysym.scancode]] = (event.key.state == SDL_PRESSED);
@@ -126,28 +142,28 @@ void Input::poll_events()
 
 		case SDL_MOUSEBUTTONUP:
 		case SDL_MOUSEBUTTONDOWN:
-			if (!mouseEvent) {
-				mouseEvent = true;
+			if (!mouse_event) {
+				mouse_event = true;
 				mouse_cleared = false;
 				mouse_index = 1-mouse_index;
-				mouse_state[mouse_index] = mouse_state[1-mouse_index];
+				memcpy(mouse_state + mouse_index, mouse_state + (1-mouse_index), Button::COUNT * sizeof(bool));
 			}
 			mouse_state[mouse_index][button_map[event.button.button]] = (event.button.state == SDL_PRESSED);
 			break;
 
 		default: break;
 		}
-        }
+	}
 
-	if (!mouse_cleared & !mouseEvent)
+	if (!mouse_cleared & !mouse_event)
 	{
 		mouse_cleared = true;
-		mouse_state[1-mouse_index] = mouse_state[mouse_index];
+		memcpy(mouse_state + (1 - mouse_index), mouse_state + mouse_index, Button::COUNT * sizeof(bool));
 	}
-	if (!keyboardCleared & !keyboardEvent)
+	if (!keyboard_cleared & !keyboard_event)
 	{
-		keyboardCleared = true;
-		keyboard_state[1-keyboard_index] = keyboard_state[keyboard_index];
+		keyboard_cleared = true;
+		memcpy(keyboard_state + (1 - keyboard_index), keyboard_state + keyboard_index, Key::COUNT * sizeof(bool));
 	}
 
 	/// Mouse move

@@ -53,6 +53,7 @@ struct ParallelFor
 
 void init();
 void destroy();
+void sleep();
 
 void yield();
 

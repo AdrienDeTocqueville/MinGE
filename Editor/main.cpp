@@ -3,11 +3,17 @@
 
 #include <iostream>
 
+#include "Editor.h"
+
 SDL_Window* window;
 SDL_GLContext gl_context;
 
-void open_window()
+void open_window(int monitor)
 {
+	int pos = SDL_WINDOWPOS_CENTERED_DISPLAY(monitor);
+	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI |
+		SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE);
+
 	// OpenGL 4
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -18,10 +24,9 @@ void open_window()
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-	window = SDL_CreateWindow("MinGE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1440, 810, window_flags);
+	window = SDL_CreateWindow("MinGE", pos, pos, 1440, 810, window_flags);
 
-	SDL_SetWindowPosition(window, -1920 + (1920-1440)/2, 350);
+	//SDL_SetWindowPosition(window, -1920 + (1920-1440)/2, 350);
 }
 
 int main(int, char**)
@@ -29,10 +34,11 @@ int main(int, char**)
 	std::cout << "  -- MinGE --" << std::endl;
 
 	/// Create window
-	open_window();
+	open_window(1);
 
 	/// Init engine
 	Engine::init(window);
+	Editor::init();
 
 	/// Init systems
 	auto transforms = new(Engine::alloc_system("TransformSystem")) TransformSystem();

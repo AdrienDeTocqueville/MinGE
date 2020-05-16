@@ -1,10 +1,8 @@
 # MinGE
 
-Experimental 3D game engine.
+Experimental data oriented 3D game engine.
 
 ## References
-
-General architecture is heavily inspired from Unity.
 
 #### Renderer:
  * [Stateless, layered, multi-threaded rendering](https://blog.molecular-matters.com/2014/11/06/stateless-layered-multi-threaded-rendering-part-1/)
@@ -14,21 +12,25 @@ General architecture is heavily inspired from Unity.
 #### Other
  * [JSON parser](https://github.com/nlohmann/json)
  * [Lock-free job system](https://blog.molecular-matters.com/tag/job-system/)
- * [microprofile](https://github.com/zeux/microprofile)
 
 
 ## Dependencies
-* [SFML](https://www.sfml-dev.org/download/sfml/2.5.1/)
+
+* [SDL 2](https://www.libsdl.org/)
 * [GLEW](http://glew.sourceforge.net/index.html)
 * [GLM](https://github.com/g-truc/glm/releases/)
-* [Ultralight](https://github.com/ultralight-ux/Ultralight/releases)
+
+#### Included
+* [microprofile](https://github.com/zeux/microprofile)
+* [Dear ImGui](https://github.com/ocornut/imgui)
+* [stb](https://github.com/nothings/stb)
 
 ## Build
 
 Install [premake 5](https://premake.github.io/) and all the above dependencies.
 You may want to modify libraries path in premake5.lua
 
-When ready, run premake with the desired target:
+To generate project files, run premake with the desired target:
 ```bash
 # For unix makefiles
 premake5 gmake
@@ -40,5 +42,5 @@ premake5 vs2017
 ### Installing dependencies on arch
 
 ```bash
-pacman -S sfml glew glm
+pacman -S sdl2 glew glm
 ```

@@ -15,6 +15,7 @@
 #include "Graphics/RenderEngine.h"
 
 #include "Utility/Time.h"
+#include "Utility/stb_sprintf.h"
 #include "Math/Random.h"
 #include "JobSystem/JobSystem.inl"
 #include "IO/Input.h"
@@ -110,7 +111,7 @@ void *Engine::alloc_system(const char *type_name)
 
 #ifdef PROFILE
 	static char sys_name[256];
-	snprintf(sys_name, sizeof(sys_name), "%s %zd", type_name, systems.size());
+	stbsp_snprintf(sys_name, sizeof(sys_name), "%s %zd", type_name, systems.size());
 	system->token = MicroProfileGetToken(type_name, sys_name, -1);
 #endif
 
@@ -196,4 +197,5 @@ void Engine::frame()
 	}
 
 	RenderEngine::flush();
+	JobSystem::sleep();
 }

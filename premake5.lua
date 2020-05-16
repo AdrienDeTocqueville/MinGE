@@ -23,7 +23,7 @@ function build_settings()
 		optimize "size"
 
 	filter "configurations:release"
-		defines "NDEBUG"
+		defines { "NDEBUG", "IMGUI_DISABLE_DEMO_WINDOWS" }
 		optimize "speed"
 end
 -- End of modifiable section

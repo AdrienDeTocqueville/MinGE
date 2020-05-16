@@ -183,6 +183,7 @@ typedef uint16_t MicroProfileGroupId;
 
 #include <stdint.h>
 #include <string.h>
+#include "Utility/stb_sprintf.h"
 
 #ifndef MICROPROFILE_NOCXX11
 #include <thread>
@@ -1007,9 +1008,7 @@ inline uint16_t MicroProfileGetGroupIndex(MicroProfileToken t)
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
-#if !defined(_MSC_VER) || _MSC_VER < 1900 // VS2015 includes proper snprintf
-#define snprintf _snprintf
-#endif
+#define snprintf stbsp_snprintf
 
 #pragma warning(push)
 #pragma warning(disable: 4244)
@@ -1812,7 +1811,7 @@ void MicroProfileLabelFormatV(MicroProfileToken nToken_, const char* pName, va_l
 	if(MicroProfileGetGroupMask(nToken_) & S.nActiveGroup)
 	{
 		char buffer[MICROPROFILE_LABEL_MAX_LEN];
-		vsnprintf(buffer, sizeof(buffer)-1, pName, args);
+		stbsp_vsnprintf(buffer, sizeof(buffer)-1, pName, args);
 
 		buffer[sizeof(buffer)-1] = 0;
 
@@ -2672,11 +2671,11 @@ int MicroProfileFormatCounter(int eFormat, int64_t nCounter, char* pOut, uint32_
 		MP_ASSERT(nShift < (int64_t)nNumExt);
 		if (nShift)
 		{
-			nLen = snprintf(pOut, nBufferSize - 1, "%3.2f%s", (double)nCounter / nDivisor, pExt[nShift]);
+			nLen = stbsp_snprintf(pOut, nBufferSize - 1, "%3.2f%s", (double)nCounter / nDivisor, pExt[nShift]);
 		}
 		else
 		{
-			nLen = snprintf(pOut, nBufferSize - 1, "%lld%s", (long long)nCounter, pExt[nShift]);
+			nLen = stbsp_snprintf(pOut, nBufferSize - 1, "%lld%s", (long long)nCounter, pExt[nShift]);
 		}
 		nLen = (int)strlen(pOut);
 	}
@@ -2705,11 +2704,7 @@ MICROPROFILE_FORMAT(3, 4) void MicroProfilePrintf(MicroProfileWriteCallback CB, 
 	char buffer[4096];
 	va_list args;
 	va_start (args, pFmt);
-#ifdef _WIN32
-	size_t size = vsprintf_s(buffer, pFmt, args);
-#else
-	size_t size = vsnprintf(buffer, sizeof(buffer)-1,  pFmt, args);
-#endif
+	size_t size = stbsp_vsnprintf(buffer, sizeof(buffer)-1,  pFmt, args);
 	CB(Handle, size, &buffer[0]);
 	va_end (args);
 }

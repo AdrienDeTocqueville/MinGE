@@ -1,10 +1,6 @@
 #include "Profiler/profiler.h"
 
-#include "JobSystem.inl"
-#include "Math/Random.h"
-
 #include <assert.h>
-#include <string.h>
 #include <thread>
 
 #ifdef __linux__
@@ -16,6 +12,13 @@
 #error Unsupported OS
 #endif
 
+#include <SDL.h>
+
+#include "JobSystem.inl"
+#include "Math/Random.h"
+#include "Utility/Time.h"
+#include "Utility/stb_sprintf.h"
+
 //#define SINGLE_THREADED
 
 
@@ -23,6 +26,7 @@ namespace JobSystem
 {
 // Job system
 bool work = true; // flag to tell workers to stop working
+bool goto_sleep = false;
 
 // Workers
 unsigned num_worker;
@@ -253,6 +257,15 @@ void run(Work func, void *data, void *scratch, size_t n, Semaphore *counter)
 	workers[this_worker].push(job);
 }
 
+inline void do_sleep()
+{
+	MICROPROFILE_SCOPEI("JOB_SYSTEM", "sleep");
+
+	uint32_t dt = Time::frame_duration();
+	uint32_t freq = 1000 / 30;
+	if (dt < freq) SDL_Delay(freq);
+}
+
 #define EXEC_WHILE(condition) 						\
 {									\
 	Job *job = NULL;						\
@@ -272,7 +285,7 @@ void run(Work func, void *data, void *scratch, size_t n, Semaphore *counter)
 									\
 		else if (!(condition)) break;				\
 		else if (!JobSystem::work) break;			\
-		else std::this_thread::yield();				\
+		else if (JobSystem::goto_sleep)	do_sleep();		\
 	}								\
 }
 
@@ -287,7 +300,7 @@ static void worker_main(const int i)
 
 #ifdef PROFILE
 	char worker_name[16];
-	snprintf(worker_name, sizeof(worker_name), "worker %d", i);
+	stbsp_snprintf(worker_name, sizeof(worker_name), "worker %d", i);
 	MicroProfileOnThreadCreate(worker_name);
 #endif
 
@@ -373,6 +386,20 @@ void destroy()
 #endif
 
 	IF_PROFILE(MicroProfileShutdown());
+}
+
+void sleep()
+{
+	MICROPROFILE_SCOPEI("JOB_SYSTEM", "sleep");
+
+	uint32_t dt = Time::frame_duration();
+	uint32_t freq = 1000 / 30;
+	if (dt < freq)
+	{
+		goto_sleep = true;
+		SDL_Delay(freq);
+		goto_sleep = false;
+	}
 }
 
 } // namespace

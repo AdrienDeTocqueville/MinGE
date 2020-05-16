@@ -13,7 +13,6 @@
 #include "Graphics/Textures/Texture.h"
 
 #include "IO/Input.h"
-#include "Utility/Time.h"
 
 static std::vector<cmd_buffer_t> buffers;
 
@@ -59,7 +58,7 @@ void RenderEngine::start_frame()
 	MicroProfileMouseButton(Input::button_down(Button::Left), Input::button_down(Button::Right));
 
 	/// UI
-	UI::send_inputs();
+	UI::frame();
 }
 
 void RenderEngine::flush()
@@ -97,7 +96,6 @@ void RenderEngine::flush()
 	{
 		MICROPROFILE_SCOPEI("RENDER_ENGINE", "swap");
 
-		SDL_Delay(1000 / 30 - Time::frame_duration());
 		SDL_GL_SwapWindow(Input::window());
 	}
 }

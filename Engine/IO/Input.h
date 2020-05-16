@@ -18,24 +18,16 @@ enum key_t {
 	Unknown = 0,
 
 	Left, Right, Up, Down,
-	Backspace = '\b', Tab = '\t',
-	Return = '\r', Enter = '\r',
+	Backspace = '\b', Tab = '\t', Return = '\r', Enter = '\r',
 
 	LeftControl, LeftShift, LeftAlt, LeftSystem,
 	RightControl, RightShift, RightAlt, RightSystem,
 	End, Home, Insert, PageUp, PageDown,
 
-	Escape = '\033',
-	Space = ' ',
-	Exclaim = '!',
-	Quotedbl = '"',
-	Hash = '#',
-	Dollar = '$',
-	Percent = '%',
-	Ampersand = '&',
-	Quote = '\'',
-	LeftParen = '(', RightParen = ')',
-	Asterisk = '*', Plus = '+', Comma = ',', Minus = '-', Period = '.', Slash = '/',
+	Escape = '\033', Space = ' ', Exclaim = '!', DoubleQuote = '"',
+	Hash = '#', Dollar = '$', Percent = '%', Ampersand = '&',
+	Quote = '\'', LeftParen = '(', RightParen = ')',
+	Asterisk = '*', Multiply = '*', Plus = '+', Comma = ',', Minus = '-', Period = '.', Slash = '/', Divide = '/',
 
 	Num0 = '0', Num1 = '1', Num2 = '2', Num3 = '3', Num4 = '4',
 	Num5 = '5', Num6 = '6', Num7 = '7', Num8 = '8', Num9 = '9',
@@ -72,11 +64,12 @@ struct Input
 	static ivec2 window_size() { return dim; }
 	static void  set_window_size(ivec2 _size);
 
-	// Key::key_tboard
+	// Keyboard
 	static inline bool key_down(Key::key_t _key);
 	static inline bool key_changed(Key::key_t _key);
 	static inline bool key_pressed (Key::key_t _key);
 	static inline bool key_released(Key::key_t _key);
+	static inline bool *keys_down() { return keyboard_state[keyboard_index]; }
 
 	// Mouse
 	static inline bool button_down(Button::button_t _button);
@@ -111,15 +104,15 @@ private:
 	static bool closed;
 
 	static int mouse_index, keyboard_index;
-	static bool mouse_cleared, keyboardCleared;
+	static bool mouse_cleared, keyboard_cleared;
 
-	static std::bitset<Button::COUNT> mouse_state[2];
-	static std::bitset<Key::COUNT> keyboard_state[2];
+	static bool mouse_state[2][Button::COUNT];
+	static bool keyboard_state[2][Key::COUNT];
 
 	friend struct Engine;
 };
 
-// Key::key_tboard
+// Keyboard
 bool Input::key_down(Key::key_t _key)
 {
 	return keyboard_state[keyboard_index][_key];

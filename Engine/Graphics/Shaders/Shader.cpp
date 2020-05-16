@@ -74,6 +74,7 @@ Shader* Shader::import(const char *URI)
 			return nullptr;
 		}
 		shaders.emplace(uri.path, s);
+		s->URI = URI;
 		return s;
 	}
 	else

@@ -35,7 +35,9 @@ public:
 	template <typename T>
 	static inline void set_builtin(size_t location, T value);
 
-private:
+	const char *URI;
+
+//private:
 	~Shader();
 
 	static void clear();

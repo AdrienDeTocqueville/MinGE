@@ -35,6 +35,7 @@ void Texture::destroy()
 	GLuint i = (GLuint)id();
 	glCheck(glDeleteTextures(1, &i));
 	textures[id()].gen++;
+	textures[id()].URI = NULL;
 }
 
 
