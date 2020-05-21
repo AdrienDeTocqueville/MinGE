@@ -15,17 +15,23 @@ IMGUI_IMPL_API void	ImGui_ImplSDL2_UpdateMouseCursor();
 
 struct tab_t
 {
+	tab_t(const char *_name, void (*_callback)(void*), const void *_data, size_t size):
+		name(_name), callback(_callback), opened(true)
+	{ memcpy(data, _data, size); }
+
 	const char *name;
-	void (*callback)();
+	void (*callback)(void*);
 	bool opened;
+	uint8_t data[2*sizeof(void*) - sizeof(bool)];
 };
 
 std::vector<tab_t> tabs;
 
 
-void UI::create_tab(const char *name, void (*callback)())
+void UI::create_tab(const char *name, void (*callback)(void*), const void *data, size_t size)
 {
-	tabs.push_back({name, callback, true});
+	assert(size <= sizeof(tab_t::data));
+	tabs.emplace_back(name, callback, data, size);
 }
 
 void UI::frame()
@@ -58,14 +64,19 @@ void UI::frame()
 	if (Input::key_pressed(Key::F9)) show_demo_window = !show_demo_window;
 	if (show_demo_window)	ImGui::ShowDemoWindow(&show_demo_window);
 
+	const ImGuiTabBarFlags tab_flags = ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_NoTooltip;
+	ImGui::Begin("window", NULL, ImGuiWindowFlags_NoTitleBar);
+	if (ImGui::BeginTabBar("tabs", tab_flags))
 	for (int i = 0; i < tabs.size(); i++)
 	{
-		if (!tabs[i].opened)	continue;
-
-		if (ImGui::Begin(tabs[i].name, &tabs[i].opened, ImGuiWindowFlags_NoTitleBar))
-			tabs[i].callback();
-		ImGui::End();
+		if (tabs[i].opened && ImGui::BeginTabItem(tabs[i].name, &tabs[i].opened, ImGuiTabItemFlags_None))
+		{
+			tabs[i].callback(&tabs[i].data);
+                        ImGui::EndTabItem();
+		}
 	}
+	ImGui::EndTabBar();
+	ImGui::End();
 
 }
 
@@ -129,6 +140,10 @@ static inline void set_style()
 	style->Colors[ImGuiCol_ScrollbarGrab] = grey5;
 	style->Colors[ImGuiCol_ScrollbarGrabHovered] = grey5;
 	style->Colors[ImGuiCol_ScrollbarGrabActive] = grey4;
+
+	style->Colors[ImGuiCol_Tab] = grey1;
+	style->Colors[ImGuiCol_TabHovered] = grey4;
+	style->Colors[ImGuiCol_TabActive] = grey3;
 
 	style->Colors[ImGuiCol_ResizeGrip] = transparent;
 	style->Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);

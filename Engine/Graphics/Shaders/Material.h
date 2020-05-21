@@ -55,6 +55,7 @@ struct Material: public UID32
 	static const Material none;
 	static Material create(class Shader *shader);
 	static Material copy(Material src);
+	static Material get(uint32_t i);
 	static void clear();
 
 	static multi_array_t<material_t, uint8_t> materials;

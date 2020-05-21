@@ -13,7 +13,7 @@ struct texture_t
 };
 
 const Texture Texture::none;
-static std::vector<texture_t> textures = { texture_t { uvec2{0,0}, NULL, 1 } };
+std::vector<texture_t> textures = { texture_t { uvec2{0,0}, NULL, 1 } };
 
 
 bool Texture::is_valid()
@@ -120,6 +120,13 @@ Texture Texture::import(const char *URI)
 	textures[id].size = size;
 	textures[id].URI = URI;
 	return Texture(id, textures[id].gen);
+}
+
+Texture Texture::get(uint32_t i)
+{
+	if (textures[i].URI == NULL)
+		return Texture::none;
+	return Texture(i, textures[i].gen);
 }
 
 void Texture::clear()

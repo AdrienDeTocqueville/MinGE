@@ -4,34 +4,42 @@
 #include "Graphics/Shaders/Shader.h"
 #include "Graphics/Shaders/Program.h"
 #include "Graphics/Shaders/Material.inl"
-#include "Graphics/Textures/Texture.h"
 
-void material_tab()
+#include "GraphicsUI.h"
+
+Material material_dropdown(Material selected, const char *label)
 {
-	// Should not be static
-	static material_t *selected = NULL;
+	bool valid = selected.is_valid();
+	uint32_t id = selected.id();
+	const char *name = valid ? Material::materials.get<0>(id)->shader->URI : "None";
 
-	if (ImGui::BeginCombo("Select material", NULL, ImGuiComboFlags_NoPreview))
+	if (ImGui::BeginCombo(label, name))
 	{
 		for (uint32_t i(1); i <= Material::materials.size; i++)
 		{
 			material_t *mat = Material::materials.get<0>(i);
 			if (mat->shader == NULL)
 				continue;
-			const bool is_selected = (selected == mat);
+			const bool is_selected = (valid && i == id);
 			if (ImGui::Selectable(mat->shader->URI, is_selected))
-				selected = mat;
+				selected = Material::get(i);
 			if (is_selected)
 				ImGui::SetItemDefaultFocus();
 		}
 		ImGui::EndCombo();
 	}
+	return selected;
+}
 
-	if (selected == NULL)
+void material_tab(Material *material)
+{
+	*material = material_dropdown(*material, "Select material");
+	ImGui::Separator();
+
+	if (!material->is_valid())
 		return;
 
-	ImGui::Text(selected->shader->URI);
-	ImGui::Separator();
+	material_t *selected = Material::materials.get<0>(material->id());
 
 	ImGui::InputInt("Variant hash", (int*)&selected->variant_hash, 1, 2, ImGuiInputTextFlags_ReadOnly);
 	ImGui::InputInt("Variant index", (int*)&selected->variant_idx, 1, 2, ImGuiInputTextFlags_ReadOnly);
@@ -125,6 +133,7 @@ display_uniform:
 		case GL_FLOAT_MAT4:
 			break;
 		case GL_SAMPLER_2D:
+			*t = texture_dropdown(*t, it.first.c_str());
 			break;
 		}
 	}

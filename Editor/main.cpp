@@ -48,7 +48,12 @@ int main(int, char**)
 	Mesh cube = Mesh::import("asset:mesh/cube?x=1&y=3&z=3");
 	Mesh sphere = Mesh::import("asset:mesh/sphere?radius=3");
 
-	//Texture texture = Texture::import("asset://Assets/Textures/0.png?format=srgb");
+	Texture::import("asset://Assets/Textures/0.png?format=srgb");
+	Texture::import("asset://Assets/Textures/white.png");
+
+	//Texture::import("asset://Assets/Textures/Iron/albedo.png?format=srgb");
+	//Texture::import("asset://Assets/Textures/Iron/metallic.png");
+	//Texture::import("asset://Assets/Textures/Iron/roughness.png");
 
 	/// Create entities
 	Entity mesh_ent = Entity::create();

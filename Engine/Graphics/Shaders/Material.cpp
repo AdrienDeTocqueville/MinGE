@@ -56,6 +56,13 @@ Material Material::copy(Material src)
 	return Material(i, materials.get<1>()[i]);
 }
 
+Material Material::get(uint32_t i)
+{
+	if (materials.get<0>(i)->shader == NULL)
+		return Material::none;
+	return Material(i, materials.get<1>()[i]);
+}
+
 void Material::clear()
 {
 	for (uint32_t i(1); i <= materials.size; i++)

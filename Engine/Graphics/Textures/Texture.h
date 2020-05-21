@@ -13,6 +13,7 @@ struct Texture: public UID64
 
 	static const Texture none;
 	static Texture import(const char *URI);
+	static Texture get(uint32_t i);
 	static void clear();
 
 private:
