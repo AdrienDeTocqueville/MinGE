@@ -1,3 +1,4 @@
+#include <string.h>
 #include "IO/URI.h"
 
 static bool str_diff(const char *ref, const char *src)

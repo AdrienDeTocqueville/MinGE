@@ -2,7 +2,7 @@
 
 #include "Profiler/profiler.h"
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 SDL_Window *Input::win = nullptr;
 

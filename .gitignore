@@ -35,8 +35,8 @@ obj/
 
 
 # App
-bin/debug
-bin/dev
-bin/release
+bin/*_debug
+bin/*_dev
+bin/*_release
 *.dat
 *.ini

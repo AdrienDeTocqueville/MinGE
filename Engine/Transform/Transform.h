@@ -30,10 +30,10 @@ struct Transform: public UID32
 	inline vec3 vec_to_world(vec3 vec) const;
 
 private:
-	friend struct TransformSystem;
-
-	Transform(uint32_t id, TransformSystem &system): UID32(id, 0), sys(system) {}
+	Transform(uint32_t id, struct TransformSystem &system): UID32(id, 0), sys(system) {}
 	TransformSystem &sys;
+
+	friend TransformSystem;
 };
 
 

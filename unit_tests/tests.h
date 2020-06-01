@@ -9,7 +9,7 @@
 #include <MinGE.h>
 #include <iostream>
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #if _WIN32
 #define TEST(x) if (!(x)) { std::stringstream str; \

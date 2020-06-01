@@ -4,6 +4,23 @@
 #include <string>
 #include <sstream>
 
+template<typename T>
+inline T parse_val(const std::string &val)
+{
+	T res;
+	std::istringstream ss(val);
+	ss >> res;
+	return res;
+}
+
+template<>
+inline bool parse_val(const std::string &val)
+{
+	if (val == "true") return true;
+	if (val == "false") return false;
+	return parse_val<int>(val);
+}
+
 struct uri_t
 {
 	bool parse(const char *uri);
@@ -24,22 +41,4 @@ struct uri_t
 	bool on_disk;
 	std::string path;
 	std::unordered_map<std::string, std::string> params;
-
-private:
-	template<typename T>
-	static T parse_val(const std::string &val)
-	{
-		T res;
-		std::istringstream ss(val);
-		ss >> res;
-		return res;
-	}
-
-	template<>
-	static bool parse_val(const std::string &val)
-	{
-		if (val == "true") return true;
-		if (val == "false") return false;
-		return parse_val<int>(val);
-	}
 };

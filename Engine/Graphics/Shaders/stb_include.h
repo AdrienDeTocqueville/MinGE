@@ -38,11 +38,11 @@
 #define STB_INCLUDE_STB_INCLUDE_H
 
 // Do include-processing on the string 'str'. To free the return value, pass it to free()
-char *stb_include_string(const char *str, size_t size, char *path_to_includes, const char *filename_for_line_directive, char error[256]);
+char *stb_include_string(const char *str, size_t size, const char *path_to_includes, const char *filename_for_line_directive, char error[256]);
 
 // Load the file 'filename' and do include-processing on the string therein. note that
 // 'filename' is opened directly; 'path_to_includes' is not used. To free the return value, pass it to free()
-char *stb_include_file(char *filename, char *path_to_includes, char error[256]);
+char *stb_include_file(char *filename, const char *path_to_includes, char error[256]);
 
 #endif
 
@@ -174,7 +174,7 @@ static char *stb_include_append(char *str, size_t *curlen, const char *addstr, s
 	return str;
 }
 
-char *stb_include_string(const char *str, size_t source_len, char *path_to_includes, const char *filename, char error[256])
+char *stb_include_string(const char *str, size_t source_len, const char *path_to_includes, const char *filename, char error[256])
 {
 	char temp[4096];
 	include_info *inc_list;
@@ -235,7 +235,7 @@ char *stb_include_string(const char *str, size_t source_len, char *path_to_inclu
 	return text;
 }
 
-char *stb_include_file(char *filename, char *path_to_includes, char error[256])
+char *stb_include_file(char *filename, const char *path_to_includes, char error[256])
 {
 	size_t len;
 	char *result;

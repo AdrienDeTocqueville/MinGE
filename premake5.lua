@@ -7,6 +7,13 @@ filter "system:windows"
 	glew_path = lib_dir .. "/glew-2.1.0"
 	glm_path  = lib_dir .. "/glm-0.9.9.7"
 
+function project_settings()
+	language "C++"
+	cppdialect "C++14"
+	staticruntime "on"
+	exceptionhandling "off"
+end
+
 function build_settings()
 	filter "system:windows"
 		systemversion "latest"
@@ -40,9 +47,7 @@ workspace "MinGE"
 project "Engine"
 	targetname "%{prj.name}_%{cfg.buildcfg}"
 	kind "StaticLib"
-	language "C++"
-	cppdialect "C++11"
-	staticruntime "on"
+	project_settings()
 
 	targetdir ("bin")
 	objdir ("obj")
@@ -83,43 +88,42 @@ project "Engine"
 
 for i = 1, #prj_names do
 	project (prj_names[i])
-		targetname "%{prj.name}_%{cfg.buildcfg}"
-		kind "ConsoleApp"
-		language "C++"
-		cppdialect "C++11"
-		staticruntime "on"
 
-		targetdir "bin"
-		objdir "obj"
-		debugdir "bin"
+	targetname "%{prj.name}_%{cfg.buildcfg}"
+	kind "ConsoleApp"
+	project_settings()
 
-		-- Sources
-		files {
-			"%{prj.name}/**.h",
-			"%{prj.name}/**.cpp"
+	targetdir "bin"
+	objdir "obj"
+	debugdir "bin"
+
+	-- Sources
+	files {
+		"%{prj.name}/**.h",
+		"%{prj.name}/**.cpp"
+	}
+
+	includedirs { "Engine" }
+
+	filter "system:windows"
+		includedirs {
+			sdl_path .. "/include",
+			glew_path .. "/include",
+			glm_path
 		}
 
-		includedirs { "Engine" }
+	filter {} -- Reset filters
 
-		filter "system:windows"
-			includedirs {
-				sdl_path .. "/include",
-				glew_path .. "/include",
-				glm_path
-			}
+	-- Libraries
+	links { "Engine" }
 
-		filter {} -- Reset filters
+	filter "system:linux"
+		links {
+			"GL", "GLEW", "pthread",
+			"SDL2main", "SDL2"
+		}
 
-		-- Libraries
-		links { "Engine" }
-
-		filter "system:linux"
-			links {
-				"GL", "GLEW", "pthread",
-				"SDL2main", "SDL2"
-			}
-
-		build_settings()
+	build_settings()
 end
 
 
@@ -146,7 +150,11 @@ newaction {
 	description = "Remove project files",
 
 	onWorkspace = function(wks)
-		cleanfile(wks.name .. ".sln")
+		if os.istarget("windows") then
+			cleanfile(wks.name .. ".sln")
+		elseif os.istarget("linux") then
+			cleanfile("Makefile")
+		end
 	end,
 
 	onProject = function(prj)
@@ -155,7 +163,7 @@ newaction {
 			cleanfile(getfilename(prj, "%%.vcxproj.filters"))
 			cleanfile(getfilename(prj, "%%.vcxproj.user"))
 		elseif os.istarget("linux") then
-				print("TODO");
+			cleanfile(getfilename(prj, "%%.make"))
 		end
 	end,
 

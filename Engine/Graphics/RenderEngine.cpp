@@ -1,5 +1,5 @@
 #include <chrono>
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #include "Profiler/profiler.h"
 #include "UI/UI.h"

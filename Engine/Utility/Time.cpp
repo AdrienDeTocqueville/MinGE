@@ -36,6 +36,7 @@ Time::Chrono::Chrono()
 {
 	start = std::chrono::high_resolution_clock::now();
 }
+
 long Time::Chrono::time() const
 {
 	const auto end = std::chrono::high_resolution_clock::now();

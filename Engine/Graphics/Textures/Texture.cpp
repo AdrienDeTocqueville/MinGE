@@ -1,3 +1,5 @@
+#include <vector>
+
 #include "Graphics/Textures/Texture.h"
 #include "Utility/Error.h"
 #include "IO/URI.h"

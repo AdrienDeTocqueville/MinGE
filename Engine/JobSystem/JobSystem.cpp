@@ -5,6 +5,7 @@
 
 #ifdef __linux__
 #include <pthread.h>
+#include <ucontext.h>
 #elif _WIN32
 #define NOMINMAX
 #include <Windows.h>
@@ -12,12 +13,13 @@
 #error Unsupported OS
 #endif
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
-#include "JobSystem.inl"
+#include "JobSystem/JobSystem.inl"
 #include "Math/Random.h"
 #include "Utility/Time.h"
 #include "Utility/stb_sprintf.h"
+#include "Core/Platform.h"
 
 //#define SINGLE_THREADED
 
@@ -25,25 +27,31 @@
 namespace JobSystem
 {
 // Job system
-bool work = true; // flag to tell workers to stop working
-bool goto_sleep = false;
+static bool work = true; // flag to tell workers to stop working
+static bool goto_sleep = false;
 
 // Workers
-unsigned num_worker;
-struct Worker *workers = nullptr;
-thread_local unsigned this_worker;
-thread_local void *this_fiber;
+static unsigned num_worker;
+static struct Worker *workers = nullptr;
+static thread_local unsigned this_worker;
+
 
 // Job pools
-const unsigned JOB_POOL_SIZE = 512;
-thread_local Job job_pool[JOB_POOL_SIZE];
-thread_local uint32_t job_pool_index = 0;
+static const unsigned JOB_POOL_SIZE = 512;
+static thread_local Job job_pool[JOB_POOL_SIZE];
+static thread_local uint32_t job_pool_index = 0;
+#ifdef __linux__
+static thread_local ucontext_t job_contexts[JOB_POOL_SIZE];
+static thread_local uint8_t job_stacks[JOB_POOL_SIZE][0x1000];
+#endif
 
 static inline Job* allocate_job()
 {
 	const uint32_t index = job_pool_index++;
 	return &job_pool[index & (JOB_POOL_SIZE-1u)];
 }
+
+#include "JobSystem/Fiber.h"
 
 #ifdef __linux__
 #define COMPILER_BARRIER() asm volatile("" ::: "memory")
@@ -60,7 +68,6 @@ static inline Job* allocate_job()
 #define COMPARE_EXCHANGE(dest, cmp, val) (InterlockedCompareExchange(dest, val, cmp) == cmp)
 
 #define THIS_THREAD GetCurrentThread()
-
 #endif
 
 struct Worker
@@ -181,21 +188,16 @@ static Job *steal_or_pop()
 	return pop();
 }
 
-__declspec(noinline) void *get_this_fiber_fls()
-{
-	return this_fiber;
-}
-
 // Not inlined because this_fiber is TLS and it could cause problems
 void yield()
 {
+	Job *job = this_job;
 #ifdef PROFILE
-	Job *job = (Job*)GetFiberData();
 	if (job->data != job->scratch && job->token)
 		MicroProfileLeave(job->token, job->tick);
 #endif
 
-	SwitchToFiber(this_fiber);
+	switch_fiber(job->fiber, this_fiber);
 
 #ifdef PROFILE
 	if (job->data != job->scratch && job->token)
@@ -216,12 +218,16 @@ reset_fiber:
 	} else
 #endif
 
+#ifdef __linux__
+	this_job = job;
+#endif
+
 	job->function(job->data);
 
 	job->function = NULL;
 	job->counter->n.fetch_sub(1, std::memory_order_release);
 
-	SwitchToFiber(get_this_fiber_fls());
+	switch_fiber(job->fiber, get_this_fiber_fls());
 	goto reset_fiber;
 }
 
@@ -272,7 +278,7 @@ inline void do_sleep()
 	if (condition) while (true) {					\
 		if (job || (job = pop_or_steal()))			\
 		{							\
-			SwitchToFiber(job->fiber);			\
+			switch_fiber(this_fiber, job->fiber);		\
 			if (!(condition)) break;			\
 			if (job->function == NULL)			\
 				job = pop_or_steal();			\
@@ -304,15 +310,11 @@ static void worker_main(const int i)
 	MicroProfileOnThreadCreate(worker_name);
 #endif
 
-#ifdef _WIN32
-	this_fiber = ConvertThreadToFiber(0);
-#endif
+	INIT_FIBER_THREAD();
 
 	EXEC_WHILE(true);
 
-#ifdef _WIN32
-	ConvertFiberToThread();
-#endif
+	DESTROY_FIBER_THREAD();
 
 	IF_PROFILE(MicroProfileOnThreadExit());
 }
@@ -364,11 +366,10 @@ void init()
 		set_cpu_affinity(workers[i].thread.native_handle(), i);
 	}
 
-#ifdef _WIN32
-	this_fiber = ConvertThreadToFiber(0);
+	INIT_FIBER_THREAD();
+
 	for (unsigned i(0); i < JOB_POOL_SIZE; i++)
-		job_pool[i].fiber = CreateFiber(0, (Work)job_run, job_pool + i);
-#endif
+		job_pool[i].fiber = create_fiber(job_run, i);
 }
 
 void destroy()
@@ -379,11 +380,10 @@ void destroy()
 		workers[i].thread.join();
 	delete[] workers;
 
-#ifdef _WIN32
 	for (unsigned i(0); i < JOB_POOL_SIZE; i++)
-		DeleteFiber(job_pool[i].fiber);
-	ConvertFiberToThread();
-#endif
+		delete_fiber(job_pool[i].fiber);
+
+	DESTROY_FIBER_THREAD();
 
 	IF_PROFILE(MicroProfileShutdown());
 }

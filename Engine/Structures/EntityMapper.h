@@ -30,7 +30,7 @@ struct entity_mapper_t
 		assert(entity.id() != 0 && "Invalid entity");
 		assert(!has<n>(entity) && "Entity already has such component");
 
-		uint32_t *indices_realloc(uint32_t *indices, uint32_t &size, uint32_t new_size, int N);
+		uint32_t *indices_realloc(uint32_t*, uint32_t&, uint32_t, int);
 
 		if (entity.id() >= size)
 			indices = indices_realloc(indices, size, entity.id(), N);
