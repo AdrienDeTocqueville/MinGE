@@ -209,6 +209,10 @@ static void job_run(Job *job)
 {
 reset_fiber:
 
+#ifdef __linux__
+	this_job = job;
+#endif
+
 #ifdef PROFILE
 	if (job->data != job->scratch && job->token)
 	{
@@ -216,10 +220,6 @@ reset_fiber:
 		job->function(job->data);
 		MicroProfileLeave(job->token, job->tick);
 	} else
-#endif
-
-#ifdef __linux__
-	this_job = job;
 #endif
 
 	job->function(job->data);
@@ -269,7 +269,7 @@ inline void do_sleep()
 
 	uint32_t dt = Time::frame_duration();
 	uint32_t freq = 1000 / 30;
-	if (dt < freq) SDL_Delay(freq);
+	if (dt < freq) SDL_Delay(freq - dt);
 }
 
 #define EXEC_WHILE(condition) 						\
@@ -397,7 +397,7 @@ void sleep()
 	if (dt < freq)
 	{
 		goto_sleep = true;
-		SDL_Delay(freq);
+		SDL_Delay(freq - dt);
 		goto_sleep = false;
 	}
 }

@@ -7,6 +7,7 @@ struct Time
 	static float delta_time;
 	static float time;
 
+	// time elapsed since the start of the frame
 	static uint32_t frame_duration(); // in ms
 
 	struct Chrono
