@@ -15,7 +15,6 @@
 
 using json = nlohmann::json;
 
-Shader *Shader::_standard = NULL, *Shader::_debug = NULL;
 
 static const std::unordered_map<std::string, RenderPass::Type> pass_type = {
 	{"shadow",	RenderPass::Shadow},
@@ -53,34 +52,33 @@ static inline std::string get_or_default(const json &n, const char *prop)
 
 
 
-static std::unordered_map<std::string, Shader*> shaders;
+static std::unordered_map<const char*, Shader*> shaders;
 
-Shader* Shader::import(const char *URI)
+Shader* Shader::load(const char *URI)
 {
+	auto it = shaders.find(URI);
+	if (it != shaders.end())
+		return it->second;
+
 	uri_t uri;
 	if (!uri.parse(URI))
 		return nullptr;
 
-	if (uri.on_disk)
+	if (!uri.on_disk)
 	{
-		auto it = shaders.find(uri.path);
-		if (it != shaders.end())
-			return it->second;
-
-		Shader *s = new Shader();
-		if (!s->load(uri.path))
-		{
-			delete s;
-			return nullptr;
-		}
-		shaders.emplace(uri.path, s);
-		s->URI = URI;
-		return s;
+		if (uri.path == "shader/standard")	uri.path = "Assets/Shaders/standard.json";
+		if (uri.path == "shader/debug")		uri.path = "Assets/Shaders/debug.json";
 	}
-	else
+
+	Shader *s = new Shader();
+	if (!s->load(uri.path))
 	{
+		delete s;
 		return nullptr;
 	}
+	shaders.emplace(URI, s);
+	s->URI = URI;
+	return s;
 }
 
 void Shader::clear()
@@ -93,7 +91,7 @@ Shader::~Shader()
 {
 	std::unordered_set<Program*> freed;
 
-	for (Variant &variant : variants)
+	for (Shader::Variant &variant : variants)
 	{
 		for (int i(0); i < RenderPass::Count; i++)
 		{
@@ -105,15 +103,37 @@ Shader::~Shader()
 	}
 }
 
+Shader *Shader::reload()
+{
+	shaders.erase(URI);
+
+	if (Shader *reloaded = Shader::load(URI))
+	{
+		/*
+		std::unordered_map<std::string, size_t> uniforms_names_save;
+
+		free_variants(variants);
+		variants.clear();
+		variant_idx.clear();
+		macros.clear();
+		std::swap(uniforms_names, uniforms_names_save);
+		*/
+		delete this;
+		return reloaded;
+	}
+	else
+	{
+		shaders.emplace(URI, this);
+		return NULL;
+	}
+}
+
 // Variant stuff
 bool Shader::load(const std::string &path)
 {
 	// Clear state
 	for (int i(0); i < RenderPass::Count; i++)
 		passes[i].exists = false;
-	variants.clear();
-	variant_idx.clear();
-	macros.clear();
 	next_bit = 0;
 	uniform_offset = 0;
 
@@ -297,11 +317,6 @@ void Shader::setup_builtins()
 	// Model
 	add_builtin("MATRIX_M", GL_FLOAT_MAT4);
 	add_builtin("MATRIX_N", GL_FLOAT_MAT4);
-
-
-	Shader::_standard = Shader::import("assets://Assets/Shaders/standard.json");
-	Shader::_debug = Shader::import("assets://Assets/Shaders/debug.json");
-
 }
 
 void Shader::add_builtin(std::string name, unsigned type)

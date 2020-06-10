@@ -55,7 +55,7 @@ void main()
 	float roughness = texture(roughness_map, in_fs.uv).x;
 #endif
 
-	float ao        = 1.0f;
+	float ao = 1.0f;
 
 	vec3 N = normalize(in_fs.normal);
 	vec3 V = normalize(VIEW_POS - in_fs.pos);

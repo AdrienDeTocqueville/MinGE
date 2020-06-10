@@ -46,17 +46,18 @@ static void update(GraphicsSystem *self)
 	material_t::bound = nullptr;
 
 	auto renderer_count = self->renderers.size;
-	auto *renderers = self->renderers.get<0>();
+	auto *renderers = self->renderers.get<0>() + 1;
+	auto camera_count = self->cameras.size;
 	auto &submeshes = self->submeshes;
 
 	MICROPROFILE_COUNTER_SET("GRAPHICS/renderers", renderer_count);
-	MICROPROFILE_COUNTER_SET("GRAPHICS/cameras", self->cameras.size);
+	MICROPROFILE_COUNTER_SET("GRAPHICS/cameras", camera_count);
 	MICROPROFILE_COUNTER_SET("GRAPHICS/point_lights", self->point_lights.size());
 
 	/// Resize persistent alloc if needed
 	{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "realloc");
 
-	uint32_t new_index_count = submeshes.count * self->cameras.size;
+	uint32_t new_index_count = submeshes.count * camera_count;
 	if (self->prev_index_count < new_index_count)
 	{
 		self->prev_index_count = mem::next_power_of_two(new_index_count);
@@ -67,13 +68,13 @@ static void update(GraphicsSystem *self)
 	{
 		recompute_indices:
 		init_indices(self->draw_order_indices, renderers, renderer_count);
-		for (uint32_t i = 1; i < self->cameras.size; i++)
+		for (uint32_t i = 1; i < camera_count; i++)
 			memcpy(self->draw_order_indices + i * submeshes.count, self->draw_order_indices, submeshes.count * sizeof(uint32_t));
 	}
 
-	if (self->prev_key_count < submeshes.size * self->cameras.size)
+	if (self->prev_key_count < submeshes.size * camera_count)
 	{
-		self->prev_key_count = mem::next_power_of_two(submeshes.size * self->cameras.size);
+		self->prev_key_count = mem::next_power_of_two(submeshes.size * camera_count);
 		self->renderer_keys = (uint64_t*)realloc(self->renderer_keys, self->prev_key_count * sizeof(uint64_t));
 	}
 
@@ -84,6 +85,8 @@ static void update(GraphicsSystem *self)
 	}
 	}
 
+	auto *cameras = self->cameras.get<0>() + 1;
+	auto *camera_datas = self->cameras.get<1>() + 1;
 	mat4 *matrices = self->matrices;
 
 	/// Read transform data
@@ -98,13 +101,13 @@ static void update(GraphicsSystem *self)
 			Transform tr = transforms->get(renderers[i].entity);
 			matrices[i] = tr.world_matrix();
 		}
-		for (uint32_t i = 0; i < self->cameras.size; i++)
+		for (uint32_t i = 0; i < camera_count; i++)
 		{
-			Transform tr = transforms->get(self->cameras.get<0>()[i].entity);
+			Transform tr = transforms->get(cameras[i].entity);
 			vec3 pos = tr.position();
 
-			self->cameras.get<0>()[i].center_point = tr.vec_to_world(vec3(1, 0, 0)) + pos;
-			self->cameras.get<1>()[i].position = pos;
+			cameras[i].center_point = tr.vec_to_world(vec3(1, 0, 0)) + pos;
+			camera_datas[i].position = pos;
 		}
 		for (uint32_t i = 0; i < self->point_lights.size(); i++)
 		{
@@ -120,14 +123,14 @@ static void update(GraphicsSystem *self)
 
 	Sphere sphere;
 	auto &cmd = RenderEngine::get_cmd_buffer(self->cmd_buffer);
-	for (uint32_t i = 0; i < self->cameras.size; i++)
+	for (uint32_t i = 0; i < camera_count; i++)
 	{
 		MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "camera_setup");
 
 		uint32_t cmd_count = renderer_count;
 		uint64_t *renderer_keys = self->renderer_keys + i * submeshes.size;
-		GraphicsSystem::camera_t *cam = self->cameras.get<0>() + i;
-		camera_data_t *cam_data = self->cameras.get<1>() + i;
+		GraphicsSystem::camera_t *cam = cameras + i;
+		camera_data_t *cam_data = camera_datas + i;
 		float scale = 1.0f / (cam->zFar - cam->zNear);
 
 		/// Compute new VP
@@ -227,7 +230,8 @@ const system_type_t GraphicsSystem::type = []() {
 
 	t.destroy = [](void *system) { ((GraphicsSystem*)system)->~GraphicsSystem(); };
 	t.update = (void(*)(void*))update;
-	t.serialize = NULL;
-	t.deserialize = NULL;
+	t.on_destroy_entity = NULL;
+	t.save = [](void *system, SerializationContext &ctx) { ((GraphicsSystem*)system)->save(ctx); };
+	t.load = [](void *system, const SerializationContext &ctx) { new(system) GraphicsSystem(ctx); };
 	return t;
 }();

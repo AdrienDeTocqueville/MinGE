@@ -63,6 +63,19 @@ Material Material::get(uint32_t i)
 	return Material(i, materials.get<1>()[i]);
 }
 
+void Material::reload(Shader *shader)
+{
+	Shader *reloaded = shader->reload();
+	if (reloaded == NULL)
+		return;
+
+	for (uint32_t i(1); i <= materials.size; i++)
+	{
+		if (materials.get<0>(i)->shader == shader)
+			materials.get<0>(i)->shader = reloaded;
+	}
+}
+
 void Material::clear()
 {
 	for (uint32_t i(1); i <= materials.size; i++)

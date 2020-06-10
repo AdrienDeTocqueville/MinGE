@@ -10,6 +10,7 @@
 struct material_t
 {
 	/// Methods (public)
+	inline bool has_pass(RenderPass::Type pass) const;
 	void bind(RenderPass::Type pass) const;
 
 	inline void update_variant(uint32_t hash);
@@ -28,8 +29,9 @@ struct Material: public UID32
 {
 	Material() {}
 
-	bool is_valid() { return id() && *materials.get<1>(id()) == gen(); }
 	void destroy();
+	class Shader *shader() { return materials.get<0>(id())->shader;  }
+	bool is_valid() { return id() && *materials.get<1>(id()) == gen(); }
 
 	void define(const std::vector<std::string> &macros);
 	void define(const std::string& macro);
@@ -52,12 +54,13 @@ struct Material: public UID32
 	inline void set(size_t location, T *values, size_t num);
 
 
-	static const Material none;
 	static Material create(class Shader *shader);
 	static Material copy(Material src);
 	static Material get(uint32_t i);
+	static void reload(class Shader *shader);
 	static void clear();
 
+	static const Material none;
 	static multi_array_t<material_t, uint8_t> materials;
 
 private:

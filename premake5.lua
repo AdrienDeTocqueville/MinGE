@@ -15,6 +15,9 @@ function project_settings()
 end
 
 function build_settings()
+	rtti "off"
+	exceptionhandling "off"
+
 	filter "system:windows"
 		systemversion "latest"
 		defines "_CRT_SECURE_NO_DEPRECATE"
@@ -56,7 +59,8 @@ project "Engine"
 	files {
 		"%{prj.name}/**.h",
 		"%{prj.name}/**.inl",
-		"%{prj.name}/**.cpp"
+		"%{prj.name}/**.cpp",
+		"%{prj.name}/**.hpp"
 	}
 
 	includedirs { "Engine" }

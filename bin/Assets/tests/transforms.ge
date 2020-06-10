@@ -1,0 +1,254 @@
+{
+    "entities": [
+        {
+            "name": "e1",
+            "uint": 16777217
+        },
+        {
+            "name": "e2",
+            "uint": 33554434
+        },
+        {
+            "name": "e3",
+            "uint": 33554435
+        },
+        {
+            "name": "_e",
+            "uint": 16777220
+        },
+        {
+            "name": "e4",
+            "uint": 5
+        },
+        {
+            "name": "e5",
+            "uint": 6
+        },
+        {
+            "name": "e6",
+            "uint": 7
+        },
+        {
+            "name": "e7",
+            "uint": 8
+        },
+        {
+            "name": "e8",
+            "uint": 9
+        }
+    ],
+    "max_entity": 9,
+    "max_mesh": 0,
+    "meshes": [],
+    "systems": {
+        "world": {
+            "data": {
+                "hierarchies": [
+                    {
+                        "first_child": 4,
+                        "next_sibling": 0,
+                        "parent": 0
+                    },
+                    {
+                        "first_child": 0,
+                        "next_sibling": 0,
+                        "parent": 1
+                    },
+                    {
+                        "first_child": 0,
+                        "next_sibling": 2,
+                        "parent": 1
+                    },
+                    {
+                        "first_child": 7,
+                        "next_sibling": 3,
+                        "parent": 1
+                    },
+                    {
+                        "first_child": 8,
+                        "next_sibling": 0,
+                        "parent": 4
+                    },
+                    {
+                        "first_child": 0,
+                        "next_sibling": 6,
+                        "parent": 4
+                    },
+                    {
+                        "first_child": 0,
+                        "next_sibling": 0,
+                        "parent": 6
+                    },
+                    {
+                        "first_child": 0,
+                        "next_sibling": 5,
+                        "parent": 6
+                    }
+                ],
+                "indices": [
+                    [
+                        1,
+                        2,
+                        3,
+                        0,
+                        4,
+                        6,
+                        7,
+                        5,
+                        8
+                    ]
+                ],
+                "max_component": [
+                    8
+                ],
+                "transforms": [
+                    {
+                        "position": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            1.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            1.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            1.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            1.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                ]
+            },
+            "type": "TransformSystem"
+        }
+    }
+}

@@ -8,8 +8,8 @@
 #include "UI/UI.h"
 #include "UI/imgui/imgui_impl_opengl3.h"
 
-IMGUI_IMPL_API bool	ImGui_ImplSDL2_Init(struct SDL_Window* window);
-IMGUI_IMPL_API void     ImGui_ImplSDL2_Shutdown();
+IMGUI_IMPL_API bool	ImGui_ImplSDL2_Init(struct SDL_Window*);
+IMGUI_IMPL_API void ImGui_ImplSDL2_Shutdown();
 IMGUI_IMPL_API void	ImGui_ImplSDL2_UpdateMouseCursor();
 
 
@@ -66,18 +66,32 @@ void UI::frame()
 
 	const ImGuiTabBarFlags tab_flags = ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_NoTooltip;
 	ImGui::Begin("window", NULL, ImGuiWindowFlags_NoTitleBar);
-	if (ImGui::BeginTabBar("tabs", tab_flags))
-	for (int i = 0; i < tabs.size(); i++)
 	{
-		if (tabs[i].opened && ImGui::BeginTabItem(tabs[i].name, &tabs[i].opened, ImGuiTabItemFlags_None))
+		/*
+		if (ImGui::BeginCombo("", NULL, ImGuiComboFlags_NoPreview))
 		{
-			tabs[i].callback(&tabs[i].data);
-                        ImGui::EndTabItem();
+			for (int i = 0; i < tabs.size(); i++)
+			{
+				if (!tabs[i].opened && ImGui::Selectable(tabs[i].name, false))
+					tabs[i].opened = true;
+			}
+			ImGui::EndCombo();
 		}
-	}
-	ImGui::EndTabBar();
-	ImGui::End();
+		ImGui::SameLine();
+		*/
 
+		ImGui::BeginTabBar("tabs", tab_flags);
+		for (int i = 0; i < tabs.size(); i++)
+		{
+			if (tabs[i].opened && ImGui::BeginTabItem(tabs[i].name, &tabs[i].opened, ImGuiTabItemFlags_None))
+			{
+				tabs[i].callback(&tabs[i].data);
+							ImGui::EndTabItem();
+			}
+		}
+		ImGui::EndTabBar();
+	}
+	ImGui::End();
 }
 
 static inline void set_style()
@@ -101,7 +115,7 @@ static inline void set_style()
 
 	ImVec4 grey0(0.095f, 0.095f, 0.095f, 1.00f);
 	ImVec4 grey1(0.09f, 0.09f, 0.09f, 1.00f);
-	ImVec4 grey2(0.12f, 0.12, 0.12f, 1.00f);
+	ImVec4 grey2(0.12f, 0.12f, 0.12f, 1.00f);
 	ImVec4 grey3(0.145f, 0.145f, 0.145f, 1.00f);
 	ImVec4 grey4(0.263f, 0.263f, 0.263f, 1.00f);
 	ImVec4 grey5(0.54f, 0.54f, 0.54f, 1.00f);

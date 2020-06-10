@@ -88,4 +88,9 @@ struct GraphicsSystem
 	TransformSystem *transforms;
 
 	static const system_type_t type;
+
+
+	// Serialization
+	GraphicsSystem(const SerializationContext &ctx);
+	void save(SerializationContext &ctx) const;
 };

@@ -17,12 +17,13 @@ Material material_dropdown(Material selected, const char *label)
 	{
 		for (uint32_t i(1); i <= Material::materials.size; i++)
 		{
-			material_t *mat = Material::materials.get<0>(i);
-			if (mat->shader == NULL)
+			Material mat = Material::get(i);
+			if (mat == Material::none)
 				continue;
+
 			const bool is_selected = (valid && i == id);
-			if (ImGui::Selectable(mat->shader->URI, is_selected))
-				selected = Material::get(i);
+			if (ImGui::Selectable(mat.shader()->URI, is_selected))
+				selected = mat;
 			if (is_selected)
 				ImGui::SetItemDefaultFocus();
 		}
@@ -31,34 +32,26 @@ Material material_dropdown(Material selected, const char *label)
 	return selected;
 }
 
-void material_tab(Material *material)
+void list_macros(material_t *material, Shader *shader)
 {
-	*material = material_dropdown(*material, "Select material");
 	ImGui::Separator();
-
-	if (!material->is_valid())
-		return;
-
-	material_t *selected = Material::materials.get<0>(material->id());
-
-	ImGui::InputInt("Variant hash", (int*)&selected->variant_hash, 1, 2, ImGuiInputTextFlags_ReadOnly);
-	ImGui::InputInt("Variant index", (int*)&selected->variant_idx, 1, 2, ImGuiInputTextFlags_ReadOnly);
-
 	ImGui::Text("Macros");
 
+	ImGui::InputInt("Variant hash", (int*)&material->variant_hash, 1, 2, ImGuiInputTextFlags_ReadOnly);
+	ImGui::InputInt("Variant index", (int*)&material->variant_idx, 1, 2, ImGuiInputTextFlags_ReadOnly);
+
 	uint32_t hash_done = 0;
-	Shader *shader = selected->shader;
 	for (const auto &it : shader->macros)
 	{
 		uint32_t mask = it.second.mask;
-		bool checked = (selected->variant_hash & mask) == it.second.id;
+		bool checked = (material->variant_hash & mask) == it.second.id;
 		if ((mask & (mask - 1)) == 0)
 		{
 			if (ImGui::Checkbox(it.first.c_str(), &checked))
 			{
-				uint32_t hash = (selected->variant_hash & ~mask);
+				uint32_t hash = (material->variant_hash & ~mask);
 				if (checked) hash |= it.second.id;
-				selected->update_variant(hash);
+				material->update_variant(hash);
 			}
 		}
 		else if ((hash_done & mask) == 0)
@@ -68,7 +61,7 @@ void material_tab(Material *material)
 			const char *name = NULL;
 			for (const auto &it2 : shader->macros)
 			{
-				if ((selected->variant_hash & mask) == it2.second.id)
+				if ((material->variant_hash & mask) == it2.second.id)
 				{ name = it2.first.c_str(); break; }
 			}
 
@@ -80,8 +73,8 @@ void material_tab(Material *material)
 					checked = (it2.first.c_str() == name);
 					if (ImGui::Selectable(it2.first.c_str(), checked))
 					{
-						uint32_t hash = (selected->variant_hash & ~mask) | it2.second.id;
-						selected->update_variant(hash);
+						uint32_t hash = (material->variant_hash & ~mask) | it2.second.id;
+						material->update_variant(hash);
 					}
 					if (checked)
 						ImGui::SetItemDefaultFocus();
@@ -90,11 +83,14 @@ void material_tab(Material *material)
 			}
 		}
 	}
+}
 
+void list_uniforms(material_t *material, Shader *shader)
+{
 	ImGui::Separator();
 	ImGui::Text("Uniforms");
 
-	auto *passes = shader->variants[selected->variant_idx].passes;
+	auto *passes = shader->variants[material->variant_idx].passes;
 	for (const auto &it : shader->uniforms_names)
 	{
 		Program::Uniform *uniform = NULL;
@@ -112,7 +108,7 @@ void material_tab(Material *material)
 		continue;
 
 display_uniform:
-		const void *data = selected->uniforms.data() + uniform->offset;
+		const void *data = material->uniforms.data() + uniform->offset;
 		Texture *t = (Texture*)data;
 
 		switch (uniform->type)
@@ -137,5 +133,28 @@ display_uniform:
 			break;
 		}
 	}
+}
+
+void material_tab(Material *material)
+{
+	*material = material_dropdown(*material, "Select material");
+
+	if (!material->is_valid())
+		return;
+
+	material_t *selected = Material::materials.get<0>(material->id());
+	Shader *shader = selected->shader;
+
+	if (ImGui::Button("Reload"))
+	{
+		Material::reload(shader);
+		shader = selected->shader;
+	}
+
+	if (shader->macros.size())
+		list_macros(selected, shader);
+
+	if (shader->uniforms_names.size())
+		list_uniforms(selected, shader);
 }
 

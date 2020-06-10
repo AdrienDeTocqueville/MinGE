@@ -34,7 +34,7 @@ static thread_local void *this_fiber;
 
 #endif // END PLATFORM
 
-NO_INLINE const void *get_this_fiber_fls()
+NO_INLINE void *const get_this_fiber_fls()
 {
 	return this_fiber;
 }

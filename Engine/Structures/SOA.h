@@ -30,19 +30,19 @@ namespace soa
 		{ return sizeof(T) + arrays_t<i+1, Types...>::size(); }
 		constexpr inline void init(void *alloc, uint32_t stride)
 		{
-			array_t<i, T>::buf = (T*)alloc;
-			arrays_t<i+1, Types...>::init(array_t<i, T>::buf + stride, stride);
+			array_t<i, T>::buf = (T*)alloc - 1;
+			arrays_t<i+1, Types...>::init(array_t<i, T>::buf + 1 + stride, stride);
 		}
 		constexpr inline void move(void *alloc, uint32_t size, uint32_t stride)
 		{
-			memcpy(alloc, array_t<i, T>::buf, size * sizeof(T));
-			array_t<i, T>::buf = (T*)alloc;
-			arrays_t<i+1, Types...>::move(array_t<i, T>::buf + stride, size, stride);
+			memcpy(alloc, array_t<i, T>::buf + 1, size * sizeof(T));
+			array_t<i, T>::buf = (T*)alloc - 1;
+			arrays_t<i+1, Types...>::move(array_t<i, T>::buf + 1 + stride, size, stride);
 		}
-		constexpr inline void move(uint32_t first, uint32_t last)
+		constexpr inline void move(uint32_t dst, uint32_t src)
 		{
-			memcpy(array_t<i, T>::buf + first, array_t<i, T>::buf + last, sizeof(T));
-			arrays_t<i+1, Types...>::move(first, last);
+			memcpy(array_t<i, T>::buf + dst, array_t<i, T>::buf + src, sizeof(T));
+			arrays_t<i+1, Types...>::move(dst, src);
 		}
 	};
 
@@ -53,11 +53,15 @@ namespace soa
 	{ return arrays.array_t<i, T>::buf; }
 }
 
+// Structure of arrays
+// Index 0 is out of bounds
+// Index soa_t::size is accessible (if not 0)
+
 template<typename... Types>
 struct soa_t
 {
 	inline soa_t();
-	~soa_t() { mem::free_page(get<0>(), capacity); }
+	~soa_t() { mem::free_page(get<0>() + 1, capacity); }
 
 	void realloc(uint32_t new_cap);
 	uint32_t add();
@@ -85,7 +89,7 @@ soa_t<Types...>::soa_t():
 template<typename... Types>
 void soa_t<Types...>::realloc(uint32_t new_cap)
 {
-	void *old_alloc = get<0>();
+	void *old_alloc = get<0>() + 1;
 	void *new_alloc = mem::alloc_page((size_t)new_cap);
 
 	data.move(new_alloc, size, new_cap / (uint32_t)data.size());
@@ -99,14 +103,13 @@ uint32_t soa_t<Types...>::add()
 {
 	if (size * data.size() >= capacity)
 		realloc(capacity * 2);
-	return size++;
+	return ++size;
 }
 
 template<typename... Types>
 void soa_t<Types...>::remove(uint32_t index)
 {
-	size--;
-	data.move(index, size);
+	data.move(index, size--);
 }
 
 template<typename... Types>

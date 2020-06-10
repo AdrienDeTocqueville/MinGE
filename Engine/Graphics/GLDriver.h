@@ -152,11 +152,16 @@ public:
 
 	static void BindElementBuffer(GLuint buf)
 	{
+		// Disabled because it doesn't work
+		// Probably because the bound buffer is modified by vao
+		/*
 		if (buf != state.ebo || NO_DRIVER_STATE_CACHE)
 		{
 			glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buf));
 			state.ebo = buf;
 		}
+		*/
+		glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buf));
 	}
 
 	static void BindVertexArray(GLuint vao)

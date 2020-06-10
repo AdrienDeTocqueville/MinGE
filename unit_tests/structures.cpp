@@ -63,26 +63,29 @@ static void test_soa()
 {
 	soa_t<uint32_t, uint32_t> arr;
 
-	TEST(arr.add() == 0);
 	TEST(arr.add() == 1);
 	TEST(arr.add() == 2);
+	TEST(arr.add() == 3);
 
 	TEST(arr.size == 3);
 
-	arr.get<0>()[2] = 23;
-	arr.get<1>()[2] = 36;
+	arr.get<0>()[3] = 23;
+	arr.get<1>()[3] = 36;
 
 	arr.remove(1);
 
 	TEST(arr.size == 2);
 	TEST(arr.get<0>()[1] == 23);
-	TEST(arr.get<1>()[2] == 36);
+	TEST(arr.get<1>()[1] == 36);
 }
 
 
 
 void test_structures()
 {
+	static_assert(sizeof(array_list::slot32_t) == sizeof(uint32_t), "Invalid size");
+	static_assert(sizeof(array_list::slot64_t) == sizeof(uint64_t), "Invalid size");
+
 	test_multi_array();
 
 	test_array_list<array_list32_t<uint32_t>>();

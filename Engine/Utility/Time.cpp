@@ -29,7 +29,7 @@ uint32_t Time::frame_duration()
 {
 	auto now = high_resolution_clock::now();
 	auto test = duration_cast<milliseconds>(now - prev);
-	return test.count();
+	return (uint32_t)test.count();
 }
 
 Time::Chrono::Chrono()

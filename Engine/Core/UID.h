@@ -22,15 +22,20 @@ static_assert(sizeof(uid64_t) == 8, "Invalid size");
 template <typename T, typename U>
 struct UID
 {
-	UID(): index(0) {}
+	UID(U idx = 0) : index(idx) {}
 	UID(uint32_t id, uint32_t gen): uid{id, gen} {}
-	
-	inline auto id() const { return uid.id; }
-	inline auto gen() const { return uid.gen; }
 
-	inline bool operator==(const UID<T, U> &other)
+	inline auto id()   const { return uid.id; }
+	inline auto gen()  const { return uid.gen; }
+	inline auto uint() const { return index; }
+
+	inline bool operator==(const UID<T, U> &other) const
 	{
 		return index == other.index;
+	}
+	inline bool operator!=(const UID<T, U> &other) const
+	{
+		return index != other.index;
 	}
 
 private:

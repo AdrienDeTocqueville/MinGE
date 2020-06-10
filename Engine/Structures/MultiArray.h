@@ -16,7 +16,7 @@ namespace multi_array
 	// Base case: empty
 	template<int i>
 	struct arrays_t<i> {
-		constexpr inline size_t size() const { return 0; }
+		constexpr inline uint32_t size() const { return 0; }
 		constexpr inline void init(void*, uint32_t) { }
 		constexpr inline void move(void*, uint32_t, uint32_t) { }
 	};
@@ -25,7 +25,7 @@ namespace multi_array
 	template<int i, typename T, typename... Types>
 	struct arrays_t<i, T, Types...> : public array_t<i, T>, public arrays_t<i + 1, Types...>
 	{
-		constexpr inline size_t size() const
+		constexpr inline uint32_t size() const
 		{ return sizeof(T) + arrays_t<i+1, Types...>::size(); }
 		constexpr inline void init(void *alloc, uint32_t stride)
 		{
@@ -50,9 +50,10 @@ namespace multi_array
 template<typename... Types>
 struct multi_array_t
 {
-	inline multi_array_t();
+	inline multi_array_t(uint32_t _capacity = mem::page_size, bool split = true);
 	~multi_array_t() { mem::free_page(get<0>() + 1, capacity); }
 
+	void init(uint32_t _size);
 	void realloc(uint32_t new_alloc_size);
 	uint32_t add();
 	inline void remove(uint32_t index);
@@ -64,7 +65,7 @@ struct multi_array_t
 
 	template<int i> auto get(uint32_t index)
 	{
-		assert(index != 0 && "invalid index");
+		assert((index != 0 && index <= size) && "Invalid index");
 		return multi_array::get<i>(data) + index;
 	}
 
@@ -76,15 +77,29 @@ struct multi_array_t
 
 // Implementation
 template<typename... Types>
-multi_array_t<Types...>::multi_array_t():
-	next_slot(0), size(0), capacity(mem::page_size)
+multi_array_t<Types...>::multi_array_t(uint32_t _capacity, bool split) :
+	next_slot(0), size(0), capacity(mem::next_power_of_two(split ? _capacity : _capacity * data.size()))
 {
 	// The first array is also used to store the next free slot index
 	static_assert(sizeof(*get<0>()) >= sizeof(uint32_t), "First element type is too small");
 
-	stride = capacity / (uint32_t)data.size();
+	stride = capacity / data.size();
 	void *alloc = mem::alloc_page((size_t)capacity);
 	data.init(alloc, stride);
+}
+
+template<typename... Types>
+void multi_array_t<Types...>::init(uint32_t _size)
+{
+	size = _size;
+	next_slot = 1;
+
+	if (_size > stride)
+		realloc(mem::next_power_of_two(_size * data.size()));
+
+	for (uint32_t i(1); i < size; i++)
+		*(uint32_t*)(get<0>() + i) = i + 1;
+	*(uint32_t*)(get<0>() + size) = 0;
 }
 
 template<typename... Types>
@@ -93,7 +108,7 @@ void multi_array_t<Types...>::realloc(uint32_t new_alloc_size)
 	void *old_alloc = get<0>() + 1;
 	void *new_alloc = mem::alloc_page((size_t)new_alloc_size);
 
-	stride = new_alloc_size / (uint32_t)data.size();
+	stride = new_alloc_size / data.size();
 	data.move(new_alloc, size, stride);
 	mem::free_page(old_alloc, capacity);
 

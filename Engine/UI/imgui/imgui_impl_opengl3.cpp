@@ -301,7 +301,6 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
 #ifndef IMGUI_IMPL_OPENGL_ES2
     GL::DeleteVertexArray(vertex_array_object);
 #endif
-    GL::BindElementBuffer(0);
 }
 
 bool ImGui_ImplOpenGL3_CreateFontsTexture()

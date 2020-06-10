@@ -23,6 +23,13 @@ bool Texture::is_valid()
 	return textures[id()].gen == gen();
 }
 
+const char *Texture::uri()
+{
+	assert(id() && "Invalid texture handle");
+
+	return textures[id()].URI;
+}
+
 uvec2 Texture::size()
 {
 	assert(id() && "Invalid texture handle");
@@ -76,7 +83,7 @@ GLenum channels_to_format(int n)
 	}
 }
 
-Texture Texture::import(const char *URI)
+Texture Texture::load(const char *URI)
 {
 	uri_t uri;
 	if (!uri.parse(URI))
@@ -133,11 +140,16 @@ Texture Texture::get(uint32_t i)
 
 void Texture::clear()
 {
-	for (unsigned i = 0; i < textures.size(); i++)
+	for (unsigned i = 1; i < textures.size(); i++)
 	{
 		GLuint id = i;
 		if (glIsTexture(id))
 			glCheck(glDeleteTextures(1, &id));
 	}
 	textures.clear();
+}
+
+uint32_t Texture::count()
+{
+	return textures.size() - 1;
 }

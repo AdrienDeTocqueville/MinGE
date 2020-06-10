@@ -40,7 +40,7 @@ private:
 struct TransformSystem
 {
 	TransformSystem() = default;
-	TransformSystem(const nlohmann::json &dump);
+	TransformSystem(const SerializationContext &ctx);
 
 	Transform add(Entity entity, vec3 position, quat rotation, vec3 scale);
 	Transform add_child(Entity parent, Entity entity, vec3 position, quat rotation, vec3 scale);

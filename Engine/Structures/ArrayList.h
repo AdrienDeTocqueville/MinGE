@@ -7,7 +7,7 @@ namespace array_list
 {
 struct slot32_t
 {
-	uint32_t next: 22;
+	uint32_t next: 24;
 	uint32_t avail: 8;
 };
 struct slot64_t
@@ -15,6 +15,8 @@ struct slot64_t
 	uint32_t next;
 	uint32_t avail;
 };
+
+// Structure to allocate contiguous elements
 
 template<typename T, typename S>
 struct array_list_t
@@ -34,6 +36,9 @@ struct array_list_t
 	}
 
 	T &operator[](uint32_t index)
+	{ return data[index]; }
+
+	const T &operator[](uint32_t index) const
 	{ return data[index]; }
 
 	// 64 bit

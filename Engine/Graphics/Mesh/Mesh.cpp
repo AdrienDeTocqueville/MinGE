@@ -7,7 +7,8 @@
 
 
 const Mesh Mesh::none;
-multi_array_t<submeshes_t, mesh_data_t, const char*, AABB, uint8_t> Mesh::meshes;
+// submeshes, mesh data, URI, AABB, generation
+multi_array_t<submeshes_t, mesh_data_t, char*, AABB, uint8_t> Mesh::meshes;
 array_list_t<submesh_t> Mesh::submeshes;
 
 
@@ -22,8 +23,9 @@ void Mesh::destroy()
 	GL::DeleteBuffer(subs.vbo);
 	GL::DeleteBuffer(subs.ebo);
 	submeshes.remove(subs.first, subs.count);
-
+	
 	meshes.get<1>(id())->free();
+	free(meshes.get<2>()[id()]);
 	*meshes.get<2>(id()) = NULL;
 	++(*meshes.get<4>(id()));
 
@@ -115,12 +117,12 @@ static inline void load_buffers(const mesh_data_t &data, uint32_t &vao, uint32_t
 
 		// EBO
 		glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * data.index_count, data.indices, GL_STATIC_DRAW));
-		//glCheck(glVertexArrayElementBuffer(vao, ebo));
+		glCheck(glVertexArrayElementBuffer(vao, ebo));
 	}
 	GL::BindVertexArray(0);
 }
 
-Mesh Mesh::import(const char *URI)
+Mesh Mesh::load(const char *URI)
 {
 	uri_t uri;
 	if (!uri.parse(URI))
@@ -158,14 +160,16 @@ Mesh Mesh::import(const char *URI)
 	uint32_t i = meshes.add();
 	meshes.get<0>()[i] = submeshes_t {first_submesh, submesh_count, vbo, ebo};
 	meshes.get<1>()[i] = data;
-	meshes.get<2>()[i] = URI;
+	meshes.get<2>()[i] = _strdup(URI);
 	meshes.get<3>()[i].init(b0, b1);
 
-	// Only initialize generation if new memory is allocated
-	// If a slot is recycled, we got to keep the generation index
-	if (prev_size != meshes.size)
-		meshes.get<4>()[i] = 0;
+	return Mesh(i, meshes.get<4>()[i]);
+}
 
+Mesh Mesh::get(uint32_t i)
+{
+	if (meshes.get<2>()[i] == NULL)
+		return Mesh::none;
 	return Mesh(i, meshes.get<4>()[i]);
 }
 
@@ -173,7 +177,7 @@ void Mesh::clear()
 {
 	for (uint32_t i(1); i <= meshes.size; i++)
 	{
-		if (meshes.get<2>(i) == NULL)
+		if (meshes.get<2>()[i] == NULL)
 			continue;
 
 		submeshes_t subs = *meshes.get<0>(i);
@@ -182,6 +186,7 @@ void Mesh::clear()
 		GL::DeleteVertexArray(sub.vao);
 		GL::DeleteBuffer(subs.vbo);
 		GL::DeleteBuffer(subs.ebo);
+		free(meshes.get<2>()[i]);
 
 		meshes.get<1>(i)->free();
 	}

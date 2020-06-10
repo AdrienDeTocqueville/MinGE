@@ -27,5 +27,6 @@ void benchmark_transforms(int iterations);
 void test_transforms();
 
 void test_systems();
+void test_entity();
 
 void test_structures();

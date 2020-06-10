@@ -58,15 +58,16 @@ struct Mesh: public UID32
 {
 	Mesh() {}
 
-	bool is_valid() { return id() && *meshes.get<4>(id()) == gen(); }
 	void destroy();
+	char *uri() { return *meshes.get<2>(id());  }
+	bool is_valid() { return id() && *meshes.get<4>(id()) == gen(); }
 
-	static const Mesh none;
-	static Mesh import(const char *URI);
+	static Mesh load(const char *URI);
+	static Mesh get(uint32_t i);
 	static void clear();
 
-	// submeshes, mesh data, URI, AABB, generation
-	static multi_array_t<submeshes_t, mesh_data_t, const char*, struct AABB, uint8_t> meshes;
+	static const Mesh none;
+	static multi_array_t<submeshes_t, mesh_data_t, char*, struct AABB, uint8_t> meshes;
 	static array_list_t<submesh_t> submeshes;
 
 private:

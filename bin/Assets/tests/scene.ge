@@ -1,0 +1,28 @@
+{
+    "entities": [
+        {
+            "name": "d",
+            "uint": 16777217
+        },
+        {
+            "name": "a",
+            "uint": 33554435
+        },
+        {
+            "name": "b",
+            "uint": 16777220
+        },
+        {
+            "name": "e",
+            "uint": 5
+        },
+        {
+            "name": "f",
+            "uint": 6
+        }
+    ],
+    "max_entity": 6,
+    "max_mesh": 0,
+    "meshes": [],
+    "systems": {}
+}

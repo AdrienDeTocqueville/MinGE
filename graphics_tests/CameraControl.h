@@ -157,7 +157,8 @@ const system_type_t CameraControl::type = []() {
 
 	t.destroy = [](void *system) { ((CameraControl*)system)->~CameraControl(); };
 	t.update = [](void *system) { ((CameraControl*)system)->update(); };
-	t.serialize = NULL;
-	t.deserialize = NULL;
+	t.on_destroy_entity = NULL;
+	t.save = NULL;
+	t.load = NULL;
 	return t;
 }();

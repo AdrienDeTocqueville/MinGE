@@ -12,7 +12,7 @@ public:
 	};
 
 	enum Answer {
-		YES, NO, CANCEL
+		None, Retry, Ignore, Cancel
 	};
 
 	static void add(Error::Type type, std::string description);

@@ -58,9 +58,9 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 
 	for (uint32_t s = 0; s < subs.count; s++)
 	{
-		submeshes[i].submesh = Mesh::submeshes[subs.first + s];
-		submeshes[i].material = 2; // TODO: default material
-		submeshes[i].renderer = i;
+		submeshes[first+s].submesh = Mesh::submeshes[subs.first + s];
+		submeshes[first+s].material = 2; // TODO: default material
+		submeshes[first+s].renderer = i - 1;
 	}
 
 	renderers.get<0>()[i] = renderer_t {first, first + subs.count, entity, mesh};
@@ -71,7 +71,7 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 Light GraphicsSystem::add_point_light(Entity entity, vec3 color)
 {
 	uint32_t i = point_lights.size();
-	indices.map<2>(entity, i);
+	indices.map<2>(entity, i + 1);
 
 	point_lights.emplace_back(point_light_t { color, entity });
 

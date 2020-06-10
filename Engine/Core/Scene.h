@@ -1,25 +1,26 @@
 #pragma once
 
-class Scene
+struct Scene
 {
-public:
 	struct system_ref_t
 	{
 		const char *name;
 		void *instance;
 	};
 
-	Scene(system_ref_t _systems[], int _system_count);
-	Scene(const char *path, const char *name);
+	Scene(Scene &s);
 	~Scene();
 
-	Scene(const Scene&) = delete;
-
-	void save(const char *path, const char *name, bool backup_existing);
-
+	bool save(const char *URI);
 	void *get_system(const char *name);
+	const char *get_system_name(void *system);
+
+	static Scene load(const char *URI);
+	static bool save(const char *URI, system_ref_t systems[], int system_count);
 
 private:
+	Scene(int count, system_ref_t *refs = NULL);
+
 	int system_count;
 	system_ref_t *systems;
 };

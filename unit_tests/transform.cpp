@@ -1,3 +1,5 @@
+#include <fstream>
+
 #include "tests.h"
 
 static void bench_access(int iterations)
@@ -65,7 +67,7 @@ static void bench_creation(int iterations)
 void benchmark_transforms(int iterations)
 {
 #ifdef DEBUG
-	iterations = 2;
+	iterations = 1;
 #endif
 
 	bench_access(iterations);
@@ -77,15 +79,16 @@ void test_transforms()
 	auto transforms = new(Engine::alloc_system("TransformSystem")) TransformSystem();
 
 	/// Create entities
-	Entity e1 = Entity::create();
-	Entity e2 = Entity::create();
-	Entity e3 = Entity::create();
-	Entity _e = Entity::create();
-	Entity e4 = Entity::create();
-	Entity e5 = Entity::create();
-	Entity e6 = Entity::create();
-	Entity e7 = Entity::create();
-	Entity e8 = Entity::create();
+	Entity::entities.clear();
+	Entity e1 = Entity::create("e1");
+	Entity e2 = Entity::create("e2");
+	Entity e3 = Entity::create("e3");
+	Entity _e = Entity::create("_e");
+	Entity e4 = Entity::create("e4");
+	Entity e5 = Entity::create("e5");
+	Entity e6 = Entity::create("e6");
+	Entity e7 = Entity::create("e7");
+	Entity e8 = Entity::create("e8");
 
 	transforms->add(e1, vec3(0, 0, 0));
 	TEST(transforms->has(e1));
@@ -121,10 +124,36 @@ void test_transforms()
 
 	TEST(transforms->get(e4).position() == vec3(1, 0, 0));
 
+	std::ifstream file;
 
 	Scene::system_ref_t systems[] = {
 		Scene::system_ref_t{"world", transforms},
 	};
-	Scene level(systems, ARRAY_LEN(systems));
-	level.save("Assets/", "level", false);
+	Scene::save("asset://Assets/tests/transforms.ge", systems, ARRAY_LEN(systems));
+	Engine::free_system(transforms);
+
+	e1.destroy();
+	e2.destroy();
+	e3.destroy();
+	e4.destroy();
+	e5.destroy();
+	e6.destroy();
+	e7.destroy();
+	e8.destroy();
+	_e.destroy();
+
+
+	file.open("Assets/tests/transforms.ge");
+	std::string dump1(std::istreambuf_iterator<char>(file), (std::istreambuf_iterator<char>()));
+	file.close();
+
+	Scene s = Scene::load("asset://Assets/tests/transforms.ge");
+	systems[0].instance = s.get_system("world");
+
+	Scene::save("asset://Assets/tests/transforms.ge", systems, ARRAY_LEN(systems));
+	file.open("Assets/tests/transforms.ge");
+	std::string dump2(std::istreambuf_iterator<char>(file), (std::istreambuf_iterator<char>()));
+	file.close();
+
+	TEST(dump1 == dump2);
 }

@@ -45,6 +45,12 @@ inline void Material::set(size_t location, T *values, size_t num)
 
 
 
+inline bool material_t::has_pass(RenderPass::Type pass) const
+{
+	return shader->passes[pass].exists;
+}
+
+
 inline void material_t::update_variant(uint32_t hash)
 {
 	variant_hash = hash;

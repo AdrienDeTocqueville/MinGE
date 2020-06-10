@@ -1,5 +1,7 @@
 #include "Transform/Transform.h"
-#include "IO/json.hpp"
+
+#include "Core/Serialization.h"
+#include "Structures/EntityMapper.inl"
 
 using namespace nlohmann;
 
@@ -126,49 +128,87 @@ void TransformSystem::clear()
 }
 
 
-/// TYPE DEFINITION
-static inline json to_json(vec3 v)
+/// SERIALIZATION
+static void serialize(TransformSystem *sys, SerializationContext &ctx)
 {
-	return {{"x", v.x}, {"y", v.y}, {"z", v.z}};
-}
-
-static json serialize(void *system)
-{
-	json dump;
-
-	auto sys = (TransformSystem*)system;
 	TransformSystem::transform_t *transforms = sys->data.get<0>();
 	TransformSystem::hierarchy_t *hierarchies = sys->data.get<1>();
 
-	dump["indices"] = json::object();
+	json dump = sys->indices.to_json();
+	const uint32_t max_component = dump["max_component"][0].get<uint32_t>();
+	const uint32_t *indices = sys->indices.indices;
+
 	dump["transforms"] = json::array();
-	dump["hierarchies"] = json::array();
-
-	std::map<uint32_t, uint32_t> components;
-	const auto &indices = sys->indices;
-	for (uint32_t i = 0; i < indices.size; i++)
+	dump["transforms"].get_ptr<nlohmann::json::array_t*>()->reserve(max_component);
+	for (uint32_t i = 1; i < sys->indices.size; i++)
 	{
-		if (indices.indices[i]) components[indices.indices[i]] = i;
-	}
-
-	for (auto &pair : components)
-	{
-		dump["indices"][std::to_string(pair.second)] = pair.first;
+		if (indices[i] == 0) continue;
 
 		json transform = json::object();
-		transform["position"] = ::to_json(transforms[pair.first].position);
+		transform["position"] = ::to_json(transforms[indices[i]].position);
+		transform["rotation"] = ::to_json(transforms[indices[i]].rotation);
+		transform["scale"]    = ::to_json(transforms[indices[i]].scale);
 		dump["transforms"].push_back(transform);
+	}
+
+	dump["hierarchies"] = json::array();
+	dump["hierarchies"].get_ptr<nlohmann::json::array_t*>()->reserve(max_component);
+	for (uint32_t i = 1; i < sys->indices.size; i++)
+	{
+		if (indices[i] == 0) continue;
 
 		json hierarchy = json::object();
-		hierarchy["parent"] = hierarchies[pair.first].parent;
+		hierarchy["first_child"]  = hierarchies[indices[i]].first_child;
+		hierarchy["parent"]       = hierarchies[indices[i]].parent;
+		hierarchy["next_sibling"] = hierarchies[indices[i]].next_sibling;
 		dump["hierarchies"].push_back(hierarchy);
 	}
-	return dump;
+
+	ctx.set_data(dump);
 }
 
-TransformSystem::TransformSystem(const json &dump)
-{ /*TODO*/ }
+TransformSystem::TransformSystem(const SerializationContext &ctx):
+	indices(ctx["indices"]), data(ctx["max_component"][0].get<uint32_t>(), false)
+{
+	data.init(ctx["max_component"][0].get<uint32_t>());
 
+	auto transform = ctx["transforms"].rbegin();
+	for (uint32_t i = 1; i < indices.size; i++)
+	{
+		uint32_t comp = indices.get<0>(indices.size - i);
+		if (comp == 0) continue;
+
+		// Get and mark as used
+		TransformSystem::transform_t *tr = data.get<0>(comp);
+		if (comp == 1) data.next_slot = *(uint32_t*)tr;
+		else     *(uint32_t*)(tr - 1) = *(uint32_t*)tr;
+
+		tr->position = ::to_vec3(transform.value()["position"]);
+		tr->rotation = ::to_quat(transform.value()["rotation"]);
+		tr->scale    = ::to_vec3(transform.value()["scale"]);
+
+		simd_mul(tr->world, glm::translate(tr->position), glm::toMat4(tr->rotation));
+		simd_mul(tr->world, tr->world, glm::scale(tr->scale));
+		tr->local = glm::inverse(tr->world);
+
+		++transform;
+	}
+
+	auto hierarchy = ctx["hierarchies"].begin();
+	for (uint32_t i = 1; i < indices.size; i++)
+	{
+		uint32_t comp = indices.get<0>(i);
+		if (comp == 0) continue;
+
+		TransformSystem::hierarchy_t *hi = data.get<1>(comp);
+		hi->first_child  = hierarchy.value()["first_child"].get<uint32_t>();
+		hi->parent       = hierarchy.value()["parent"].get<uint32_t>();
+		hi->next_sibling = hierarchy.value()["next_sibling"].get<uint32_t>();
+		++hierarchy;
+	}
+}
+
+/// TYPE DEFINITION
 const system_type_t TransformSystem::type = []() {
 	system_type_t t{};
 	t.name = "TransformSystem";
@@ -176,7 +216,8 @@ const system_type_t TransformSystem::type = []() {
 
 	t.destroy = [](void *system) { ((TransformSystem*)system)->~TransformSystem(); };
 	t.update = NULL;
-	t.serialize = serialize;
-	t.deserialize = [](void *system, const json &dump) { new(system) TransformSystem(dump); };
+	t.on_destroy_entity = NULL;
+	t.save = (void(*)(void*, SerializationContext&))serialize;
+	t.load = [](void *system, const SerializationContext &ctx) { new(system) TransformSystem(ctx); };
 	return t;
 }();

@@ -35,11 +35,13 @@ case DrawBatch:
 	{
 		uint32_t s = batch.sorted_indices[c];
 		submesh_data_t *data = batch.submeshes + s;
+		material_t *material = Material::materials.get<0>(data->material);
+		if (!material->has_pass(batch.pass))
+			continue;
 
 		Shader::set_builtin("MATRIX_M", batch.matrices[data->renderer]);
 		Shader::set_builtin("MATRIX_N", batch.matrices[data->renderer]);
 
-		material_t *material = Material::materials.get<0>(data->material);
 		material->bind(batch.pass);
 
 		{ MICROPROFILE_SCOPEGPUI("DrawElements", -1);

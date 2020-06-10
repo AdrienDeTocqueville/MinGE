@@ -4,6 +4,7 @@
 
 #include "IO/json_fwd.hpp"
 
+struct SerializationContext;
 struct system_type_t
 {
 	const char *name;
@@ -11,7 +12,8 @@ struct system_type_t
 
 	void (*destroy)(void *instance);
 	void (*update)(void *instance);
+	void (*on_destroy_entity)(void *instance, struct Entity);
 
-	nlohmann::json (*serialize)(void *instance);
-	void (*deserialize)(void *instance, const nlohmann::json&);
+	void (*save)(void *instance, SerializationContext&);
+	void (*load)(void *instance, const SerializationContext&);
 };

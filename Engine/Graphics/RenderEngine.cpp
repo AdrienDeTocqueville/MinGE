@@ -29,7 +29,7 @@ void RenderEngine::init()
 #endif
 
 	// TODO: destroy it
-	Material mat = Material::create(Shader::standard());
+	Material mat = Material::create(Shader::load("asset:shader/standard"));
 	mat.set("color", vec3(0.8f));
 	mat.set("metallic", 0.0f);
 	mat.set("roughness", 0.5f);
@@ -73,6 +73,8 @@ void RenderEngine::flush()
 	}
 
 	// TODO: this will draw on the last camera
+	GL::Enable(GL::Blend);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	Debug::flush();
 
 	UI::flush();

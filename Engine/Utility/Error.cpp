@@ -85,12 +85,12 @@ bool Error::check()
 Error::Answer Error::ask(Error::Type type, const char *question)
 {
 #ifdef _WIN32
-	int r = MessageBoxA(nullptr, question, get_title(type), MB_ICONQUESTION | MB_YESNOCANCEL | MB_DEFBUTTON2);
-	if (r == IDYES) return Answer::YES;
-	if (r == IDNO) return Answer::NO;
-	return Answer::CANCEL;
+	int r = MessageBoxA(nullptr, question, get_title(type), MB_ICONQUESTION | MB_CANCELTRYCONTINUE | MB_DEFBUTTON2);
+	if (r == IDTRYAGAIN) return Answer::Retry;
+	if (r == IDCONTINUE) return Answer::Ignore;
+	return Answer::Cancel;
 #else
 	std::cout << get_title(type) << ": " << question << " (cancel)" << std::endl;
-	return Answer::CANCEL;
+	return Answer::Cancel;
 #endif
 }

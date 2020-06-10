@@ -19,14 +19,23 @@ struct ShaderSources
 
 class Shader
 {
+public:
 	friend struct Material;
 	friend struct material_t;
 	friend struct RenderEngine;
 
-public:
-	static Shader *import(const char *URI);
-	static Shader *standard() { return _standard; }
-	static Shader *debug() { return _debug; }
+	struct Variant
+	{
+		struct Program *passes[RenderPass::Count];
+	};
+
+	struct Macro
+	{
+		uint32_t mask;
+		uint32_t id;
+	};
+
+	static Shader *load(const char *URI);
 
 	static inline size_t get_builtin_location(const std::string &name);
 
@@ -37,7 +46,11 @@ public:
 
 	const char *URI;
 
-//private:
+	std::unordered_map<std::string, Macro> macros;
+	std::vector<Variant> variants;
+	std::unordered_map<std::string, size_t> uniforms_names;
+
+private:
 	~Shader();
 
 	static void clear();
@@ -46,6 +59,7 @@ public:
 
 	bool load(const std::string &path);
 	void load_uniforms(struct Program *prgm);
+	Shader *reload();
 
 	uint32_t get_variant(uint32_t hash);
 	Program *update_builtins(uint32_t variant_idx, RenderPass::Type pass);
@@ -60,27 +74,11 @@ public:
 	};
 	Pass passes[RenderPass::Count];
 
-	struct Variant
-	{
-		struct Program *passes[RenderPass::Count];
-	};
-	std::vector<Variant> variants;
 	std::unordered_map<uint32_t, uint32_t> variant_idx;
 
-	struct Macro
-	{
-		uint32_t mask;
-		uint32_t id;
-	};
-	std::unordered_map<std::string, Macro> macros;
 	uint32_t next_bit;
-
-	// Uniforms related stuff
 	size_t uniform_offset;
-	std::unordered_map<std::string, size_t> uniforms_names;
 
 	static std::vector<uint8_t> builtins; // Contains < update_idx | type | data > sequenced for each builtin
 	static std::unordered_map<std::string, size_t> builtins_names;
-
-	static Shader *_standard, *_debug;
 };

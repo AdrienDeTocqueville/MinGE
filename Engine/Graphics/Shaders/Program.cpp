@@ -22,6 +22,11 @@ struct Stages
 const int NUM_STAGES = sizeof(Stages) / sizeof(unsigned);
 
 
+Program::~Program()
+{
+	GL::DeleteProgram(program);
+}
+
 static bool check_compile(unsigned shader, const std::string &file)
 {
 	GLint success;
@@ -145,8 +150,7 @@ static unsigned link(const Stages &stages)
 	return program;
 }
 
-Program::Program(const ShaderSources &sources, RenderPass::Type pass, const char *defines, const char *builtins):
-	program(0)
+static inline int compile_stages(const ShaderSources &sources, RenderPass::Type pass, const char *defines, const char *builtins, Stages &stages)
 {
 	#define COMPILE(type, name) (0 == (stages.name ? stages.name :\
 		(stages.name = compile(type, sources.name, pass_define, defines, builtins)))) \
@@ -161,7 +165,6 @@ Program::Program(const ShaderSources &sources, RenderPass::Type pass, const char
 	char pass_define[64];
 	stbsp_snprintf(pass_define, 64, "#define %s\n", pass_defines[pass]);
 
-	Stages stages;
 	memset(&stages, 0, sizeof(Stages));
 
 	bool error;
@@ -182,21 +185,25 @@ Program::Program(const ShaderSources &sources, RenderPass::Type pass, const char
 		if (error)
 		{
 			auto answer = Error::ask(Error::USER, "Failed to compile shader. Retry ?");
-			if (answer == Error::CANCEL)	exit(EXIT_FAILURE);
-			if (answer == Error::NO)	error = false;
+			if (answer != Error::Retry)	return answer;
 		}
 	}
 	while (error);
 
-	program = link(stages);
+	return Error::None;
+}
+
+Program::Program(const struct ShaderSources &sources, RenderPass::Type pass, const char *defines, const char *builtins):
+	program(0)
+{
+	Stages stages;
+
+	auto answer = compile_stages(sources, pass, defines, builtins, stages);
+	if (answer == Error::Cancel)	exit(EXIT_FAILURE);
+	else if (answer == Error::None)
+		program = link(stages);
 
 	auto shaders = (unsigned*)&stages;
 	for (int i(0); i < NUM_STAGES; i++)
 		glCheck(glDeleteShader(shaders[i]));
 }
-
-Program::~Program()
-{
-	GL::DeleteProgram(program);
-}
-

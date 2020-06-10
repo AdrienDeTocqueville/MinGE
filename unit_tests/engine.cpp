@@ -32,8 +32,8 @@ const system_type_t type = []() {
 
 	t.destroy = NULL;
 	t.update = updater;
-	t.serialize = NULL;
-	t.deserialize = NULL;
+	t.save = NULL;
+	t.load = NULL;
 	return t;
 }();
 
