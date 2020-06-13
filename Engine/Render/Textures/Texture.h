@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/UID.h"
-#include "Graphics/GLDriver.h"
+#include "Render/GLDriver.h"
 
 struct Texture: public UID64
 {

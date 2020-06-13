@@ -3,15 +3,14 @@
 #include "Profiler/profiler.h"
 #include "Core/Engine.h"
 
+#include "Render/RenderEngine.h"
+#include "Render/CommandBuffer.h"
+#include "Render/Debug.h"
+#include "Render/Shaders/Shader.inl"
+
 #include "Graphics/Graphics.h"
-#include "Graphics/RenderEngine.h"
-#include "Graphics/CommandBuffer.h"
 #include "Graphics/CommandKey.h"
-#include "Graphics/Debug.h"
-
 #include "Transform/Transform.h"
-
-#include "Graphics/Shaders/Shader.inl"
 
 GraphicsSystem::GraphicsSystem(TransformSystem *world):
 	prev_index_count(0), prev_key_count(0), prev_renderer_count(0),
@@ -107,6 +106,7 @@ static void update(GraphicsSystem *self)
 			vec3 pos = tr.position();
 
 			cameras[i].center_point = tr.vec_to_world(vec3(1, 0, 0)) + pos;
+			cameras[i].up_vector = tr.vec_to_world(vec3(0, 0, 1));
 			camera_datas[i].position = pos;
 		}
 		for (uint32_t i = 0; i < self->point_lights.size(); i++)
@@ -135,8 +135,7 @@ static void update(GraphicsSystem *self)
 
 		/// Compute new VP
 
-		static const vec3 up(0, 0, 1);
-		const mat4 view_matrix = glm::lookAt(cam_data->position, cam->center_point, up);
+		const mat4 view_matrix = glm::lookAt(cam_data->position, cam->center_point, cam->up_vector);
 		simd_mul(cam_data->view_proj, cam->projection, view_matrix);
 
 		/// Frustum culling

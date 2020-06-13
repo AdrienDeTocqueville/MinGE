@@ -1,6 +1,6 @@
 #include "Profiler/profiler.h"
 #include "Graphics/Graphics.h"
-#include "Graphics/CommandBuffer.h"
+#include "Render/CommandBuffer.h"
 #include "IO/Input.h"
 
 Camera GraphicsSystem::add_camera(Entity entity, float FOV, float zNear, float zFar,

@@ -4,7 +4,7 @@
 
 #include "CameraControl.h"
 
-//#define SERIALIZE
+#define SERIALIZE
 
 int main(int, char**)
 {
@@ -19,6 +19,8 @@ int main(int, char**)
 	/// Init engine
 	Engine::init(window);
 
+	Engine::register_system_type(TransformSystem::type);
+	Engine::register_system_type(GraphicsSystem::type);
 	Engine::register_system_type(CameraControl::type);
 
 #ifdef SERIALIZE
@@ -31,7 +33,7 @@ int main(int, char**)
 	Mesh cube = Mesh::load("asset:mesh/cube?x=1&y=3&z=3");
 	Mesh sphere = Mesh::load("asset:mesh/sphere?radius=3");
 
-	//Texture texture = Texture::load("asset://Assets/Textures/0.png?format=srgb");
+	//Texture texture = Texture::load("asset://Textures/0.png?format=srgb");
 
 	/// Create entities
 	Entity mesh_ent = Entity::create("Cube");
@@ -57,14 +59,11 @@ int main(int, char**)
 	graphics->add_camera(camera_ent, 70.0f, 2.0f, 8.0f);
 	controller->add(camera_ent);
 
-	Scene::system_ref_t systems[] = {
-		Scene::system_ref_t{"transforms", transforms},
-		Scene::system_ref_t{"graphics", graphics},
-	};
-	Scene::save("asset://Assets/tests/graphics_test.ge", systems, ARRAY_LEN(systems));
+	Scene s("transforms", transforms, "graphics", graphics);
+	s.save("Assets/tests/graphics_test.ge");
 
 #else
-	Scene s = Scene::load("asset://Assets/tests/graphics_test.ge");
+	Scene s("Assets/tests/graphics_test.ge");
 	auto transforms = (TransformSystem*)s.get_system("transforms");
 	auto graphics = (GraphicsSystem*)s.get_system("graphics");
 

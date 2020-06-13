@@ -7,6 +7,7 @@ struct Engine
 {
 	static void init(struct SDL_Window *window);
 	static void destroy();
+	static void clear();
 	static void frame();
 
 	// system

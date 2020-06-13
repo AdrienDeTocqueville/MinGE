@@ -11,24 +11,16 @@
 #include "Core/Entity.h"
 #include "Core/Serialization.h"
 
-#include "IO/URI.h"
 #include "IO/json.hpp"
 #include "Utility/Error.h"
 #include "Utility/stb_sprintf.h"
 
 #include "Structures/Bounds.h"
-#include "Graphics/Mesh/Mesh.h"
+#include "Render/Mesh/Mesh.h"
 
 using namespace nlohmann;
 
-Scene::Scene(int count, system_ref_t *refs):
-	system_count(count), systems(refs)
-{
-	if (!refs && system_count)
-		systems = (system_ref_t*)malloc(system_count * sizeof(*systems));
-}
-
-Scene::Scene(Scene &s)
+Scene::Scene(Scene &&s)
 {
 	system_count = s.system_count;
 	systems = s.systems;
@@ -38,15 +30,134 @@ Scene::Scene(Scene &s)
 
 Scene::~Scene()
 {
-	for (int i = 0; i < system_count; i++)
-	{
-		Engine::free_system(systems[i].instance);
-		free((void*)systems[i].name);
-	}
+	clear();
 	free(systems);
 }
 
-bool Scene::save(const char *URI)
+bool Scene::load(const char *path)
+{
+	std::ifstream file(path);
+	if (!file)
+	{
+		Error::add(Error::FILE_NOT_FOUND, "File not found.");
+		return false;
+	}
+
+	auto scene = json::parse(file);
+
+	// Load entities
+	{
+		uint32_t max_ent = scene["max_entity"].get<uint32_t>();
+
+		// Clear free list
+		Entity::entities.init(max_ent);
+		for (uint32_t i(1); i <= max_ent; i++)
+			Entity::entities.get<0>(i)->destroyed = 1;
+
+		// Populate
+		auto entities = scene["entities"];
+		for (auto it = entities.rbegin(); it != entities.rend(); ++it)
+		{
+			UID32 uid = it.value()["uint"].get<uint32_t>();
+			auto name = it.value().contains("name") ? it.value()["name"].get<std::string>().c_str() : NULL;
+
+			Entity::entities.next_slot = uid.id();
+			Entity::create(name);
+			Entity::entities.get<0>()[uid.id()].gen = uid.gen();
+		}
+		Entity::entities.next_slot = 1;
+	}
+
+	// Load meshes
+	{
+		uint32_t max_mesh = scene["max_mesh"].get<uint32_t>();
+
+		// Clear free list
+		Mesh::meshes.init(max_mesh);
+		for (uint32_t i(1); i <= max_mesh; i++)
+			Mesh::meshes.get<2>()[i] = NULL;
+
+		// Populate
+		auto meshes = scene["meshes"];
+		for (auto it = meshes.rbegin(); it != meshes.rend(); ++it)
+		{
+			UID32 uid = it.value()["uint"].get<uint32_t>();
+
+			Mesh::meshes.next_slot = uid.id();
+			Mesh::load(it.value()["uri"].get<std::string>().c_str());
+			Mesh::meshes.get<4>()[uid.id()] = uid.gen();
+		}
+		Mesh::meshes.next_slot = 1;
+	}
+
+	// Load systems
+	clear();
+	auto j_systems = scene["systems"];
+	reserve(system_count = (int)j_systems.size());
+
+	std::vector<void*> not_ready;
+	not_ready.reserve(system_count);
+
+	// Alloc memory
+	int i = 0;
+	size_t max_dependency = 0;
+	for (auto system = j_systems.begin(); system != j_systems.end(); ++system, ++i)
+	{
+		systems[i].name = strdup(system.key().c_str());
+		systems[i].instance = Engine::alloc_system(system.value()["type"].get<std::string>().c_str());
+		not_ready.push_back(systems[i].instance);
+		if (system.value().contains("dependencies"))
+			max_dependency = std::max(max_dependency, system.value()["dependencies"].size());
+	}
+
+	// Handle dependencies
+	SerializationContext ctx((int)max_dependency);
+	while (!not_ready.empty())
+	{
+		i = 0;
+		for (auto system = j_systems.begin(); system != j_systems.end(); ++system, ++i)
+		{
+			auto me = std::find(not_ready.begin(), not_ready.end(), systems[i].instance);
+			if (me == not_ready.end())
+				continue;
+
+			int dep_idx = 0;
+			bool ready = true;
+			if (system.value().contains("dependencies"))
+			{
+				for (auto dep : system.value()["dependencies"])
+				{
+					if (void *sys = get_system(dep.get<std::string>().c_str()))
+					{
+						auto depen = std::find(not_ready.begin(), not_ready.end(), sys);
+						if (depen != not_ready.end())
+						{
+							ready = false;
+							break;
+						}
+						else
+							ctx.dependencies[dep_idx++] = sys;
+					}
+				}
+			}
+
+			if (!ready) continue;
+
+			if (auto callback = Engine::get_system_type(systems[i].instance)->load)
+			{
+				ctx.version = get_or_default<int>(system.value(), "version", 0);
+				ctx.dependency_count = dep_idx;
+				ctx.data = system.value()["data"];
+				callback(systems[i].instance, ctx);
+			}
+			not_ready.erase(me);
+		}
+	}
+
+	return true;
+}
+
+bool Scene::save(const char *path, Overwrite mode) const
 {
 	char tmp_buf[256];
 	json scene;
@@ -125,39 +236,71 @@ bool Scene::save(const char *URI)
 	}
 
 
-	uri_t uri;
-	uri.parse(URI);
-	if (!uri.on_disk)
-		return false;
-
-	if (const char *overwrite = uri.get("overwrite"))
+	struct stat buffer;
+	if (mode && stat(path, &buffer) == 0) // if file exists
 	{
-		struct stat buffer;
-		if (stat(uri.path.c_str(), &buffer) == 0) // if file exists
+		switch (mode)
 		{
-			if (strcmp(overwrite, "no") == 0) return false;
-			else if (strcmp(overwrite, "ask") == 0)
-			{
+		case Overwrite::No:
+			return false;
+
+		case Overwrite::Ask:
+		{
 #ifdef _WIN32
-				int r = MessageBoxA(nullptr, "File already exists.\nDo you want to replace it?", "Confirm save Scene", MB_ICONWARNING | MB_YESNO | MB_DEFBUTTON2);
-				if (r == IDNO) return false;
+			int r = MessageBoxA(nullptr, "File already exists.\nDo you want to replace it?", "Confirm save Scene", MB_ICONWARNING | MB_YESNO | MB_DEFBUTTON2);
+			if (r == IDNO) return false;
 #else
-				return false;
+			return false;
 #endif
-			}
-			else if (strcmp(overwrite, "save") == 0)
-			{
-				stbsp_snprintf(tmp_buf, sizeof(tmp_buf), "%s.ge.old", uri.path.c_str());
-				rename(uri.path.c_str(), tmp_buf);
-			}
+			break;
+		}
+
+		case Overwrite::Backup:
+			stbsp_snprintf(tmp_buf, sizeof(tmp_buf), "%s.old", path);
+			rename(path, tmp_buf);
+			break;
 		}
 	}
-	std::ofstream file(uri.path.c_str(), std::ios_base::binary | std::ofstream::trunc);
+	std::ofstream file(path, std::ios_base::binary | std::ofstream::trunc);
 	file << std::setw(4) << scene << std::endl;
 	return true;
 }
 
-void *Scene::get_system(const char *name)
+void Scene::add_system(char *name, void *instance)
+{
+	reserve(system_count ? system_count * 2 : 8);
+	systems[system_count].name = name;
+	systems[system_count].instance = instance;
+	system_count++;
+}
+
+void Scene::remove_system(const char *name)
+{
+	for (int i(0); i < system_count; i++)
+	{
+		if (strcmp(systems[i].name, name) == 0)
+		{
+			Engine::free_system(systems[i].instance);
+			free(systems[i].name);
+			system_count--;
+			systems[i].name = systems[system_count].name;
+			systems[i].instance = systems[system_count].instance;
+			return;
+		}
+	}
+}
+
+void Scene::clear()
+{
+	for (int i = 0; i < system_count; i++)
+	{
+		Engine::free_system(systems[i].instance);
+		free(systems[i].name);
+	}
+	system_count = 0;
+}
+
+void *Scene::get_system(const char *name) const
 {
 	for (int i(0); i < system_count; i++)
 	{
@@ -167,7 +310,7 @@ void *Scene::get_system(const char *name)
 	return NULL;
 }
 
-const char *Scene::get_system_name(void *system)
+const char *Scene::get_system_name(void *system) const
 {
 	for (int i(0); i < system_count; i++)
 	{
@@ -177,139 +320,11 @@ const char *Scene::get_system_name(void *system)
 	return NULL;
 }
 
-Scene Scene::load(const char *URI)
+void Scene::reserve(int count)
 {
-	uri_t uri;
-	uri.parse(URI);
-	if (!uri.on_disk)
+	if (count > capacity)
 	{
-		Error::add(Error::USER, "Default scenes not implemented.");
-		return Scene(0);
+		capacity = count;
+		systems = (system_ref_t*)realloc(systems, capacity * sizeof(system_ref_t));
 	}
-
-	std::ifstream file(uri.path);
-	if (!file)
-	{
-		Error::add(Error::FILE_NOT_FOUND, "File not found.");
-		return Scene(0);
-	}
-
-	auto scene = json::parse(file);
-
-	// Load entities
-	{
-		uint32_t max_ent = scene["max_entity"].get<uint32_t>();
-
-		// Clear free list
-		Entity::entities.init(max_ent);
-		for (uint32_t i(1); i <= max_ent; i++)
-			Entity::entities.get<0>(i)->destroyed = 1;
-
-		// Populate
-		auto entities = scene["entities"];
-		for (auto it = entities.rbegin(); it != entities.rend(); ++it)
-		{
-			UID32 uid = it.value()["uint"].get<uint32_t>();
-			auto name = it.value().contains("name") ? _strdup(it.value()["name"].get<std::string>().c_str()) : NULL;
-
-			Entity::entities.next_slot = uid.id();
-			Entity::create(name);
-			Entity::entities.get<0>()[uid.id()].gen = uid.gen();
-		}
-		Entity::entities.next_slot = 1;
-	}
-
-	// Load meshes
-	{
-		uint32_t max_mesh = scene["max_mesh"].get<uint32_t>();
-
-		// Clear free list
-		Mesh::meshes.init(max_mesh);
-		for (uint32_t i(1); i <= max_mesh; i++)
-			Mesh::meshes.get<2>()[i] = NULL;
-
-		// Populate
-		auto meshes = scene["meshes"];
-		for (auto it = meshes.rbegin(); it != meshes.rend(); ++it)
-		{
-			UID32 uid = it.value()["uint"].get<uint32_t>();
-
-			Mesh::meshes.next_slot = uid.id();
-			Mesh::load(it.value()["uri"].get<std::string>().c_str());
-			Mesh::meshes.get<4>()[uid.id()] = uid.gen();
-		}
-		Mesh::meshes.next_slot = 1;
-	}
-
-	// Load systems
-	auto j_systems = scene["systems"];
-	auto res = Scene((int)j_systems.size());
-	std::vector<void*> not_ready;
-	not_ready.reserve(res.system_count);
-
-	// Alloc memory
-	int i = 0;
-	size_t max_dependency = 0;
-	for (auto system = j_systems.begin(); system != j_systems.end(); ++system, ++i)
-	{
-		res.systems[i].name = _strdup(system.key().c_str());
-		res.systems[i].instance = Engine::alloc_system(system.value()["type"].get<std::string>().c_str());
-		not_ready.push_back(res.systems[i].instance);
-		if (system.value().contains("dependencies"))
-			max_dependency = std::max(max_dependency, system.value()["dependencies"].size());
-	}
-
-	// Handle dependencies
-	SerializationContext ctx((int)max_dependency);
-	while (!not_ready.empty())
-	{
-		i = 0;
-		for (auto system = j_systems.begin(); system != j_systems.end(); ++system, ++i)
-		{
-			auto me = std::find(not_ready.begin(), not_ready.end(), res.systems[i].instance);
-			if (me == not_ready.end())
-				continue;
-
-			int dep_idx = 0;
-			bool ready = true;
-			if (system.value().contains("dependencies"))
-			{
-				for (auto dep : system.value()["dependencies"])
-				{
-					if (void *sys = res.get_system(dep.get<std::string>().c_str()))
-					{
-						auto depen = std::find(not_ready.begin(), not_ready.end(), sys);
-						if (depen != not_ready.end())
-						{
-							ready = false;
-							break;
-						}
-						else
-							ctx.dependencies[dep_idx++] = sys;
-					}
-				}
-			}
-
-			if (!ready) continue;
-
-			if (auto callback = Engine::get_system_type(res.systems[i].instance)->load)
-			{
-				ctx.version = get_or_default<int>(system.value(), "version", 0);
-				ctx.dependency_count = dep_idx;
-				ctx.data = system.value()["data"];
-				callback(res.systems[i].instance, ctx);
-			}
-			not_ready.erase(me);
-		}
-	}
-
-	return res;
-}
-
-bool Scene::save(const char *URI, system_ref_t systems[], int system_count)
-{
-	// Trick to not call Scene destructor
-	auto scene = (Scene*)alloca(sizeof(Scene));
-	new (scene) Scene(system_count, systems);
-	return scene->save(URI);
 }

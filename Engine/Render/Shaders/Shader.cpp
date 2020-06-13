@@ -3,10 +3,10 @@
 #include <unordered_set>
 #include <glm/gtc/integer.hpp>
 
-#include "Graphics/Shaders/Shader.inl"
-#include "Graphics/Shaders/Program.h"
-#include "Graphics/Textures/Texture.h"
-#include "Graphics/GLDriver.h"
+#include "Render/Shaders/Shader.inl"
+#include "Render/Shaders/Program.h"
+#include "Render/Textures/Texture.h"
+#include "Render/GLDriver.h"
 
 #include "Utility/Error.h"
 #include "Memory/Memory.h"
@@ -95,7 +95,7 @@ Shader::~Shader()
 	{
 		for (int i(0); i < RenderPass::Count; i++)
 		{
-			if (freed.find(variant.passes[i]) == freed.end())
+			if (freed.find(variant.passes[i]) != freed.end())
 				continue;
 			freed.emplace(variant.passes[i]);
 			delete variant.passes[i];

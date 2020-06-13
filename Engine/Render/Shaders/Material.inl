@@ -4,8 +4,8 @@
 #include <string>
 #include <memory>
 
-#include "Graphics/Shaders/Material.h"
-#include "Graphics/Shaders/Shader.inl"
+#include "Render/Shaders/Material.h"
+#include "Render/Shaders/Shader.inl"
 
 bool Material::has_pass(RenderPass::Type pass) const
 {

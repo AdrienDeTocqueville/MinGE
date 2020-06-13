@@ -1,6 +1,6 @@
 #include "Graphics/Graphics.h"
-#include "Graphics/RenderEngine.h"
-#include "Graphics/CommandBuffer.h"
+#include "Render/RenderEngine.h"
+#include "Render/CommandBuffer.h"
 
 #include "Core/Serialization.h"
 #include "Structures/EntityMapper.inl"

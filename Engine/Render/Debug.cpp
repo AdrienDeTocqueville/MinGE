@@ -2,10 +2,10 @@
 
 #include "Profiler/profiler.h"
 
-#include "Graphics/Debug.h"
-#include "Graphics/GLDriver.h"
-#include "Graphics/Shaders/Material.h"
-#include "Graphics/Shaders/Shader.h"
+#include "Render/Debug.h"
+#include "Render/GLDriver.h"
+#include "Render/Shaders/Material.h"
+#include "Render/Shaders/Shader.h"
 
 #include "Structures/Bounds.h"
 

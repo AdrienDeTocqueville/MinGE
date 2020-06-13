@@ -344,6 +344,7 @@ void init()
 
 #ifdef SINGLE_THREADED
 	num_worker = 1;
+	printf("[WARNING] Single threaded\n");
 #else
 	num_worker = std::thread::hardware_concurrency();
 #endif

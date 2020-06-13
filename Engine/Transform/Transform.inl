@@ -9,8 +9,7 @@ void Transform::set_position(vec3 pos)
 
 void Transform::set_rotation(vec3 rot)
 {
-	sys.data.get<0>(id())->rotation = quat(rot);
-	sys.update_matrices(id());
+	set_rotation(quat(rot));
 }
 
 void Transform::set_rotation(quat rot)

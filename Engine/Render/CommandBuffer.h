@@ -2,8 +2,8 @@
 
 #include <stdint.h>
 
-#include "Graphics/Mesh/Mesh.h"
-#include "Graphics/RenderPass.h"
+#include "Render/Mesh/Mesh.h"
+#include "Render/RenderPass.h"
 
 struct camera_data_t
 {

@@ -1,5 +1,5 @@
-#include "Graphics/Mesh/Mesh.h"
-#include "Graphics/GLDriver.h"
+#include "Render/Mesh/Mesh.h"
+#include "Render/GLDriver.h"
 
 #include "IO/URI.h"
 #include "Utility/Error.h"
@@ -160,7 +160,7 @@ Mesh Mesh::load(const char *URI)
 	uint32_t i = meshes.add();
 	meshes.get<0>()[i] = submeshes_t {first_submesh, submesh_count, vbo, ebo};
 	meshes.get<1>()[i] = data;
-	meshes.get<2>()[i] = _strdup(URI);
+	meshes.get<2>()[i] = strdup(URI);
 	meshes.get<3>()[i].init(b0, b1);
 
 	return Mesh(i, meshes.get<4>()[i]);

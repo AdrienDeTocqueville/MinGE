@@ -4,13 +4,13 @@
 #include "Profiler/profiler.h"
 #include "UI/UI.h"
 
-#include "Graphics/RenderEngine.h"
-#include "Graphics/CommandBuffer.h"
+#include "Render/RenderEngine.h"
+#include "Render/CommandBuffer.h"
 
-#include "Graphics/Debug.h"
-#include "Graphics/Shaders/Shader.h"
-#include "Graphics/Shaders/Material.inl"
-#include "Graphics/Textures/Texture.h"
+#include "Render/Debug.h"
+#include "Render/Shaders/Shader.h"
+#include "Render/Shaders/Material.inl"
+#include "Render/Textures/Texture.h"
 
 #include "IO/Input.h"
 

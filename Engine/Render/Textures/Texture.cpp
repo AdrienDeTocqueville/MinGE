@@ -1,11 +1,11 @@
 #include <vector>
 
-#include "Graphics/Textures/Texture.h"
+#include "Render/Textures/Texture.h"
 #include "Utility/Error.h"
 #include "IO/URI.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "Graphics/Textures/stb_image.h"
+#include "Render/Textures/stb_image.h"
 
 struct texture_t
 {

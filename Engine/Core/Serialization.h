@@ -38,6 +38,8 @@ private:
 	SerializationContext(int count = 0): version(0), dependency_count(count),
 		dependencies(count ? (void**)malloc(count * sizeof(void*)) : NULL)
 	{ }
+	~SerializationContext()
+	{ free(dependencies); }
 
 	template<typename... D>
 	void save_dependency(void *d, D... deps)

@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "Graphics/RenderPass.h"
+#include "Render/RenderPass.h"
 
 struct Program
 {

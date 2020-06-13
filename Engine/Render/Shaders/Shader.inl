@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Graphics/Shaders/Shader.h"
-#include "Graphics/GLDriver.h"
+#include "Render/Shaders/Shader.h"
+#include "Render/GLDriver.h"
 
 inline void set_uniform(int location, int x)
 {

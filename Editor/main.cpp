@@ -22,20 +22,10 @@ int main(int, char**)
 	Engine::init(window);
 	Editor::init();
 
-	Texture::load("asset://Assets/Textures/0.png?format=srgb");
-	Texture::load("asset://Assets/Textures/white.png");
+	Texture::load("asset://Textures/0.png?format=srgb");
+	Texture::load("asset://Textures/white.png");
 
-	//Texture::load("asset://Assets/Textures/Iron/albedo.png?format=srgb");
-	//Texture::load("asset://Assets/Textures/Iron/metallic.png");
-	//Texture::load("asset://Assets/Textures/Iron/roughness.png");
-
-	Scene s = Scene::load("asset://Assets/tests/graphics_test.ge");
-	auto transforms = (TransformSystem*)s.get_system("transforms");
-	auto graphics = (GraphicsSystem*)s.get_system("graphics");
-
-	s.save("asset://Assets/tests/editor_scene.ge");
-
-	Entity mesh_ent = Entity::get("Sphere");
+	Editor::open_scene("Assets/tests/graphics_test.ge");
 
 	/// Main loop
 	while (!Input::window_closed())
@@ -45,7 +35,7 @@ int main(int, char**)
 		if (Input::key_pressed(Key::F7))
 			MicroProfileTogglePause();
 
-		transforms->get(mesh_ent).rotate(vec3(0,0,1), Time::delta_time);
+		Editor::frame();
 		Engine::frame();
 	}
 

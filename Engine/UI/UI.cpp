@@ -1,6 +1,6 @@
 #include <vector>
 
-#include "Graphics/GLDriver.h"
+#include "Render/GLDriver.h"
 #include "Profiler/profiler.h"
 #include "Utility/Time.h"
 #include "IO/Input.h"
@@ -8,30 +8,33 @@
 #include "UI/UI.h"
 #include "UI/imgui/imgui_impl_opengl3.h"
 
-IMGUI_IMPL_API bool	ImGui_ImplSDL2_Init(struct SDL_Window*);
+IMGUI_IMPL_API bool ImGui_ImplSDL2_Init(struct SDL_Window*);
 IMGUI_IMPL_API void ImGui_ImplSDL2_Shutdown();
-IMGUI_IMPL_API void	ImGui_ImplSDL2_UpdateMouseCursor();
+IMGUI_IMPL_API void ImGui_ImplSDL2_UpdateMouseCursor();
 
 
-struct tab_t
+struct window_t
 {
-	tab_t(const char *_name, void (*_callback)(void*), const void *_data, size_t size):
-		name(_name), callback(_callback), opened(true)
-	{ memcpy(data, _data, size); }
+	window_t(uint32_t _id, void (*_callback)(uint32_t)):
+		id(_id), callback(_callback)
+	{}
 
-	const char *name;
-	void (*callback)(void*);
-	bool opened;
-	uint8_t data[2*sizeof(void*) - sizeof(bool)];
+	uint32_t id;
+	void (*callback)(uint32_t);
 };
 
-std::vector<tab_t> tabs;
+void (*menubar)() = NULL;
+std::vector<window_t> windows;
 
 
-void UI::create_tab(const char *name, void (*callback)(void*), const void *data, size_t size)
+void UI::create_window(void (*callback)(uint32_t), uint32_t id)
 {
-	assert(size <= sizeof(tab_t::data));
-	tabs.emplace_back(name, callback, data, size);
+	windows.emplace_back(id, callback);
+}
+
+void UI::set_menubar(void (*callback)())
+{
+	menubar = callback;
 }
 
 void UI::frame()
@@ -57,41 +60,25 @@ void UI::frame()
 	io.KeyCtrl = Input::key_down(Key::LeftControl);
 	io.KeyAlt = Input::key_down(Key::LeftAlt);
 
+	io.AddInputCharactersUTF8(Input::input_chars());
+
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui::NewFrame();
 
+#ifdef DEBUG
 	static bool show_demo_window = false;
 	if (Input::key_pressed(Key::F9)) show_demo_window = !show_demo_window;
 	if (show_demo_window)	ImGui::ShowDemoWindow(&show_demo_window);
+#endif
 
-	const ImGuiTabBarFlags tab_flags = ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_NoTooltip;
-	ImGui::Begin("window", NULL, ImGuiWindowFlags_NoTitleBar);
+	if (menubar && ImGui::BeginMainMenuBar())
 	{
-		/*
-		if (ImGui::BeginCombo("", NULL, ImGuiComboFlags_NoPreview))
-		{
-			for (int i = 0; i < tabs.size(); i++)
-			{
-				if (!tabs[i].opened && ImGui::Selectable(tabs[i].name, false))
-					tabs[i].opened = true;
-			}
-			ImGui::EndCombo();
-		}
-		ImGui::SameLine();
-		*/
-
-		ImGui::BeginTabBar("tabs", tab_flags);
-		for (int i = 0; i < tabs.size(); i++)
-		{
-			if (tabs[i].opened && ImGui::BeginTabItem(tabs[i].name, &tabs[i].opened, ImGuiTabItemFlags_None))
-			{
-				tabs[i].callback(&tabs[i].data);
-							ImGui::EndTabItem();
-			}
-		}
-		ImGui::EndTabBar();
+		menubar();
+		ImGui::EndMainMenuBar();
 	}
-	ImGui::End();
+
+	for (int i = 0; i < windows.size(); i++)
+		windows[i].callback(windows[i].id);
 }
 
 static inline void set_style()
@@ -102,7 +89,7 @@ static inline void set_style()
 	style->WindowRounding = 0.0f;
 	style->WindowBorderSize = 1.0f;
 	style->FrameRounding = 2.0f;
-	style->FramePadding = ImVec2(3.0f, 4.0f);
+	style->FramePadding = ImVec2(15.0f, 5.0f);
 	style->ItemSpacing = ImVec2(12, 8);
 	style->ItemInnerSpacing = ImVec2(8, 6);
 	style->IndentSpacing = 25.0f;
@@ -143,7 +130,7 @@ static inline void set_style()
 	style->Colors[ImGuiCol_HeaderHovered] = grey3;
 	style->Colors[ImGuiCol_HeaderActive] = grey0;
 
-	style->Colors[ImGuiCol_Text] = ImVec4(0.89f, 0.89f, 0.89f, 1.0f);
+	style->Colors[ImGuiCol_Text] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 	style->Colors[ImGuiCol_TextDisabled] = ImVec4(0.82f, 0.82f, 0.82f, 0.39f);
 	style->Colors[ImGuiCol_CheckMark] = grey6;
 	style->Colors[ImGuiCol_SliderGrab] = grey6;
@@ -206,7 +193,7 @@ void UI::init()
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	io.Fonts->AddFontFromFileTTF("Assets/fonts/Ruda-Bold.ttf", 12);
+	io.Fonts->AddFontFromFileTTF("Assets/fonts/Ruda-Bold.ttf", 14);
 
 	set_style();
 	set_keymap();

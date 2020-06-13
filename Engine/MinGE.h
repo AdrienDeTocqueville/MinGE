@@ -10,10 +10,10 @@
 #include "Core/Platform.h"
 
 #include "Transform/Transform.h"
-
 #include "Graphics/Graphics.h"
-#include "Graphics/Debug.h"
-#include "Graphics/Textures/Texture.h"
+
+#include "Render/Debug.h"
+#include "Render/Textures/Texture.h"
 
 #include "IO/Input.h"
 #include "Math/Random.h"

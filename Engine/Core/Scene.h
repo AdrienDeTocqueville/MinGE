@@ -4,23 +4,50 @@ struct Scene
 {
 	struct system_ref_t
 	{
-		const char *name;
+		char *name;
 		void *instance;
 	};
+	enum Overwrite { Yes = 0, No, Ask, Backup };
 
-	Scene(Scene &s);
+	template<typename... R>
+	Scene(R... refs): system_count(0), capacity(0), systems(NULL)
+	{ reserve(sizeof...(R) / 2); set_system_rec(refs...); }
+
+	Scene(): system_count(0), capacity(0), systems(NULL) {}
+	Scene(const char *path): Scene() { load(path); }
+	Scene(Scene &&s);
 	~Scene();
 
-	bool save(const char *URI);
-	void *get_system(const char *name);
-	const char *get_system_name(void *system);
+	bool load(const char *path);
+	bool save(const char *path, Overwrite mode = Overwrite::Yes) const;
 
-	static Scene load(const char *URI);
-	static bool save(const char *URI, system_ref_t systems[], int system_count);
+	void add_system(char *name, void *instance);
+	void remove_system(const char *name);
+	void clear();
+
+	void *get_system(const char *name) const;
+	const char *get_system_name(void *system) const;
+
+	const system_ref_t *get_systems() const { return systems; }
+	int get_system_count() const { return system_count; }
 
 private:
-	Scene(int count, system_ref_t *refs = NULL);
+	Scene(const Scene &s) = delete;
+	void reserve(int count);
 
-	int system_count;
+	template<typename... R>
+	void set_system_rec(const char *name, void *instance, R... refs)
+	{
+		set_system_rec(name, instance);
+		set_system_rec(refs...);
+	}
+	void set_system_rec(const char *name, void *instance)
+	{
+		systems[system_count].name = strdup(name);
+		systems[system_count].instance = instance;
+		system_count++;
+	}
+
+	int system_count, capacity;
 	system_ref_t *systems;
 };

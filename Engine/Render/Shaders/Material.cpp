@@ -1,9 +1,9 @@
 #include <string.h>
 
-#include "Graphics/Shaders/Material.inl"
-#include "Graphics/Shaders/Shader.inl"
-#include "Graphics/Shaders/Program.h"
-#include "Graphics/Textures/Texture.h"
+#include "Render/Shaders/Material.inl"
+#include "Render/Shaders/Shader.inl"
+#include "Render/Shaders/Program.h"
+#include "Render/Textures/Texture.h"
 
 #include "Utility/Error.h"
 

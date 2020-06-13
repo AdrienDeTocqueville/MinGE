@@ -32,6 +32,11 @@ public:
 		{
 			vec3 ea = world->get(cam).euler_angles();
 			angles = vec2(ea.z, ea.y);
+
+			Engine::read_lock(world);
+			Transform tr = world->get(cam);
+			tr.set_rotation(quat(vec3(0.0f, angles.y, angles.x)));
+			Engine::read_unlock(world);
 		}
 	}
 

@@ -41,7 +41,7 @@ MICROPROFILEDRAW_API void MicroProfileBeginDraw(uint32_t nWidth, uint32_t nHeigh
 MICROPROFILEDRAW_API void MicroProfileEndDraw();
 
 #ifdef MICROPROFILEDRAW_IMPL
-#include "Graphics/GLDriver.h"
+#include "Render/GLDriver.h"
 
 struct MicroProfileDrawVertex
 {

@@ -1,8 +1,8 @@
 #include "Profiler/profiler.h"
 
-#include "Graphics/CommandBuffer.h"
-#include "Graphics/Shaders/Shader.inl"
-#include "Graphics/Shaders/Material.inl"
+#include "Render/CommandBuffer.h"
+#include "Render/Shaders/Shader.inl"
+#include "Render/Shaders/Material.inl"
 
 void cmd_buffer_t::draw_batch(submesh_data_t *submeshes, mat4 *matrices, uint32_t *sorted_indices,
 		RenderPass::Type pass, uint32_t count)

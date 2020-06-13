@@ -71,6 +71,8 @@ struct Input
 	static inline bool key_released(Key::key_t _key);
 	static inline bool *keys_down() { return keyboard_state[keyboard_index]; }
 
+	static inline const char *input_chars() { return text_input; }
+
 	// Mouse
 	static inline bool button_down(Button::button_t _button);
 	static inline bool button_changed(Button::button_t _button);
@@ -108,6 +110,8 @@ private:
 
 	static bool mouse_state[2][Button::COUNT];
 	static bool keyboard_state[2][Key::COUNT];
+
+	static char text_input[];
 
 	friend struct Engine;
 };

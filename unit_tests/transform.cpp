@@ -27,7 +27,8 @@ static void bench_access(int iterations)
 		time += timer.time();
 	}
 	TEST(res);
-	std::cout << time / iterations << " (~970)\n";
+
+	REPORT("testing " << count * count << " existence: ", time / iterations, 970);
 }
 
 static void bench_creation(int iterations)
@@ -61,15 +62,11 @@ static void bench_creation(int iterations)
 		time += timer.time();
 		transforms.clear();
 	}
-	std::cout << time / iterations << " (~6250)\n";
+	REPORT("creating " << 1000 * 5 * 4 << " components: ", time / iterations, 6250);
 }
 
 void benchmark_transforms(int iterations)
 {
-#ifdef DEBUG
-	iterations = 1;
-#endif
-
 	bench_access(iterations);
 	bench_creation(iterations);
 }
@@ -124,13 +121,8 @@ void test_transforms()
 
 	TEST(transforms->get(e4).position() == vec3(1, 0, 0));
 
-	std::ifstream file;
-
-	Scene::system_ref_t systems[] = {
-		Scene::system_ref_t{"world", transforms},
-	};
-	Scene::save("asset://Assets/tests/transforms.ge", systems, ARRAY_LEN(systems));
-	Engine::free_system(transforms);
+	Scene s("world", transforms);
+	DUMP_SCENE(dump1, s, "Assets/tests/transforms.ge");
 
 	e1.destroy();
 	e2.destroy();
@@ -143,17 +135,8 @@ void test_transforms()
 	_e.destroy();
 
 
-	file.open("Assets/tests/transforms.ge");
-	std::string dump1(std::istreambuf_iterator<char>(file), (std::istreambuf_iterator<char>()));
-	file.close();
-
-	Scene s = Scene::load("asset://Assets/tests/transforms.ge");
-	systems[0].instance = s.get_system("world");
-
-	Scene::save("asset://Assets/tests/transforms.ge", systems, ARRAY_LEN(systems));
-	file.open("Assets/tests/transforms.ge");
-	std::string dump2(std::istreambuf_iterator<char>(file), (std::istreambuf_iterator<char>()));
-	file.close();
+	s.load("Assets/tests/transforms.ge");
+	DUMP_SCENE(dump2, s, "Assets/tests/transforms.ge");
 
 	TEST(dump1 == dump2);
 }

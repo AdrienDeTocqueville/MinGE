@@ -9,11 +9,13 @@ struct slot32_t
 {
 	uint32_t next: 24;
 	uint32_t avail: 8;
+	static const uint32_t invalid = (-1) & (1 << 24 - 1);
 };
 struct slot64_t
 {
 	uint32_t next;
 	uint32_t avail;
+	static const uint32_t invalid = (-1) & (1 << 32 - 1);
 };
 
 // Structure to allocate contiguous elements
@@ -31,7 +33,7 @@ struct array_list_t
 
 	const uint32_t invalid_id()
 	{
-		S slot; slot.next = -1;
+		S slot; slot.next = S::invalid;
 		return slot.next;
 	}
 
@@ -62,7 +64,7 @@ array_list_t<T, S>::array_list_t():
 	static_assert(sizeof(T) >= sizeof(S), "First element type is too small");
 
 	data = (T*)mem::alloc_page((size_t)capacity);
-	next_slot.next = -1;
+	next_slot.next = S::invalid;
 }
 
 template<typename T, typename S>
@@ -152,14 +154,14 @@ void array_list_t<T, S>::remove(uint32_t index, uint32_t count)
 	else if ((T*)new_slot + new_slot->avail - data == size) // block is at the end of array
 	{
 		size -= new_slot->avail;
-		slot->next = -1;
+		slot->next = S::invalid;
 	}
 }
 
 template<typename T, typename S>
 void array_list_t<T, S>::clear()
 {
-	next_slot.next = -1;
+	next_slot.next = S::invalid;
 	size = count = 0;
 }
 }

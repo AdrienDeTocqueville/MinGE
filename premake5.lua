@@ -21,6 +21,7 @@ function build_settings()
 	filter "system:windows"
 		systemversion "latest"
 		defines "_CRT_SECURE_NO_DEPRECATE"
+		defines "_CRT_NONSTDC_NO_DEPRECATE"
 
 	filter "configurations:debug"
 		defines { "DEBUG", "DRAWAABB" }
@@ -107,7 +108,7 @@ for i = 1, #prj_names do
 		"%{prj.name}/**.cpp"
 	}
 
-	includedirs { "Engine" }
+	includedirs { "Engine", "." }
 
 	filter "system:windows"
 		includedirs {

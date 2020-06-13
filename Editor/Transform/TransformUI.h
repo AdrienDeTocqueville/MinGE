@@ -2,7 +2,7 @@
 
 #include "Editor/Core/CoreUI.h"
 
-namespace GraphicsSystemUI
+namespace TransformSystemUI
 {
 
 extern const system_editor_t editor;

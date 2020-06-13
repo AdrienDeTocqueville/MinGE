@@ -3,6 +3,7 @@
 #include "Profiler/profiler.h"
 
 #include <SDL2/SDL.h>
+#include <string.h>
 
 SDL_Window *Input::win = nullptr;
 
@@ -19,6 +20,8 @@ bool Input::mouse_cleared = false, Input::keyboard_cleared = false;
 
 bool Input::mouse_state[2][Button::COUNT];
 bool Input::keyboard_state[2][Key::COUNT];
+
+char Input::text_input[32]; // Max characters per frame for text input
 
 static const int scancode_map[256] = {
 	Key::Unknown, Key::Unknown, Key::Unknown, Key::Unknown,
@@ -71,6 +74,11 @@ static const int button_map[] = {
 	Button::Unknown, Button::Unknown
 };
 
+inline int get_key_index(SDL_Keycode key)
+{
+	return key < 128 ? key : scancode_map[key & ~(1<<30)];
+}
+
 /// Methods (private)
 void Input::init(SDL_Window *window)
 {
@@ -91,6 +99,7 @@ void Input::poll_events()
 	MICROPROFILE_SCOPEI("IO_INPUT", "poll_events");
 
 	bool mouse_event = false, keyboard_event = false;
+	int text_input_cursor = 0;
 
 	mouse_wheel_delta = 0;
 
@@ -99,13 +108,41 @@ void Input::poll_events()
 	{
 		switch (event.type)
 		{
-		case SDL_QUIT:
-			closed = true;
-			break;
-
 		case SDL_MOUSEMOTION:
 			mouse_pos = ivec2(event.motion.x, event.motion.y);
 			break;
+
+		case SDL_KEYUP:
+		case SDL_KEYDOWN:
+			if (!keyboard_event) {
+				keyboard_event = true;
+				keyboard_cleared = false;
+				keyboard_index = 1-keyboard_index;
+				memcpy(keyboard_state + keyboard_index, keyboard_state + (1-keyboard_index), Key::COUNT * sizeof(bool));
+			}
+			keyboard_state[keyboard_index][get_key_index(event.key.keysym.sym)] =
+				(event.key.state == SDL_PRESSED);
+			break;
+
+		case SDL_MOUSEBUTTONUP:
+		case SDL_MOUSEBUTTONDOWN:
+			if (!mouse_event) {
+				mouse_event = true;
+				mouse_cleared = false;
+				mouse_index = 1-mouse_index;
+				memcpy(mouse_state + mouse_index, mouse_state + (1-mouse_index), Button::COUNT * sizeof(bool));
+			}
+			mouse_state[mouse_index][button_map[event.button.button]] =
+				(event.button.state == SDL_PRESSED);
+			break;
+
+		case SDL_TEXTINPUT:
+		{
+			char *event_text = event.text.text;
+			while (text_input_cursor < sizeof(text_input) && *event_text)
+				text_input[text_input_cursor++] = *event_text++;
+			break;
+		}
 
 		case SDL_MOUSEWHEEL:
 			mouse_wheel_delta = event.wheel.y;
@@ -128,27 +165,8 @@ void Input::poll_events()
 			}
 			break;
 
-		case SDL_KEYUP:
-		case SDL_KEYDOWN:
-			if (!keyboard_event) {
-				keyboard_event = true;
-				keyboard_cleared = false;
-				keyboard_index = 1-keyboard_index;
-				memcpy(keyboard_state + keyboard_index, keyboard_state + (1-keyboard_index), Key::COUNT * sizeof(bool));
-			}
-			keyboard_state[keyboard_index][event.key.keysym.sym < 128 ?
-				event.key.keysym.sym : scancode_map[event.key.keysym.scancode]] = (event.key.state == SDL_PRESSED);
-			break;
-
-		case SDL_MOUSEBUTTONUP:
-		case SDL_MOUSEBUTTONDOWN:
-			if (!mouse_event) {
-				mouse_event = true;
-				mouse_cleared = false;
-				mouse_index = 1-mouse_index;
-				memcpy(mouse_state + mouse_index, mouse_state + (1-mouse_index), Button::COUNT * sizeof(bool));
-			}
-			mouse_state[mouse_index][button_map[event.button.button]] = (event.button.state == SDL_PRESSED);
+		case SDL_QUIT:
+			closed = true;
 			break;
 
 		default: break;
@@ -170,6 +188,8 @@ void Input::poll_events()
 	mouse_pos_delta = mouse_pos - prev_mouse_pos;
 	mouse_pos_delta.x *= -1;
 	prev_mouse_pos = mouse_pos;
+
+	text_input[text_input_cursor] = 0;
 }
 
 

@@ -1,8 +1,8 @@
 #include <vector>
 
-#include "UI/UI.h"
-#include "Graphics/GLDriver.h"
-#include "Graphics/Textures/Texture.h"
+#include <UI/UI.h>
+#include <Render/GLDriver.h>
+#include <Render/Textures/Texture.h>
 
 struct texture_t
 {

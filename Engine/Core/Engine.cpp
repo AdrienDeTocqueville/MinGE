@@ -1,4 +1,4 @@
-#include "Graphics/GLDriver.h"
+#include "Render/GLDriver.h"
 
 #define MICROPROFILE_IMPL
 #define MICROPROFILEUI_IMPL
@@ -9,16 +9,13 @@
 #include "Core/Engine.h"
 #include "Core/Entity.h"
 
-#include "Transform/Transform.h"
-
-#include "Graphics/Graphics.h"
-#include "Graphics/RenderEngine.h"
-
+#include "IO/Input.h"
+#include "JobSystem/JobSystem.inl"
+#include "Math/Random.h"
+#include "Render/RenderEngine.h"
 #include "Utility/Time.h"
 #include "Utility/stb_sprintf.h"
-#include "Math/Random.h"
-#include "JobSystem/JobSystem.inl"
-#include "IO/Input.h"
+
 
 const Entity Entity::none;
 multi_array_t<entity_t> Entity::entities;
@@ -26,9 +23,10 @@ multi_array_t<entity_t> Entity::entities;
 struct system_t
 {
 	uint32_t type_index;
-	JobSystem::Semaphore counter;
 	std::atomic<uint32_t> readers;
-	IF_PROFILE(MicroProfileToken token;)
+	decltype(system_type_t::update) update;
+	JobSystem::Semaphore counter;
+	IF_PROFILE(MicroProfileToken token);
 	// after: <system instance>
 
 	static inline system_t *from_instance(const void *i) { return (system_t*)i - 1; }
@@ -57,12 +55,12 @@ void Entity::destroy()
 	entities.remove(id());
 }
 
-Entity Entity::create(char *name)
+Entity Entity::create(const char *name)
 {
 	auto idx = entities.add();
 	auto *e = entities.get<0>(idx);
 	e->destroyed = 0;
-	e->name = name;
+	e->name = name ? strdup(name) : NULL;
 	return Entity(idx, e->gen);
 }
 
@@ -86,6 +84,16 @@ Entity Entity::get(const char *name)
 	return Entity::none;
 }
 
+void Entity::clear()
+{
+	for (uint32_t i(1); i <= Entity::entities.size; i++)
+	{
+		if (!Entity::entities.get<0>(i)->destroyed)
+			free(entities.get<0>(i)->name);
+	}
+	Entity::entities.clear();
+}
+
 
 /// Engine
 void Engine::init(struct SDL_Window *window)
@@ -95,13 +103,17 @@ void Engine::init(struct SDL_Window *window)
 	JobSystem::init();
 	Input::init(window);
 	RenderEngine::init();
-
-	// Register builtin systems
-	Engine::register_system_type(TransformSystem::type);
-	Engine::register_system_type(GraphicsSystem::type);
 }
 
 void Engine::destroy()
+{
+	Engine::clear();
+
+	RenderEngine::destroy();
+	JobSystem::destroy();
+}
+
+void Engine::clear()
 {
 	// Launch system detroy jobs
 	{ MICROPROFILE_SCOPEI("ENGINE", "launch_destroy_jobs");
@@ -129,8 +141,8 @@ void Engine::destroy()
 	systems.clear();
 	system_types.clear();
 
-	RenderEngine::destroy();
-	JobSystem::destroy();
+	// Destroy entities
+	Entity::clear();
 }
 
 void Engine::frame()
@@ -145,7 +157,7 @@ void Engine::frame()
 	{ MICROPROFILE_SCOPEI("ENGINE", "launch_update_jobs");
 	for (system_t *system : systems)
 	{
-		if (auto callback = system_types[system->type_index].update)
+		if (auto callback = system->update)
 #ifdef PROFILE
 			JobSystem::run(callback, system->instance(), &system->counter, system->token);
 #else
@@ -195,8 +207,9 @@ void *Engine::alloc_system(const char *type_name)
 
 	auto system = (system_t*)malloc(sizeof(system_t) + type->size);
 	system->type_index = (uint32_t)(type - system_types.data());
-	new (&system->counter) JobSystem::Semaphore();
+	system->update = type->update;
 	new (&system->readers) std::atomic<uint32_t>{0};
+	new (&system->counter) JobSystem::Semaphore();
 
 #ifdef PROFILE
 	static char sys_name[256];

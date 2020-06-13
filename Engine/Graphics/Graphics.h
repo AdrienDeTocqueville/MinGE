@@ -5,9 +5,9 @@
 #include "Core/Entity.h"
 #include "Core/System.h"
 
-#include "Graphics/GLDriver.h"
-#include "Graphics/Mesh/Mesh.h"
-#include "Graphics/Shaders/Material.h"
+#include "Render/GLDriver.h"
+#include "Render/Mesh/Mesh.h"
+#include "Render/Shaders/Material.h"
 
 #include "Math/glm.h"
 #include "Structures/Bounds.h"
@@ -42,7 +42,7 @@ struct GraphicsSystem
 		mat4 projection;
 		Frustum frustum;
 		float zNear, zFar;
-		vec3 center_point;
+		vec3 center_point, up_vector;
 
 		float fov;
 		Entity entity;

@@ -5,10 +5,8 @@
 
 struct UI
 {
-	static void create_tab(const char *name, void (*callback)(void*), const void *data, size_t size);
-	template <typename T>
-	static void create_tab(const char *name, void (*callback)(T*), const T &data)
-	{ create_tab(name, (void (*)(void*))callback, &data, sizeof(T)); }
+	static void set_menubar(void (*callback)());
+	static void create_window(void (*callback)(uint32_t), uint32_t id);
 
 private:
 	static void init();

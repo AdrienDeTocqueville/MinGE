@@ -23,6 +23,19 @@
 	std::cin.get(); exit(-1); }
 #endif
 
+#define LAUNCH(func) do { \
+	printf("Testing " #func "...\n"); test_##func(); \
+	} while(0)
+#define _BENCH(func, iter) do { \
+	printf("Mesuring " #func " over %d iterations...\n", iter); \
+	benchmark_##func(iter); \
+	} while(0)
+#ifdef DEBUG
+#define BENCH(func, iter) _BENCH(func, 1)
+#else
+#define BENCH(func, iter) _BENCH(func, iter)
+#endif
+
 void benchmark_transforms(int iterations);
 void test_transforms();
 
@@ -30,3 +43,16 @@ void test_systems();
 void test_entity();
 
 void test_structures();
+
+#define DUMP_SCENE(output, s, path) std::string output; do { \
+	s.save(path); s.clear(); \
+	std::ifstream file; file.open(path); \
+	output = std::string(std::istreambuf_iterator<char>(file), (std::istreambuf_iterator<char>())); \
+} while(0)
+
+#ifdef DEBUG
+#define REPORT(text, time, ref) std::cout << text << "~" << time << "us\n"
+#else
+#define REPORT(text, time, ref) std::cout << text << "~" << \
+	time << "us (~" << ref << "us for ref)\n"
+#endif

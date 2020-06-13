@@ -8,22 +8,19 @@
 
 static void test_scene()
 {
-	std::ifstream file;
 	char name[2] = "a";
 	Entity e[6];
 	for (int i = 0; i < ARRAY_LEN(e); i++)
 	{
 		name[0] = 'a' + i;
-		e[i] = Entity::create(_strdup(name));
+		e[i] = Entity::create(name);
 	}
 	e[2].destroy();
 
 	TEST(Entity::get("c") == Entity::none);
 
-	Scene::save("asset://Assets/tests/scene.ge", NULL, 0);
-	file.open("Assets/tests/scene.ge");
-	std::string dump1(std::istreambuf_iterator<char>(file), (std::istreambuf_iterator<char>()));
-	file.close();
+	Scene s;
+	DUMP_SCENE(dump1, s, "Assets/tests/scene.ge");
 
 	for (int i = 0; i < ARRAY_LEN(e); i++)
 		if (i != 2) e[i].destroy();
@@ -34,7 +31,7 @@ static void test_scene()
 	TEST(Entity::get("e") == Entity::none);
 	TEST(Entity::get("f") == Entity::none);
 
-	Scene s = Scene::load("asset://Assets/tests/scene.ge");
+	s.load("Assets/tests/scene.ge");
 
 	TEST(Entity::get("a") != Entity::none);
 	TEST(Entity::get("b") != Entity::none);
@@ -45,10 +42,7 @@ static void test_scene()
 	for (int i = 0; i < ARRAY_LEN(e); i++)
 		if (i != 2) TEST(e[i].gen() == Entity::get(e[i].id()).gen());
 
-	s.save("asset://Assets/tests/scene.ge");
-	file.open("Assets/tests/scene.ge");
-	std::string dump2(std::istreambuf_iterator<char>(file), (std::istreambuf_iterator<char>()));
-	file.close();
+	DUMP_SCENE(dump2, s, "Assets/tests/scene.ge");
 
 	TEST(dump1 == dump2);
 }

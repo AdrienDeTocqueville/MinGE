@@ -23,10 +23,10 @@ struct Entity: public UID32
 		return i && (i <= entities.size) && (gen() == entities.get<0>(i)->gen);
 	}
 
-	static Entity create(char *name = NULL);
-	static Entity create(const char *name) { return Entity::create(_strdup(name)); }
+	static Entity create(const char *name = NULL);
 	static Entity get(uint32_t i);
 	static Entity get(const char *name);
+	static void clear();
 
 	static const Entity none;
 	static multi_array_t<entity_t> entities;

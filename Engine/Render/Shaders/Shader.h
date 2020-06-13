@@ -6,7 +6,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "Graphics/RenderPass.h"
+#include "Render/RenderPass.h"
 
 struct ShaderSources
 {

@@ -15,19 +15,22 @@ int main(int, char**)
 
 	/// Init engine
 	Engine::init(window);
+	Engine::register_system_type(TransformSystem::type);
 
-	test_entity();
-	test_structures();
-	test_transforms();
-	//test_systems();
-	benchmark_transforms(50);
+	LAUNCH(entity);
+	LAUNCH(structures);
+	LAUNCH(transforms);
+	//LAUNCH(systems);
+	BENCH(transforms, 50);
 
 	Engine::destroy();
 
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 
-	printf("\n\nAll tests passed.\nPress enter to quit...");
-	std::cin.get();
+	printf("\n\nAll tests passed.\n");
+#ifdef _WIN32
+	printf("Press enter to quit..."); std::cin.get();
+#endif
 	return 0;
 }

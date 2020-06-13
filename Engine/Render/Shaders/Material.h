@@ -1,10 +1,11 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 #include "Core/UID.h"
 #include "Structures/MultiArray.h"
-#include "Graphics/RenderPass.h"
+#include "Render/RenderPass.h"
 
 
 struct material_t

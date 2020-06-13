@@ -1,11 +1,11 @@
-#include "UI/UI.h"
+#include <UI/UI.h>
 
-#include "Graphics/GLDriver.h"
-#include "Graphics/Shaders/Shader.h"
-#include "Graphics/Shaders/Program.h"
-#include "Graphics/Shaders/Material.inl"
+#include <Render/GLDriver.h>
+#include <Render/Shaders/Shader.h>
+#include <Render/Shaders/Program.h>
+#include <Render/Shaders/Material.inl>
 
-#include "GraphicsUI.h"
+#include "Editor/Render/RenderUI.h"
 
 Material material_dropdown(Material selected, const char *label)
 {
@@ -114,16 +114,16 @@ display_uniform:
 		switch (uniform->type)
 		{
 		case GL_FLOAT:
-			ImGui::SliderFloat(it.first.c_str(), (float*)data, 0.0f, 1.0f);
+			ImGui::DragFloat(it.first.c_str(), (float*)data, 0.1f);
 			break;
 		case GL_FLOAT_VEC2:
-			ImGui::SliderFloat2(it.first.c_str(), (float*)data, 0.0f, 1.0f);
+			ImGui::DragFloat2(it.first.c_str(), (float*)data, 0.1f);
 			break;
 		case GL_FLOAT_VEC3:
-			ImGui::SliderFloat3(it.first.c_str(), (float*)data, 0.0f, 1.0f);
+			ImGui::DragFloat3(it.first.c_str(), (float*)data, 0.1f);
 			break;
 		case GL_FLOAT_VEC4:
-			ImGui::SliderFloat4(it.first.c_str(), (float*)data, 0.0f, 1.0f);
+			ImGui::DragFloat4(it.first.c_str(), (float*)data, 0.1f);
 			break;
 		case GL_FLOAT_MAT3:
 		case GL_FLOAT_MAT4:

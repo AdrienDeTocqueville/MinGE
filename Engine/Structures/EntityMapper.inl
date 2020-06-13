@@ -25,21 +25,22 @@ entity_mapper_t<N>::entity_mapper_t(const nlohmann::json &dump)
 template<int N>
 inline nlohmann::json entity_mapper_t<N>::to_json() const
 {
-	json arrays = nlohmann::json::array();
-	arrays.get_ptr<nlohmann::json::array_t*>()->reserve(N);
+	using namespace nlohmann;
+	json arrays = json::array();
+	arrays.get_ptr<json::array_t*>()->reserve(N);
 
-	json max_comp = nlohmann::json::array();
-	max_comp.get_ptr<nlohmann::json::array_t*>()->reserve(N);
+	json max_comp = json::array();
+	max_comp.get_ptr<json::array_t*>()->reserve(N);
 
 	for (int n = 0; n < N; n++)
 	{
 		uint32_t m = 0;
-		json list = nlohmann::json::array();
+		json list = json::array();
 		for (uint32_t i = size - 1; i >= 1; i--)
 		{
 			if (indices[i + size * n] != 0)
 			{
-				list.get_ptr<nlohmann::json::array_t*>()->reserve(i);
+				list.get_ptr<json::array_t*>()->reserve(i);
 
 				for (uint32_t j = 1; j <= i; j++)
 				{

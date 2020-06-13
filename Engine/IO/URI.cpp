@@ -29,9 +29,10 @@ bool uri_t::parse(const char *uri)
 	if (colon == NULL || str_diff("asset", uri))
 		return false;
 	on_disk = !str_diff("//", colon + 1);
-	const char *path_start = colon + (on_disk ? 3 : 1);
+	const char *path_start = colon + (on_disk ? 2 : 1);
 	const char *path_end = find_next(colon + 1, '?');
-	path = std::string(path_start, path_end - path_start);
+	if (on_disk) path = "Assets";
+	path += std::string(path_start, path_end - path_start);
 	if (*path_end == '?')
 	{
 		const char *arg = path_end;
