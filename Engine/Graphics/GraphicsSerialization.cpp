@@ -19,8 +19,8 @@ void GraphicsSystem::save(SerializationContext &ctx) const
 			json cam = json::object();
 
 			cam["fov"] = cameras.get<0>()[i].fov;
-			cam["zNear"] = cameras.get<0>()[i].zNear;
-			cam["zFar"] = cameras.get<0>()[i].zFar;
+			cam["near_plane"] = cameras.get<0>()[i].near_plane;
+			cam["far_plane"] = cameras.get<0>()[i].far_plane;
 			cam["viewport"] = ::to_json(cameras.get<0>()[i].ss_viewport);
 			cam["ortho"] = cameras.get<0>()[i].ortho;
 			cam["clear_color"] = ::to_json(cameras.get<1>()[i].clear_color);
@@ -70,7 +70,7 @@ GraphicsSystem::GraphicsSystem(const SerializationContext &ctx):
 
 		indices.map<0>(i, 0);
 		auto cam = cam_it.value();
-		add_camera(Entity::get(i), cam["fov"], cam["zNear"], cam["zFar"], cam["ortho"],
+		add_camera(Entity::get(i), cam["fov"], cam["near_plane"], cam["far_plane"], cam["ortho"],
 			::to_vec4(cam["viewport"]), ::to_vec3(cam["clear_color"]), cam["clear_flags"]);
 		++cam_it;
 	}

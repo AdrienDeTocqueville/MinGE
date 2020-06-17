@@ -14,7 +14,7 @@ static void add_component(TransformSystem *sys, const char *name, Entity e)
 	if (sys->has(e)) return;
 
 	if (ImGui::MenuItem(name))
-	{}
+		sys->add(e);
 }
 
 struct ActionData
@@ -31,22 +31,19 @@ static void edit_entity(TransformSystem *sys, Entity e)
 	Transform tr = sys->get(e);
 	ActionData data { sys, e };
 
-	vec3 pos = tr.position();
-	Editor::field("Position", ImGui::DragFloat3, pos, data,
+	Editor::field("Position", ImGui::DragFloat3, tr.position(), data,
 	(void (*)(vec3*,vec3*,ActionData*))[](vec3 *old, vec3 *val, ActionData *d) {
 		if (d->sys->has(d->e))
 			d->sys->get(d->e).set_position(*val);
 	});
 
-	vec3 rot = glm::degrees(tr.euler_angles());
-	Editor::field("Rotation", ImGui::DragFloat3, rot, data,
+	Editor::field("Rotation", ImGui::DragFloat3, glm::degrees(tr.euler_angles()), data,
 	(void (*)(vec3*,vec3*,ActionData*))[](vec3 *old, vec3 *val, ActionData *d) {
 		if (d->sys->has(d->e))
 			d->sys->get(d->e).set_rotation(glm::radians(*val));
 	});
 
-	vec3 scale = tr.scale();
-	Editor::field("Scale", ImGui::DragFloat3, scale, data,
+	Editor::field("Scale", ImGui::DragFloat3, tr.scale(), data,
 	(void (*)(vec3*,vec3*,ActionData*))[](vec3 *old, vec3 *val, ActionData *d) {
 		if (d->sys->has(d->e))
 			d->sys->get(d->e).set_scale(*val);
@@ -61,13 +58,6 @@ const system_editor_t editor = []() {
 	e.add_component = decltype(e.add_component)(add_component);
 	e.edit_entity = decltype(e.edit_entity)(edit_entity);
 
-	/*
-	t.destroy = [](void *system) { ((TransformSystem*)system)->~TransformSystem(); };
-	t.update = NULL;
-	t.on_destroy_entity = NULL;
-	t.save = (void(*)(void*, SerializationContext&))serialize;
-	t.load = [](void *system, const SerializationContext &ctx) { new(system) TransformSystem(ctx); };
-	*/
 	return e;
 }();
 

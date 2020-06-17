@@ -45,16 +45,16 @@
                             0.0
                         ],
                         "clear_flags": 16640,
+                        "far_plane": 1000.0,
                         "fov": 70.0,
+                        "near_plane": 0.10000000149011612,
                         "ortho": false,
                         "viewport": [
                             0.0,
                             0.0,
                             1.0,
                             1.0
-                        ],
-                        "zFar": 1000.0,
-                        "zNear": 0.10000000149011612
+                        ]
                     },
                     {
                         "clear_color": [
@@ -64,16 +64,16 @@
                             0.0
                         ],
                         "clear_flags": 16640,
+                        "far_plane": 8.0,
                         "fov": 70.0,
+                        "near_plane": 2.0,
                         "ortho": false,
                         "viewport": [
                             0.0,
                             0.0,
                             1.0,
                             1.0
-                        ],
-                        "zFar": 8.0,
-                        "zNear": 2.0
+                        ]
                     }
                 ],
                 "indices": [

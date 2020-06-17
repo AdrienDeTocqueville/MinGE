@@ -47,6 +47,7 @@ bool Scene::load(const char *path)
 
 	// Load entities
 	{
+		uint32_t final_slot = 1;
 		uint32_t max_ent = scene["max_entity"].get<uint32_t>();
 
 		// Clear free list
@@ -61,15 +62,20 @@ bool Scene::load(const char *path)
 			UID32 uid = it.value()["uint"].get<uint32_t>();
 			auto name = it.value().contains("name") ? it.value()["name"].get<std::string>().c_str() : NULL;
 
+			auto *data = Entity::entities.get<0>();
+			if (uid.id() == 1) final_slot = *(uint32_t*)(data + uid.id());
+			else *(uint32_t*)(data + uid.id() - 1) = *(uint32_t*)(data + uid.id());
+
 			Entity::entities.next_slot = uid.id();
 			Entity::create(name);
 			Entity::entities.get<0>()[uid.id()].gen = uid.gen();
 		}
-		Entity::entities.next_slot = 1;
+		Entity::entities.next_slot = final_slot;
 	}
 
 	// Load meshes
 	{
+		uint32_t final_slot = 1;
 		uint32_t max_mesh = scene["max_mesh"].get<uint32_t>();
 
 		// Clear free list
@@ -83,11 +89,15 @@ bool Scene::load(const char *path)
 		{
 			UID32 uid = it.value()["uint"].get<uint32_t>();
 
+			auto *data = Mesh::meshes.get<0>();
+			if (uid.id() == 1) final_slot = *(uint32_t*)(data + uid.id());
+			else *(uint32_t*)(data + uid.id() - 1) = *(uint32_t*)(data + uid.id());
+
 			Mesh::meshes.next_slot = uid.id();
 			Mesh::load(it.value()["uri"].get<std::string>().c_str());
 			Mesh::meshes.get<4>()[uid.id()] = uid.gen();
 		}
-		Mesh::meshes.next_slot = 1;
+		Mesh::meshes.next_slot = final_slot;
 	}
 
 	// Load systems

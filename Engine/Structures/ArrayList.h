@@ -19,6 +19,7 @@ struct slot64_t
 };
 
 // Structure to allocate contiguous elements
+// First element returned is at index 0
 
 template<typename T, typename S>
 struct array_list_t
@@ -31,10 +32,9 @@ struct array_list_t
 	void remove(uint32_t index, uint32_t count);
 	inline void clear();
 
-	const uint32_t invalid_id()
+	inline const uint32_t invalid_id() const
 	{
-		S slot; slot.next = S::invalid;
-		return slot.next;
+		return S::invalid;
 	}
 
 	T &operator[](uint32_t index)
@@ -52,6 +52,8 @@ struct array_list_t
 		};
 	};
 
+	// count is the number of allocated element
+	// size is the number of reserved bytes in the buffer
 	uint32_t count, size;
 	T *data;
 };

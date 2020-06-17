@@ -16,10 +16,7 @@
 #include "Structures/MultiArray.h"
 #include "Structures/EntityMapper.h"
 
-// TODO: like seriously
-using Camera = uint32_t;
-using Renderer = uint32_t;
-using Light = uint32_t;
+#include "Graphics/GraphicsComponents.h"
 
 struct TransformSystem;
 
@@ -28,7 +25,7 @@ struct GraphicsSystem
 	GraphicsSystem(TransformSystem *world);
 	~GraphicsSystem();
 
-	Camera add_camera(Entity entity, float FOV = 70.0f, float zNear = 0.1f, float zFar = 1000.0f,
+	Camera add_camera(Entity entity, float fov = 70.0f, float near_plane = 0.1f, float far_plane = 1000.0f,
 		bool orthographic = false, vec4 viewport = vec4(0.0f,0.0f,1.0f,1.0f),
 		vec3 clear_color = vec3(0.0f), unsigned clear_flags = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -36,12 +33,18 @@ struct GraphicsSystem
 
 	Light add_point_light(Entity entity, vec3 color = vec3(150.0f / 255.0f));
 
+	bool has_camera(Entity entity)	 const	{ return indices.has<0>(entity); }
+	bool has_renderer(Entity entity) const	{ return indices.has<1>(entity); }
+	Camera	 get_camera(Entity entity)   { return {entity.id(), 0, *this}; }
+	Renderer get_renderer(Entity entity) { return {entity.id(), 0, *this}; }
+
+
 	// Cameras
 	struct camera_t
 	{
 		mat4 projection;
 		Frustum frustum;
-		float zNear, zFar;
+		float near_plane, far_plane;
 		vec3 center_point, up_vector;
 
 		float fov;
@@ -90,7 +93,13 @@ struct GraphicsSystem
 	static const system_type_t type;
 
 
+	void update_projection(uint32_t i);
+	void update_submeshes(uint32_t i, bool remove_previous);
+
+
 	// Serialization
 	GraphicsSystem(const SerializationContext &ctx);
 	void save(SerializationContext &ctx) const;
 };
+
+#include "Graphics/GraphicsComponents.inl"

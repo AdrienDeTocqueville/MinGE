@@ -7,14 +7,19 @@
 
 #include "Editor/Render/RenderUI.h"
 
-Material material_dropdown(Material selected, const char *label)
+bool material_dropdown(const char *label, Material *selected)
 {
-	bool valid = selected.is_valid();
-	uint32_t id = selected.id();
-	const char *name = valid ? Material::materials.get<0>(id)->shader->URI : "None";
+	bool changed = false;
+	bool valid = selected->is_valid();
+	uint32_t id = selected->id();
+	const char *name = valid ? Material::get(id).shader()->URI : "None";
 
 	if (ImGui::BeginCombo(label, name))
 	{
+		if (ImGui::Selectable("None", !valid) && valid)
+		{ *selected = Material::none; changed = true; }
+		if (!valid) ImGui::SetItemDefaultFocus();
+
 		for (uint32_t i(1); i <= Material::materials.size; i++)
 		{
 			Material mat = Material::get(i);
@@ -22,14 +27,14 @@ Material material_dropdown(Material selected, const char *label)
 				continue;
 
 			const bool is_selected = (valid && i == id);
-			if (ImGui::Selectable(mat.shader()->URI, is_selected))
-				selected = mat;
+			if (ImGui::Selectable(mat.shader()->URI, is_selected) && !is_selected)
+			{ *selected = mat; changed = true; }
 			if (is_selected)
 				ImGui::SetItemDefaultFocus();
 		}
 		ImGui::EndCombo();
 	}
-	return selected;
+	return changed;
 }
 
 void list_macros(material_t *material, Shader *shader)
@@ -129,7 +134,7 @@ display_uniform:
 		case GL_FLOAT_MAT4:
 			break;
 		case GL_SAMPLER_2D:
-			*t = texture_dropdown(*t, it.first.c_str());
+			texture_dropdown(it.first.c_str(), t);
 			break;
 		}
 	}
@@ -137,7 +142,7 @@ display_uniform:
 
 void material_tab(Material *material)
 {
-	*material = material_dropdown(*material, "Select material");
+	material_dropdown("Select material", material);
 
 	if (!material->is_valid())
 		return;
@@ -157,4 +162,3 @@ void material_tab(Material *material)
 	if (shader->uniforms_names.size())
 		list_uniforms(selected, shader);
 }
-

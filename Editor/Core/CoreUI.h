@@ -11,4 +11,4 @@ struct system_editor_t
 	void (*edit_entity)(void *instance, Entity e);
 };
 
-Entity entity_dropdown(Entity selected, const char *label);
+bool entity_dropdown(const char *label, Entity *selected);

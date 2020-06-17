@@ -207,6 +207,11 @@ void Input::set_window_size(ivec2 _size)
 	center = dim / 2;
 }
 
+void Input::set_window_name(const char *name)
+{
+	SDL_SetWindowTitle(win, name);
+}
+
 
 // Mouse
 vec2 Input::mouse_position_ss()

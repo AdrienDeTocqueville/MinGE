@@ -2,23 +2,30 @@
 
 struct Editor
 {
+	typedef void (*Action)(void*, void*, void*);
+
 	static void init();
 	static void frame();
 	static void register_system_editor(const struct system_editor_t &editor);
 
-	static void open_scene(const char *URI);
+	static void open_scene(const char *path);
+	static void save_scene();
+	static void save_scene_as(const char *path);
 
 	static void field(const char *label, void (*widget)(),
-			void *val, size_t val_size,
-			void *data, size_t data_size,
-			void (*action)(void*, void*, void*));
+		const void *val, size_t val_size,
+		const void *data, size_t data_size,
+		Action action);
 
 	template<typename Widget, typename V, typename D>
-	static void field(const char *label, Widget widget, V &val, D &data,
-			void (*action)(V*, V*, D*))
+	static void field(const char *label, Widget widget,
+		const V &val, const D &data,
+		void (*action)(V*, V*, D*))
 	{
-		field(label, (void(*)())widget, &val, sizeof(V), &data, sizeof(D),
-			(void(*)(void*, void*, void*))action);
+		field(label, (void(*)())widget,
+			&val, sizeof(V),
+			&data, sizeof(D),
+			(Action)action);
 	}
 
 	static bool can_undo();
@@ -27,5 +34,6 @@ struct Editor
 	static void redo();
 
 private:
-	void clear_history();
+	static void clear_history();
+	static void handle_shortcuts();
 };

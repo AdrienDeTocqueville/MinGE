@@ -63,7 +63,9 @@ static void update(GraphicsSystem *self)
 		self->draw_order_indices = (uint32_t*)realloc(self->draw_order_indices, self->prev_index_count * sizeof(uint32_t));
 		goto recompute_indices;
 	}
-	if (self->prev_renderer_count != renderer_count)
+	// TODO: find a correct condition for this
+	// (when any mesh(not renderer) is added or changed)
+	//if (self->prev_renderer_count != renderer_count)
 	{
 		recompute_indices:
 		init_indices(self->draw_order_indices, renderers, renderer_count);
@@ -127,11 +129,11 @@ static void update(GraphicsSystem *self)
 	{
 		MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "camera_setup");
 
-		uint32_t cmd_count = renderer_count;
+		uint32_t cmd_count = submeshes.count;
 		uint64_t *renderer_keys = self->renderer_keys + i * submeshes.size;
 		GraphicsSystem::camera_t *cam = cameras + i;
 		camera_data_t *cam_data = camera_datas + i;
-		float scale = 1.0f / (cam->zFar - cam->zNear);
+		float scale = 1.0f / (cam->far_plane - cam->near_plane);
 
 		/// Compute new VP
 
@@ -145,7 +147,9 @@ static void update(GraphicsSystem *self)
 
 		for (uint32_t j = 0; j < renderer_count; j++)
 		{
-			// TODO: don't recompute sphere for each camera
+			if (renderers[j].mesh == Mesh::none) continue;
+
+			// TODO: don't recompute sphere for each camera ?
 			sphere.init(Mesh::meshes.get<3>()[renderers[j].mesh.id()]);
 			sphere.transform(matrices[j]);
 

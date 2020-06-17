@@ -19,10 +19,16 @@ void Editor::clear_history()
 void Editor::frame()
 {
 	if (ImGui::GetActiveID() == 0) active_item = 0;
-	if (Input::key_pressed(Key::Z) && Input::key_down(Key::LeftControl) && can_undo())
-		undo();
-	if (Input::key_pressed(Key::Y) && Input::key_down(Key::LeftControl) && can_redo())
-		redo();
+
+	// Handle shortcuts
+	if (ImGui::GetIO().WantTextInput)
+		return;
+	if (Input::key_down(Key::LeftControl))
+	{
+		if (Input::key_pressed(Key::Z) && can_undo()) undo();
+		else if (Input::key_pressed(Key::Y) && can_redo()) redo();
+	}
+	Editor::handle_shortcuts();
 }
 
 template<typename W>
@@ -42,7 +48,7 @@ static uint32_t read_hist(uint32_t offset, void *x, uint32_t size)
 	return offset + size;
 }
 
-static uint32_t write_hist(uint32_t offset, void *x, uint32_t size)
+static uint32_t write_hist(uint32_t offset, const void *x, uint32_t size)
 {
 	memcpy(history + offset, x, size);
 	return offset + size;
@@ -60,7 +66,10 @@ static void advance_start()
 	if (temp2 & reset_bit) h_start = 0;
 }
 
-static void write_hist(const char *label, uint32_t val_size, void *old, void *val, uint32_t data_size, void *data, void (*action)(void*,void*,void*))
+static void write_hist(const char *label,
+		uint32_t val_size, const void *old, const void *val,
+		uint32_t data_size, const void *data,
+		Editor::Action action)
 {
 	ImGuiID item = ImGui::GetCurrentWindowRead()->GetID(label);
 	const size_t total_size = sizeof(val_size) + val_size + val_size + sizeof(data_size) + data_size + sizeof(action) + sizeof(uint32_t);
@@ -71,6 +80,9 @@ static void write_hist(const char *label, uint32_t val_size, void *old, void *va
 		// Amend last action with new value
 		start = h_head - total_size + sizeof(val_size) + val_size;
 		write_hist(start, val, val_size);
+		action(history + start - val_size,
+			history + start,
+			history + start + val_size + sizeof(data_size));
 		return;
 	}
 
@@ -101,28 +113,36 @@ static void write_hist(const char *label, uint32_t val_size, void *old, void *va
 	h_head = write_hist(h_head, &start, sizeof(start));
 
 	h_end = h_head;
+
+	action(history + start + sizeof(val_size),
+		history + start + sizeof(val_size) + val_size,
+		history + start + sizeof(val_size) + val_size*2 + sizeof(data_size));
 }
 
 void Editor::field(const char *label, void (*widget)(),
-		void *val, size_t val_size,
-		void *data, size_t data_size,
-		void (*action)(void*, void*, void*))
+		const void *val, size_t val_size,
+		const void *data, size_t data_size,
+		Editor::Action action)
 {
+	// duplicate original value for undo
+	void *buffer = alloca(val_size);
+	memcpy(buffer, val, val_size);
+
+	bool changed = false;
 	if (is_widget(widget, ImGui::DragFloat, ImGui::DragFloat2, ImGui::DragFloat3, ImGui::DragFloat4))
 	{
-		// save original value for undo
-		uint8_t *buffer = (uint8_t*)alloca(val_size);
-		memcpy(buffer, val, val_size);
-
-		auto w = (bool(*)(const char*,float*,float,float,float,const char*,float))widget;
-		if (w(label, (float*)val, 0.1f, 0.0f, 0.0f, "%.3f", 1.0f))
-		{
-			write_hist(label, val_size, buffer, val, data_size, data, action);
-			action((void*)buffer, val, data);
-		}
+		auto w = (bool(*)(const char*,void*,float,float,float,const char*,float))widget;
+		changed = w(label, buffer, 0.1f, 0.0f, 0.0f, "%.3f", 1.0f);
 	}
 	else
-		printf("Unknown widget\n");
+	{
+		auto w = (bool(*)(const char*,void*))widget;
+		changed = w(label, buffer);
+	}
+
+	if (changed)
+		write_hist(label, val_size, val, buffer, data_size, data, action);
+
 }
 
 bool Editor::can_undo() { return active_item == 0 && h_head != h_start; }
@@ -136,7 +156,7 @@ void Editor::undo()
 	start = ((previous & reset_bit) != 0) ? 0 : previous & ~next_reset_bit;
 
 	uint32_t val_size, data_size;
-	void (*action)(void*,void*,void*);
+	Editor::Action action;
 
 	start = read_hist(start, &val_size, sizeof(val_size));
 	void *old  = history + start; start += val_size;
@@ -160,7 +180,7 @@ void Editor::redo()
 	}
 
 	uint32_t val_size, data_size;
-	void (*action)(void*,void*,void*);
+	Editor::Action action;
 
 	start = read_hist(start, &val_size, sizeof(val_size));
 	void *old  = history + start; start += val_size;

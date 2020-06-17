@@ -63,6 +63,7 @@ struct Input
 	static bool  window_focused() { return has_focus; }
 	static ivec2 window_size() { return dim; }
 	static void  set_window_size(ivec2 _size);
+	static void  set_window_name(const char *name);
 
 	// Keyboard
 	static inline bool key_down(Key::key_t _key);
