@@ -2,6 +2,7 @@
 
 #include "Profiler/profiler.h"
 #include "Core/Engine.h"
+#include "IO/Input.h"
 
 #include "Render/RenderEngine.h"
 #include "Render/CommandBuffer.h"
@@ -226,14 +227,42 @@ static void update(GraphicsSystem *self)
 }
 
 
+static void on_destroy_entity(GraphicsSystem *self, Entity e)
+{
+	assert(false && "todo");
+}
+
+static void on_resize_window(GraphicsSystem *self)
+{
+	vec2 ws = Input::window_size();
+
+	auto *cameras = self->cameras.get<0>() + 1;
+	auto *camera_datas = self->cameras.get<1>() + 1;
+	auto camera_count = self->cameras.size;
+
+	for (uint32_t i = 0; i < camera_count; i++)
+	{
+		vec4 viewport = cameras[i].ss_viewport;
+		camera_datas[i].viewport = ivec4(viewport.x * ws.x,
+			viewport.y * ws.y,
+			viewport.z * ws.x,
+			viewport.w * ws.y
+		);
+		self->update_projection(i + 1);
+	}
+}
+
 const system_type_t GraphicsSystem::type = []() {
-	system_type_t t{};
+	system_type_t t{NULL};
 	t.name = "GraphicsSystem";
 	t.size = sizeof(GraphicsSystem);
 
 	t.destroy = [](void *system) { ((GraphicsSystem*)system)->~GraphicsSystem(); };
-	t.update = (void(*)(void*))update;
-	t.on_destroy_entity = NULL;
+	t.update = (decltype(t.update))update;
+
+	t.on_destroy_entity = (decltype(t.on_destroy_entity))on_destroy_entity;
+	t.on_resize_window = (decltype(t.on_resize_window))on_resize_window;
+
 	t.save = [](void *system, SerializationContext &ctx) { ((GraphicsSystem*)system)->save(ctx); };
 	t.load = [](void *system, const SerializationContext &ctx) { new(system) GraphicsSystem(ctx); };
 	return t;

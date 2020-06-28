@@ -93,6 +93,7 @@ private:
 	/// Methods (private)
 	static void init(struct SDL_Window *window);
 	static void poll_events();
+	static void on_resize_window_event();
 
 	/// Attributes (private)
 	static struct SDL_Window *win;

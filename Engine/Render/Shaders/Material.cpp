@@ -183,10 +183,8 @@ void material_t::bind(RenderPass::Type pass) const
 
 		if (var.type == GL_SAMPLER_2D)
 		{
-			Texture *t = (Texture*)data;
-
 			GL::ActiveTexture(GL_TEXTURE0 + texture_slot);
-			glBindTexture(GL_TEXTURE_2D, t->id());
+			glBindTexture(GL_TEXTURE_2D, *(uint32_t*)data);
 			set_uniform(var.location, texture_slot++);
 		}
 		else

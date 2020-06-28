@@ -1,4 +1,32 @@
 {
+    "assets": {
+        "Mesh": {
+            "max_id": 2,
+            "meshes": [
+                {
+                    "uint": 1,
+                    "uri": "asset:mesh/cube?x=1&y=3&z=3"
+                },
+                {
+                    "uint": 2,
+                    "uri": "asset:mesh/sphere?radius=3"
+                }
+            ]
+        },
+        "Texture": {
+            "max_id": 2,
+            "textures": [
+                {
+                    "uint": 1,
+                    "uri": "asset://Textures/0.png?format=srgb"
+                },
+                {
+                    "uint": 2,
+                    "uri": "asset://Textures/white.png"
+                }
+            ]
+        }
+    },
     "entities": [
         {
             "name": "Cube",
@@ -22,17 +50,6 @@
         }
     ],
     "max_entity": 5,
-    "max_mesh": 2,
-    "meshes": [
-        {
-            "uint": 1,
-            "uri": "asset:mesh/cube?x=1&y=3&z=3"
-        },
-        {
-            "uint": 2,
-            "uri": "asset:mesh/sphere?radius=3"
-        }
-    ],
     "systems": {
         "graphics": {
             "data": {

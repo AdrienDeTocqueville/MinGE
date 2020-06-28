@@ -23,6 +23,22 @@ struct ActionData
 	Entity e;
 };
 
+#define SIMPLE_PROP(label, widget, type, owner, prop) do { \
+void (*func)(type*,type*,ActionData*) = [](type *old, type *val, ActionData *d) { \
+	if (d->sys->has(d->e)) d->sys->get(d->e).set_##prop(*val); \
+}; \
+Editor::field(label, widget, owner.prop(), data, func); \
+} while (0)
+
+
+#define COMPLEX_PROP(label, widget, type, prop, getter, setter) do { \
+void (*func)(type*,type*,ActionData*) = [](type *old, type *val, ActionData *d) { \
+	if (d->sys->has(d->e)) d->sys->get(d->e).set_##prop(setter(*val)); \
+}; \
+Editor::field(label, widget, getter, data, func); \
+} while (0)
+
+
 static void edit_entity(TransformSystem *sys, Entity e)
 {
 	if (!sys->has(e)) return;
@@ -31,23 +47,9 @@ static void edit_entity(TransformSystem *sys, Entity e)
 	Transform tr = sys->get(e);
 	ActionData data { sys, e };
 
-	Editor::field("Position", ImGui::DragFloat3, tr.position(), data,
-	(void (*)(vec3*,vec3*,ActionData*))[](vec3 *old, vec3 *val, ActionData *d) {
-		if (d->sys->has(d->e))
-			d->sys->get(d->e).set_position(*val);
-	});
-
-	Editor::field("Rotation", ImGui::DragFloat3, glm::degrees(tr.euler_angles()), data,
-	(void (*)(vec3*,vec3*,ActionData*))[](vec3 *old, vec3 *val, ActionData *d) {
-		if (d->sys->has(d->e))
-			d->sys->get(d->e).set_rotation(glm::radians(*val));
-	});
-
-	Editor::field("Scale", ImGui::DragFloat3, tr.scale(), data,
-	(void (*)(vec3*,vec3*,ActionData*))[](vec3 *old, vec3 *val, ActionData *d) {
-		if (d->sys->has(d->e))
-			d->sys->get(d->e).set_scale(*val);
-	});
+	SIMPLE_PROP("Position", ImGui::DragFloat3, vec3, tr, position);
+	COMPLEX_PROP("Rotation", ImGui::DragFloat3, vec3, rotation, glm::degrees(tr.euler_angles()), glm::radians);
+	SIMPLE_PROP("Scale", ImGui::DragFloat3, vec3, tr, scale);
 }
 
 const system_editor_t editor = []() {

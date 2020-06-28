@@ -23,6 +23,12 @@ int main(int, char**)
 	Engine::register_system_type(GraphicsSystem::type);
 	Engine::register_system_type(CameraControl::type);
 
+	Engine::register_asset_type(Mesh::type);
+	Engine::register_asset_type(Texture::type);
+
+	Texture::load("asset://Textures/0.png?format=srgb");
+	Texture::load("asset://Textures/white.png");
+
 #ifdef SERIALIZE
 	/// Init systems
 	auto transforms = new(Engine::alloc_system("TransformSystem")) TransformSystem();

@@ -29,7 +29,7 @@ void GraphicsSystem::save(SerializationContext &ctx) const
 			cam_dump.push_back(cam);
 		}
 
-		dump["cameras"] = cam_dump;
+		dump["cameras"].swap(cam_dump);
 	}
 
 	{
@@ -49,11 +49,11 @@ void GraphicsSystem::save(SerializationContext &ctx) const
 			renderer_dump.push_back(renderer);
 		}
 
-		dump["renderers"] = renderer_dump;
+		dump["renderers"].swap(renderer_dump);
 	}
 
 	ctx.set_dependencies(transforms);
-	ctx.set_data(dump);
+	ctx.swap_data(dump);
 }
 
 GraphicsSystem::GraphicsSystem(const SerializationContext &ctx):

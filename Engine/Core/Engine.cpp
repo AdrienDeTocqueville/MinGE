@@ -8,7 +8,10 @@
 
 #include "Core/Engine.h"
 #include "Core/Entity.h"
+#include "Core/Asset.h"
+#include "Core/Scene.h"
 
+#include "IO/json.hpp"
 #include "IO/Input.h"
 #include "JobSystem/JobSystem.inl"
 #include "Math/Random.h"
@@ -35,6 +38,8 @@ struct system_t
 
 static std::vector<system_type_t> system_types;
 static std::vector<system_t*> systems;
+
+static std::vector<asset_type_t> asset_types;
 
 
 /// Entity
@@ -177,7 +182,7 @@ void Engine::frame()
 }
 
 
-// system
+// systems
 static inline system_type_t *get_type(const char *name)
 {
 	for (system_type_t &type : system_types)
@@ -191,7 +196,7 @@ static inline system_type_t *get_type(const char *name)
 void Engine::register_system_type(const system_type_t &system_type)
 {
 	if (get_type(system_type.name) == NULL)
-		system_types.push_back(system_type);
+		system_types.emplace_back(system_type);
 }
 
 const system_type_t *Engine::get_system_type(void *system)
@@ -217,7 +222,7 @@ void *Engine::alloc_system(const char *type_name)
 	system->token = MicroProfileGetToken(type_name, sys_name, -1);
 #endif
 
-	systems.push_back(system);
+	systems.emplace_back(system);
 	return system->instance();
 }
 
@@ -278,4 +283,45 @@ void Engine::write_lock(void *system)
 void Engine::write_unlock(void *system)
 {
 	system_t::from_instance(system)->readers = 0;
+}
+
+// assets
+void Engine::register_asset_type(const asset_type_t &asset_type)
+{
+	asset_types.emplace_back(asset_type);
+}
+
+void Scene::load_assets(nlohmann::json &scene)
+{
+	auto &assets = scene["assets"];
+	for (int i(0); i < asset_types.size(); i++)
+	{
+		if (asset_types[i].load && assets.contains(asset_types[i].name))
+			asset_types[i].load(assets[asset_types[i].name]);
+	}
+}
+
+void Scene::save_assets(nlohmann::json &scene) const
+{
+	scene["assets"] = nlohmann::json::object();
+	for (int i(0); i < asset_types.size(); i++)
+	{
+		if (asset_types[i].save)
+		{
+			nlohmann::json asset = nlohmann::json::object();
+			asset_types[i].save(asset);
+			scene["assets"][asset_types[i].name].swap(asset);
+		}
+	}
+}
+
+
+// Input
+void Input::on_resize_window_event()
+{
+	for (system_t *system : systems)
+	{
+		if (auto callback = system_types[system->type_index].on_resize_window)
+			callback(system->instance());
+	}
 }

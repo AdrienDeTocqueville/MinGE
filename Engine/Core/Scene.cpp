@@ -15,9 +15,6 @@
 #include "Utility/Error.h"
 #include "Utility/stb_sprintf.h"
 
-#include "Structures/Bounds.h"
-#include "Render/Mesh/Mesh.h"
-
 using namespace nlohmann;
 
 Scene::Scene(Scene &&s)
@@ -60,45 +57,24 @@ bool Scene::load(const char *path)
 		for (auto it = entities.rbegin(); it != entities.rend(); ++it)
 		{
 			UID32 uid = it.value()["uint"].get<uint32_t>();
-			auto name = it.value().contains("name") ? it.value()["name"].get<std::string>().c_str() : NULL;
 
 			auto *data = Entity::entities.get<0>();
 			if (uid.id() == 1) final_slot = *(uint32_t*)(data + uid.id());
 			else *(uint32_t*)(data + uid.id() - 1) = *(uint32_t*)(data + uid.id());
 
 			Entity::entities.next_slot = uid.id();
-			Entity::create(name);
+			if (it.value().contains("name"))
+				Entity::create(it.value()["name"].get<std::string>().c_str());
+			else
+				Entity::create(NULL);
+
 			Entity::entities.get<0>()[uid.id()].gen = uid.gen();
 		}
 		Entity::entities.next_slot = final_slot;
 	}
 
-	// Load meshes
-	{
-		uint32_t final_slot = 1;
-		uint32_t max_mesh = scene["max_mesh"].get<uint32_t>();
-
-		// Clear free list
-		Mesh::meshes.init(max_mesh);
-		for (uint32_t i(1); i <= max_mesh; i++)
-			Mesh::meshes.get<2>()[i] = NULL;
-
-		// Populate
-		auto meshes = scene["meshes"];
-		for (auto it = meshes.rbegin(); it != meshes.rend(); ++it)
-		{
-			UID32 uid = it.value()["uint"].get<uint32_t>();
-
-			auto *data = Mesh::meshes.get<0>();
-			if (uid.id() == 1) final_slot = *(uint32_t*)(data + uid.id());
-			else *(uint32_t*)(data + uid.id() - 1) = *(uint32_t*)(data + uid.id());
-
-			Mesh::meshes.next_slot = uid.id();
-			Mesh::load(it.value()["uri"].get<std::string>().c_str());
-			Mesh::meshes.get<4>()[uid.id()] = uid.gen();
-		}
-		Mesh::meshes.next_slot = final_slot;
-	}
+	// Load assets
+	load_assets(scene);
 
 	// Load systems
 	clear();
@@ -191,30 +167,11 @@ bool Scene::save(const char *path, Overwrite mode) const
 		}
 
 		scene["max_entity"] = max_ent;
-		scene["entities"] = entities;
+		scene["entities"].swap(entities);
 	}
 
-	// Save meshes
-	{
-		uint32_t max_mesh = 0;
-		json meshes = json::array();
-		meshes.get_ptr<nlohmann::json::array_t*>()->reserve(Mesh::meshes.size);
-		for (uint32_t i(1); i <= Mesh::meshes.size; i++)
-		{
-			auto mesh = Mesh::get(i);
-			if (mesh == Mesh::none)
-				continue;
-
-			max_mesh = i;
-			json mesh_dump = json::object();
-			mesh_dump["uint"] = mesh.uint();
-			mesh_dump["uri"] = mesh.uri();
-			meshes.push_back(mesh_dump);
-		}
-
-		scene["max_mesh"] = max_mesh;
-		scene["meshes"] = meshes;
-	}
+	// Save assets
+	save_assets(scene);
 
 	// Save systems
 	// TODO: multithread serialize
@@ -242,7 +199,7 @@ bool Scene::save(const char *path, Overwrite mode) const
 			}
 		}
 		system["type"] = type->name;
-		scene["systems"][systems[i].name] = system;
+		scene["systems"][systems[i].name].swap(system);
 	}
 
 

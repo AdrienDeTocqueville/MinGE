@@ -7,13 +7,14 @@
 
 struct camera_data_t
 {
+	uint32_t fbo;
+	uint32_t clear_flags;
+
 	ivec4 viewport;
 	vec4 clear_color;
 
 	mat4 view_proj;
 	vec3 position;
-
-	uint32_t clear_flags;
 };
 
 struct submesh_data_t

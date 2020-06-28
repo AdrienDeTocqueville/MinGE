@@ -159,8 +159,11 @@ void Input::poll_events()
 				break;
 
 			case SDL_WINDOWEVENT_RESIZED:
+				if (dim == ivec2(event.window.data1, event.window.data2))
+					break;
 				dim = ivec2(event.window.data1, event.window.data2);
 				center = dim / 2;
+				on_resize_window_event();
 				break;
 			}
 			break;
@@ -201,10 +204,15 @@ void Input::close_window()
 
 void Input::set_window_size(ivec2 _size)
 {
+	if (dim == _size)
+		return;
+
 	SDL_SetWindowSize(win, _size.x, _size.y);
 
 	dim = _size;
 	center = dim / 2;
+
+	on_resize_window_event();
 }
 
 void Input::set_window_name(const char *name)

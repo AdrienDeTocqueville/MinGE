@@ -10,9 +10,9 @@ struct SerializationContext
 		version = v;
 	}
 
-	void set_data(nlohmann::json dump)
+	void swap_data(nlohmann::json &dump)
 	{
-		data = dump;
+		data.swap(dump);
 	}
 
 	template<typename... D>

@@ -164,7 +164,7 @@ static void serialize(TransformSystem *sys, SerializationContext &ctx)
 		dump["hierarchies"].push_back(hierarchy);
 	}
 
-	ctx.set_data(dump);
+	ctx.swap_data(dump);
 }
 
 TransformSystem::TransformSystem(const SerializationContext &ctx):
@@ -210,13 +210,12 @@ TransformSystem::TransformSystem(const SerializationContext &ctx):
 
 /// TYPE DEFINITION
 const system_type_t TransformSystem::type = []() {
-	system_type_t t{};
+	system_type_t t{NULL};
 	t.name = "TransformSystem";
 	t.size = sizeof(TransformSystem);
 
 	t.destroy = [](void *system) { ((TransformSystem*)system)->~TransformSystem(); };
-	t.update = NULL;
-	t.on_destroy_entity = NULL;
+
 	t.save = (void(*)(void*, SerializationContext&))serialize;
 	t.load = [](void *system, const SerializationContext &ctx) { new(system) TransformSystem(ctx); };
 	return t;

@@ -31,11 +31,12 @@ struct ActionData
 	Entity e;
 };
 
-#define SIMPLE_PROP(label, widget, type, owner, prop)	\
-Editor::field(label, widget, owner.prop(), data,	\
-(void (*)(type*,type*,ActionData*))[](type *old, type *val, ActionData *d) {	\
+#define SIMPLE_PROP(label, widget, type, owner, prop) do { \
+void (*func)(type*,type*,ActionData*) = [](type *old, type *val, ActionData *d) { \
 	if (d->sys->has_##owner(d->e)) d->sys->get_##owner(d->e).set_##prop(*val); \
-});
+}; \
+Editor::field(label, widget, owner.prop(), data, func); \
+} while (0)
 
 static void edit_entity(GraphicsSystem *sys, Entity e)
 {
@@ -45,16 +46,16 @@ static void edit_entity(GraphicsSystem *sys, Entity e)
 	if (sys->has_camera(e) && ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		Camera camera = sys->get_camera(e);
-		SIMPLE_PROP("Near plane", ImGui::DragFloat, float, camera, near_plane)
-		SIMPLE_PROP("Far plane", ImGui::DragFloat, float, camera, far_plane)
-		SIMPLE_PROP("Field of view", ImGui::DragFloat, float, camera, fov)
+		SIMPLE_PROP("Near plane", ImGui::DragFloat, float, camera, near_plane);
+		SIMPLE_PROP("Far plane", ImGui::DragFloat, float, camera, far_plane);
+		SIMPLE_PROP("Field of view", ImGui::DragFloat, float, camera, fov);
 	}
 
 	// Renderer
 	if (sys->has_renderer(e) && ImGui::CollapsingHeader("Renderer", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		Renderer renderer = sys->get_renderer(e);
-		SIMPLE_PROP("Mesh", mesh_dropdown, Mesh, renderer, mesh)
+		SIMPLE_PROP("Mesh", mesh_dropdown, Mesh, renderer, mesh);
 	}
 }
 

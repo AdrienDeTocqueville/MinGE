@@ -27,7 +27,7 @@ bool texture_dropdown(const char *label, Texture *selected)
 		{ *selected = Texture::none; changed = true; }
 		if (!valid) ImGui::SetItemDefaultFocus();
 
-		for (uint32_t i(1); i <= Texture::count(); i++)
+		for (uint32_t i(1); i <= Texture::textures.size; i++)
 		{
 			Texture texture = Texture::get(i);
 			if (texture == Texture::none)

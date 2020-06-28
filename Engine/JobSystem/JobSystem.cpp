@@ -19,9 +19,9 @@
 #include "Math/Random.h"
 #include "Utility/Time.h"
 #include "Utility/stb_sprintf.h"
-#include "Core/Platform.h"
+#include "Core/Utils.h"
 
-#define SINGLE_THREADED
+//#define SINGLE_THREADED
 
 
 namespace JobSystem

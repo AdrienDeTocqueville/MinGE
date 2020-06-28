@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/Asset.h"
 #include "Core/UID.h"
 #include "Math/glm.h"
 
@@ -59,8 +60,8 @@ struct Mesh: public UID32
 	Mesh() {}
 
 	void destroy();
-	char *uri() { return *meshes.get<2>(id());  }
-	bool is_valid() { return id() && *meshes.get<4>(id()) == gen(); }
+	char *uri() const { return *meshes.get<2>(id());  }
+	bool is_valid() const { return id() && *meshes.get<4>(id()) == gen(); }
 
 	static Mesh load(const char *URI);
 	static Mesh get(uint32_t i);
@@ -69,6 +70,8 @@ struct Mesh: public UID32
 	static const Mesh none;
 	static multi_array_t<submeshes_t, mesh_data_t, char*, struct AABB, uint8_t> meshes;
 	static array_list_t<submesh_t> submeshes;
+
+	static const asset_type_t type;
 
 private:
 	Mesh(uint32_t i, uint32_t g): UID32(i, g) {}

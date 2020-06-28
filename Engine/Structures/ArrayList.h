@@ -9,13 +9,13 @@ struct slot32_t
 {
 	uint32_t next: 24;
 	uint32_t avail: 8;
-	static const uint32_t invalid = (-1) & (1 << 24 - 1);
+	static const uint32_t invalid = (1 << 24) - 1;
 };
 struct slot64_t
 {
 	uint32_t next;
 	uint32_t avail;
-	static const uint32_t invalid = (-1) & (1 << 32 - 1);
+	static const uint32_t invalid = -1;
 };
 
 // Structure to allocate contiguous elements
@@ -33,9 +33,7 @@ struct array_list_t
 	inline void clear();
 
 	inline const uint32_t invalid_id() const
-	{
-		return S::invalid;
-	}
+	{ return S::invalid; }
 
 	T &operator[](uint32_t index)
 	{ return data[index]; }

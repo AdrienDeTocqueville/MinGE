@@ -62,14 +62,16 @@ case SetupCamera:
 	GL::Enable(GL::ScissorTest);
 	GL::Disable(GL::Blend);
 
+	GL::BindFramebuffer(camera->fbo);
+
 	GL::Viewport(camera->viewport);
 	GL::Scissor (camera->viewport);
 	GL::ClearColor(camera->clear_color);
+	glClear(camera->clear_flags);
 
 	Shader::set_builtin("MATRIX_VP", camera->view_proj);
 	Shader::set_builtin("VIEW_POS", camera->position);
 
-	glClear(camera->clear_flags);
 	break;
 }
 }

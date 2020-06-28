@@ -156,14 +156,11 @@ public:
 };
 
 const system_type_t CameraControl::type = []() {
-	system_type_t t{};
+	system_type_t t{NULL};
 	t.name = "CameraControl";
 	t.size = sizeof(CameraControl);
 
 	t.destroy = [](void *system) { ((CameraControl*)system)->~CameraControl(); };
 	t.update = [](void *system) { ((CameraControl*)system)->update(); };
-	t.on_destroy_entity = NULL;
-	t.save = NULL;
-	t.load = NULL;
 	return t;
 }();

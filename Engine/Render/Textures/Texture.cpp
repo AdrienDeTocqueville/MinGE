@@ -1,50 +1,27 @@
-#include <vector>
-
 #include "Render/Textures/Texture.h"
 #include "Utility/Error.h"
+#include "IO/json.hpp"
 #include "IO/URI.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "Render/Textures/stb_image.h"
 
-struct texture_t
-{
-	uvec2 size;
-	const char *URI;
-	uint32_t gen;
-};
 
 const Texture Texture::none;
-std::vector<texture_t> textures = { texture_t { uvec2{0,0}, NULL, 1 } };
+// {id, size}, uri, gen
+multi_array_t<Texture::texture_t, char*, uint8_t> Texture::textures;
 
-
-bool Texture::is_valid()
-{
-	return textures[id()].gen == gen();
-}
-
-const char *Texture::uri()
-{
-	assert(id() && "Invalid texture handle");
-
-	return textures[id()].URI;
-}
-
-uvec2 Texture::size()
-{
-	assert(id() && "Invalid texture handle");
-
-	return textures[id()].size;
-}
 
 void Texture::destroy()
 {
-	assert(is_valid() && "Invalid texture handle");
+	assert(is_valid() && "Invalid Texture handle");
 
-	GLuint i = (GLuint)id();
-	glCheck(glDeleteTextures(1, &i));
-	textures[id()].gen++;
-	textures[id()].URI = NULL;
+	GLuint *handle = &textures.get<0>()[id()].handle;
+	glCheck(glDeleteTextures(1, handle));
+
+	free(textures.get<1>(id()));
+	*textures.get<1>(id()) = NULL;
+	++(*textures.get<2>(id()));
 }
 
 
@@ -89,10 +66,10 @@ Texture Texture::load(const char *URI)
 	if (!uri.parse(URI))
 		return Texture::none;
 
-	unsigned id;
+	unsigned handle;
 	uvec2 size;
-	glGenTextures(1, &id);
-	glBindTexture(GL_TEXTURE_2D, id);
+	glGenTextures(1, &handle);
+	glBindTexture(GL_TEXTURE_2D, handle);
 
 	// Set the texture wrapping and filtering options
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, parse_wrap_mode(uri.get("wrap_s")));
@@ -107,7 +84,7 @@ Texture Texture::load(const char *URI)
 		if (data == NULL)
 		{
 			Error::add(Error::USER, "Cannot import texture: " + uri.path);
-			glCheck(glDeleteTextures(1, &id));
+			glCheck(glDeleteTextures(1, &handle));
 			return Texture::none;
 		}
 
@@ -120,36 +97,108 @@ Texture Texture::load(const char *URI)
 	}
 	else
 	{
-		glCheck(glDeleteTextures(1, &id));
+		// TODO
+		glCheck(glDeleteTextures(1, &handle));
 		return Texture::none;
 	}
 
-	if (textures.size() <= id)
-		textures.resize(id + 1);
-	textures[id].size = size;
-	textures[id].URI = URI;
-	return Texture(id, textures[id].gen);
+	uint32_t i = textures.add();
+	textures.get<0>()[i] = { handle, size };
+	textures.get<1>()[i] = strdup(URI);
+
+	return Texture(i, textures.get<2>()[i]);
 }
 
 Texture Texture::get(uint32_t i)
 {
-	if (textures[i].URI == NULL)
+	if (textures.get<1>()[i] == NULL)
 		return Texture::none;
-	return Texture(i, textures[i].gen);
+	return Texture(i, textures.get<2>()[i]);
+}
+
+Texture Texture::find_by_handle(uint32_t handle)
+{
+	for (uint32_t i(1); i <= textures.size; i++)
+	{
+		if (textures.get<1>()[i] != NULL && textures.get<0>()[i].handle == handle)
+			return Texture(i, textures.get<2>()[i]);
+	}
+	return Texture::none;
 }
 
 void Texture::clear()
 {
-	for (unsigned i = 1; i < textures.size(); i++)
+	for (uint32_t i(1); i <= textures.size; i++)
 	{
-		GLuint id = i;
-		if (glIsTexture(id))
-			glCheck(glDeleteTextures(1, &id));
+		if (textures.get<1>()[i] == NULL)
+			continue;
+
+		GLuint *handle = &textures.get<0>()[i].handle;
+		glCheck(glDeleteTextures(1, handle));
+
+		free(textures.get<1>()[i]);
 	}
 	textures.clear();
 }
 
-uint32_t Texture::count()
+
+/// Serialization
+using namespace nlohmann;
+void texture_save(json &dump)
 {
-	return textures.size() - 1;
+	uint32_t max_id = 0;
+	json textures = json::array();
+	textures.get_ptr<json::array_t*>()->reserve(Texture::textures.size);
+	for (uint32_t i(1); i <= Texture::textures.size; i++)
+	{
+		auto texture = Texture::get(i);
+		if (texture == Texture::none)
+			continue;
+
+		max_id = i;
+		json texture_dump = json::object();
+		texture_dump["uint"] = texture.uint();
+		texture_dump["uri"] = texture.uri();
+		textures.push_back(texture_dump);
+	}
+
+	dump["max_id"] = max_id;
+	dump["textures"].swap(textures);
 }
+
+void texture_load(const json &dump)
+{
+	uint32_t final_slot = 1;
+	uint32_t max_id = dump["max_id"].get<uint32_t>();
+
+	// Clear free list
+	Texture::textures.init(max_id);
+	for (uint32_t i(1); i <= max_id; i++)
+		Texture::textures.get<1>()[i] = NULL;
+
+	// Populate
+	const json &textures = dump["textures"];
+	for (auto it = textures.rbegin(); it != textures.rend(); ++it)
+	{
+		UID32 uid = it.value()["uint"].get<uint32_t>();
+
+		auto *data = Texture::textures.get<0>();
+		if (uid.id() == 1) final_slot = *(uint32_t*)(data + uid.id());
+		else *(uint32_t*)(data + uid.id() - 1) = *(uint32_t*)(data + uid.id());
+
+		Texture::textures.next_slot = uid.id();
+		Texture::load(it.value()["uri"].get<std::string>().c_str());
+		Texture::textures.get<2>()[uid.id()] = uid.gen();
+	}
+	Texture::textures.next_slot = final_slot;
+}
+
+const asset_type_t Texture::type = []() {
+	asset_type_t t{ NULL };
+	t.name = "Texture";
+
+	t.save = texture_save;
+	t.load = texture_load;
+	return t;
+}();
+

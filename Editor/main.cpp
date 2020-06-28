@@ -22,9 +22,6 @@ int main(int, char**)
 	Engine::init(window);
 	Editor::init();
 
-	Texture::load("asset://Textures/0.png?format=srgb");
-	Texture::load("asset://Textures/white.png");
-
 	Editor::open_scene("Assets/tests/graphics_test.ge");
 
 	/// Main loop

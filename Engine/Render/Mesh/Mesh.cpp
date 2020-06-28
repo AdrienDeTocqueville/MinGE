@@ -2,6 +2,7 @@
 #include "Render/GLDriver.h"
 
 #include "IO/URI.h"
+#include "IO/json.hpp"
 #include "Utility/Error.h"
 #include "Structures/Bounds.h"
 
@@ -156,7 +157,6 @@ Mesh Mesh::load(const char *URI)
 	for (uint32_t i = first_submesh; i < last_submesh; i++)
 		submeshes[i].vao = vao;
 
-	uint32_t prev_size = meshes.size;
 	uint32_t i = meshes.add();
 	meshes.get<0>()[i] = submeshes_t {first_submesh, submesh_count, vbo, ebo};
 	meshes.get<1>()[i] = data;
@@ -195,94 +195,62 @@ void Mesh::clear()
 }
 
 
-/*
-MeshRef Mesh::createCylinder(mesh_data_t::Flags flags, float _base, float _top, float _height, unsigned _slices)
+/// Serialization
+using namespace nlohmann;
+void mesh_save(json &dump)
 {
-	const float iSlices = 1/((float)_slices);
-	Mesh* m = new Mesh(_dataFlags);
+	uint32_t max_id = 0;
+	json meshes = json::array();
+	meshes.get_ptr<json::array_t*>()->reserve(Mesh::meshes.size);
+	for (uint32_t i(1); i <= Mesh::meshes.size; i++)
+	{
+		auto mesh = Mesh::get(i);
+		if (mesh == Mesh::none)
+			continue;
 
-		float b = (_base == _top)? 0.5f : 0.25f;
-		const vec3 base = vec3(0, 0, -_height * b);
-		const vec3 top  = vec3(0, 0,  _height * (1.0f - b));
+		max_id = i;
+		json mesh_dump = json::object();
+		mesh_dump["uint"] = mesh.uint();
+		mesh_dump["uri"] = mesh.uri();
+		meshes.push_back(mesh_dump);
+	}
 
-		std::vector<vec3> vertices(_slices+1);
-
-		bool useBase = _base != 0.0f;
-		bool useTop  = _top != 0.0f;
-
-		for (unsigned x(0) ; x <= _slices ; x++)
-		{
-			float angle = x*2.0f*PI * iSlices;
-
-			vertices[x] = vec3(cos(angle), sin(angle), 0);
-		}
-
-		unsigned size = _slices * 3 * (useBase + useTop + 2);
-		m->vertices.reserve(size);
-		m->normals.reserve(size);
-		m->texCoords.reserve(size);
-
-		for (unsigned i(0) ; i < _slices ; i++)
-		{
-			if (useBase)
-			{
-				m->vertices.push_back(_base*vertices[i+1] + base);
-				m->vertices.push_back(_base*vertices[i] + base);
-				m->vertices.push_back(base);
-
-				m->normals.push_back(vec3(0, 0, -1));
-				m->normals.push_back(vec3(0, 0, -1));
-				m->normals.push_back(vec3(0, 0, -1));
-
-				m->texCoords.push_back(vec2(vertices[i+1]*0.5f+0.5f));
-				m->texCoords.push_back(vec2(vertices[i]*0.5f+0.5f));
-				m->texCoords.push_back(vec2(0.5f));
-			}
-			if (useTop)
-			{
-				m->vertices.push_back(top);
-				m->vertices.push_back(_top*vertices[i] + top);
-				m->vertices.push_back(_top*vertices[i+1] + top);
-
-				m->normals.push_back(vec3(0, 0, 1));
-				m->normals.push_back(vec3(0, 0, 1));
-				m->normals.push_back(vec3(0, 0, 1));
-
-				m->texCoords.push_back(vec2(0.5f));
-				m->texCoords.push_back(vec2(vertices[i]*0.5f+0.5f));
-				m->texCoords.push_back(vec2(vertices[i+1]*0.5f+0.5f));
-			}
-
-			m->vertices.push_back(_top*vertices[i] + top);
-			m->vertices.push_back(_base*vertices[i] + base);
-			m->vertices.push_back(_base*vertices[i+1] + base);
-
-			m->normals.push_back(vertices[i]);
-			m->normals.push_back(vertices[i]);
-			m->normals.push_back(vertices[i+1]);
-
-				m->texCoords.push_back(vec2(vertices[i]*0.5f+0.5f));
-				m->texCoords.push_back(vec2(vertices[i]*0.5f+0.5f));
-				m->texCoords.push_back(vec2(vertices[i+1]*0.5f+0.5f));
-
-
-			m->vertices.push_back(_base*vertices[i+1] + base);
-			m->vertices.push_back(_top*vertices[i+1] + top);
-			m->vertices.push_back(_top*vertices[i] + top);
-
-			m->normals.push_back(vertices[i+1]);
-			m->normals.push_back(vertices[i+1]);
-			m->normals.push_back(vertices[i]);
-
-			m->texCoords.push_back(vec2(0.0f));
-			m->texCoords.push_back(vec2(0.0f));
-			m->texCoords.push_back(vec2(0.0f));
-		}
-
-		m->submeshes.push_back(Submesh(GL_TRIANGLES, 0, m->vertices.size()));
-
-	m->loadBuffers();
-
-	return MeshRef(m);
+	dump["max_id"] = max_id;
+	dump["meshes"].swap(meshes);
 }
-*/
+
+void mesh_load(const json &dump)
+{
+	uint32_t final_slot = 1;
+	uint32_t max_id = dump["max_id"].get<uint32_t>();
+
+	// Clear free list
+	Mesh::meshes.init(max_id);
+	for (uint32_t i(1); i <= max_id; i++)
+		Mesh::meshes.get<2>()[i] = NULL;
+
+	// Populate
+	const json &meshes = dump["meshes"];
+	for (auto it = meshes.rbegin(); it != meshes.rend(); ++it)
+	{
+		UID32 uid = it.value()["uint"].get<uint32_t>();
+
+		auto *data = Mesh::meshes.get<0>();
+		if (uid.id() == 1) final_slot = *(uint32_t*)(data + uid.id());
+		else *(uint32_t*)(data + uid.id() - 1) = *(uint32_t*)(data + uid.id());
+
+		Mesh::meshes.next_slot = uid.id();
+		Mesh::load(it.value()["uri"].get<std::string>().c_str());
+		Mesh::meshes.get<4>()[uid.id()] = uid.gen();
+	}
+	Mesh::meshes.next_slot = final_slot;
+}
+
+const asset_type_t Mesh::type = []() {
+	asset_type_t t{ NULL };
+	t.name = "Mesh";
+
+	t.save = mesh_save;
+	t.load = mesh_load;
+	return t;
+}();

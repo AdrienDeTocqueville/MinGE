@@ -2,8 +2,6 @@
 
 #include <stdint.h>
 
-#include "IO/json_fwd.hpp"
-
 struct SerializationContext;
 struct system_type_t
 {
@@ -12,7 +10,9 @@ struct system_type_t
 
 	void (*destroy)(void *instance);
 	void (*update)(void *instance);
+
 	void (*on_destroy_entity)(void *instance, struct Entity);
+	void (*on_resize_window)(void *instance);
 
 	void (*save)(void *instance, SerializationContext&);
 	void (*load)(void *instance, const SerializationContext&);

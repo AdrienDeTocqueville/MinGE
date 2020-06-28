@@ -20,7 +20,7 @@
 #else
 #define TEST(x) if (!(x)) { \
 	printf("TEST Failed in " __FILE__ " at line %d: '" # x "'\n", __LINE__); \
-	std::cin.get(); exit(-1); }
+	__builtin_trap(); std::cin.get(); exit(-1); }
 #endif
 
 #define LAUNCH(func) do { \

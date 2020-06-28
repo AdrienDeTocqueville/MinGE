@@ -22,15 +22,16 @@ Camera GraphicsSystem::add_camera(Entity entity, float fov, float near_plane, fl
 
 	camera_data_t *cam_data = cameras.get<1>() + i;
 
+	cam_data->fbo		= 0;
+	cam_data->clear_flags	= clear_flags;
+	cam_data->clear_color	= vec4(clear_color, 0.0f);
+
 	vec2 ws = Input::window_size();
 	cam_data->viewport = ivec4(viewport.x * ws.x,
 		viewport.y * ws.y,
 		viewport.z * ws.x,
 		viewport.w * ws.y
 	);
-
-	cam_data->clear_color	= vec4(clear_color, 0.0f);
-	cam_data->clear_flags	= clear_flags;
 
 	update_projection(i);
 	return {i, 0, *this};
@@ -58,6 +59,7 @@ Light GraphicsSystem::add_point_light(Entity entity, vec3 color)
 
 	return {i, 0, *this};
 }
+
 
 void GraphicsSystem::update_projection(uint32_t i)
 {

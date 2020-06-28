@@ -267,3 +267,97 @@ bool generate_mesh(const uri_t &uri, mesh_data_t &data)
 	}
 	return true;
 }
+
+
+
+/*
+MeshRef Mesh::createCylinder(mesh_data_t::Flags flags, float _base, float _top, float _height, unsigned _slices)
+{
+	const float iSlices = 1/((float)_slices);
+	Mesh* m = new Mesh(_dataFlags);
+
+		float b = (_base == _top)? 0.5f : 0.25f;
+		const vec3 base = vec3(0, 0, -_height * b);
+		const vec3 top  = vec3(0, 0,  _height * (1.0f - b));
+
+		std::vector<vec3> vertices(_slices+1);
+
+		bool useBase = _base != 0.0f;
+		bool useTop  = _top != 0.0f;
+
+		for (unsigned x(0) ; x <= _slices ; x++)
+		{
+			float angle = x*2.0f*PI * iSlices;
+
+			vertices[x] = vec3(cos(angle), sin(angle), 0);
+		}
+
+		unsigned size = _slices * 3 * (useBase + useTop + 2);
+		m->vertices.reserve(size);
+		m->normals.reserve(size);
+		m->texCoords.reserve(size);
+
+		for (unsigned i(0) ; i < _slices ; i++)
+		{
+			if (useBase)
+			{
+				m->vertices.push_back(_base*vertices[i+1] + base);
+				m->vertices.push_back(_base*vertices[i] + base);
+				m->vertices.push_back(base);
+
+				m->normals.push_back(vec3(0, 0, -1));
+				m->normals.push_back(vec3(0, 0, -1));
+				m->normals.push_back(vec3(0, 0, -1));
+
+				m->texCoords.push_back(vec2(vertices[i+1]*0.5f+0.5f));
+				m->texCoords.push_back(vec2(vertices[i]*0.5f+0.5f));
+				m->texCoords.push_back(vec2(0.5f));
+			}
+			if (useTop)
+			{
+				m->vertices.push_back(top);
+				m->vertices.push_back(_top*vertices[i] + top);
+				m->vertices.push_back(_top*vertices[i+1] + top);
+
+				m->normals.push_back(vec3(0, 0, 1));
+				m->normals.push_back(vec3(0, 0, 1));
+				m->normals.push_back(vec3(0, 0, 1));
+
+				m->texCoords.push_back(vec2(0.5f));
+				m->texCoords.push_back(vec2(vertices[i]*0.5f+0.5f));
+				m->texCoords.push_back(vec2(vertices[i+1]*0.5f+0.5f));
+			}
+
+			m->vertices.push_back(_top*vertices[i] + top);
+			m->vertices.push_back(_base*vertices[i] + base);
+			m->vertices.push_back(_base*vertices[i+1] + base);
+
+			m->normals.push_back(vertices[i]);
+			m->normals.push_back(vertices[i]);
+			m->normals.push_back(vertices[i+1]);
+
+				m->texCoords.push_back(vec2(vertices[i]*0.5f+0.5f));
+				m->texCoords.push_back(vec2(vertices[i]*0.5f+0.5f));
+				m->texCoords.push_back(vec2(vertices[i+1]*0.5f+0.5f));
+
+
+			m->vertices.push_back(_base*vertices[i+1] + base);
+			m->vertices.push_back(_top*vertices[i+1] + top);
+			m->vertices.push_back(_top*vertices[i] + top);
+
+			m->normals.push_back(vertices[i+1]);
+			m->normals.push_back(vertices[i+1]);
+			m->normals.push_back(vertices[i]);
+
+			m->texCoords.push_back(vec2(0.0f));
+			m->texCoords.push_back(vec2(0.0f));
+			m->texCoords.push_back(vec2(0.0f));
+		}
+
+		m->submeshes.push_back(Submesh(GL_TRIANGLES, 0, m->vertices.size()));
+
+	m->loadBuffers();
+
+	return MeshRef(m);
+}
+*/

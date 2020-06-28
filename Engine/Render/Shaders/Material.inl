@@ -6,6 +6,7 @@
 
 #include "Render/Shaders/Material.h"
 #include "Render/Shaders/Shader.inl"
+#include "Render/Textures/Texture.h"
 
 bool Material::has_pass(RenderPass::Type pass) const
 {
@@ -14,7 +15,7 @@ bool Material::has_pass(RenderPass::Type pass) const
 }
 
 template <typename T>
-inline void Material::set(const std::string &name, T value)
+inline void Material::set(const std::string &name, const T &value)
 {
 	size_t loc = get_location(name);
 	if (loc != (size_t)-1)
@@ -22,14 +23,21 @@ inline void Material::set(const std::string &name, T value)
 }
 
 template <typename T>
-inline void Material::set(size_t location, T value)
+inline void Material::set(size_t location, const T &value)
 {
 	material_t *m = materials.get<0>(id());
 	memcpy(m->uniforms.data() + location, &value, sizeof(T));
 }
 
+template <>
+inline void Material::set(size_t location, const Texture &value)
+{
+	material_t *m = materials.get<0>(id());
+	*(uint32_t*)(m->uniforms.data() + location) = value.handle();
+}
+
 template <typename T>
-inline void Material::set(const std::string &name, T *values, size_t num)
+inline void Material::set(const std::string &name, const T *values, size_t num)
 {
 	size_t loc = get_location(name);
 	if (loc != (size_t)-1)
@@ -37,7 +45,7 @@ inline void Material::set(const std::string &name, T *values, size_t num)
 }
 
 template <typename T>
-inline void Material::set(size_t location, T *values, size_t num)
+inline void Material::set(size_t location, const T *values, size_t num)
 {
 	material_t *m = materials.get<0>(id());
 	memcpy(m->uniforms.data() + location, values, sizeof(T) * num);

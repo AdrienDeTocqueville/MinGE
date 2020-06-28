@@ -17,10 +17,7 @@ struct asset_tab_t
 {
 	const char *name;
 	void (*callback)(void*);
-	union {
-		UID32 uid32;
-		UID64 uid64;
-	} selected;
+	UID32 selected;
 };
 static std::vector<asset_tab_t> asset_tabs;
 
@@ -38,7 +35,7 @@ ImVec2 GetButtonSize(const char *label)
 }
 bool ButtonCentered(const char *label)
 {
-	SetCursorPosX((GetWindowSize().x - GetButtonSize(label).x) * 0.5);
+	SetCursorPosX((GetWindowSize().x - GetButtonSize(label).x) * 0.5f);
 	return Button(label);
 }
 }
@@ -209,11 +206,10 @@ void Editor::init()
 	UI::create_window(assets_win, 0);
 	UI::create_window(systems_win, 0);
 
-	asset_tabs.push_back((asset_tab_t){"Entity", (void(*)(void*))entity_tab, Entity::none});
-	asset_tabs.push_back((asset_tab_t){"Mesh", (void(*)(void*))mesh_tab, Mesh::none});
-	asset_tabs.push_back((asset_tab_t){"Material", (void(*)(void*))material_tab, Material::none});
-	asset_tabs.push_back((asset_tab_t){"Texture", (void(*)(void*))texture_tab});
-	asset_tabs.back().selected.uid64 = Texture::none;
+	asset_tabs.push_back(asset_tab_t {"Entity", (void(*)(void*))entity_tab, Entity::none});
+	asset_tabs.push_back(asset_tab_t {"Mesh", (void(*)(void*))mesh_tab, Mesh::none});
+	asset_tabs.push_back(asset_tab_t {"Material", (void(*)(void*))material_tab, Material::none});
+	asset_tabs.push_back(asset_tab_t {"Texture", (void(*)(void*))texture_tab, Texture::none});
 }
 
 void Editor::register_system_editor(const struct system_editor_t &editor)
@@ -231,6 +227,9 @@ void Editor::open_scene(const char *path)
 	// Register builtin systems
 	Engine::register_system_type(TransformSystem::type);
 	Engine::register_system_type(GraphicsSystem::type);
+
+	Engine::register_asset_type(Mesh::type);
+	Engine::register_asset_type(Texture::type);
 
 	register_system_editor(TransformSystemUI::editor);
 	register_system_editor(GraphicsSystemUI::editor);

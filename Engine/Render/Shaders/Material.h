@@ -43,16 +43,19 @@ struct Material: public UID32
 	size_t get_location(const std::string &name) const;
 
 	template <typename T>
-	inline void set(const std::string &name, T value);
+	inline void set(const std::string &name, const T &value);
 
 	template <typename T>
-	inline void set(size_t location, T value);
+	inline void set(size_t location, const T &value);
+
+	template<>
+	inline void set(size_t location, const struct Texture &value);
 
 	template <typename T>
-	inline void set(const std::string &name, T *values, size_t num);
+	inline void set(const std::string &name, const T *values, size_t num);
 
 	template <typename T>
-	inline void set(size_t location, T *values, size_t num);
+	inline void set(size_t location, const T *values, size_t num);
 
 
 	static Material create(class Shader *shader);

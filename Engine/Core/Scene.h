@@ -1,5 +1,7 @@
 #pragma once
 
+#include "IO/json_fwd.hpp"
+
 struct Scene
 {
 	struct system_ref_t
@@ -34,6 +36,9 @@ struct Scene
 private:
 	Scene(const Scene &s) = delete;
 	void reserve(int count);
+
+	void load_assets(nlohmann::json &scene);
+	void save_assets(nlohmann::json &scene) const;
 
 	template<typename... R>
 	void set_system_rec(const char *name, void *instance, R... refs)

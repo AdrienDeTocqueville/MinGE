@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <assert.h>
+#include "Core/Utils.h"
 #include "Memory/Memory.h"
 
 namespace multi_array
@@ -65,7 +65,7 @@ struct multi_array_t
 
 	template<int i> auto get(uint32_t index)
 	{
-		assert((index != 0 && index <= size) && "Invalid index");
+		ASSERT(index != 0 && index <= size, "Invalid index");
 		return multi_array::get<i>(data) + index;
 	}
 
