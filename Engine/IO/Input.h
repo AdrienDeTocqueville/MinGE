@@ -53,10 +53,15 @@ enum key_t {
 };
 }
 
+struct SDL_Window;
+
 struct Input
 {
 	// Window
-	static struct SDL_Window *window() { return win; }
+	static SDL_Window *create_window_centered(const char *title, vec2 ratio, int flags, int monitor = 0);
+	static SDL_Window *create_window_maximized(const char *title, int flags, int monitor = 0);
+
+	static SDL_Window *window() { return win; }
 	static void close_window();
 
 	static bool  window_closed() { return closed; }
@@ -91,12 +96,12 @@ struct Input
 
 private:
 	/// Methods (private)
-	static void init(struct SDL_Window *window);
+	static void init(SDL_Window *window);
 	static void poll_events();
 	static void on_resize_window_event();
 
 	/// Attributes (private)
-	static struct SDL_Window *win;
+	static SDL_Window *win;
 
 	static ivec2 dim, center;
 

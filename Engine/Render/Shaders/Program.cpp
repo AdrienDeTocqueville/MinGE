@@ -27,7 +27,7 @@ Program::~Program()
 	GL::DeleteProgram(program);
 }
 
-static bool check_compile(unsigned shader, const std::string &file)
+static bool check_compile(unsigned shader, const char *file)
 {
 	GLint success;
 	glCheck(glGetShaderiv(shader, GL_COMPILE_STATUS, &success));
@@ -46,7 +46,7 @@ static bool check_compile(unsigned shader, const std::string &file)
 		std::cout << std::endl << error;
 		delete[] error;
 #endif
-		Error::add(Error::OPENGL, "Failed to compile shader: " + file);
+		Error::addf(Error::OPENGL, "Failed to compile shader: %s", file);
 	}
 	return success == GL_TRUE;
 }
@@ -56,7 +56,7 @@ static unsigned compile(unsigned type, const std::string &path, const char *pass
 	std::ifstream file("Assets/Shaders/" + path);
 	if (!file)
 	{
-		Error::add(Error::FILE_NOT_FOUND, "Shader file not found: " + path);
+		Error::addf(Error::FILE_NOT_FOUND, "Shader file not found: %s", path.c_str());
 		return 0;
 	}
 
@@ -89,11 +89,18 @@ static unsigned compile(unsigned type, const std::string &path, const char *pass
 
 	free(final_source);
 
-	if (!check_compile(shader, path))
+	if (!check_compile(shader, path.c_str()))
 	{
 		glCheck(glDeleteShader(shader));
 		return 0;
 	}
+
+	size_t start = path.rfind('/');
+	if (start == std::string::npos) start = 0;
+	else start++;
+	size_t end = path.find('.', start);
+	size_t length = end == std::string::npos ? -1 : end - start;
+	glCheck(glObjectLabel(GL_SHADER, shader, length, path.c_str() + start));
 
 	return shader;
 }
@@ -113,8 +120,7 @@ static bool check_link(unsigned program)
 		glCheck(glGetShaderInfoLog(program, stringSize, &stringSize, error));
 		error[stringSize] = '\0';
 
-		std::string errorString(reinterpret_cast<char*>(error));
-		Error::add(Error::OPENGL, "Linker error: " + errorString);
+		Error::addf(Error::OPENGL, "Linker error: %s", error);
 
 		delete[] error;
 	}
@@ -139,7 +145,6 @@ static unsigned link(const Stages &stages)
 		if (shaders[i])
 			glCheck(glDetachShader(program, shaders[i]));
 	}
-
 
 	if (!check_link(program))
 	{
@@ -206,4 +211,9 @@ Program::Program(const struct ShaderSources &sources, RenderPass::Type pass, con
 	auto shaders = (unsigned*)&stages;
 	for (int i(0); i < NUM_STAGES; i++)
 		glCheck(glDeleteShader(shaders[i]));
+}
+
+void Program::label(const char *name, size_t len)
+{
+	glCheck(glObjectLabel(GL_PROGRAM, program, len, name));
 }

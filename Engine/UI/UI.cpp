@@ -214,6 +214,8 @@ void UI::flush()
 	MICROPROFILE_SCOPEI("RENDER_ENGINE", "UI");
 	MICROPROFILE_SCOPEGPUI("imgui", -1);
 
+	GL::BindFramebuffer(0);
+
 	ImGui::Render();
 	ImGui_ImplSDL2_UpdateMouseCursor();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

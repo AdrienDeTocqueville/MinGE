@@ -11,6 +11,7 @@
 
 #include "Transform/Transform.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/PostProcessing.h"
 
 #include "Render/Debug.h"
 #include "Render/Textures/Texture.h"

@@ -101,6 +101,7 @@ void list_uniforms(material_t *material, Shader *shader)
 		Program::Uniform *uniform = NULL;
 		for (int p = 0; p < RenderPass::Count; p++)
 		{
+			if (passes[p] != NULL)
 			for (auto &uni : passes[p]->uniforms)
 			{
 				if (uni.offset == it.second)
@@ -114,6 +115,7 @@ void list_uniforms(material_t *material, Shader *shader)
 
 display_uniform:
 		const void *data = material->uniforms.data() + uniform->offset;
+		Texture *t = (Texture*)data;
 
 		switch (uniform->type)
 		{
@@ -132,11 +134,8 @@ display_uniform:
 		case GL_FLOAT_MAT3:
 		case GL_FLOAT_MAT4:
 			break;
-		case GL_SAMPLER_2D: {
-			Texture t = Texture::find_by_handle(*(uint32_t*)data);
-			if (texture_dropdown(it.first.c_str(), &t))
-				*(uint32_t*)data = t.handle();
-			}
+		case GL_SAMPLER_2D:
+			texture_dropdown(it.first.c_str(), t);
 			break;
 		}
 	}

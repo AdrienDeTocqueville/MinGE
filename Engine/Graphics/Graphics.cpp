@@ -43,7 +43,6 @@ static void init_indices(uint32_t *__restrict indices, const GraphicsSystem::ren
 static void update(GraphicsSystem *self)
 {
 	Engine::read_lock(self);
-	material_t::bound = nullptr;
 
 	auto renderer_count = self->renderers.size;
 	auto *renderers = self->renderers.get<0>() + 1;
@@ -64,11 +63,10 @@ static void update(GraphicsSystem *self)
 		self->draw_order_indices = (uint32_t*)realloc(self->draw_order_indices, self->prev_index_count * sizeof(uint32_t));
 		goto recompute_indices;
 	}
-	// TODO: find a correct condition for this
-	// (when any mesh(not renderer) is added or changed)
-	//if (self->prev_renderer_count != renderer_count)
+	if (self->prev_renderer_count & (-1))
 	{
 		recompute_indices:
+		self->prev_renderer_count &= ~(-1);
 		init_indices(self->draw_order_indices, renderers, renderer_count);
 		for (uint32_t i = 1; i < camera_count; i++)
 			memcpy(self->draw_order_indices + i * submeshes.count, self->draw_order_indices, submeshes.count * sizeof(uint32_t));
@@ -122,7 +120,7 @@ static void update(GraphicsSystem *self)
 		Engine::read_unlock(transforms);
 	}
 
-	/// Build command buffers
+	/// Build command buffer
 
 	Sphere sphere;
 	auto &cmd = RenderEngine::get_cmd_buffer(self->cmd_buffer);
@@ -213,14 +211,24 @@ static void update(GraphicsSystem *self)
 				Debug::sphere(sphere, color);
 				color += vec3(0, 1, 0);
 			}
-			continue;
 		}
 
 		/// Submit to backend
 		{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "submit");
 
 		cmd.setup_camera(cam_data);
+		/*
+		cmd.set_framebuffer(cam->fbo_depth, vec4(1.0f), true);
+		cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Depth, cmd_count);
+		cmd.set_framebuffer(cam->fbo_forward, cam->clear_color, false);
 		cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Forward, cmd_count);
+		*/
+		
+		cmd.set_framebuffer(cam->fbo_forward, cam->clear_color, true);
+		cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Forward, cmd_count);
+
+		//cmd.set_framebuffer(0, cam->clear_color, true);
+		//cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Forward, cmd_count);
 		}
 	}
 	Engine::read_unlock(self);
@@ -234,28 +242,16 @@ static void on_destroy_entity(GraphicsSystem *self, Entity e)
 
 static void on_resize_window(GraphicsSystem *self)
 {
-	vec2 ws = Input::window_size();
-
 	auto *cameras = self->cameras.get<0>() + 1;
 	auto *camera_datas = self->cameras.get<1>() + 1;
 	auto camera_count = self->cameras.size;
 
 	for (uint32_t i = 0; i < camera_count; i++)
-	{
-		vec4 viewport = cameras[i].ss_viewport;
-		camera_datas[i].viewport = ivec4(viewport.x * ws.x,
-			viewport.y * ws.y,
-			viewport.z * ws.x,
-			viewport.w * ws.y
-		);
-		self->update_projection(i + 1);
-	}
+		self->resize_rt(i + 1);
 }
 
 const system_type_t GraphicsSystem::type = []() {
-	system_type_t t{NULL};
-	t.name = "GraphicsSystem";
-	t.size = sizeof(GraphicsSystem);
+	system_type_t t = INIT_SYSTEM_TYPE(GraphicsSystem);
 
 	t.destroy = [](void *system) { ((GraphicsSystem*)system)->~GraphicsSystem(); };
 	t.update = (decltype(t.update))update;

@@ -48,9 +48,6 @@ struct Material: public UID32
 	template <typename T>
 	inline void set(size_t location, const T &value);
 
-	template<>
-	inline void set(size_t location, const struct Texture &value);
-
 	template <typename T>
 	inline void set(const std::string &name, const T *values, size_t num);
 

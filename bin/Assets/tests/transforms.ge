@@ -1,4 +1,5 @@
 {
+    "assets": {},
     "entities": [
         {
             "name": "e1",
@@ -38,8 +39,6 @@
         }
     ],
     "max_entity": 9,
-    "max_mesh": 0,
-    "meshes": [],
     "systems": {
         "world": {
             "data": {

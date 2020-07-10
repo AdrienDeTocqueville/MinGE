@@ -145,6 +145,7 @@ void Engine::clear()
 
 	systems.clear();
 	system_types.clear();
+	asset_types.clear();
 
 	// Destroy entities
 	Entity::clear();

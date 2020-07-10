@@ -1,40 +1,36 @@
 #include "Profiler/profiler.h"
 #include "Graphics/Graphics.h"
+#include "Render/GLDriver.h"
 #include "Render/CommandBuffer.h"
+#include "Render/RenderEngine.h"
 #include "IO/Input.h"
+#include "Utility/stb_sprintf.h"
+#include "Utility/Error.h"
 
-Camera GraphicsSystem::add_camera(Entity entity, float fov, float near_plane, float far_plane,
-	bool orthographic, vec4 viewport, vec3 clear_color, unsigned clear_flags)
+uint32_t GraphicsSystem::init_camera(Entity entity, float fov, float near_plane, float far_plane,
+	bool orthographic, vec2 size_scale, vec4 clear_color, Texture color, Texture depth)
 {
 	uint32_t i = cameras.add();
 	indices.map<0>(entity, i);
 
-
 	camera_t *cam = cameras.get<0>() + i;
 
-	cam->fov	= fov;
 	cam->near_plane	= near_plane;
 	cam->far_plane	= far_plane;
-	cam->ortho	= orthographic;
+	cam->clear_color= clear_color;
+	cam->fbo_depth  = 0;
+	cam->fbo_forward= 0;
+	cam->fov	= fov;
 	cam->entity	= entity;
-	cam->ss_viewport= viewport;
-
+	cam->size_scale = size_scale;
+	cam->ortho	= orthographic;
+	cam->color_texture = color;
+	cam->depth_texture = depth;
 
 	camera_data_t *cam_data = cameras.get<1>() + i;
+	cam_data->resolution = ivec2(0);
 
-	cam_data->fbo		= 0;
-	cam_data->clear_flags	= clear_flags;
-	cam_data->clear_color	= vec4(clear_color, 0.0f);
-
-	vec2 ws = Input::window_size();
-	cam_data->viewport = ivec4(viewport.x * ws.x,
-		viewport.y * ws.y,
-		viewport.z * ws.x,
-		viewport.w * ws.y
-	);
-
-	update_projection(i);
-	return {i, 0, *this};
+	return i;
 }
 
 Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
@@ -47,7 +43,7 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 
 	update_submeshes(i, false);
 
-	return {i, 0, *this};
+	return {entity.id(), 0, *this};
 }
 
 Light GraphicsSystem::add_point_light(Entity entity, vec3 color)
@@ -57,9 +53,93 @@ Light GraphicsSystem::add_point_light(Entity entity, vec3 color)
 
 	point_lights.emplace_back(point_light_t { color, entity });
 
-	return {i, 0, *this};
+	return { entity.id(), 0, *this};
 }
 
+
+GLuint validate_framebuffer(GLuint fbo)
+{
+	int val = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (val != GL_FRAMEBUFFER_COMPLETE)
+	{
+		static char err[256];
+		const char *str;
+		switch (val)
+		{
+		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: str = "Incomplete attachment"; break;
+		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: str = "Incomplete draw buffer"; break;
+		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: str = "Incomplete read buffer"; break;
+		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: str = "Missing attachment"; break;
+		case GL_FRAMEBUFFER_UNSUPPORTED: str = "Framebuffer unsupported"; break;
+		default: str = "Unknow error code"; break;
+		}
+		stbsp_snprintf(err, sizeof(err), "Failed to create framebuffer -> %s (%d).", str, val);
+		Error::add(Error::OPENGL, err);
+		GL::DeleteFramebuffer(fbo);
+		return 0;
+	}
+	return fbo;
+}
+
+GLuint create_framebuffer(render_texture_t depth_buffer, GLuint color_texture)
+{
+	GLuint fbo = GL::GenFramebuffer();
+	GL::BindFramebuffer(fbo);
+
+	GLenum draw_buffers[1] = { GL_COLOR_ATTACHMENT0 };
+	glCheck(glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, color_texture, 0));
+	glCheck(glDrawBuffers(1, draw_buffers));
+
+	glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer.handle));
+
+	return validate_framebuffer(fbo);
+}
+
+static inline bool is_smaller(const vec2 &a, const vec2 &b)
+{
+	return a.x < b.x || a.y < b.y;
+}
+
+void GraphicsSystem::resize_rt(uint32_t i)
+{
+	camera_t *cam = cameras.get<0>() + i;
+	camera_data_t *cam_data = cameras.get<1>() + i;
+
+	vec2 ws = Input::window_size();
+	vec2 size_scale = cam->size_scale;
+	ivec2 resolution = ivec2(size_scale.x * ws.x, size_scale.y * ws.y);
+
+	if (resolution == cam_data->resolution)
+		return;
+
+	cam_data->resolution = resolution;
+
+	// Create texture attachments
+	static char uri[256];
+	int c = stbsp_snprintf(uri, sizeof(uri), "asset:texture?"
+		"wrap_s=clamp&wrap_t=clamp&"
+		"min_filter=nearest&max_filter=nearest&"
+		"scale=%g,%g&format=", size_scale.x, size_scale.y);
+
+	strcpy(uri + c, "r32f");
+	if (cam->depth_texture == Texture::none) cam->depth_texture = Texture::load(uri);
+	else if (is_smaller(cam->depth_texture.size(), resolution)) cam->depth_texture.reload(uri);
+
+	strcpy(uri + c, "rgba16f");
+	if (cam->color_texture == Texture::none) cam->color_texture = Texture::load(uri);
+	else if (is_smaller(cam->color_texture.size(), resolution)) cam->color_texture.reload(uri);
+
+	cam->depth_buffer.create(resolution, render_texture_t::Format::DEPTH24_STENCIL8);
+
+	// Create framebuffers
+	if (cam->fbo_depth)   GL::DeleteFramebuffer(cam->fbo_depth);
+	if (cam->fbo_forward) GL::DeleteFramebuffer(cam->fbo_forward);
+	cam->fbo_depth   = create_framebuffer(cam->depth_buffer, cam->depth_texture.handle());
+	cam->fbo_forward = create_framebuffer(cam->depth_buffer, cam->color_texture.handle());
+
+	// Compute projection matrix
+	update_projection(i);
+}
 
 void GraphicsSystem::update_projection(uint32_t i)
 {
@@ -69,12 +149,12 @@ void GraphicsSystem::update_projection(uint32_t i)
 	if (cam->ortho)
 	{
 		float half_width = cam->fov * 0.5f;
-		float half_height = half_width * cam_data->viewport.w / (float)cam_data->viewport.z;
+		float half_height = half_width * cam_data->resolution.y / (float)cam_data->resolution.x;
 		cam->projection = ortho(-half_width, half_width, -half_height, half_height, cam->near_plane, cam->far_plane);
 	}
 	else
 	{
-		float aspect_ratio = (float)cam_data->viewport.z / (float)cam_data->viewport.w;
+		float aspect_ratio = (float)cam_data->resolution.x / (float)cam_data->resolution.y;
 		cam->projection = perspective(glm::radians(cam->fov), aspect_ratio,
 			cam->near_plane, cam->far_plane);
 	}
@@ -95,7 +175,7 @@ void GraphicsSystem::update_submeshes(uint32_t i, bool remove_previous)
 		for (uint32_t s = 0; s < subs.count; s++)
 		{
 			submeshes[first+s].submesh = Mesh::submeshes[subs.first + s];
-			submeshes[first+s].material = 2; // TODO: default material
+			submeshes[first+s].material = RenderEngine::default_material.id();
 			submeshes[first+s].renderer = i - 1;
 		}
 
@@ -104,4 +184,7 @@ void GraphicsSystem::update_submeshes(uint32_t i, bool remove_previous)
 	}
 	else
 		r->first_submesh = r->last_submesh = submeshes.invalid_id();
+
+	// Mark draw_order_indices as dirty
+	prev_renderer_count |= -1;
 }

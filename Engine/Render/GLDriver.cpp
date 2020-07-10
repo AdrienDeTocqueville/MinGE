@@ -38,8 +38,8 @@ void GL::init()
 
 	if (GLenum error = glewInit() != GLEW_OK)
 	{
-		std::string errorString(reinterpret_cast<const char*>(glewGetErrorString(error)));
-		Error::add(Error::OPENGL, "glewInit() -> Failed with error: " + errorString);
+		Error::addf(Error::OPENGL, "glewInit() -> Failed with error: %s", glewGetErrorString(error));
+		exit(0);
 	}
 
 #ifdef DEBUG
@@ -56,7 +56,7 @@ void GL::init()
 	printf("Opengl version: (%s)\n", glGetString(GL_VERSION));
 	printf("GLSL   version: (%s)\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 #endif
-	
+
 	glDepthFunc(GL_LEQUAL);
 	glCullFace(GL_BACK);
 	glEnable(GL_LINE_SMOOTH);

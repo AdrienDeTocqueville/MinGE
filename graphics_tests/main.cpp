@@ -11,22 +11,22 @@ int main(int, char**)
 	std::cout << "  -- MinGE --" << std::endl;
 
 	/// Create window
-	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-	SDL_Window *window = SDL_CreateWindow("MinGE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1440, 810, window_flags);
-
-	SDL_SetWindowPosition(window, -1920 + (1920-1440)/2, 350);
+	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Window *window = Input::create_window_centered("MinGE", vec2(0.66f),
+		SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE, 1);
 
 	/// Init engine
 	Engine::init(window);
 
 	Engine::register_system_type(TransformSystem::type);
 	Engine::register_system_type(GraphicsSystem::type);
+	Engine::register_system_type(PostProcessingSystem::type);
 	Engine::register_system_type(CameraControl::type);
 
 	Engine::register_asset_type(Mesh::type);
 	Engine::register_asset_type(Texture::type);
 
-	Texture::load("asset://Textures/0.png?format=srgb");
+	Texture::load("asset://Textures/0.png?format=srgb8");
 	Texture::load("asset://Textures/white.png");
 
 #ifdef SERIALIZE
@@ -38,8 +38,6 @@ int main(int, char**)
 	// Open assets
 	Mesh cube = Mesh::load("asset:mesh/cube?x=1&y=3&z=3");
 	Mesh sphere = Mesh::load("asset:mesh/sphere?radius=3");
-
-	//Texture texture = Texture::load("asset://Textures/0.png?format=srgb");
 
 	/// Create entities
 	Entity mesh_ent = Entity::create("Cube");
@@ -56,7 +54,7 @@ int main(int, char**)
 
 	Entity camera_ent = Entity::create("MainCamera");
 	transforms->add(camera_ent, vec3(5, 13, 10));
-	graphics->add_camera(camera_ent);
+	auto cam = graphics->add_camera(camera_ent);
 	transforms->get(camera_ent).look_at(vec3(5,0,0));
 	controller->add(camera_ent);
 
@@ -65,7 +63,11 @@ int main(int, char**)
 	graphics->add_camera(camera_ent, 70.0f, 2.0f, 8.0f);
 	controller->add(camera_ent);
 
-	Scene s("transforms", transforms, "graphics", graphics);
+	Texture output_color = cam.color_texture();
+	auto postproc = new(Engine::alloc_system("PostProcessingSystem")) PostProcessingSystem(graphics, output_color);
+
+
+	Scene s("transforms", transforms, "graphics", graphics, "post-processing", postproc);
 	s.save("Assets/tests/graphics_test.ge");
 
 #else

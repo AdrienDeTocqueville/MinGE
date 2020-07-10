@@ -57,7 +57,7 @@ private:
 	static void setup_builtins();
 	static void add_builtin(std::string name, unsigned type);
 
-	bool load(const std::string &path);
+	bool load_json(const char *path);
 	void load_uniforms(struct Program *prgm);
 	Shader *reload();
 
@@ -78,6 +78,9 @@ private:
 
 	uint32_t next_bit;
 	size_t uniform_offset;
+
+	const char *label;
+	int label_len;
 
 	static std::vector<uint8_t> builtins; // Contains < update_idx | type | data > sequenced for each builtin
 	static std::unordered_map<std::string, size_t> builtins_names;

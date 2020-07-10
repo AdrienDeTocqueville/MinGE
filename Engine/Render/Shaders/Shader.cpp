@@ -8,6 +8,7 @@
 #include "Render/Textures/Texture.h"
 #include "Render/GLDriver.h"
 
+#include "Utility/stb_sprintf.h"
 #include "Utility/Error.h"
 #include "Memory/Memory.h"
 #include "IO/json.hpp"
@@ -23,6 +24,7 @@ static const std::unordered_map<std::string, RenderPass::Type> pass_type = {
 };
 
 static const std::unordered_map<GLuint, uint8_t> uniform_type_size = {
+	{GL_INT,	(uint8_t)sizeof(int)},
 	{GL_FLOAT,	(uint8_t)sizeof(float)},
 	{GL_FLOAT_VEC2, (uint8_t)sizeof(vec2)},
 	{GL_FLOAT_VEC3, (uint8_t)sizeof(vec3)},
@@ -33,6 +35,7 @@ static const std::unordered_map<GLuint, uint8_t> uniform_type_size = {
 };
 
 static const std::unordered_map<GLuint, const char*> uniform_type_names = {
+	{GL_INT,	"int"},
 	{GL_FLOAT,	"float"},
 	{GL_FLOAT_VEC2, "vec2"},
 	{GL_FLOAT_VEC3, "vec3"},
@@ -64,20 +67,27 @@ Shader* Shader::load(const char *URI)
 	if (!uri.parse(URI))
 		return nullptr;
 
+	const char *path = uri.path.c_str();
 	if (!uri.on_disk)
 	{
-		if (uri.path == "shader/standard")	uri.path = "Assets/Shaders/standard.json";
-		if (uri.path == "shader/debug")		uri.path = "Assets/Shaders/debug.json";
+		static char buf[256];
+		const char *name = strchr(path, '/');
+		if (name++ == NULL) return nullptr;
+
+		stbsp_snprintf(buf, sizeof(buf), "Assets/Shaders/%s.json", name);
+		path = buf;
 	}
 
 	Shader *s = new Shader();
-	if (!s->load(uri.path))
+	uri.extract_label(URI, s->label, s->label_len);
+	if (!s->load_json(path))
 	{
 		delete s;
 		return nullptr;
 	}
 	shaders.emplace(URI, s);
 	s->URI = URI;
+
 	return s;
 }
 
@@ -129,7 +139,7 @@ Shader *Shader::reload()
 }
 
 // Variant stuff
-bool Shader::load(const std::string &path)
+bool Shader::load_json(const char *path)
 {
 	// Clear state
 	for (int i(0); i < RenderPass::Count; i++)
@@ -137,12 +147,11 @@ bool Shader::load(const std::string &path)
 	next_bit = 0;
 	uniform_offset = 0;
 
-
 	// Parse file
 	std::ifstream file(path);
 	if (!file)
 	{
-		Error::add(Error::FILE_NOT_FOUND, "Shader file not found: " + path);
+		Error::addf(Error::FILE_NOT_FOUND, "Shader file not found: %s", path);
 		return false;
 	}
 
@@ -287,6 +296,7 @@ uint32_t Shader::get_variant(uint32_t hash)
 		if (!found)
 		{
 			variant.passes[i] = new Program(passes[i].sources, (RenderPass::Type)i, defines.c_str(), builtins_decl.c_str());
+			variant.passes[i]->label(label, label_len);
 			load_uniforms(variant.passes[i]);
 		}
 	}

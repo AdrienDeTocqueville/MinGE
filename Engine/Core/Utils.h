@@ -35,7 +35,7 @@
 	std::cerr << str.str() << std::endl; \
 	DebugBreak(); std::cin.get(); exit(-1);  }
 #else
-#efine ASSERT(x, msg)	((void)0)
+#define ASSERT(x, msg)	((void)0)
 #endif
 
 #endif

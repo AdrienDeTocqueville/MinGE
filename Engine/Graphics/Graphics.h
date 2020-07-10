@@ -5,9 +5,10 @@
 #include "Core/Entity.h"
 #include "Core/System.h"
 
-#include "Render/GLDriver.h"
 #include "Render/Mesh/Mesh.h"
 #include "Render/Shaders/Material.h"
+#include "Render/Textures/Texture.h"
+#include "Render/Textures/RenderTexture.h"
 
 #include "Math/glm.h"
 #include "Structures/Bounds.h"
@@ -26,8 +27,12 @@ struct GraphicsSystem
 	~GraphicsSystem();
 
 	Camera add_camera(Entity entity, float fov = 70.0f, float near_plane = 0.1f, float far_plane = 1000.0f,
-		bool orthographic = false, vec4 viewport = vec4(0.0f,0.0f,1.0f,1.0f),
-		vec3 clear_color = vec3(0.0f), unsigned clear_flags = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		bool orthographic = false, vec2 size_scale = vec2(1), vec4 clear_color = vec4(0.0f))
+	{
+		resize_rt(init_camera(entity, fov, near_plane, far_plane, orthographic, size_scale,
+			clear_color, Texture::none, Texture::none));
+		return {entity.id(), 0, *this};
+	}
 
 	Renderer add_renderer(Entity entity, Mesh mesh);
 
@@ -42,15 +47,26 @@ struct GraphicsSystem
 	// Cameras
 	struct camera_t
 	{
+		vec3 center_point;
+		float near_plane;
+		vec3 up_vector;
+		float far_plane;
+
 		mat4 projection;
 		Frustum frustum;
-		float near_plane, far_plane;
-		vec3 center_point, up_vector;
+		vec4 clear_color;
+		uint32_t fbo_depth, fbo_forward;
 
 		float fov;
 		Entity entity;
-		vec4 ss_viewport;	// screen space (between 0 and 1)
+		vec2 size_scale;
+
 		bool ortho;
+
+		render_texture_t depth_buffer;
+		Texture depth_texture;
+		Texture color_texture;
+
 	};
 
 	soa_t<camera_t, struct camera_data_t> cameras; // TODO: don't need a whole page
@@ -93,6 +109,7 @@ struct GraphicsSystem
 	static const system_type_t type;
 
 
+	void resize_rt(uint32_t i);
 	void update_projection(uint32_t i);
 	void update_submeshes(uint32_t i, bool remove_previous);
 
@@ -100,6 +117,10 @@ struct GraphicsSystem
 	// Serialization
 	GraphicsSystem(const SerializationContext &ctx);
 	void save(SerializationContext &ctx) const;
+
+private:
+	uint32_t init_camera(Entity entity, float fov, float near_plane, float far_plane, bool orthographic,
+		vec2 size_scale, vec4 clear_color, Texture color, Texture depth);
 };
 
 #include "Graphics/GraphicsComponents.inl"

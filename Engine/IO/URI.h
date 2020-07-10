@@ -4,6 +4,8 @@
 #include <string>
 #include <sstream>
 
+#include "Math/glm.h"
+
 template<typename T>
 inline T parse_val(const std::string &val)
 {
@@ -21,6 +23,14 @@ inline bool parse_val(const std::string &val)
 	return parse_val<int>(val);
 }
 
+template<>
+inline vec2 parse_val(const std::string &val)
+{
+	vec2 res;
+	sscanf(val.c_str(), "%f,%f", &res.x, &res.y);
+	return res;
+}
+
 struct uri_t
 {
 	bool parse(const char *uri);
@@ -29,6 +39,17 @@ struct uri_t
 	{
 		auto it = params.find(param);
 		return it == params.end() ? NULL : it->second.data();
+	}
+
+	template<typename T>
+	const bool try_get(const std::string &param, T &output) const
+	{
+		auto it = params.find(param);
+		if (it == params.end())
+			return false;
+
+		output = parse_val<T>(it->second);
+		return true;
 	}
 
 	template<typename T>
@@ -41,4 +62,15 @@ struct uri_t
 	bool on_disk;
 	std::string path;
 	std::unordered_map<std::string, std::string> params;
+
+
+	void extract_label(const char *uri, const char *&label, int &len)
+	{
+		size_t start = path.rfind('/') + 1;
+		label = uri + strlen("asset:") + (on_disk ? 2 : 0) + start;
+
+		const char *end = strchr(label, '.');
+		if (end == NULL) len = path.size() - start;
+		else len = end - label;
+	}
 };

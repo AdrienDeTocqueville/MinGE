@@ -14,7 +14,10 @@
 
 #include "IO/Input.h"
 
+Material RenderEngine::default_material;
 static std::vector<cmd_buffer_t> buffers;
+
+GLuint empty_vao;
 
 void RenderEngine::init()
 {
@@ -28,15 +31,20 @@ void RenderEngine::init()
 	MicroProfileGpuInitGL();
 #endif
 
-	// TODO: destroy it
-	Material mat = Material::create(Shader::load("asset:shader/standard"));
-	mat.set("color", vec3(0.8f));
-	mat.set("metallic", 0.0f);
-	mat.set("roughness", 0.5f);
+	default_material = Material::create(Shader::load("asset:shader/standard"));
+	default_material.set("color", vec3(0.8f));
+	default_material.set("metallic", 0.0f);
+	default_material.set("roughness", 0.5f);
+
+	empty_vao = GL::GenVertexArray();
 }
 
 void RenderEngine::destroy()
 {
+	GL::DeleteVertexArray(empty_vao);
+
+	default_material.destroy();
+
 	UI::destroy();
 	Debug::destroy();
 
@@ -65,6 +73,8 @@ void RenderEngine::flush()
 {
 	MICROPROFILE_SCOPEI("RENDER_ENGINE", "flush");
 
+	material_t::bound = nullptr;
+
 	for (auto &cmd : buffers)
 	{
 		MICROPROFILE_SCOPEI("RENDER_ENGINE", "cmd_buffer");
@@ -72,7 +82,10 @@ void RenderEngine::flush()
 		cmd.flush();
 	}
 
-	// TODO: this will draw on the last camera
+	glDepthMask(GL_TRUE);
+	glDepthFunc(GL_LEQUAL);
+
+	GL::BindFramebuffer(0);
 	GL::Enable(GL::Blend);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	Debug::flush();
@@ -104,6 +117,14 @@ void RenderEngine::flush()
 
 uint32_t RenderEngine::create_cmd_buffer()
 {
+	for (int i = 0; i < buffers.size(); i++)
+	{
+		if (buffers[i].buffer == NULL)
+		{
+			new(&buffers[i]) cmd_buffer_t();
+			return i;
+		}
+	}
 	buffers.emplace_back();
 	return (uint32_t)buffers.size() - 1;
 }
@@ -116,4 +137,6 @@ cmd_buffer_t &RenderEngine::get_cmd_buffer(uint32_t i)
 void RenderEngine::destroy_cmd_buffer(uint32_t i)
 {
 	free(buffers[i].buffer);
+	buffers[i].buffer = NULL;
+	buffers[i].size = 0;
 }

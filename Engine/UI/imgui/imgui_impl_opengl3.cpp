@@ -223,6 +223,10 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
     glCheck(glVertexAttribPointer(g_AttribLocationVtxPos,   2, GL_FLOAT,         GL_FALSE, sizeof(ImDrawVert), (GLvoid*)IM_OFFSETOF(ImDrawVert, pos)));
     glCheck(glVertexAttribPointer(g_AttribLocationVtxUV,    2, GL_FLOAT,         GL_FALSE, sizeof(ImDrawVert), (GLvoid*)IM_OFFSETOF(ImDrawVert, uv)));
     glCheck(glVertexAttribPointer(g_AttribLocationVtxColor, 4, GL_UNSIGNED_BYTE, GL_TRUE,  sizeof(ImDrawVert), (GLvoid*)IM_OFFSETOF(ImDrawVert, col)));
+
+#ifndef IMGUI_IMPL_OPENGL_ES2
+    glCheck(glVertexArrayElementBuffer(vertex_array_object, g_ElementsHandle));
+#endif
 }
 
 // OpenGL3 Render function.
@@ -241,7 +245,7 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
     // The renderer would actually work without any VAO bound, but then our VertexAttrib calls would overwrite the default one currently bound.
     GLuint vertex_array_object = 0;
 #ifndef IMGUI_IMPL_OPENGL_ES2
-    glGenVertexArrays(1, &vertex_array_object);
+    vertex_array_object = GL::GenVertexArray();
 #endif
     ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
 
@@ -530,8 +534,8 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
     g_AttribLocationVtxColor = glGetAttribLocation(g_ShaderHandle, "Color");
 
     // Create buffers
-    glGenBuffers(1, &g_VboHandle);
-    glGenBuffers(1, &g_ElementsHandle);
+    g_VboHandle = GL::GenBuffer();
+    g_ElementsHandle = GL::GenBuffer();
 
     ImGui_ImplOpenGL3_CreateFontsTexture();
 

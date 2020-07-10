@@ -4,7 +4,10 @@
 
 namespace GraphicsSystemUI
 {
+	extern const system_editor_t editor;
+}
 
-extern const system_editor_t editor;
-
+namespace PostProcessingSystemUI
+{
+	extern const system_editor_t editor;
 }

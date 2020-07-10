@@ -47,11 +47,6 @@ static int get_icon(Error::Type type)
 
 bool Error::error = false;
 
-void Error::add(Error::Type type, std::string description)
-{
-	Error::add(type, description.c_str());
-}
-
 void Error::add(Error::Type type, const char *description)
 {
 	if (type >= Error::MAX)

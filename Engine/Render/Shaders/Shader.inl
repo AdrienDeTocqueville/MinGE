@@ -12,23 +12,27 @@ inline void set_uniform(int location, GLuint type, GLsizei num, const void *data
 {
 	switch (type)
 	{
-	case GL_FLOAT:
-		glCheck(glUniform1f(location, *(const float*)data));
-		break;
-	case GL_FLOAT_VEC2:
-		glCheck(glUniform2fv(location, num, (float*)data));
+	case GL_FLOAT_VEC4:
+		glCheck(glUniform4fv(location, num, (float*)data));
 		break;
 	case GL_FLOAT_VEC3:
 		glCheck(glUniform3fv(location, num, (float*)data));
 		break;
-	case GL_FLOAT_VEC4:
-		glCheck(glUniform4fv(location, num, (float*)data));
+	case GL_FLOAT:
+		glCheck(glUniform1f(location, *(const float*)data));
+		break;
+	case GL_FLOAT_MAT4:
+		glCheck(glUniformMatrix4fv(location, num, GL_FALSE, (float*)data));
+		break;
+
+	case GL_FLOAT_VEC2:
+		glCheck(glUniform2fv(location, num, (float*)data));
 		break;
 	case GL_FLOAT_MAT3:
 		glCheck(glUniformMatrix3fv(location, num, GL_FALSE, (float*)data));
 		break;
-	case GL_FLOAT_MAT4:
-		glCheck(glUniformMatrix4fv(location, num, GL_FALSE, (float*)data));
+	case GL_INT:
+		glCheck(glUniform1i(location, *(const int*)data));
 		break;
 	}
 }

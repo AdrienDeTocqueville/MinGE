@@ -12,6 +12,8 @@ struct Camera: UID32
 	SIMPLE_PROP(float, far_plane)
 	SIMPLE_PROP(float, fov)
 
+	SIMPLE_PROP(Texture, color_texture)
+
 private:
 	Camera(uint32_t id, uint32_t gen, GraphicsSystem &system):
 		UID32(id, gen), sys(system) {}

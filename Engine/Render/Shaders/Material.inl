@@ -6,7 +6,6 @@
 
 #include "Render/Shaders/Material.h"
 #include "Render/Shaders/Shader.inl"
-#include "Render/Textures/Texture.h"
 
 bool Material::has_pass(RenderPass::Type pass) const
 {
@@ -27,13 +26,6 @@ inline void Material::set(size_t location, const T &value)
 {
 	material_t *m = materials.get<0>(id());
 	memcpy(m->uniforms.data() + location, &value, sizeof(T));
-}
-
-template <>
-inline void Material::set(size_t location, const Texture &value)
-{
-	material_t *m = materials.get<0>(id());
-	*(uint32_t*)(m->uniforms.data() + location) = value.handle();
 }
 
 template <typename T>

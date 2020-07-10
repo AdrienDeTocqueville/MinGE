@@ -210,9 +210,7 @@ TransformSystem::TransformSystem(const SerializationContext &ctx):
 
 /// TYPE DEFINITION
 const system_type_t TransformSystem::type = []() {
-	system_type_t t{NULL};
-	t.name = "TransformSystem";
-	t.size = sizeof(TransformSystem);
+	system_type_t t = INIT_SYSTEM_TYPE(TransformSystem);
 
 	t.destroy = [](void *system) { ((TransformSystem*)system)->~TransformSystem(); };
 

@@ -4,7 +4,5 @@
 
 namespace TransformSystemUI
 {
-
-extern const system_editor_t editor;
-
+	extern const system_editor_t editor;
 }

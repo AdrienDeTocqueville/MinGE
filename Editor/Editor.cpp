@@ -4,6 +4,7 @@
 #include <Core/Engine.h>
 #include <Transform/Transform.h>
 #include <Graphics/Graphics.h>
+#include <Graphics/PostProcessing.h>
 
 #include "Editor.h"
 #include "Core/CoreUI.h"
@@ -28,10 +29,10 @@ namespace ImGui {
 ImVec2 CalcItemSize(ImVec2, float, float);
 ImVec2 GetButtonSize(const char *label)
 {
-    const ImGuiStyle &style = ImGui::GetStyle();
-    const ImVec2 label_size = ImGui::CalcTextSize(label, NULL, true);
+	const ImGuiStyle &style = ImGui::GetStyle();
+	const ImVec2 label_size = ImGui::CalcTextSize(label, NULL, true);
 
-    return ImGui::CalcItemSize(ImVec2(0, 0), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
+	return ImGui::CalcItemSize(ImVec2(0, 0), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
 }
 bool ButtonCentered(const char *label)
 {
@@ -120,10 +121,10 @@ void systems_win(uint32_t id)
 		{
 			auto &s = scene.get_systems()[i];
 			auto *t = Engine::get_system_type(s.instance);
-			if (ImGui::CollapsingHeader(s.name, ImGuiTreeNodeFlags_None))
+			auto *e = get_editor(t->name);
+			if (e->edit_system && ImGui::CollapsingHeader(s.name, ImGuiTreeNodeFlags_None))
 			{
-				// edit_system callback ?
-				ImGui::Text("Hello");
+				e->edit_system(s.instance);
 			}
 		}
 
@@ -205,11 +206,6 @@ void Editor::init()
 	UI::set_menubar(menubar);
 	UI::create_window(assets_win, 0);
 	UI::create_window(systems_win, 0);
-
-	asset_tabs.push_back(asset_tab_t {"Entity", (void(*)(void*))entity_tab, Entity::none});
-	asset_tabs.push_back(asset_tab_t {"Mesh", (void(*)(void*))mesh_tab, Mesh::none});
-	asset_tabs.push_back(asset_tab_t {"Material", (void(*)(void*))material_tab, Material::none});
-	asset_tabs.push_back(asset_tab_t {"Texture", (void(*)(void*))texture_tab, Texture::none});
 }
 
 void Editor::register_system_editor(const struct system_editor_t &editor)
@@ -223,16 +219,24 @@ void Editor::open_scene(const char *path)
 	clear_history();
 	Engine::clear();
 	system_editors.clear();
+	asset_tabs.clear();
 
 	// Register builtin systems
 	Engine::register_system_type(TransformSystem::type);
 	Engine::register_system_type(GraphicsSystem::type);
+	Engine::register_system_type(PostProcessingSystem::type);
 
 	Engine::register_asset_type(Mesh::type);
 	Engine::register_asset_type(Texture::type);
 
 	register_system_editor(TransformSystemUI::editor);
 	register_system_editor(GraphicsSystemUI::editor);
+	register_system_editor(PostProcessingSystemUI::editor);
+
+	asset_tabs.push_back(asset_tab_t {"Entity", (void(*)(void*))entity_tab, Entity::none});
+	asset_tabs.push_back(asset_tab_t {"Mesh", (void(*)(void*))mesh_tab, Mesh::none});
+	asset_tabs.push_back(asset_tab_t {"Material", (void(*)(void*))material_tab, Material::none});
+	asset_tabs.push_back(asset_tab_t {"Texture", (void(*)(void*))texture_tab, Texture::none});
 
 	if (scene.load(path))
 	{

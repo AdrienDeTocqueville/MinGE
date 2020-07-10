@@ -18,6 +18,7 @@ void Camera::set_##prop(type val) {	\
 SIMPLE_CAM_PROP(float, near_plane)
 SIMPLE_CAM_PROP(float, far_plane)
 SIMPLE_CAM_PROP(float, fov)
+SIMPLE_CAM_PROP(Texture, color_texture)
 
 #undef SIMPLE_CAM_PROP
 

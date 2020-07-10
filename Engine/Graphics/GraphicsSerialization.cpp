@@ -18,13 +18,15 @@ void GraphicsSystem::save(SerializationContext &ctx) const
 		{
 			json cam = json::object();
 
-			cam["fov"] = cameras.get<0>()[i].fov;
 			cam["near_plane"] = cameras.get<0>()[i].near_plane;
 			cam["far_plane"] = cameras.get<0>()[i].far_plane;
-			cam["viewport"] = ::to_json(cameras.get<0>()[i].ss_viewport);
+			cam["clear_color"] = ::to_json(cameras.get<0>()[i].clear_color);
+			cam["fov"] = cameras.get<0>()[i].fov;
+			cam["size_scale"] = ::to_json(cameras.get<0>()[i].size_scale);
 			cam["ortho"] = cameras.get<0>()[i].ortho;
-			cam["clear_color"] = ::to_json(cameras.get<1>()[i].clear_color);
-			cam["clear_flags"] = cameras.get<1>()[i].clear_flags;
+
+			cam["depth_texture"] = cameras.get<0>()[i].depth_texture.uint();
+			cam["color_texture"] = cameras.get<0>()[i].color_texture.uint();
 
 			cam_dump.push_back(cam);
 		}
@@ -70,8 +72,9 @@ GraphicsSystem::GraphicsSystem(const SerializationContext &ctx):
 
 		indices.map<0>(i, 0);
 		auto cam = cam_it.value();
-		add_camera(Entity::get(i), cam["fov"], cam["near_plane"], cam["far_plane"], cam["ortho"],
-			::to_vec4(cam["viewport"]), ::to_vec3(cam["clear_color"]), cam["clear_flags"]);
+		resize_rt(init_camera(Entity::get(i), cam["fov"], cam["near_plane"], cam["far_plane"],
+			cam["ortho"], ::to_vec2(cam["size_scale"]), ::to_vec4(cam["clear_color"]),
+			Texture::get(cam["color_texture"]), Texture::get(cam["depth_texture"])));
 		++cam_it;
 	}
 
@@ -86,6 +89,6 @@ GraphicsSystem::GraphicsSystem(const SerializationContext &ctx):
 		add_renderer(Entity::get(i), Mesh::get(renderer["mesh"]));
 		++renderer_it;
 	}
-	
+
 	cmd_buffer = RenderEngine::create_cmd_buffer();
 }

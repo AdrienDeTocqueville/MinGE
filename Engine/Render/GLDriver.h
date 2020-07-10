@@ -152,8 +152,8 @@ public:
 
 	static void BindElementBuffer(GLuint buf)
 	{
-		// Disabled because it doesn't work
-		// Probably because the bound buffer is modified by vao
+		// Disabled because it doesn't work with imgui
+		// Probably because imgui recreates the vao every frame
 		/*
 		if (buf != state.ebo || NO_DRIVER_STATE_CACHE)
 		{

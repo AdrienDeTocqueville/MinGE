@@ -24,7 +24,7 @@ void Mesh::destroy()
 	GL::DeleteBuffer(subs.vbo);
 	GL::DeleteBuffer(subs.ebo);
 	submeshes.remove(subs.first, subs.count);
-	
+
 	meshes.get<1>(id())->free();
 	free(meshes.get<2>()[id()]);
 	*meshes.get<2>(id()) = NULL;

@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "Utility/stb_sprintf.h"
 
 class Error
 {
@@ -15,11 +16,23 @@ public:
 		None, Retry, Ignore, Cancel
 	};
 
-	static void add(Error::Type type, std::string description);
 	static void add(Error::Type type, const char *description);
 	static bool check();
 
 	static Answer ask(Error::Type type, const char *question);
+
+	template<typename... S>
+	static void addf(Error::Type type, S... args)
+	{
+		static char err[256];
+		stbsp_snprintf(err, sizeof(err), args...);
+		Error::add(type, err);
+	}
+
+	static void add(Error::Type type, const std::string &description)
+	{
+		Error::add(type, description.c_str());
+	}
 
 private:
 	static bool error;

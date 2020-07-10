@@ -3,7 +3,7 @@
 #include "Core/Asset.h"
 #include "Core/UID.h"
 
-#include "Render/GLDriver.h"
+#include "Math/glm.h"
 #include "Structures/MultiArray.h"
 
 struct Texture: public UID32
@@ -17,6 +17,8 @@ struct Texture: public UID32
 	Texture() {}
 
 	void destroy();
+	void reload(const char *uri);
+
 	uint32_t handle() const { return id() ? textures.get<0>(id())->handle : 0; }
 	uvec2 size() const { return textures.get<0>(id())->size; }
 	const char *uri() const { return *textures.get<1>(id()); }
@@ -24,7 +26,6 @@ struct Texture: public UID32
 
 	static Texture load(const char *URI);
 	static Texture get(uint32_t i);
-	static Texture find_by_handle(uint32_t handle);
 	static void clear();
 
 	static const Texture none;

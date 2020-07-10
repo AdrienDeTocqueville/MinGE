@@ -1,6 +1,7 @@
 #include "IO/Input.h"
 
 #include "Profiler/profiler.h"
+#include "Utility/Error.h"
 
 #include <SDL2/SDL.h>
 #include <string.h>
@@ -197,6 +198,27 @@ void Input::poll_events()
 
 
 // Window
+SDL_Window *Input::create_window_centered(const char *title, vec2 ratio, int flags, int monitor)
+{
+	SDL_DisplayMode mode;
+	if (SDL_GetDesktopDisplayMode(monitor, &mode))
+	{
+		Error::addf(Error::MINGE, "Failed to get screen size: %s", SDL_GetError());
+		return NULL;
+	}
+
+	vec2 size = vec2(mode.w, mode.h) * ratio;
+
+	int pos = SDL_WINDOWPOS_CENTERED_DISPLAY(monitor);
+	flags |= SDL_WINDOW_OPENGL;
+	return SDL_CreateWindow(title, pos, pos, (int)size.x, (int)size.y, flags);
+}
+
+SDL_Window *Input::create_window_maximized(const char *title, int flags, int monitor)
+{
+	return create_window_centered(title, vec2(0.66f), flags | SDL_WINDOW_MAXIMIZED, monitor);
+}
+
 void Input::close_window()
 {
 	closed = true;

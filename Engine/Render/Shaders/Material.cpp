@@ -158,7 +158,7 @@ size_t Material::get_location(const std::string &name) const
 #ifdef DEBUG
 	if (it == shader->uniforms_names.end())
 	{
-		Error::add(Error::USER, "Unknown uniform: " + name);
+		Error::addf(Error::USER, "Unknown uniform: %s", name.c_str());
 		return -1;
 	}
 #endif
@@ -184,8 +184,10 @@ void material_t::bind(RenderPass::Type pass) const
 		if (var.type == GL_SAMPLER_2D)
 		{
 			GL::ActiveTexture(GL_TEXTURE0 + texture_slot);
-			glBindTexture(GL_TEXTURE_2D, *(uint32_t*)data);
 			set_uniform(var.location, texture_slot++);
+
+			Texture *t = (Texture*)data;
+			glBindTexture(GL_TEXTURE_2D, t->handle());
 		}
 		else
 			set_uniform(var.location, var.type, var.num, data);

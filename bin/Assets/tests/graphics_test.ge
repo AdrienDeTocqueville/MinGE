@@ -14,15 +14,31 @@
             ]
         },
         "Texture": {
-            "max_id": 2,
+            "max_id": 6,
             "textures": [
                 {
                     "uint": 1,
-                    "uri": "asset://Textures/0.png?format=srgb"
+                    "uri": "asset://Textures/0.png?format=srgb8"
                 },
                 {
                     "uint": 2,
                     "uri": "asset://Textures/white.png"
+                },
+                {
+                    "uint": 3,
+                    "uri": "asset:texture?wrap_s=clamp&wrap_t=clamp&min_filter=nearest&max_filter=nearest&scale=1,1&format=r32f"
+                },
+                {
+                    "uint": 4,
+                    "uri": "asset:texture?wrap_s=clamp&wrap_t=clamp&min_filter=nearest&max_filter=nearest&scale=1,1&format=rgba16f"
+                },
+                {
+                    "uint": 5,
+                    "uri": "asset:texture?wrap_s=clamp&wrap_t=clamp&min_filter=nearest&max_filter=nearest&scale=1,1&format=r32f"
+                },
+                {
+                    "uint": 6,
+                    "uri": "asset:texture?wrap_s=clamp&wrap_t=clamp&min_filter=nearest&max_filter=nearest&scale=1,1&format=rgba16f"
                 }
             ]
         }
@@ -61,14 +77,13 @@
                             0.0,
                             0.0
                         ],
-                        "clear_flags": 16640,
+                        "color_texture": 4,
+                        "depth_texture": 3,
                         "far_plane": 1000.0,
                         "fov": 70.0,
                         "near_plane": 0.10000000149011612,
                         "ortho": false,
-                        "viewport": [
-                            0.0,
-                            0.0,
+                        "size_scale": [
                             1.0,
                             1.0
                         ]
@@ -80,14 +95,13 @@
                             0.0,
                             0.0
                         ],
-                        "clear_flags": 16640,
+                        "color_texture": 6,
+                        "depth_texture": 5,
                         "far_plane": 8.0,
                         "fov": 70.0,
                         "near_plane": 2.0,
                         "ortho": false,
-                        "viewport": [
-                            0.0,
-                            0.0,
+                        "size_scale": [
                             1.0,
                             1.0
                         ]
@@ -135,6 +149,22 @@
                 "transforms"
             ],
             "type": "GraphicsSystem"
+        },
+        "post-processing": {
+            "data": {
+                "exposure": 1.0,
+                "ss_viewport": [
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0
+                ],
+                "texture": 4
+            },
+            "dependencies": [
+                "graphics"
+            ],
+            "type": "PostProcessingSystem"
         },
         "transforms": {
             "data": {

@@ -8,8 +8,8 @@
 static uint8_t *history = (uint8_t*)mem::alloc_page(mem::page_size);
 static uint32_t h_start = 0, h_end = 0, h_head = h_start;
 static ImGuiID active_item = 0;
-static const int reset_bit = 1 << 30;
-static const int next_reset_bit = 1 << 31;
+static const uint32_t reset_bit = 1 << 30;
+static const uint32_t next_reset_bit = 1 << 31;
 
 void Editor::clear_history()
 {

@@ -90,6 +90,11 @@ static inline nlohmann::json to_json(const mat<R, C, T, Q>& m)
 }
 
 // Deserialize
+static inline vec2 to_vec2(const nlohmann::json &x)
+{
+	return vec2(x[0].get<float>(), x[1].get<float>());
+}
+
 static inline vec3 to_vec3(const nlohmann::json &x)
 {
 	return vec3(x[0].get<float>(), x[1].get<float>(), x[2].get<float>());

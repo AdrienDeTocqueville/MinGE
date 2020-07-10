@@ -12,7 +12,7 @@
 		"macros": [ "SKINNED" ],
 		"stages": {
 			"vertex": "glsl/standard.vert",
-			"fragment": "glsl/empty.frag"
+			"fragment": "glsl/standard_depth.frag"
 		}
 	},
 
@@ -25,7 +25,7 @@
 
 		"stages": {
 			"vertex": "glsl/standard.vert",
-			"fragment": "glsl/standard.frag"
+			"fragment": "glsl/standard_forward.frag"
 		}
 	}
 }

@@ -11,6 +11,7 @@ struct Program
 {
 	Program(const struct ShaderSources &sources, RenderPass::Type pass, const char *defines, const char *builtins);
 	~Program();
+	void label(const char *name, size_t len);
 
 	unsigned program;
 

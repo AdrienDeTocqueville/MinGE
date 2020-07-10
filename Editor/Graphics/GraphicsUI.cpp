@@ -1,9 +1,11 @@
 #include <UI/UI.h>
-#include <Graphics/Graphics.h>
 
 #include "Editor/Editor.h"
 #include "Editor/Render/RenderUI.h"
 #include "Editor/Graphics/GraphicsUI.h"
+
+
+#include <Graphics/Graphics.h>
 
 namespace GraphicsSystemUI
 {
@@ -31,6 +33,7 @@ struct ActionData
 	Entity e;
 };
 
+#undef SIMPLE_PROP
 #define SIMPLE_PROP(label, widget, type, owner, prop) do { \
 void (*func)(type*,type*,ActionData*) = [](type *old, type *val, ActionData *d) { \
 	if (d->sys->has_##owner(d->e)) d->sys->get_##owner(d->e).set_##prop(*val); \
@@ -60,12 +63,42 @@ static void edit_entity(GraphicsSystem *sys, Entity e)
 }
 
 const system_editor_t editor = []() {
-	system_editor_t e{};
-	e.type_name = "GraphicsSystem";
+	system_editor_t e = INIT_SYSTEM_EDITOR(GraphicsSystem);
 
 	e.add_system = NULL;
 	e.add_component = decltype(e.add_component)(add_component);
 	e.edit_entity = decltype(e.edit_entity)(edit_entity);
+
+	return e;
+}();
+
+}
+
+
+#include <Graphics/PostProcessing.h>
+
+namespace PostProcessingSystemUI
+{
+
+#undef SIMPLE_PROP
+#define SIMPLE_PROP(label, widget, type, prop) do { \
+void (*func)(type*,type*,PostProcessingSystem**) = [](type *old, type *val, PostProcessingSystem **sys) { \
+	(*sys)->##prop = *val; \
+}; \
+Editor::field(label, widget, sys->prop, sys, func); \
+} while (0)
+
+static void edit_system(PostProcessingSystem *sys)
+{
+	SIMPLE_PROP("Enable HDR", ImGui::Checkbox, int, enable);
+	SIMPLE_PROP("Color buffer", texture_dropdown, Texture, texture);
+	SIMPLE_PROP("Exposure", ImGui::DragFloat, float, exposure);
+}
+
+const system_editor_t editor = []() {
+	system_editor_t e = INIT_SYSTEM_EDITOR(PostProcessingSystem);
+
+	e.edit_system = decltype(e.edit_system)(edit_system);
 
 	return e;
 }();

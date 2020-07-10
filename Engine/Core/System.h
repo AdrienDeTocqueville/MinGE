@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#define INIT_SYSTEM_TYPE(name) { #name, sizeof(name) }
+
 struct SerializationContext;
 struct system_type_t
 {
