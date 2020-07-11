@@ -12,6 +12,7 @@ struct Camera: UID32
 	SIMPLE_PROP(float, far_plane)
 	SIMPLE_PROP(float, fov)
 
+	SIMPLE_PROP(Texture, depth_texture)
 	SIMPLE_PROP(Texture, color_texture)
 
 	SIMPLE_PROP(const Frustum&, frustum)

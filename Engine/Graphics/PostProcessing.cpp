@@ -10,9 +10,9 @@
 
 static Material post_process;
 
-PostProcessingSystem::PostProcessingSystem(void *system_dependency, Texture color_texture, float exposure, vec4 ss_viewport):
+PostProcessingSystem::PostProcessingSystem(void *system_dependency, Texture depth_texture, Texture color_texture, float exposure, vec4 ss_viewport):
 	dependency(system_dependency), ss_viewport(ss_viewport),
-	enable(0), texture(color_texture), exposure(exposure)
+	enable(0), depth(depth_texture), color(color_texture), exposure(exposure)
 {
 	if (post_process == Material::none)
 		post_process = Material::create(Shader::load("asset:shader/postprocessing"));
@@ -28,7 +28,8 @@ PostProcessingSystem::~PostProcessingSystem()
 static void update(PostProcessingSystem *self)
 {
 	post_process.set("hdr", self->enable);
-	post_process.set("color_buffer", self->texture);
+	post_process.set("depth_buffer", self->depth);
+	post_process.set("color_buffer", self->color);
 	post_process.set("exposure", self->exposure);
 
 	ivec2 ws = Input::window_size();
@@ -43,14 +44,15 @@ static void update(PostProcessingSystem *self)
 using namespace nlohmann;
 
 PostProcessingSystem::PostProcessingSystem(const SerializationContext &ctx):
-	PostProcessingSystem(ctx.get_dependency(0), Texture::get(ctx["texture"]),
+	PostProcessingSystem(ctx.get_dependency(0), Texture::get(ctx["depth"]), Texture::get(ctx["color"]),
 		ctx["exposure"], ::to_vec4(ctx["ss_viewport"]))
 { }
 
 void PostProcessingSystem::save(SerializationContext &ctx) const
 {
 	json dump = json::object();
-	dump["texture"] = texture.uint();
+	dump["depth"] = depth.uint();
+	dump["color"] = color.uint();
 	dump["exposure"] = exposure;
 	dump["ss_viewport"] = ::to_json(ss_viewport);
 

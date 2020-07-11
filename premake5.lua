@@ -24,7 +24,7 @@ function build_settings()
 		defines "_CRT_NONSTDC_NO_DEPRECATE"
 
 	filter "configurations:debug"
-		defines { "DEBUG", "DRAWAABB" }
+		defines { "DEBUG", "PROFILE" }
 		symbols "on"
 		optimize "off"
 

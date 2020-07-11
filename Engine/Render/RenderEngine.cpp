@@ -76,11 +76,7 @@ void RenderEngine::flush()
 	material_t::bound = nullptr;
 
 	for (auto *cmd : buffers)
-	{
-		MICROPROFILE_SCOPEI("RENDER_ENGINE", "cmd_buffer");
-		MICROPROFILE_SCOPEGPUI("cmd_buffer", -1);
 		cmd->flush();
-	}
 
 	Debug::flush();
 	UI::flush();

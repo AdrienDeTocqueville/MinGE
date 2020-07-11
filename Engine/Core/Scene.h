@@ -23,6 +23,10 @@ struct Scene
 	bool load(const char *path);
 	bool save(const char *path, Overwrite mode = Overwrite::Yes) const;
 
+	template<typename... R>
+	void set_systems(R... refs)
+	{ clear(); reserve(sizeof...(R) / 2); set_system_rec(refs...); }
+
 	void add_system(char *name, void *instance);
 	void remove_system(const char *name);
 	void clear();

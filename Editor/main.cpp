@@ -18,7 +18,7 @@ int main(int, char**)
 	Engine::init(window);
 	Editor::init();
 
-	Editor::open_scene("Assets/tests/graphics_test.ge");
+	Editor::open_scene("Assets/tests/stress_scene.ge");
 
 	/// Main loop
 	while (!Input::window_closed())

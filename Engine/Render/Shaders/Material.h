@@ -23,7 +23,7 @@ struct material_t
 	std::vector<uint8_t> uniforms; // Contains < data > sequenced for each uniform
 
 
-	static const material_t *bound;
+	static const void *bound;
 };
 
 struct Material: public UID32

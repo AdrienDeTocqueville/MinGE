@@ -8,10 +8,12 @@ uint32_t *entity_mapper_realloc(uint32_t *indices, uint32_t &size, uint32_t new_
 {
 	new_size = mem::next_power_of_two(new_size + 1);
 	indices = (uint32_t*)realloc(indices, new_size * N * sizeof(uint32_t));
-	int i = 0;
-	do {
-		memset(indices + (size + new_size * i), 0, (new_size - size) * sizeof(uint32_t));
-	} while (++i != N);
+
+	for (int n = N; n > 0; n--)
+	{
+		memcpy(indices + new_size * (n - 1), indices + size * (n - 1), size * sizeof(uint32_t));
+		memset(indices + new_size * (n - 1) + size, 0, (new_size - size) * sizeof(uint32_t));
+	}
 
 	size = new_size;
 	return indices;

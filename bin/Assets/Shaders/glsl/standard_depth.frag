@@ -1,8 +1,8 @@
 in vec4 gl_FragCoord;
 
-out vec4 depth;
+out float depth;
 
 void main()
 {
-	depth = vec4(gl_FragCoord.z, 0.0, 0.0, 0.0);
+	depth = gl_FragCoord.z;
 }

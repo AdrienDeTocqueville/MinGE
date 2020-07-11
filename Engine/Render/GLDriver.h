@@ -18,6 +18,7 @@ void glCheckError(const char* file, unsigned int line, const char* expression);
 struct GL
 {
 	enum Capability { CullFace, Blend, DepthTest, ScissorTest, CAP_COUNT };
+	enum DepthFunc { Never, Always, Less, LessEqual, Equal, FUNC_COUNT };
 
 	typedef void *SDL_GLContext;
 	static SDL_GLContext context;
@@ -33,6 +34,8 @@ private:
 		vec4 clearColor;
 
 		bool caps[GL::CAP_COUNT];
+		bool depth_mask;
+		DepthFunc depth_func;
 	};
 
 	static GLState state;
@@ -43,6 +46,14 @@ private:
 			GL_CULL_FACE, GL_BLEND, GL_DEPTH_TEST, GL_SCISSOR_TEST
 		};
 		return gl_caps[cap];
+	}
+
+	static inline GLenum func_to_gl(DepthFunc func)
+	{
+		static const GLenum gl_funcs[GL::FUNC_COUNT] = {
+			GL_NEVER, GL_ALWAYS, GL_LESS, GL_LEQUAL, GL_EQUAL
+		};
+		return gl_funcs[func];
 	}
 
 	static void init();
@@ -67,6 +78,24 @@ public:
 		{
 			glDisable(cap_to_gl(cap));
 			state.caps[cap] = false;
+		}
+	}
+
+	static void DepthMask(bool enable)
+	{
+		if (state.depth_mask != enable)
+		{
+			glDepthMask(enable);
+			state.depth_mask = enable;
+		}
+	}
+
+	static void DepthFunc(DepthFunc func)
+	{
+		if (state.depth_func != func)
+		{
+			glDepthFunc(func_to_gl(func));
+			state.depth_func = func;
 		}
 	}
 

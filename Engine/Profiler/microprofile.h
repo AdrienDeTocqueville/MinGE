@@ -1661,6 +1661,7 @@ uint64_t MicroProfileEnter(MicroProfileToken nToken_)
 			if (nGroupMask & S.nGroupMaskGpu)
 			{
 				uint32_t nTimer = MicroProfileGpuInsertTimer(pLog->pContextGpu);
+				glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, S.TimerInfo[MicroProfileGetTimerIndex(nToken_)].pName);
 				if (nTimer != (uint32_t)-1)
 				{
 					MicroProfileLogPutGpu(nToken_, nTimer, MP_LOG_ENTER, pLog);
@@ -1853,6 +1854,7 @@ void MicroProfileLeave(MicroProfileToken nToken_, uint64_t nTickStart)
 
 			if (nGroupMask & S.nGroupMaskGpu)
 			{
+				glPopDebugGroup();
 				uint32_t nTimer = MicroProfileGpuInsertTimer(pLog->pContextGpu);
 				MicroProfileLogPutGpu(nToken_, nTimer, MP_LOG_LEAVE, pLog);
 				MicroProfileLogPutGpu(pLog->nLogIndex, MP_TICK(), MP_LOG_GPU_EXTRA, pLog);
@@ -4678,6 +4680,7 @@ uint32_t MicroProfileGpuInsertTimerGL(void* pContext)
 
 	if(!GPU.nTimestampBits && nIndex > 0)
 		glEndQuery(GL_TIME_ELAPSED);
+
 
 	if(GPU.nTimestampBits)
 		glQueryCounter(GPU.nQueries[nQueryIndex], GL_TIMESTAMP);

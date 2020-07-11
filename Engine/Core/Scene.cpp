@@ -1,3 +1,5 @@
+#include "Profiler/profiler.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -33,6 +35,8 @@ Scene::~Scene()
 
 bool Scene::load(const char *path)
 {
+	MICROPROFILE_SCOPEI("SCENE", "load");
+
 	std::ifstream file(path);
 	if (!file)
 	{
@@ -145,6 +149,8 @@ bool Scene::load(const char *path)
 
 bool Scene::save(const char *path, Overwrite mode) const
 {
+	MICROPROFILE_SCOPEI("SCENE", "save");
+
 	char tmp_buf[256];
 	json scene;
 

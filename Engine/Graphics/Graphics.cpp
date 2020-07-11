@@ -54,16 +54,20 @@ static void init_indices(uint32_t *__restrict indices, const GraphicsSystem::ren
 
 static void update(GraphicsSystem *self)
 {
+	{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "read_lock");
 	Engine::read_lock(self);
+	}
 
 	auto renderer_count = self->renderers.size;
 	auto *renderers = self->renderers.get<0>() + 1;
 	auto camera_count = self->cameras.size;
 	auto &submeshes = self->submeshes;
 
+	{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "set_counters");
 	MICROPROFILE_COUNTER_SET("GRAPHICS/renderers", renderer_count);
 	MICROPROFILE_COUNTER_SET("GRAPHICS/cameras", camera_count);
 	MICROPROFILE_COUNTER_SET("GRAPHICS/point_lights", self->point_lights.size());
+	}
 
 	/// Resize persistent alloc if needed
 	{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "realloc");
@@ -211,18 +215,10 @@ static void update(GraphicsSystem *self)
 		{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "submit");
 
 		cmd.setup_camera(cam_data);
-		/*
 		cmd.set_framebuffer(cam->fbo_depth, vec4(1.0f), true);
 		cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Depth, cmd_count);
 		cmd.set_framebuffer(cam->fbo_forward, cam->clear_color, false);
 		cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Forward, cmd_count);
-		*/
-
-		cmd.set_framebuffer(cam->fbo_forward, cam->clear_color, true);
-		cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Forward, cmd_count);
-
-		//cmd.set_framebuffer(0, cam->clear_color, true);
-		//cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Forward, cmd_count);
 		}
 	}
 

@@ -14,9 +14,6 @@ static void GLAPIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id
 
 void GL::init()
 {
-	memset(&state, 0, sizeof(GLState));
-	state.clearColor = vec4(0.0f);
-
 	// OpenGL 4.3 core
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
@@ -47,9 +44,10 @@ void GL::init()
 	if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
 	{
 		glEnable(GL_DEBUG_OUTPUT);
-		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		glDebugMessageCallback(glDebugOutput, nullptr);
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+		glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_PUSH_GROUP, GL_DONT_CARE, 0, nullptr, GL_FALSE);
+		glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_POP_GROUP, GL_DONT_CARE, 0, nullptr, GL_FALSE);
 	}
 
 	printf("\n");
@@ -57,7 +55,11 @@ void GL::init()
 	printf("GLSL   version: (%s)\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 #endif
 
-	glDepthFunc(GL_LEQUAL);
+	memset(&state, 0, sizeof(GLState));
+	state.clearColor = vec4(0.0f);
+	state.depth_mask = true;
+	state.depth_func = GL::Less;
+
 	glCullFace(GL_BACK);
 	glEnable(GL_LINE_SMOOTH);
 	glPointSize(7.0f);
@@ -123,8 +125,8 @@ void glCheckError(const char* file, unsigned int line, const char* expression)
 	}
 
 	// Log the error
-	std::cout << "An internal OpenGL call failed in "
-		<< fileString.substr(fileString.find_last_of("\\/") + 1) << "(" << line << ")."
+	std::cout << "\n\n > OpenGL error detected <"
+		//<< fileString.substr(fileString.find_last_of("\\/") + 1) << "(" << line << ")."
 		<< "\nExpression:\n   " << expression
 		<< "\nError description:\n   " << error << "\n   " << description << "\n"
 		<< std::endl;
@@ -134,7 +136,7 @@ void GLAPIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenu
 	const char *message, const void *userParam)
 {
 	// ignore non-significant error/warning codes
-	if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
+	//if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
 
 	std::cout << "---------------" << std::endl;
 	std::cout << "Debug message (" << id << "): " << message << std::endl;

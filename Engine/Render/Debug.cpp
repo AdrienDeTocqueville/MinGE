@@ -142,8 +142,6 @@ void Debug::destroy()
 
 void flush_points()
 {
-	MICROPROFILE_SCOPEGPUI("debug_points", -1);
-
 	GL::BindVertexArray(vao);
 	GL::BindVertexBuffer(vbo);
 
@@ -161,8 +159,6 @@ void flush_points()
 
 void flush_lines()
 {
-	MICROPROFILE_SCOPEGPUI("debug_lines", -1);
-
 	GL::BindVertexArray(vao);
 	GL::BindVertexBuffer(vbo);
 
@@ -195,10 +191,10 @@ void Debug::flush()
 	if (!points.size() && !lines.size())
 		return;
 
-	// Depth test doesn't work because post processing doesn't write to backbuffer
-	glDepthMask(GL_FALSE);
-	glDepthFunc(GL_LEQUAL);
-
+	GL::Enable(GL::DepthTest);
+	GL::DepthMask(false);
+	GL::DepthFunc(GL::LessEqual);
+	GL::Enable(GL::DepthTest);
 	GL::Enable(GL::Blend);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 

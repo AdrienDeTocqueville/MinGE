@@ -1,14 +1,18 @@
 {
     "assets": {
         "Mesh": {
-            "max_id": 2,
+            "max_id": 3,
             "meshes": [
                 {
                     "uint": 1,
-                    "uri": "asset:mesh/cube?x=1&y=3&z=3"
+                    "uri": "asset:mesh/cube?x=1&y=1&z=1"
                 },
                 {
                     "uint": 2,
+                    "uri": "asset:mesh/cube?x=2&y=3&z=3"
+                },
+                {
+                    "uint": 3,
                     "uri": "asset:mesh/sphere?radius=3"
                 }
             ]
@@ -135,13 +139,13 @@
                         "materials": [
                             2
                         ],
-                        "mesh": 1
+                        "mesh": 2
                     },
                     {
                         "materials": [
                             2
                         ],
-                        "mesh": 2
+                        "mesh": 3
                     }
                 ]
             },
@@ -152,14 +156,15 @@
         },
         "post-processing": {
             "data": {
+                "color": 4,
+                "depth": 3,
                 "exposure": 1.0,
                 "ss_viewport": [
                     0.0,
                     0.0,
                     1.0,
                     1.0
-                ],
-                "texture": 4
+                ]
             },
             "dependencies": [
                 "graphics"

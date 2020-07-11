@@ -25,6 +25,7 @@ void Camera::set_##prop(type val) {		\
 SIMPLE_CAM_PROP(float, near_plane)
 SIMPLE_CAM_PROP(float, far_plane)
 SIMPLE_CAM_PROP(float, fov)
+SIMPLE_CAM_GETTER(Texture, depth_texture)
 SIMPLE_CAM_GETTER(Texture, color_texture)
 SIMPLE_CAM_GETTER(const Frustum&, frustum)
 

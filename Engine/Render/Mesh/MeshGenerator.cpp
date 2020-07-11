@@ -20,7 +20,7 @@ bool generate_mesh(const uri_t &uri, mesh_data_t &data)
 
 	if (uri.path == "mesh/cube")
 	{
-		vec3 e(uri.get_or_default("x", 0.5f), uri.get_or_default("y", 0.5f), uri.get_or_default("z", 0.5f));
+		vec3 e = 0.5f * vec3(uri.get_or_default("x", 1.0f), uri.get_or_default("y", 1.0f), uri.get_or_default("z", 1.0f));
 		data.init(4 * 6, 6 * 6, flags);
 
 		if (flags & mesh_data_t::POINTS)

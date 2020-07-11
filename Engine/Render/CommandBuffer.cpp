@@ -35,6 +35,9 @@ void cmd_buffer_t::fullscreen_pass(uint32_t fbo, ivec4 viewport, uint32_t materi
 
 void cmd_buffer_t::flush()
 {
+MICROPROFILE_SCOPEI("RENDER_ENGINE", "cmd_buffer_flush");
+MICROPROFILE_SCOPEGPUI("cmd_buffer_flush", -1);
+
 uint32_t i = 0;
 while (i < size)
 {
@@ -43,6 +46,9 @@ switch (cmd)
 {
 case DrawBatch:
 {
+	MICROPROFILE_SCOPEI("RENDER_ENGINE", "DrawBatch");
+	MICROPROFILE_SCOPEGPUI("DrawBatch", -1);
+
 	draw_batch_t &batch = consume<draw_batch_t>(i);
 
 	for (uint32_t c = 0; c < batch.count; c++)
@@ -58,33 +64,33 @@ case DrawBatch:
 
 		material->bind(batch.pass);
 
-		{ MICROPROFILE_SCOPEGPUI("DrawElements", -1);
 		GL::BindVertexArray(data->submesh.vao);
 		glCheck(glDrawElements(data->submesh.mode, data->submesh.count, GL_UNSIGNED_SHORT,
 					(void*)(uint64_t)data->submesh.offset));
-		}
 	}
+
 	break;
 }
 
 case SetFramebuffer:
 {
+	MICROPROFILE_SCOPEI("RENDER_ENGINE", "SetFramebuffer");
+	MICROPROFILE_SCOPEGPUI("SetFramebuffer", -1);
+
 	set_framebuffer_t &setup = consume<set_framebuffer_t>(i);
 
 	GL::BindFramebuffer(setup.fbo);
 	GL::ClearColor(setup.clear_color);
 	if (setup.clear_depth)
 	{
-		glDepthMask(GL_TRUE);
-		glDepthFunc(GL_LEQUAL);
+		GL::DepthMask(true);
+		GL::DepthFunc(GL::LessEqual);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	}
 	else
 	{
-		glDepthMask(GL_TRUE);
-		glDepthFunc(GL_LEQUAL);
-		//glDepthMask(GL_FALSE);
-		//glDepthFunc(GL_EQUAL);
+		GL::DepthMask(false);
+		GL::DepthFunc(GL::Equal);
 		glClear(GL_COLOR_BUFFER_BIT);
 	}
 
@@ -93,6 +99,9 @@ case SetFramebuffer:
 
 case SetupCamera:
 {
+	MICROPROFILE_SCOPEI("RENDER_ENGINE", "SetupCamera");
+	MICROPROFILE_SCOPEGPUI("SetupCamera", -1);
+
 	camera_data_t *&camera = consume<camera_data_t*>(i);
 
 	GL::Enable(GL::CullFace);
@@ -112,12 +121,16 @@ case SetupCamera:
 
 case FullscreenPass:
 {
+	MICROPROFILE_SCOPEI("RENDER_ENGINE", "FullscreenPass");
+	MICROPROFILE_SCOPEGPUI("FullscreenPass", -1);
+
 	fullscreen_pass_t &setup = consume<fullscreen_pass_t>(i);
 
 	GL::BindFramebuffer(setup.fbo);
 
-	glDepthMask(GL_FALSE);
-	glDepthFunc(GL_ALWAYS);
+	GL::Enable(GL::DepthTest);
+	GL::DepthMask(true);
+	GL::DepthFunc(GL::Always);
 
 	GL::Viewport(setup.viewport);
 	GL::Scissor(setup.viewport);
@@ -128,10 +141,8 @@ case FullscreenPass:
 
 	material->bind(RenderPass::Forward);
 
-	{ MICROPROFILE_SCOPEGPUI("FullscreenPass", -1);
 	GL::BindVertexArray(empty_vao);
-	glCheck(glDrawArrays(GL_TRIANGLES, 0, 6));
-	}
+	glCheck(glDrawArrays(GL_TRIANGLES, 0, 3));
 
 	break;
 }

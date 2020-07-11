@@ -167,14 +167,15 @@ size_t Material::get_location(const std::string &name) const
 }
 
 
-const material_t *material_t::bound = nullptr;
+const void *material_t::bound = nullptr;
 
 void material_t::bind(RenderPass::Type pass) const
 {
 	auto *prgm = shader->update_builtins(variant_idx, pass);
 
-	if (bound == this) return;
-	else bound = this;
+	// works because sizeof(this) < RenderPass::Count
+	if (bound == (uint8_t*)this + pass) return;
+	else bound = (uint8_t*)this + pass;
 
 	int texture_slot = 0;
 	for (const Program::Uniform &var : prgm->uniforms)

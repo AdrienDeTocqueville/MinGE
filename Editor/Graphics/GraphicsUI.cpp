@@ -94,7 +94,8 @@ Editor::field(label, widget, sys->prop, sys, func); \
 static void edit_system(PostProcessingSystem *sys)
 {
 	SIMPLE_PROP("Enable HDR", ImGui::Checkbox, int, enable);
-	SIMPLE_PROP("Color buffer", texture_dropdown, Texture, texture);
+	SIMPLE_PROP("Depth buffer", texture_dropdown, Texture, depth);
+	SIMPLE_PROP("Color buffer", texture_dropdown, Texture, color);
 	SIMPLE_PROP("Exposure", ImGui::DragFloat, float, exposure);
 }
 

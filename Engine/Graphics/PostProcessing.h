@@ -8,7 +8,7 @@
 
 struct PostProcessingSystem
 {
-	PostProcessingSystem(void *system_dependency, Texture color_texture, float exposure = 1.0, vec4 ss_viewport = ivec4(0,0,1,1));
+	PostProcessingSystem(void *system_dependency, Texture depth_texture, Texture color_texture, float exposure = 1.0, vec4 ss_viewport = ivec4(0,0,1,1));
 	~PostProcessingSystem();
 
 	void *dependency;
@@ -16,7 +16,7 @@ struct PostProcessingSystem
 	vec4 ss_viewport;
 
 	int enable;
-	Texture texture;
+	Texture depth, color;
 	float exposure;
 
 	static const system_type_t type;

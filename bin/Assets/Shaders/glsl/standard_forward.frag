@@ -66,7 +66,7 @@ void main()
 	vec3 Lo = vec3(0.0f);
 #ifndef NO_LIGHT
 	{
-		vec3 L = normalize(LIGHT_DIR - in_fs.pos); // Point
+		vec3 L = normalize(vec3(0.0f) - in_fs.pos); // Point
 		//vec3 L = LIGHT_DIR; // Directional
 		vec3 H = normalize(V + L);
 
@@ -99,10 +99,5 @@ void main()
 	vec3 ambient = vec3(0.03) * color * ao;
 	vec3 final = ambient + Lo;
 
-	// HDR tonemapping
-	final = final / (final + vec3(1.0));
-	// gamma correct
-	final = pow(final, vec3(1.0/2.2));
-
-	out_color = vec4(final, 1.0);
+	out_color = vec4(color, 1.0);
 }
