@@ -14,6 +14,7 @@ struct Debug
 	static void sphere(const struct Sphere &sphere, vec3 color = vec3(1.0f));
 	static void frustum(const struct Frustum &f, vec3 color = vec3(1.0f));
 
+	static struct cmd_buffer_t &cmd();
 	static void flush();
 
 private:

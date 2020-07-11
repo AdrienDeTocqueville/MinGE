@@ -120,6 +120,11 @@ void Engine::destroy()
 
 void Engine::clear()
 {
+	/*
+	 * System destruction in jobs is disabled for now
+	 * RenderEngine::remove_buffer would need synchronization
+	 * GL assets destruction can only be done on main thread
+
 	// Launch system detroy jobs
 	{ MICROPROFILE_SCOPEI("ENGINE", "launch_destroy_jobs");
 	for (system_t *system : systems)
@@ -142,6 +147,14 @@ void Engine::clear()
 	// Free allocated memory
 	for (system_t *system : systems)
 		free(system);
+	*/
+
+	for (system_t *system : systems)
+	{
+		if (auto callback = system_types[system->type_index].destroy)
+			callback(system->instance());
+		free(system);
+	}
 
 	systems.clear();
 	system_types.clear();

@@ -15,7 +15,7 @@
 #include "IO/Input.h"
 
 Material RenderEngine::default_material;
-static std::vector<cmd_buffer_t> buffers;
+static std::vector<cmd_buffer_t*> buffers;
 
 GLuint empty_vao;
 
@@ -75,21 +75,14 @@ void RenderEngine::flush()
 
 	material_t::bound = nullptr;
 
-	for (auto &cmd : buffers)
+	for (auto *cmd : buffers)
 	{
 		MICROPROFILE_SCOPEI("RENDER_ENGINE", "cmd_buffer");
 		MICROPROFILE_SCOPEGPUI("cmd_buffer", -1);
-		cmd.flush();
+		cmd->flush();
 	}
 
-	glDepthMask(GL_TRUE);
-	glDepthFunc(GL_LEQUAL);
-
-	GL::BindFramebuffer(0);
-	GL::Enable(GL::Blend);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	Debug::flush();
-
 	UI::flush();
 
 #ifdef PROFILE
@@ -115,28 +108,19 @@ void RenderEngine::flush()
 	}
 }
 
-uint32_t RenderEngine::create_cmd_buffer()
+void RenderEngine::add_buffer(cmd_buffer_t *buffer)
 {
-	for (int i = 0; i < buffers.size(); i++)
+	buffers.emplace_back(buffer);
+}
+
+void RenderEngine::remove_buffer(cmd_buffer_t *buffer)
+{
+	for (auto i = buffers.begin(); i != buffers.end(); ++i)
 	{
-		if (buffers[i].buffer == NULL)
+		if (*i == buffer)
 		{
-			new(&buffers[i]) cmd_buffer_t();
-			return i;
+			buffers.erase(i);
+			return;
 		}
 	}
-	buffers.emplace_back();
-	return (uint32_t)buffers.size() - 1;
-}
-
-cmd_buffer_t &RenderEngine::get_cmd_buffer(uint32_t i)
-{
-	return buffers[i];
-}
-
-void RenderEngine::destroy_cmd_buffer(uint32_t i)
-{
-	free(buffers[i].buffer);
-	buffers[i].buffer = NULL;
-	buffers[i].size = 0;
 }

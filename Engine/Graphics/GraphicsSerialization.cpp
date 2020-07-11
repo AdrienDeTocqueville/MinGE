@@ -90,5 +90,5 @@ GraphicsSystem::GraphicsSystem(const SerializationContext &ctx):
 		++renderer_it;
 	}
 
-	cmd_buffer = RenderEngine::create_cmd_buffer();
+	RenderEngine::add_buffer(&cmd_buffer);
 }

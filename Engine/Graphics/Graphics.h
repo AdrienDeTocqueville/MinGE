@@ -5,6 +5,7 @@
 #include "Core/Entity.h"
 #include "Core/System.h"
 
+#include "Render/CommandBuffer.h"
 #include "Render/Mesh/Mesh.h"
 #include "Render/Shaders/Material.h"
 #include "Render/Textures/Texture.h"
@@ -94,7 +95,7 @@ struct GraphicsSystem
 	// System data
 	entity_mapper_t<3> indices;
 
-	uint32_t cmd_buffer;
+	cmd_buffer_t cmd_buffer;
 
 	uint32_t prev_index_count;
 	uint32_t prev_key_count;

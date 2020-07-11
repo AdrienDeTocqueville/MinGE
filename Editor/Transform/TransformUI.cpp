@@ -1,4 +1,5 @@
 #include <UI/UI.h>
+#include <Render/Debug.h>
 #include <Transform/Transform.h>
 
 #include "Editor/Editor.h"
@@ -50,6 +51,11 @@ static void edit_entity(TransformSystem *sys, Entity e)
 	SIMPLE_PROP("Position", ImGui::DragFloat3, vec3, tr, position);
 	COMPLEX_PROP("Rotation", ImGui::DragFloat3, vec3, rotation, glm::degrees(tr.euler_angles()), glm::radians);
 	SIMPLE_PROP("Scale", ImGui::DragFloat3, vec3, tr, scale);
+
+	vec3 p = tr.position();
+	Debug::vector(p, tr.vec_to_world(vec3(1, 0, 0)), vec3(1, 0, 0));
+	Debug::vector(p, tr.vec_to_world(vec3(0, 1, 0)), vec3(0, 1, 0));
+	Debug::vector(p, tr.vec_to_world(vec3(0, 0, 1)), vec3(0, 0, 1));
 }
 
 const system_editor_t editor = []() {

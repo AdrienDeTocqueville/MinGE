@@ -22,6 +22,7 @@ struct submesh_data_t
 struct cmd_buffer_t
 {
 	cmd_buffer_t(): size(0), capacity(32) { buffer = (uint8_t*)malloc(capacity); }
+	~cmd_buffer_t() { free(buffer); }
 
 	void setup_camera(camera_data_t *camera);
 	void set_framebuffer(uint32_t fbo, vec4 color, bool clear_depth);
@@ -29,6 +30,7 @@ struct cmd_buffer_t
 			RenderPass::Type pass, uint32_t count);
 	void fullscreen_pass(uint32_t fbo, ivec4 viewport, uint32_t material);
 
+	// Should only be called from render thread
 	void flush();
 
 	uint8_t *buffer;

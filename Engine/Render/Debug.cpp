@@ -4,6 +4,7 @@
 
 #include "Render/Debug.h"
 #include "Render/GLDriver.h"
+#include "Render/CommandBuffer.h"
 #include "Render/Shaders/Material.h"
 #include "Render/Shaders/Shader.h"
 
@@ -16,6 +17,7 @@ struct Vertex
 static std::mutex points_lock, lines_lock;
 static std::vector<Vertex> points, lines;
 
+static cmd_buffer_t cmd_buffer;
 
 void Debug::point(vec3 _point, vec3 color)
 {
@@ -176,17 +178,31 @@ void flush_lines()
 	lines.clear();
 }
 
+cmd_buffer_t &Debug::cmd()
+{
+	return cmd_buffer;
+}
+
 void Debug::flush()
 {
-	if (!points.size() && !lines.size())
-		return;
-
 	MICROPROFILE_SCOPEI("RENDER_ENGINE", "debug_draw");
 	MICROPROFILE_SCOPEGPUI("debug_draw", -1);
 
-	Material::materials.get<0>(material.id())->bind(RenderPass::Forward);
+	GL::BindFramebuffer(0);
 
-	//GL::Disable(GL::DepthTest);
+	cmd_buffer.flush();
+
+	if (!points.size() && !lines.size())
+		return;
+
+	// Depth test doesn't work because post processing doesn't write to backbuffer
+	glDepthMask(GL_FALSE);
+	glDepthFunc(GL_LEQUAL);
+
+	GL::Enable(GL::Blend);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	Material::materials.get<0>(material.id())->bind(RenderPass::Forward);
 
 	if (points.size())	flush_points();
 	if (lines.size())	flush_lines();

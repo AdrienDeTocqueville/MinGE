@@ -14,15 +14,15 @@ PostProcessingSystem::PostProcessingSystem(void *system_dependency, Texture colo
 	dependency(system_dependency), ss_viewport(ss_viewport),
 	enable(0), texture(color_texture), exposure(exposure)
 {
-	cmd_buffer = RenderEngine::create_cmd_buffer();
-
 	if (post_process == Material::none)
 		post_process = Material::create(Shader::load("asset:shader/postprocessing"));
+
+	RenderEngine::add_buffer(&cmd_buffer);
 }
 
 PostProcessingSystem::~PostProcessingSystem()
 {
-	RenderEngine::destroy_cmd_buffer(cmd_buffer);
+	RenderEngine::remove_buffer(&cmd_buffer);
 }
 
 static void update(PostProcessingSystem *self)
@@ -31,8 +31,9 @@ static void update(PostProcessingSystem *self)
 	post_process.set("color_buffer", self->texture);
 	post_process.set("exposure", self->exposure);
 
-	auto &cmd = RenderEngine::get_cmd_buffer(self->cmd_buffer);
 	ivec2 ws = Input::window_size();
+
+	cmd_buffer_t &cmd = self->cmd_buffer;
 	cmd.fullscreen_pass(0, ivec4(0,0,ws.x,ws.y), post_process.id());
 }
 

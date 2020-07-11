@@ -97,7 +97,7 @@
                         ],
                         "color_texture": 6,
                         "depth_texture": 5,
-                        "far_plane": 8.0,
+                        "far_plane": 10.0,
                         "fov": 70.0,
                         "near_plane": 2.0,
                         "ortho": false,

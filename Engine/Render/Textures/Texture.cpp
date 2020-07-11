@@ -22,9 +22,12 @@ void Texture::destroy()
 	GLuint *handle = &textures.get<0>()[id()].handle;
 	glCheck(glDeleteTextures(1, handle));
 
-	free(textures.get<1>(id()));
-	*textures.get<1>(id()) = NULL;
-	++(*textures.get<2>(id()));
+	char **uri = textures.get<1>(id());
+	uint8_t *gen = textures.get<2>(id());
+
+	free(*uri);
+	*uri = NULL;
+	++(*gen);
 }
 
 

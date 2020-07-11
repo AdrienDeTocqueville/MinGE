@@ -208,17 +208,17 @@ MICROPROFILE_API int64_t MicroProfileTicksPerSecondCpu();
 #define MP_TICK() mach_absolute_time()
 inline int64_t MicroProfileTicksPerSecondCpu()
 {
-	static int64_t nTicksPerSecond = 0;	
+	static int64_t nTicksPerSecond = 0;
 	if(nTicksPerSecond == 0) 
 	{
-		mach_timebase_info_data_t sTimebaseInfo;	
+		mach_timebase_info_data_t sTimebaseInfo;
 		mach_timebase_info(&sTimebaseInfo);
 		nTicksPerSecond = 1000000000ll * sTimebaseInfo.denom / sTimebaseInfo.numer;
 	}
 	return nTicksPerSecond;
 }
 inline uint64_t MicroProfileGetCurrentThreadId()
-{	
+{
 	uint64_t tid;
 	pthread_threadid_np(nullptr, &tid);
 	return tid;

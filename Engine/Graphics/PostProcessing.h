@@ -4,6 +4,7 @@
 
 #include "Core/System.h"
 #include "Render/Textures/Texture.h"
+#include "Render/CommandBuffer.h"
 
 struct PostProcessingSystem
 {
@@ -11,7 +12,7 @@ struct PostProcessingSystem
 	~PostProcessingSystem();
 
 	void *dependency;
-	uint32_t cmd_buffer;
+	cmd_buffer_t cmd_buffer;
 	vec4 ss_viewport;
 
 	int enable;

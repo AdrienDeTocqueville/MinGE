@@ -80,8 +80,8 @@ public:
 		Engine::read_lock(graphics);
 		for (int i = 1; i < cameras.size(); i++)
 		{
-			uint32_t c = graphics->indices.get<0>(cameras[i]);
-			Debug::frustum(graphics->cameras.get<0>()[c].frustum, cam == cameras[i] ? vec3(0,1,0) : vec3(1));
+			Camera c = graphics->get_camera(cameras[i]);
+			Debug::frustum(c.frustum(), cam == cameras[i] ? vec3(0,1,0) : vec3(1));
 		}
 		Engine::read_unlock(graphics);
 

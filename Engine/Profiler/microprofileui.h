@@ -3849,6 +3849,7 @@ void MicroProfileCustomGroupAddTimer(const char* pCustomName, const char* pGroup
 }
 
 #undef UI
+#undef snprintf
 
 #endif
 #endif

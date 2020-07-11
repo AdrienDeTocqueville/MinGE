@@ -115,8 +115,10 @@ case FullscreenPass:
 	fullscreen_pass_t &setup = consume<fullscreen_pass_t>(i);
 
 	GL::BindFramebuffer(setup.fbo);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	
+
+	glDepthMask(GL_FALSE);
+	glDepthFunc(GL_ALWAYS);
+
 	GL::Viewport(setup.viewport);
 	GL::Scissor(setup.viewport);
 

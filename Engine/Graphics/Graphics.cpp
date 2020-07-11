@@ -18,12 +18,24 @@ GraphicsSystem::GraphicsSystem(TransformSystem *world):
 	draw_order_indices(NULL), renderer_keys(NULL), matrices(NULL),
 	transforms(world)
 {
-	cmd_buffer = RenderEngine::create_cmd_buffer();
+	RenderEngine::add_buffer(&cmd_buffer);
 }
 
 GraphicsSystem::~GraphicsSystem()
 {
-	RenderEngine::destroy_cmd_buffer(cmd_buffer);
+	for (uint32_t i = 1; i <= cameras.size; i++)
+	{
+		camera_t *cam = cameras.get<0>() + i;
+
+		GL::DeleteFramebuffer(cam->fbo_depth);
+		GL::DeleteFramebuffer(cam->fbo_forward);
+
+		cam->depth_buffer.destroy();
+		cam->depth_texture.destroy();
+		cam->color_texture.destroy();
+	}
+
+	RenderEngine::remove_buffer(&cmd_buffer);
 
 	free(draw_order_indices);
 	free(renderer_keys);
@@ -123,7 +135,7 @@ static void update(GraphicsSystem *self)
 	/// Build command buffer
 
 	Sphere sphere;
-	auto &cmd = RenderEngine::get_cmd_buffer(self->cmd_buffer);
+	cmd_buffer_t &cmd = self->cmd_buffer;
 	for (uint32_t i = 0; i < camera_count; i++)
 	{
 		MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "camera_setup");
@@ -195,24 +207,6 @@ static void update(GraphicsSystem *self)
 		);
 		}
 
-		if (i != 0) // some debug draw
-		{
-			MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "debug");
-
-			vec3 color(1, 0, 0);
-			for (uint32_t c = 0; c < cmd_count; c++)
-			{
-				uint32_t s = draw_order_indices[c];
-				submesh_data_t *data = &self->submeshes[s];
-
-				sphere.init(Mesh::meshes.get<3>()[renderers[data->renderer].mesh.id()]);
-				sphere.transform(matrices[data->renderer]);
-
-				Debug::sphere(sphere, color);
-				color += vec3(0, 1, 0);
-			}
-		}
-
 		/// Submit to backend
 		{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "submit");
 
@@ -223,7 +217,7 @@ static void update(GraphicsSystem *self)
 		cmd.set_framebuffer(cam->fbo_forward, cam->clear_color, false);
 		cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Forward, cmd_count);
 		*/
-		
+
 		cmd.set_framebuffer(cam->fbo_forward, cam->clear_color, true);
 		cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Forward, cmd_count);
 
@@ -231,6 +225,12 @@ static void update(GraphicsSystem *self)
 		//cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Forward, cmd_count);
 		}
 	}
+
+	if (camera_count)
+	{
+		Debug::cmd().setup_camera(camera_datas);
+	}
+
 	Engine::read_unlock(self);
 }
 

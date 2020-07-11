@@ -1,4 +1,5 @@
 #include <UI/UI.h>
+#include <Render/Debug.h>
 
 #include "Editor/Editor.h"
 #include "Editor/Render/RenderUI.h"
@@ -52,6 +53,8 @@ static void edit_entity(GraphicsSystem *sys, Entity e)
 		SIMPLE_PROP("Near plane", ImGui::DragFloat, float, camera, near_plane);
 		SIMPLE_PROP("Far plane", ImGui::DragFloat, float, camera, far_plane);
 		SIMPLE_PROP("Field of view", ImGui::DragFloat, float, camera, fov);
+
+		Debug::frustum(camera.frustum());
 	}
 
 	// Renderer

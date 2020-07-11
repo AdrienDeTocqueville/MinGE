@@ -60,7 +60,7 @@ int main(int, char**)
 
 	camera_ent = Entity::create("Camera2");
 	transforms->add(camera_ent, vec3(-6,0,0));
-	graphics->add_camera(camera_ent, 70.0f, 2.0f, 8.0f);
+	graphics->add_camera(camera_ent, 70.0f, 2.0f, 10.0f);
 	controller->add(camera_ent);
 
 	Texture output_color = cam.color_texture();
@@ -95,6 +95,13 @@ int main(int, char**)
 
 		Engine::frame();
 	}
+
+#ifdef SERIALIZE
+	cube.destroy();
+	sphere.destroy();
+#else
+	s.clear();
+#endif
 
 	Engine::destroy();
 
