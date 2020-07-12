@@ -86,7 +86,7 @@ namespace PostProcessingSystemUI
 #undef SIMPLE_PROP
 #define SIMPLE_PROP(label, widget, type, prop) do { \
 void (*func)(type*,type*,PostProcessingSystem**) = [](type *old, type *val, PostProcessingSystem **sys) { \
-	(*sys)->##prop = *val; \
+	(*sys)->prop = *val; \
 }; \
 Editor::field(label, widget, sys->prop, sys, func); \
 } while (0)

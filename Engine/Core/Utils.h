@@ -17,7 +17,7 @@
 	std::cerr << "Assert in " << __FILE__ << " at line " << __LINE__ << ": '" << # x << "'\n"; \
 	__builtin_trap(); std::cin.get(); exit(-1);  }
 #else
-#efine ASSERT(x, msg)	((void)0)
+#define ASSERT(x, msg)	((void)0)
 #endif
 
 

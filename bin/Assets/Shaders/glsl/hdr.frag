@@ -17,7 +17,7 @@ void main()
 	gl_FragDepth = depth;
 
 	vec3 hdr_color = texture(color_buffer, uv).rgb;
-	if (hdr)
+	if (hdr == 1)
 	{
 		// reinhard
 		// hdr_color = hdr_color / (hdr_color + vec3(1.0));

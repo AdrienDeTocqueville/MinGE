@@ -40,6 +40,7 @@ static GLint parse_wrap_mode(const char *wrap)
 	else if (!strcmp(wrap, "repeat"))	return GL_REPEAT;
 
 	else Error::addf(Error::USER, "Wrap mode is not supported: %s", wrap);
+	return 0;
 }
 
 static GLint parse_filter(const char *filter)
@@ -50,6 +51,7 @@ static GLint parse_filter(const char *filter)
 	else if (!strcmp(filter, "linear"))	return GL_LINEAR;
 
 	else Error::addf(Error::USER, "Filter mode is not supported: %s", filter);
+	return 0;
 }
 
 inline static GLint parse_internal_format(const char *format)
@@ -85,6 +87,7 @@ inline static GLint parse_internal_format(const char *format)
 	else if (!strcmp(format, "d24s8"))	return GL_DEPTH24_STENCIL8;
 
 	else Error::addf(Error::USER, "Format is not supported: %s", format);
+	return 0;
 }
 
 inline static GLenum channels_to_format(int n)

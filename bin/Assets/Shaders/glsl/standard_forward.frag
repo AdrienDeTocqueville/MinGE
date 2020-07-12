@@ -99,5 +99,5 @@ void main()
 	vec3 ambient = vec3(0.03) * color * ao;
 	vec3 final = ambient + Lo;
 
-	out_color = vec4(color, 1.0);
+	out_color = vec4(final, 1.0);
 }

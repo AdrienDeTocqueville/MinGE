@@ -200,6 +200,8 @@ void Input::poll_events()
 // Window
 SDL_Window *Input::create_window_centered(const char *title, vec2 ratio, int flags, int monitor)
 {
+	int displays = SDL_GetNumVideoDisplays() - 1;
+	if (monitor > displays) monitor = displays;
 	SDL_DisplayMode mode;
 	if (SDL_GetDesktopDisplayMode(monitor, &mode))
 	{

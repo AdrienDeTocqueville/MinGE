@@ -8,13 +8,14 @@ int main(int, char**)
 	std::cout << "  -- MinGE --" << std::endl;
 
 	/// Create window
-	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-	SDL_Window *window = SDL_CreateWindow("MinGE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1440, 810, window_flags);
-
-	SDL_SetWindowPosition(window, -1920 + (1920-1440)/2, 350);
+	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Window *window = Input::create_window_centered("MinGE unit tests", vec2(0.66f),
+		SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE, 1);
 
 	/// Init engine
 	Engine::init(window);
+	printf("Engine initialized\n");
+
 	Engine::register_system_type(TransformSystem::type);
 
 	LAUNCH(entity);
