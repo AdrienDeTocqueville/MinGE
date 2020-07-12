@@ -4,7 +4,28 @@
 #include "Render/Shaders/Shader.inl"
 #include "Render/Shaders/Material.inl"
 
-extern GLuint empty_vao;
+static GLuint empty_vao;
+
+static size_t MATRIX_M, MATRIX_N;
+static size_t MATRIX_VP, VIEW_POS;
+
+void cmd_buffer_t::init()
+{
+	empty_vao = GL::GenVertexArray();
+
+#define INIT_LOCATION(x) x = Shader::get_builtin_location(#x)
+	INIT_LOCATION(MATRIX_M);
+	INIT_LOCATION(MATRIX_N);
+	INIT_LOCATION(MATRIX_VP);
+	INIT_LOCATION(VIEW_POS);
+#undef INIT_LOCATION
+}
+
+void cmd_buffer_t::destroy()
+{
+	GL::DeleteVertexArray(empty_vao);
+
+}
 
 void cmd_buffer_t::setup_camera(camera_data_t *camera)
 {
@@ -59,14 +80,17 @@ case DrawBatch:
 		if (!material->has_pass(batch.pass))
 			continue;
 
-		Shader::set_builtin("MATRIX_M", batch.matrices[data->renderer]);
-		Shader::set_builtin("MATRIX_N", batch.matrices[data->renderer]);
+		// 1.79 + 1.62
+		Shader::set_builtin(MATRIX_M, batch.matrices[data->renderer]);
+		Shader::set_builtin(MATRIX_N, batch.matrices[data->renderer]);
 
+		// 0.84 + 0.91
 		material->bind(batch.pass);
 
+		// 4.15 + 4.12
 		GL::BindVertexArray(data->submesh.vao);
-		glCheck(glDrawElements(data->submesh.mode, data->submesh.count, GL_UNSIGNED_SHORT,
-					(void*)(uint64_t)data->submesh.offset));
+		glDrawElements(data->submesh.mode, data->submesh.count,
+			GL_UNSIGNED_SHORT, (void*)(uint64_t)data->submesh.offset);
 	}
 
 	break;
@@ -109,8 +133,8 @@ case SetupCamera:
 	GL::Enable(GL::ScissorTest);
 	GL::Disable(GL::Blend);
 
-	Shader::set_builtin("MATRIX_VP", camera->view_proj);
-	Shader::set_builtin("VIEW_POS", camera->position);
+	Shader::set_builtin(MATRIX_VP, camera->view_proj);
+	Shader::set_builtin(VIEW_POS, camera->position);
 
 	ivec4 viewport = ivec4(0, 0, camera->resolution);
 	GL::Viewport(viewport);

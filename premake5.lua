@@ -23,6 +23,9 @@ function build_settings()
 		defines "_CRT_SECURE_NO_DEPRECATE"
 		defines "_CRT_NONSTDC_NO_DEPRECATE"
 
+	filter "system:linux"
+		buildoptions { "-mavx2" }
+
 	filter "configurations:debug"
 		defines { "DEBUG", "PROFILE" }
 		symbols "on"

@@ -21,6 +21,9 @@ struct submesh_data_t
 
 struct cmd_buffer_t
 {
+	static void init();
+	static void destroy();
+
 	cmd_buffer_t(): size(0), capacity(32) { buffer = (uint8_t*)malloc(capacity); }
 	~cmd_buffer_t() { free(buffer); }
 

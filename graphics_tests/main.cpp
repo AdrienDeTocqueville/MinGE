@@ -71,6 +71,8 @@ static void stress_scene(bool serialize)
 {
 	assert(serialize);
 
+	Time::set_fps_max(60);
+
 	/// Init systems
 	auto transforms = new(Engine::alloc_system("TransformSystem")) TransformSystem();
 	auto graphics = new(Engine::alloc_system("GraphicsSystem")) GraphicsSystem(transforms);

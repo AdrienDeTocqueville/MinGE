@@ -40,9 +40,9 @@ public:
 	static inline size_t get_builtin_location(const std::string &name);
 
 	template <typename T>
-	static inline void set_builtin(std::string name, T value);
+	static inline void set_builtin(const std::string &name, const T &value);
 	template <typename T>
-	static inline void set_builtin(size_t location, T value);
+	static inline void set_builtin(size_t location, const T &value);
 
 	const char *URI;
 

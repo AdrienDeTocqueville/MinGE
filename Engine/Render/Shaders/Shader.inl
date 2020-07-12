@@ -53,7 +53,13 @@ inline size_t Shader::get_builtin_location(const std::string &name)
 }
 
 template <typename T>
-inline void Shader::set_builtin(size_t location, T value)
+inline void Shader::set_builtin(const std::string &name, const T &value)
+{
+	set_builtin(get_builtin_location(name), value);
+}
+
+template <typename T>
+inline void Shader::set_builtin(size_t location, const T &value)
 {
 	uint8_t *b = builtins.data() + location;
 	(*b)++; // Bump update index;
@@ -63,8 +69,3 @@ inline void Shader::set_builtin(size_t location, T value)
 	memcpy(b, &value, sizeof(T));
 }
 
-template <typename T>
-inline void Shader::set_builtin(std::string name, T value)
-{
-	set_builtin(get_builtin_location(name), value);
-}

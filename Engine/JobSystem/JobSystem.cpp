@@ -268,7 +268,7 @@ inline void do_sleep()
 	MICROPROFILE_SCOPEI("JOB_SYSTEM", "sleep");
 
 	uint32_t dt = Time::frame_duration();
-	uint32_t freq = 1000 / 30;
+	uint32_t freq = Time::frame_time;
 	if (dt < freq) SDL_Delay(freq - dt);
 }
 
@@ -394,7 +394,7 @@ void sleep()
 	MICROPROFILE_SCOPEI("JOB_SYSTEM", "sleep");
 
 	uint32_t dt = Time::frame_duration();
-	uint32_t freq = 1000 / 30;
+	uint32_t freq = Time::frame_time;
 	if (dt < freq)
 	{
 		goto_sleep = true;

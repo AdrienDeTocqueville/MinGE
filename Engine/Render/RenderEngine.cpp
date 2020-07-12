@@ -17,14 +17,14 @@
 Material RenderEngine::default_material;
 static std::vector<cmd_buffer_t*> buffers;
 
-GLuint empty_vao;
-
 void RenderEngine::init()
 {
 	GL::init();
 	Shader::setup_builtins();
 	Debug::init();
 	UI::init();
+
+	cmd_buffer_t::init();
 
 #ifdef PROFILE
 	MicroProfileDrawInitGL();
@@ -35,15 +35,13 @@ void RenderEngine::init()
 	default_material.set("color", vec3(0.8f));
 	default_material.set("metallic", 0.0f);
 	default_material.set("roughness", 0.5f);
-
-	empty_vao = GL::GenVertexArray();
 }
 
 void RenderEngine::destroy()
 {
-	GL::DeleteVertexArray(empty_vao);
-
 	default_material.destroy();
+
+	cmd_buffer_t::destroy();
 
 	UI::destroy();
 	Debug::destroy();

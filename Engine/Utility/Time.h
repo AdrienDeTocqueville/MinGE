@@ -7,8 +7,11 @@ struct Time
 	static float delta_time;
 	static float time;
 
+	static uint32_t frame_time; // in ms
+
 	// time elapsed since the start of the frame
 	static uint32_t frame_duration(); // in ms
+	static void set_fps_max(uint32_t fps_max);
 
 	struct Chrono
 	{
