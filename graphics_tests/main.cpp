@@ -3,7 +3,7 @@
 #include <SDL2/SDL.h>
 
 #include "Render/RenderEngine.h"
-#include "Render/Shaders/Material.inl"
+#include "Render/Shader/Material.inl"
 
 #include "CameraControl.h"
 

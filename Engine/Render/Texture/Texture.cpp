@@ -1,5 +1,5 @@
 #include "Render/GLDriver.h"
-#include "Render/Textures/Texture.h"
+#include "Render/Texture/Texture.h"
 #include "Utility/Error.h"
 
 #include "IO/json.hpp"
@@ -7,7 +7,7 @@
 #include "IO/URI.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "Render/Textures/stb_image.h"
+#include "Render/Texture/stb_image.h"
 
 
 const Texture Texture::none;

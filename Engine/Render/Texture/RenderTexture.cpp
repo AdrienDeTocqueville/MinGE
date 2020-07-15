@@ -1,4 +1,4 @@
-#include "Render/Textures/RenderTexture.h"
+#include "Render/Texture/RenderTexture.h"
 #include "Render/GLDriver.h"
 
 void render_texture_t::create(ivec2 size, Format format)

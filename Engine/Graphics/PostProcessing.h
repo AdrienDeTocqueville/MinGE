@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #include "Core/System.h"
-#include "Render/Textures/Texture.h"
+#include "Render/Texture/Texture.h"
 #include "Render/CommandBuffer.h"
 
 struct PostProcessingSystem

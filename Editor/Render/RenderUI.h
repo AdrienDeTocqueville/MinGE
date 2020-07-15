@@ -1,8 +1,8 @@
 #pragma once
 
 #include <Render/Mesh/Mesh.h>
-#include <Render/Shaders/Material.h>
-#include <Render/Textures/Texture.h>
+#include <Render/Shader/Material.h>
+#include <Render/Texture/Texture.h>
 
 bool mesh_dropdown(const char*, Mesh*);
 void mesh_tab(Mesh*);

@@ -4,7 +4,7 @@
 
 #include "Render/RenderEngine.h"
 #include "Render/CommandBuffer.h"
-#include "Render/Shaders/Material.inl"
+#include "Render/Shader/Material.inl"
 
 #include "IO/Input.h"
 

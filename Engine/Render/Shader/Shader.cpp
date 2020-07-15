@@ -3,9 +3,9 @@
 #include <unordered_set>
 #include <glm/gtc/integer.hpp>
 
-#include "Render/Shaders/Shader.inl"
-#include "Render/Shaders/Program.h"
-#include "Render/Textures/Texture.h"
+#include "Render/Shader/Shader.inl"
+#include "Render/Shader/Program.h"
+#include "Render/Texture/Texture.h"
 #include "Render/GLDriver.h"
 
 #include "Utility/stb_sprintf.h"

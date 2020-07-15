@@ -8,9 +8,10 @@
 #include "Render/CommandBuffer.h"
 
 #include "Render/Debug.h"
-#include "Render/Shaders/Shader.h"
-#include "Render/Shaders/Material.inl"
-#include "Render/Textures/Texture.h"
+#include "Render/Shader/Shader.h"
+#include "Render/Shader/Material.inl"
+#include "Render/Texture/Texture.h"
+#include "Render/Buffer/UBO.h"
 
 #include "IO/Input.h"
 

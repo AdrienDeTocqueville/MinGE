@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "Render/Shaders/Material.h"
+#include "Render/Shader/Material.h"
 
 struct cmd_buffer_t;
 

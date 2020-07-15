@@ -14,7 +14,7 @@
 #include "Graphics/PostProcessing.h"
 
 #include "Render/Debug.h"
-#include "Render/Textures/Texture.h"
+#include "Render/Texture/Texture.h"
 
 #include "IO/Input.h"
 #include "Math/Random.h"

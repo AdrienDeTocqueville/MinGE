@@ -1,8 +1,8 @@
 #include "Profiler/profiler.h"
 
 #include "Render/CommandBuffer.h"
-#include "Render/Shaders/Shader.inl"
-#include "Render/Shaders/Material.inl"
+#include "Render/Shader/Shader.inl"
+#include "Render/Shader/Material.inl"
 
 static GLuint empty_vao;
 

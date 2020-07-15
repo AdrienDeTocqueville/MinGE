@@ -1,10 +1,10 @@
-#include "Render/Shaders/Program.h"
-#include "Render/Shaders/Shader.h"
+#include "Render/Shader/Program.h"
+#include "Render/Shader/Shader.h"
 #include "Render/GLDriver.h"
 
 #define STB_INCLUDE_IMPLEMENTATION
 #define STB_INCLUDE_LINE_GLSL
-#include "Render/Shaders/stb_include.h"
+#include "Render/Shader/stb_include.h"
 
 #include "Utility/Error.h"
 #include "Utility/stb_sprintf.h"

@@ -1,9 +1,9 @@
 #include <UI/UI.h>
 
 #include <Render/GLDriver.h>
-#include <Render/Shaders/Shader.h>
-#include <Render/Shaders/Program.h>
-#include <Render/Shaders/Material.inl>
+#include <Render/Shader/Shader.h>
+#include <Render/Shader/Program.h>
+#include <Render/Shader/Material.inl>
 
 #include "Editor/Render/RenderUI.h"
 

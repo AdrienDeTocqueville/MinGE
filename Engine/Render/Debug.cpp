@@ -5,8 +5,8 @@
 #include "Render/Debug.h"
 #include "Render/GLDriver.h"
 #include "Render/CommandBuffer.h"
-#include "Render/Shaders/Material.h"
-#include "Render/Shaders/Shader.h"
+#include "Render/Shader/Material.h"
+#include "Render/Shader/Shader.h"
 
 #include "Structures/Bounds.h"
 

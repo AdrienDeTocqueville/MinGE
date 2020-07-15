@@ -7,9 +7,9 @@
 
 #include "Render/CommandBuffer.h"
 #include "Render/Mesh/Mesh.h"
-#include "Render/Shaders/Material.h"
-#include "Render/Textures/Texture.h"
-#include "Render/Textures/RenderTexture.h"
+#include "Render/Shader/Material.h"
+#include "Render/Texture/Texture.h"
+#include "Render/Texture/RenderTexture.h"
 
 #include "Math/glm.h"
 #include "Structures/Bounds.h"

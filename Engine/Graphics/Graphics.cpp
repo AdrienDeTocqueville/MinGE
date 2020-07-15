@@ -7,7 +7,7 @@
 #include "Render/RenderEngine.h"
 #include "Render/CommandBuffer.h"
 #include "Render/Debug.h"
-#include "Render/Shaders/Shader.inl"
+#include "Render/Shader/Shader.inl"
 
 #include "Graphics/Graphics.h"
 #include "Graphics/CommandKey.h"

@@ -2,7 +2,7 @@
 
 #include <UI/UI.h>
 #include <Render/GLDriver.h>
-#include <Render/Textures/Texture.h>
+#include <Render/Texture/Texture.h>
 
 struct texture_t
 {
