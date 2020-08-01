@@ -18,7 +18,7 @@ int main(int, char**)
 	Engine::init(window);
 	Editor::init();
 
-	Editor::open_scene("Assets/tests/dummy_scene.ge");
+	Editor::open_scene("Assets/Scenes/gamma.ge");
 
 	/// Main loop
 	while (!Input::window_closed())

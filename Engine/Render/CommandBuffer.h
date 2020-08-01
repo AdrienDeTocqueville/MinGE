@@ -5,13 +5,6 @@
 #include "Render/Mesh/Mesh.h"
 #include "Render/RenderPass.h"
 
-struct camera_data_t
-{
-	mat4 view_proj;
-	vec3 position;
-	ivec2 resolution;
-};
-
 struct submesh_data_t
 {
 	submesh_t submesh;
@@ -27,10 +20,14 @@ struct cmd_buffer_t
 	cmd_buffer_t(): size(0), capacity(32) { buffer = (uint8_t*)malloc(capacity); }
 	~cmd_buffer_t() { free(buffer); }
 
-	void setup_camera(camera_data_t *camera);
+	void set_uniform_data(uint32_t buffer, void *data, uint32_t size);
+	void set_storage_data(uint32_t buffer, void *data, uint32_t size);
+
+	void setup_camera(ivec2 res, uint32_t buf, uint32_t offset, uint32_t size);
 	void set_framebuffer(uint32_t fbo, vec4 color, bool clear_depth);
-	void draw_batch(submesh_data_t *submeshes, mat4 *matrices, uint32_t *sorted_indices,
-			RenderPass::Type pass, uint32_t count);
+
+	void draw_batch(submesh_data_t *submeshes, uint32_t *sorted_indices,
+			uint32_t per_object, RenderPass::Type pass, uint32_t count);
 	void fullscreen_pass(uint32_t fbo, ivec4 viewport, uint32_t material);
 
 	// Should only be called from render thread
@@ -40,7 +37,7 @@ struct cmd_buffer_t
 	uint32_t size, capacity;
 
 private:
-	enum Type { DrawBatch, SetFramebuffer, SetupCamera, FullscreenPass };
+	enum Type { SetUniformData, SetStorageData, DrawBatch, SetFramebuffer, SetupCamera, FullscreenPass };
 
 	template <typename T>
 	void store(Type type, T data)
@@ -64,11 +61,18 @@ private:
 		return *(T*)data;
 	}
 
+	struct block_data_t
+	{
+		uint32_t buffer;
+		uint32_t size;
+		void *data;
+	};
+
 	struct draw_batch_t
 	{
 		submesh_data_t *submeshes;
-		mat4 *matrices;
 		uint32_t *sorted_indices;
+		uint32_t per_object;
 		RenderPass::Type pass;
 		uint32_t count;
 	};
@@ -78,6 +82,13 @@ private:
 		uint32_t fbo;
 		bool clear_depth;
 		vec4 clear_color;
+	};
+
+	struct setup_camera_t
+	{
+		ivec2 res;
+		uint32_t buf;
+		uint32_t offset, size;
 	};
 
 	struct fullscreen_pass_t

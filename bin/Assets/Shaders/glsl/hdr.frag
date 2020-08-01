@@ -1,13 +1,16 @@
 in vec2 uv;
 in vec4 gl_FragCoord;
 
-uniform sampler2D depth_buffer;
-uniform sampler2D color_buffer;
+out vec4 out_color;
+out float gl_FragDepth;
+
+
 uniform int hdr;
 uniform float exposure;
 
-out vec4 out_color;
-out float gl_FragDepth;
+uniform sampler2D depth_buffer;
+uniform sampler2D color_buffer;
+
 
 void main()
 {

@@ -47,3 +47,20 @@ void Renderer::set_mesh(Mesh val)
 
 	sys.update_submeshes(x, true);
 }
+
+
+// Light
+
+#define SIMPLE_LIGHT_PROP(type, prop) \
+type Light::prop() {				\
+	auto x = sys.indices.get<2>(id());	\
+	return sys.point_lights.get<0>()[x].prop;	\
+} \
+void Light::set_##prop(type val) {		\
+	auto x = sys.indices.get<2>(id());	\
+	sys.point_lights.get<0>()[x].prop = val;	\
+}
+
+SIMPLE_LIGHT_PROP(vec3, color)
+
+#undef SIMPLE_LIGHT_PROP

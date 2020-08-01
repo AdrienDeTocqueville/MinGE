@@ -32,26 +32,10 @@ static bool check_compile(unsigned shader, const char *file)
 	GLint success;
 	glCheck(glGetShaderiv(shader, GL_COMPILE_STATUS, &success));
 
-	if (success != GL_TRUE)
-	{
-#ifdef DEBUG
-		GLint stringSize(0);
-		glCheck(glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &stringSize));
-
-		char *error = new char[stringSize + 1];
-
-		glCheck(glGetShaderInfoLog(shader, stringSize, &stringSize, error));
-		error[stringSize] = '\0';
-
-		std::cout << std::endl << error;
-		delete[] error;
-#endif
-		Error::addf(Error::OPENGL, "Failed to compile shader: %s", file);
-	}
 	return success == GL_TRUE;
 }
 
-static unsigned compile(unsigned type, const std::string &path, const char *pass_define, const char *defines, const char *builtins)
+static unsigned compile(unsigned type, const std::string &path, const char *pass_define, const char *defines)
 {
 	std::ifstream file("Assets/Shaders/" + path);
 	if (!file)
@@ -80,11 +64,10 @@ static unsigned compile(unsigned type, const std::string &path, const char *pass
 	const GLchar* source[] = {
 		defines,
 		pass_define,
-		builtins,
 		final_source,
 	};
 
-	glCheck(glShaderSource(shader, 4, source, nullptr));
+	glCheck(glShaderSource(shader, sizeof(source)/sizeof(GLchar*), source, nullptr));
 	glCheck(glCompileShader(shader));
 
 	free(final_source);
@@ -100,7 +83,7 @@ static unsigned compile(unsigned type, const std::string &path, const char *pass
 	else start++;
 	size_t end = path.find('.', start);
 	size_t length = end == std::string::npos ? -1 : end - start;
-	glCheck(glObjectLabel(GL_SHADER, shader, length, path.c_str() + start));
+	glCheck(glObjectLabel(GL_SHADER, shader, (GLsizei)length, path.c_str() + start));
 
 	return shader;
 }
@@ -155,10 +138,10 @@ static unsigned link(const Stages &stages)
 	return program;
 }
 
-static inline int compile_stages(const ShaderSources &sources, RenderPass::Type pass, const char *defines, const char *builtins, Stages &stages)
+static inline int compile_stages(const ShaderSources &sources, RenderPass::Type pass, const char *defines, Stages &stages)
 {
 	#define COMPILE(type, name) (0 == (stages.name ? stages.name :\
-		(stages.name = compile(type, sources.name, pass_define, defines, builtins)))) \
+		(stages.name = compile(type, sources.name, pass_define, defines)))) \
 
 	static const char *pass_defines[] = {
 		"SHADOW_PASS",
@@ -198,12 +181,12 @@ static inline int compile_stages(const ShaderSources &sources, RenderPass::Type 
 	return Error::None;
 }
 
-Program::Program(const struct ShaderSources &sources, RenderPass::Type pass, const char *defines, const char *builtins):
+Program::Program(const struct ShaderSources &sources, RenderPass::Type pass, const char *defines):
 	program(0)
 {
 	Stages stages;
 
-	auto answer = compile_stages(sources, pass, defines, builtins, stages);
+	auto answer = compile_stages(sources, pass, defines, stages);
 	if (answer == Error::Cancel)	exit(EXIT_FAILURE);
 	else if (answer == Error::None)
 		program = link(stages);
@@ -215,5 +198,5 @@ Program::Program(const struct ShaderSources &sources, RenderPass::Type pass, con
 
 void Program::label(const char *name, size_t len)
 {
-	glCheck(glObjectLabel(GL_PROGRAM, program, len, name));
+	glCheck(glObjectLabel(GL_PROGRAM, program, (GLsizei)len, name));
 }

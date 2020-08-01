@@ -23,10 +23,13 @@ struct GL
 	typedef void *SDL_GLContext;
 	static SDL_GLContext context;
 
+	static GLint uniform_offset_alignment;
+	static GLint storage_offset_alignment;
+
 private:
 	struct GLState
 	{
-		GLuint ubo, vbo, ebo, vao, fbo;
+		GLuint ubo, ssbo, vbo, ebo, vao, fbo;
 		GLuint program;
 		GLuint texture_unit;
 
@@ -159,15 +162,30 @@ public:
 	{
 		if (buf != state.ubo || NO_DRIVER_STATE_CACHE)
 		{
-			glCheck(glBindBuffer(GL_UNIFORM_BUFFER, buf));
+			glBindBuffer(GL_UNIFORM_BUFFER, buf);
 			state.ubo = buf;
 		}
 	}
 
-	static void BindBufferRange(GLuint binding, GLuint buf, GLintptr offset, GLsizeiptr size)
+	static void BindStorageBuffer(GLuint buf)
+	{
+		if (buf != state.ssbo || NO_DRIVER_STATE_CACHE)
+		{
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, buf);
+			state.ssbo = buf;
+		}
+	}
+
+	static void BindUniformRange(GLuint binding, GLuint buf, GLintptr offset, GLsizeiptr size)
 	{
 		glCheck(glBindBufferRange(GL_UNIFORM_BUFFER, binding, buf, offset, size));
 		state.ubo = buf;
+	}
+
+	static void BindStorageRange(GLuint binding, GLuint buf, GLintptr offset, GLsizeiptr size)
+	{
+		glCheck(glBindBufferRange(GL_SHADER_STORAGE_BUFFER, binding, buf, offset, size));
+		state.ssbo = buf;
 	}
 
 	static void BindVertexBuffer(GLuint buf)

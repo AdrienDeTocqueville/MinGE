@@ -65,6 +65,9 @@ const mat4& Transform::world_matrix() const
 const mat4& Transform::local_matrix() const
 { return sys.data.get<0>(id())->local; }
 
+mat4 Transform::normal_matrix() const
+{ return transpose(inverse(world_matrix())); }
+
 
 vec3 Transform::to_world(vec3 point) const
 {

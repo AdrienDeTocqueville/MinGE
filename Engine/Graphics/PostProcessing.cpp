@@ -28,9 +28,9 @@ PostProcessingSystem::~PostProcessingSystem()
 static void update(PostProcessingSystem *self)
 {
 	post_process.set("hdr", self->enable);
+	post_process.set("exposure", self->exposure);
 	post_process.set("depth_buffer", self->depth);
 	post_process.set("color_buffer", self->color);
-	post_process.set("exposure", self->exposure);
 
 	ivec2 ws = Input::window_size();
 

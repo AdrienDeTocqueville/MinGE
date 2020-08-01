@@ -75,9 +75,17 @@
         {
             "name": "Light2",
             "uint": 6
+        },
+        {
+            "name": "Light3",
+            "uint": 7
+        },
+        {
+            "name": "Light4",
+            "uint": 8
         }
     ],
-    "max_entity": 6,
+    "max_entity": 8,
     "systems": {
         "graphics": {
             "data": {
@@ -232,6 +240,16 @@
                         "first_child": 0,
                         "next_sibling": 0,
                         "parent": 0
+                    },
+                    {
+                        "first_child": 0,
+                        "next_sibling": 0,
+                        "parent": 0
+                    },
+                    {
+                        "first_child": 0,
+                        "next_sibling": 0,
+                        "parent": 0
                     }
                 ],
                 "indices": [
@@ -241,11 +259,13 @@
                         3,
                         4,
                         5,
-                        6
+                        6,
+                        8,
+                        7
                     ]
                 ],
                 "max_component": [
-                    6
+                    8
                 ],
                 "transforms": [
                     {
@@ -286,9 +306,9 @@
                     },
                     {
                         "position": [
-                            9.300000190734863,
+                            6.0,
                             0.0,
-                            8.0
+                            0.0
                         ],
                         "rotation": [
                             0.0,
@@ -340,9 +360,45 @@
                     },
                     {
                         "position": [
-                            1.2999999523162842,
+                            4.0,
                             0.0,
-                            8.0
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            2.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
                         ],
                         "rotation": [
                             0.0,

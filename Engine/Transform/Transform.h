@@ -25,6 +25,7 @@ struct Transform: public UID32
 
 	inline const mat4 &world_matrix() const;
 	inline const mat4 &local_matrix() const;
+	inline mat4 normal_matrix() const;
 
 	inline vec3 to_world(vec3 point) const;
 	inline vec3 vec_to_world(vec3 vec) const;

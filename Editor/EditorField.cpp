@@ -134,6 +134,11 @@ void Editor::field(const char *label, void (*widget)(),
 		auto w = (bool(*)(const char*,void*,float,float,float,const char*,float))widget;
 		changed = w(label, buffer, 0.1f, 0.0f, 0.0f, "%.3f", 1.0f);
 	}
+	else if (is_widget(widget, ImGui::ColorEdit3, ImGui::ColorEdit4, ImGui::ColorPicker3, ImGui::ColorPicker4))
+	{
+		auto w = (bool(*)(const char*,void*,ImGuiColorEditFlags))widget;
+		changed = w(label, buffer, 0);
+	}
 	else
 	{
 		auto w = (bool(*)(const char*,void*))widget;

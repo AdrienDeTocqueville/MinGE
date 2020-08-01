@@ -37,12 +37,14 @@ struct GraphicsSystem
 
 	Renderer add_renderer(Entity entity, Mesh mesh);
 
-	Light add_point_light(Entity entity, vec3 color = vec3(150.0f / 255.0f));
+	Light add_point_light(Entity entity, vec3 color = vec3(150.0f / 255.0f), float radius = 1.0f);
 
 	bool has_camera(Entity entity)	 const	{ return indices.has<0>(entity); }
 	bool has_renderer(Entity entity) const	{ return indices.has<1>(entity); }
+	bool has_light(Entity entity)    const	{ return indices.has<2>(entity); }
 	Camera	 get_camera(Entity entity)   { return {entity.id(), 0, *this}; }
 	Renderer get_renderer(Entity entity) { return {entity.id(), 0, *this}; }
+	Light    get_light(Entity entity)    { return {entity.id(), 0, *this}; }
 
 
 	// Cameras
@@ -57,6 +59,7 @@ struct GraphicsSystem
 		Frustum frustum;
 		vec4 clear_color;
 		uint32_t fbo_depth, fbo_forward;
+		ivec2 screen_size;
 
 		float fov;
 		Entity entity;
@@ -70,7 +73,7 @@ struct GraphicsSystem
 
 	};
 
-	soa_t<camera_t, struct camera_data_t> cameras; // TODO: don't need a whole page
+	soa_t<camera_t> cameras; // TODO: don't need a whole page
 
 	// Renderers
 	struct renderer_t
@@ -86,24 +89,32 @@ struct GraphicsSystem
 	// Lights
 	struct point_light_t
 	{
+		float radius;
 		vec3 color;
 		Entity entity;
 	};
-
-	std::vector<point_light_t> point_lights;
+	
+	soa_t<point_light_t> point_lights; // TODO: don't need a whole page
 
 	// System data
 	entity_mapper_t<3> indices;
 
 	cmd_buffer_t cmd_buffer;
 
-	uint32_t prev_index_count;
-	uint32_t prev_key_count;
-	uint32_t prev_renderer_count;
+	uint32_t indices_capacity;
+	uint32_t keys_capacity;
 
 	uint32_t *draw_order_indices;
 	uint64_t *renderer_keys;
-	mat4 *matrices;
+
+	struct interface_block {
+		interface_block(): data(NULL), capacity(0) {}
+		~interface_block() { free(data); }
+
+		void *data;
+		uint32_t buffer, capacity;
+	};
+	interface_block global, objects /*, skinned_objects */;
 
 	TransformSystem *transforms;
 

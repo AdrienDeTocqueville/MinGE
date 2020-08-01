@@ -37,12 +37,12 @@ inline void set_uniform(int location, GLuint type, GLsizei num, const void *data
 	}
 }
 
-inline size_t Shader::get_builtin_location(const std::string &name)
+inline uint32_t Shader::get_builtin_location(const std::string &name)
 {
-	auto it = builtins_names.find(name);
+	auto it = bindings_cache.variables.find(name);
 
 #ifdef DEBUG
-	if (it == builtins_names.end())
+	if (it == bindings_cache.variables.end())
 	{
 		std::cout << "Unknown builtin: " << name << std::endl;
 		return -1;
@@ -52,20 +52,14 @@ inline size_t Shader::get_builtin_location(const std::string &name)
 	return it->second;
 }
 
-template <typename T>
-inline void Shader::set_builtin(const std::string &name, const T &value)
+void Shader::set_uniform(uint32_t slot, uint32_t buf, uint32_t offset, uint32_t size)
 {
-	set_builtin(get_builtin_location(name), value);
+	if (bindings_cache.update(BindingsCache::Uniform, slot, buf, offset, size))
+		GL::BindUniformRange(slot, buf, offset, size);
 }
 
-template <typename T>
-inline void Shader::set_builtin(size_t location, const T &value)
+void Shader::set_storage(uint32_t slot, uint32_t buf, uint32_t offset, uint32_t size)
 {
-	uint8_t *b = builtins.data() + location;
-	(*b)++; // Bump update index;
-
-	b += sizeof(uint8_t) + sizeof(GLuint);
-
-	memcpy(b, &value, sizeof(T));
+	if (bindings_cache.update(BindingsCache::Storage, slot, buf, offset, size))
+		GL::BindStorageRange(slot, buf, offset, size);
 }
-

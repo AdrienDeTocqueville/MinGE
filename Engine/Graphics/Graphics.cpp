@@ -14,11 +14,14 @@
 #include "Transform/Transform.h"
 
 GraphicsSystem::GraphicsSystem(TransformSystem *world):
-	prev_index_count(0), prev_key_count(0), prev_renderer_count(0),
-	draw_order_indices(NULL), renderer_keys(NULL), matrices(NULL),
+	indices_capacity(0), keys_capacity(0),
+	draw_order_indices(NULL), renderer_keys(NULL),
 	transforms(world)
 {
 	RenderEngine::add_buffer(&cmd_buffer);
+
+	global.buffer = GL::GenBuffer();
+	objects.buffer = GL::GenBuffer();
 }
 
 GraphicsSystem::~GraphicsSystem()
@@ -39,8 +42,23 @@ GraphicsSystem::~GraphicsSystem()
 
 	free(draw_order_indices);
 	free(renderer_keys);
-	free(matrices);
 }
+
+
+// Must match builtin.glsl
+struct camera_data_t
+{
+	mat4 view_proj;
+	vec3 position;
+	float padding;
+};
+struct light_data_t
+{
+	vec3 position;
+	float radius;
+	vec3 color;
+	float padding;
+};
 
 static void init_indices(uint32_t *__restrict indices, const GraphicsSystem::renderer_t *renderers, uint32_t count)
 {
@@ -61,49 +79,59 @@ static void update(GraphicsSystem *self)
 	auto renderer_count = self->renderers.size;
 	auto *renderers = self->renderers.get<0>() + 1;
 	auto camera_count = self->cameras.size;
+	auto light_count = self->point_lights.size;
 	auto &submeshes = self->submeshes;
+
+	const unsigned object_size = mem::align(sizeof(mat4) * 2, GL::uniform_offset_alignment);
+	const uint32_t global_size = sizeof(camera_data_t) + light_count * sizeof(light_data_t);
 
 	{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "set_counters");
 	MICROPROFILE_COUNTER_SET("GRAPHICS/renderers", renderer_count);
 	MICROPROFILE_COUNTER_SET("GRAPHICS/cameras", camera_count);
-	MICROPROFILE_COUNTER_SET("GRAPHICS/point_lights", self->point_lights.size());
+	MICROPROFILE_COUNTER_SET("GRAPHICS/lights", light_count);
 	}
 
 	/// Resize persistent alloc if needed
 	{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "realloc");
 
 	uint32_t new_index_count = submeshes.count * camera_count;
-	if (self->prev_index_count < new_index_count)
+	if (self->indices_capacity < new_index_count)
 	{
-		self->prev_index_count = mem::next_power_of_two(new_index_count);
-		self->draw_order_indices = (uint32_t*)realloc(self->draw_order_indices, self->prev_index_count * sizeof(uint32_t));
+		self->indices_capacity = mem::next_power_of_two(new_index_count);
+		self->draw_order_indices = (uint32_t*)realloc(self->draw_order_indices, self->indices_capacity * sizeof(uint32_t));
 		goto recompute_indices;
 	}
-	if (self->prev_renderer_count & (-1))
+	if (self->objects.capacity & (-1))
 	{
 		recompute_indices:
-		self->prev_renderer_count &= ~(-1);
+		self->objects.capacity &= ~(-1);
 		init_indices(self->draw_order_indices, renderers, renderer_count);
 		for (uint32_t i = 1; i < camera_count; i++)
 			memcpy(self->draw_order_indices + i * submeshes.count, self->draw_order_indices, submeshes.count * sizeof(uint32_t));
 	}
 
-	if (self->prev_key_count < submeshes.size * camera_count)
+	if (self->keys_capacity < submeshes.size * camera_count)
 	{
-		self->prev_key_count = mem::next_power_of_two(submeshes.size * camera_count);
-		self->renderer_keys = (uint64_t*)realloc(self->renderer_keys, self->prev_key_count * sizeof(uint64_t));
+		self->keys_capacity = mem::next_power_of_two(submeshes.size * camera_count);
+		self->renderer_keys = (uint64_t*)realloc(self->renderer_keys, self->keys_capacity * sizeof(uint64_t));
 	}
 
-	if (self->prev_renderer_count < renderer_count)
+	if (self->global.capacity < global_size)
 	{
-		self->prev_renderer_count = mem::next_power_of_two(renderer_count);
-		self->matrices = (mat4*)realloc(self->matrices, self->prev_renderer_count * sizeof(mat4));
+		self->global.capacity = mem::next_power_of_two(global_size);
+		self->global.data = (mat4*)realloc(self->global.data, self->global.capacity * camera_count);
+	}
+	if (self->objects.capacity < renderer_count)
+	{
+		self->objects.capacity = mem::next_power_of_two(renderer_count);
+		self->objects.data = (mat4*)realloc(self->objects.data, self->objects.capacity * object_size);
 	}
 	}
 
 	auto *cameras = self->cameras.get<0>() + 1;
-	auto *camera_datas = self->cameras.get<1>() + 1;
-	mat4 *matrices = self->matrices;
+	auto *point_lights = self->point_lights.get<0>() + 1;
+	uint8_t *matrices = (uint8_t*)self->objects.data;
+	uint8_t *global = (uint8_t*)self->global.data;
 
 	/// Read transform data
 	{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "sync_transform");
@@ -115,31 +143,42 @@ static void update(GraphicsSystem *self)
 		for (uint32_t i = 0; i < renderer_count; i++)
 		{
 			Transform tr = transforms->get(renderers[i].entity);
-			matrices[i] = tr.world_matrix();
+			auto obj = (mat4*)(matrices + i * object_size);
+			obj[0] = tr.world_matrix();
+			obj[1] = tr.normal_matrix();
 		}
 		for (uint32_t i = 0; i < camera_count; i++)
 		{
+			camera_data_t *camera_data = (camera_data_t*)(global + i * global_size);
 			Transform tr = transforms->get(cameras[i].entity);
 			vec3 pos = tr.position();
 
 			cameras[i].center_point = tr.vec_to_world(vec3(1, 0, 0)) + pos;
 			cameras[i].up_vector = tr.vec_to_world(vec3(0, 0, 1));
-			camera_datas[i].position = pos;
+			camera_data->position = pos;
 		}
-		for (uint32_t i = 0; i < self->point_lights.size(); i++)
+
+		light_data_t *lights_data = (light_data_t*)(global + sizeof(camera_data_t));
+		for (uint32_t i = 0; i < light_count; i++)
 		{
-			Transform tr = transforms->get(self->point_lights[i].entity);
-			Shader::set_builtin("LIGHT_DIR", tr.position());
-			Shader::set_builtin("LIGHT_COLOR", self->point_lights[i].color);
+			Transform tr = transforms->get(point_lights[i].entity);
+			lights_data[i].position = tr.position();
+			lights_data[i].radius = point_lights[i].radius;
+			lights_data[i].color = point_lights[i].color;
 		}
 
 		Engine::read_unlock(transforms);
+
+		for (uint32_t i = 1; i < camera_count; i++)
+			memcpy(lights_data + i * global_size, lights_data, light_count * sizeof(light_data_t));
 	}
 
 	/// Build command buffer
+	cmd_buffer_t &cmd = self->cmd_buffer;
+	cmd.set_uniform_data(self->objects.buffer, matrices, object_size * renderer_count);
+	cmd.set_storage_data(self->global.buffer, global, global_size * camera_count);
 
 	Sphere sphere;
-	cmd_buffer_t &cmd = self->cmd_buffer;
 	for (uint32_t i = 0; i < camera_count; i++)
 	{
 		MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "camera_setup");
@@ -147,18 +186,18 @@ static void update(GraphicsSystem *self)
 		uint32_t cmd_count = submeshes.count;
 		uint64_t *renderer_keys = self->renderer_keys + i * submeshes.size;
 		GraphicsSystem::camera_t *cam = cameras + i;
-		camera_data_t *cam_data = camera_datas + i;
+		camera_data_t *camera_data = (camera_data_t*)(global + i * global_size);
 		float scale = 1.0f / (cam->far_plane - cam->near_plane);
 
 		/// Compute new VP
 
-		const mat4 view_matrix = glm::lookAt(cam_data->position, cam->center_point, cam->up_vector);
-		simd_mul(cam_data->view_proj, cam->projection, view_matrix);
+		const mat4 view_matrix = glm::lookAt(camera_data->position, cam->center_point, cam->up_vector);
+		simd_mul(camera_data->view_proj, cam->projection, view_matrix);
 
 		/// Frustum culling
 		{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "frustum_culling");
 
-		cam->frustum.init(cam_data->view_proj);
+		cam->frustum.init(camera_data->view_proj);
 
 		for (uint32_t j = 0; j < renderer_count; j++)
 		{
@@ -166,7 +205,7 @@ static void update(GraphicsSystem *self)
 
 			// TODO: don't recompute sphere for each camera ?
 			sphere.init(Mesh::meshes.get<3>()[renderers[j].mesh.id()]);
-			sphere.transform(matrices[j]);
+			sphere.transform(*(mat4*)(matrices + j * object_size));
 
 			// TODO: SIMDify
 			if (Bounds::collide(cam->frustum, sphere))
@@ -214,17 +253,20 @@ static void update(GraphicsSystem *self)
 		/// Submit to backend
 		{ MICROPROFILE_SCOPEI("GRAPHICS_SYSTEM", "submit");
 
-		cmd.setup_camera(cam_data);
+		cmd.setup_camera(cam->screen_size, self->global.buffer, i * global_size, global_size);
+
 		cmd.set_framebuffer(cam->fbo_depth, vec4(1.0f), true);
-		cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Depth, cmd_count);
+		cmd.draw_batch(submeshes.data, draw_order_indices, self->objects.buffer, RenderPass::Depth, cmd_count);
+
 		cmd.set_framebuffer(cam->fbo_forward, cam->clear_color, false);
-		cmd.draw_batch(submeshes.data, matrices, draw_order_indices, RenderPass::Forward, cmd_count);
+		cmd.draw_batch(submeshes.data, draw_order_indices, self->objects.buffer, RenderPass::Forward, cmd_count);
 		}
 	}
 
 	if (camera_count)
 	{
-		Debug::cmd().setup_camera(camera_datas);
+		// Use first camera for debug draw
+		Debug::cmd().setup_camera(cameras->screen_size, self->global.buffer, 0, global_size);
 	}
 
 	Engine::read_unlock(self);
@@ -238,12 +280,8 @@ static void on_destroy_entity(GraphicsSystem *self, Entity e)
 
 static void on_resize_window(GraphicsSystem *self)
 {
-	auto *cameras = self->cameras.get<0>() + 1;
-	auto *camera_datas = self->cameras.get<1>() + 1;
-	auto camera_count = self->cameras.size;
-
-	for (uint32_t i = 0; i < camera_count; i++)
-		self->resize_rt(i + 1);
+	for (uint32_t i = 1; i <= self->cameras.size; i++)
+		self->resize_rt(i);
 }
 
 const system_type_t GraphicsSystem::type = []() {

@@ -37,6 +37,9 @@ private:
 
 struct Light: UID32
 {
+	SIMPLE_PROP(vec3, color)
+	SIMPLE_PROP(float, radius)
+
 private:
 	Light(uint32_t id, uint32_t gen, GraphicsSystem &system):
 		UID32(id, gen), sys(system) {}

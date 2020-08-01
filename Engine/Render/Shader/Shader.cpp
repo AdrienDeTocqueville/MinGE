@@ -138,7 +138,7 @@ Shader *Shader::reload()
 	}
 }
 
-// Variant stuff
+/// Variant stuff
 bool Shader::load_json(const char *path)
 {
 	// Clear state
@@ -260,18 +260,6 @@ uint32_t Shader::get_variant(uint32_t hash)
 		}
 	}
 
-	// Generate builtins declarations
-	std::string builtins_decl;
-	for (auto &var : builtins_names)
-	{
-		unsigned *type = (GLuint*)(builtins.data() + var.second + 1);
-		builtins_decl += "uniform ";
-		builtins_decl += uniform_type_names.at(*type);
-		builtins_decl += " ";
-		builtins_decl += var.first;
-		builtins_decl += ";\n";
-	}
-
 	// Compile shaders
 	for (int i(0); i < RenderPass::Count; i++)
 	{
@@ -295,7 +283,7 @@ uint32_t Shader::get_variant(uint32_t hash)
 		// If not, compile it
 		if (!found)
 		{
-			variant.passes[i] = new Program(passes[i].sources, (RenderPass::Type)i, defines.c_str(), builtins_decl.c_str());
+			variant.passes[i] = new Program(passes[i].sources, (RenderPass::Type)i, defines.c_str());
 			variant.passes[i]->label(label, label_len);
 			load_uniforms(variant.passes[i]);
 		}
@@ -305,129 +293,97 @@ uint32_t Shader::get_variant(uint32_t hash)
 	return (uint32_t)(variants.size() - 1);
 }
 
-// Uniform stuff
-std::vector<uint8_t> Shader::builtins;
-std::unordered_map<std::string, size_t> Shader::builtins_names;
+/// Uniform stuff
+Shader::BindingsCache Shader::bindings_cache;
 
 void Shader::setup_builtins()
 {
-	builtins_names.clear();
-	builtins.clear();
+	bindings_cache.clear();
 
-	// Camera
-	add_builtin("MATRIX_VP", GL_FLOAT_MAT4);
-	add_builtin("VIEW_POS", GL_FLOAT_VEC3);
-
-	// Light
-	add_builtin("MATRIX_LIGHT", GL_FLOAT_MAT4);
-	add_builtin("LIGHT_DIR", GL_FLOAT_VEC3);
-	add_builtin("LIGHT_COLOR", GL_FLOAT_VEC3);
-	add_builtin("SHADOW_MAP", GL_SAMPLER_2D);
-
-	// Model
-	add_builtin("MATRIX_M", GL_FLOAT_MAT4);
-	add_builtin("MATRIX_N", GL_FLOAT_MAT4);
-}
-
-void Shader::add_builtin(std::string name, unsigned type)
-{
-	size_t offset = builtins.size();
-	uint8_t size = uniform_type_size.at(type);
-
-	builtins_names[name] = offset;
-
-	/*
-	 * Builtin structure:
-	 * - uint8_t update_idx;
-	 * - GLuint type;
-	 * - uint8_t data[size];
-	 */
-	builtins.resize(offset + sizeof(uint8_t) + sizeof(GLuint) + size);
-
-	uint8_t *start = builtins.data() + offset;
-	*start = 0; start += sizeof(uint8_t);
-	*(GLuint *)start = type;
+	// Uniform
+	bindings_cache.add_builtin(BindingsCache::Uniform, "PER_OBJECT");
+	// Storage
+	bindings_cache.add_builtin(BindingsCache::Storage, "GLOBAL");
 }
 
 void Shader::load_uniforms(Program *prgm)
 {
 	unsigned program = prgm->program;
+	GLint uniform_count, uniform_block_count, ssbo_count;
 
-	GLint name_len, real_len;
-	glCheck(glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &name_len));
-	char *temp_name = new char[name_len];
+	// Find max uniform name length
+	GLint max_len, temp_len;
+	glCheck(glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_len));
+	glCheck(glGetProgramInterfaceiv(program, GL_UNIFORM_BLOCK, GL_MAX_NAME_LENGTH, &temp_len));
+	if (temp_len > max_len) max_len = temp_len;
+	glCheck(glGetProgramInterfaceiv(program, GL_SHADER_STORAGE_BLOCK, GL_MAX_NAME_LENGTH, &temp_len));
+	if (temp_len > max_len) max_len = temp_len;
+	char *temp_name = new char[max_len];
 
-	GLint uniform_count = 0;
+	// UBO
+	glCheck(glGetProgramInterfaceiv(program, GL_UNIFORM_BLOCK, GL_ACTIVE_RESOURCES, &uniform_block_count));
+	for (GLint i = 0; i < uniform_block_count; ++i)
+	{
+		glCheck(glGetProgramResourceName(program, GL_UNIFORM_BLOCK, i, max_len, &temp_len, temp_name));
+
+		std::string var_name(temp_name, temp_len);
+		auto slot = bindings_cache.get_slot(BindingsCache::Uniform, var_name);
+		if (slot == -1) continue;
+
+		GLuint index = glGetProgramResourceIndex(program, GL_UNIFORM_BLOCK, temp_name);
+		glUniformBlockBinding(program, index, slot);
+
+	}
+
+	// SSBO
+	glCheck(glGetProgramInterfaceiv(program, GL_SHADER_STORAGE_BLOCK, GL_ACTIVE_RESOURCES, &ssbo_count));
+	for (GLint i = 0; i < ssbo_count; ++i)
+	{
+		glCheck(glGetProgramResourceName(program, GL_SHADER_STORAGE_BLOCK, i, max_len, &temp_len, temp_name));
+
+		std::string var_name(temp_name, temp_len);
+		auto slot = bindings_cache.get_slot(BindingsCache::Storage, var_name);
+		if (slot == -1) continue;
+
+		GLuint index = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, temp_name);
+		glShaderStorageBlockBinding(program, index, slot);
+	}
+
+	// Uniforms
 	glCheck(glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &uniform_count));
-
 	for (GLint i = 0; i < uniform_count; ++i)
 	{
 		Program::Uniform u;
 
-		GLint num;
-		glCheck(glGetActiveUniform(program, i, name_len, &real_len, &num, &u.type, temp_name));
+		glCheck(glGetActiveUniform(program, i, max_len, &temp_len, &u.num, &u.type, temp_name));
 		u.location = glGetUniformLocation(program, temp_name);
 
 		if (u.location == -1)
 			continue;
 
 		// Remove '[...]' from variable name if its an array
-		if (num != 1)
-			real_len = (int)(strchr(temp_name, '[') - temp_name);
+		if (u.num != 1)
+			temp_len = (int)(strchr(temp_name, '[') - temp_name);
 
-		std::string var_name(temp_name, real_len);
-		auto it = builtins_names.find(var_name);
+		u.size = uniform_type_size.at(u.type);
 
-		// If builtin or not
-		if (it != builtins_names.end())
-			prgm->builtins.push_back({u.location, 0, it->second});
+		std::string var_name(temp_name, temp_len);
+		auto it = uniforms_names.find(var_name);
+		if (it != uniforms_names.end())
+		{
+			// Uniform is already defined by an other variant
+			u.offset = it->second;
+		}
 		else
 		{
-			u.size = uniform_type_size.at(u.type);
-			u.num = num;
+			u.offset = uniform_offset;
+			uniform_offset += (size_t)u.size * u.num;
 
-			auto it = uniforms_names.find(var_name);
-			if (it != uniforms_names.end())
-			{
-				// Uniform is already defined by an other variant
-				u.offset = it->second;
-			}
-			else
-			{
-				u.offset = uniform_offset;
-				uniform_offset += (size_t)u.size * u.num;
-
-				uniforms_names.emplace(std::move(var_name), u.offset);
-			}
-
-			prgm->uniforms.push_back(u);
+			uniforms_names.emplace(std::move(var_name), u.offset);
 		}
+
+		prgm->uniforms.push_back(u);
 	}
 
 	delete[] temp_name;
-}
-
-Program *Shader::update_builtins(uint32_t variant_idx, RenderPass::Type pass)
-{
-	Program *prgm = variants[variant_idx].passes[pass];
-	GL::UseProgram(prgm->program);
-
-	for (Program::Builtin &var : prgm->builtins)
-	{
-		uint8_t *b = builtins.data() + var.offset;
-
-		uint8_t update_idx = *b;
-		if (var.update_idx == update_idx)
-			continue;
-		var.update_idx = update_idx;
-
-		b += sizeof(uint8_t);
-		GLuint type = *(GLuint*)b;
-
-		b += sizeof(GLuint);
-
-		set_uniform(var.location, type, 1, b);
-	}
-
-	return prgm;
 }

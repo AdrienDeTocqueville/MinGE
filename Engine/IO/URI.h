@@ -70,7 +70,7 @@ struct uri_t
 		label = uri + strlen("asset:") + (on_disk ? 2 : 0) + start;
 
 		const char *end = strchr(label, '.');
-		if (end == NULL) len = path.size() - start;
-		else len = end - label;
+		if (end == NULL) len = (int)(path.size() - start);
+		else len = (int)(end - label);
 	}
 };

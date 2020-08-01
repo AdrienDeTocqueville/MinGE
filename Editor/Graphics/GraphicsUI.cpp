@@ -15,7 +15,8 @@ static void add_component(GraphicsSystem *sys, const char *name, Entity e)
 {
 	bool c = sys->has_camera(e);
 	bool r = sys->has_renderer(e);
-	if (c && r) return;
+	bool l = sys->has_light(e);
+	if (c && r && l) return;
 
 	if (!ImGui::BeginMenu(name))
 		return;
@@ -24,6 +25,8 @@ static void add_component(GraphicsSystem *sys, const char *name, Entity e)
 		sys->add_camera(e);
 	if (!r && ImGui::MenuItem("Renderer"))
 		sys->add_renderer(e, Mesh::none);
+	if (!l && ImGui::MenuItem("Light"))
+		sys->add_point_light(e);
 
 	ImGui::EndMenu();
 }
@@ -62,6 +65,13 @@ static void edit_entity(GraphicsSystem *sys, Entity e)
 	{
 		Renderer renderer = sys->get_renderer(e);
 		SIMPLE_PROP("Mesh", mesh_dropdown, Mesh, renderer, mesh);
+	}
+
+	// Light
+	if (sys->has_light(e) && ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		Light light= sys->get_light(e);
+		SIMPLE_PROP("Color", ImGui::ColorEdit3, vec3, light, color);
 	}
 }
 

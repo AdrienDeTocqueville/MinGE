@@ -11,7 +11,6 @@
 #include "Render/Shader/Shader.h"
 #include "Render/Shader/Material.inl"
 #include "Render/Texture/Texture.h"
-#include "Render/Buffer/UBO.h"
 
 #include "IO/Input.h"
 
@@ -21,10 +20,9 @@ static std::vector<cmd_buffer_t*> buffers;
 void RenderEngine::init()
 {
 	GL::init();
-	Shader::setup_builtins();
-	Debug::init();
 	UI::init();
 
+	Shader::setup_builtins();
 	cmd_buffer_t::init();
 
 #ifdef PROFILE
@@ -32,6 +30,7 @@ void RenderEngine::init()
 	MicroProfileGpuInitGL();
 #endif
 
+	Debug::init();
 	default_material = Material::create(Shader::load("asset:shader/standard"));
 	default_material.set("color", vec3(0.8f));
 	default_material.set("metallic", 0.0f);

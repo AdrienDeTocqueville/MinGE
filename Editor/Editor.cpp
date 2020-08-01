@@ -14,6 +14,8 @@
 #include "Transform/TransformUI.h"
 #include "Graphics/GraphicsUI.h"
 
+static char scene_path[255] = "";
+
 struct asset_tab_t
 {
 	const char *name;
@@ -59,7 +61,7 @@ void menubar()
 		if (ImGui::MenuItem("Save As", "Ctrl+Shit+S"))
 		{ }
 		if (ImGui::MenuItem("Open Scene", "Ctrl+O"))
-		{ }
+		{ Editor::open_scene(/*placeholder*/scene_path); }
 
 		if (ImGui::MenuItem("Exit"))
 			Input::close_window();
@@ -213,7 +215,6 @@ void Editor::register_system_editor(const struct system_editor_t &editor)
 	system_editors.push_back(editor);
 }
 
-static char scene_path[255] = "";
 void Editor::open_scene(const char *path)
 {
 	clear_history();

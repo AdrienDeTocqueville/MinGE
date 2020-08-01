@@ -67,6 +67,21 @@ static void dummy_scene(bool serialize = true)
 	}
 }
 
+static void gamma_scene(bool serialize = false)
+{
+	assert(!serialize);
+
+	s.load("Assets/Scenes/gamma.ge");
+
+	auto transforms = (TransformSystem*)s.get_system("transforms");
+	auto graphics = (GraphicsSystem*)s.get_system("graphics");
+
+	auto controller = new(Engine::alloc_system("CameraControl")) CameraControl(transforms, graphics);
+
+	controller->add(Entity::get("MainCamera"));
+	controller->add(Entity::get("Camera2"));
+}
+
 static void stress_scene(bool serialize)
 {
 	assert(serialize);
@@ -128,7 +143,7 @@ int main(int, char**)
 	Engine::register_asset_type(Mesh::type);
 	Engine::register_asset_type(Texture::type);
 
-	bool serialize = true;
+	bool serialize = false;
 
 	if (serialize)
 	{
@@ -142,7 +157,8 @@ int main(int, char**)
 	}
 
 	//dummy_scene(serialize);
-	stress_scene(serialize);
+	gamma_scene(serialize);
+	//stress_scene(serialize);
 
 	/// Main loop
 	while (!Input::window_closed())

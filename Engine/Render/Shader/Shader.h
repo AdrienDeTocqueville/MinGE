@@ -37,12 +37,10 @@ public:
 
 	static Shader *load(const char *URI);
 
-	static inline size_t get_builtin_location(const std::string &name);
+	static inline uint32_t get_builtin_location(const std::string &name);
 
-	template <typename T>
-	static inline void set_builtin(const std::string &name, const T &value);
-	template <typename T>
-	static inline void set_builtin(size_t location, const T &value);
+	static inline void set_uniform(uint32_t slot, uint32_t buf, uint32_t offset, uint32_t size);
+	static inline void set_storage(uint32_t slot, uint32_t buf, uint32_t offset, uint32_t size);
 
 	const char *URI;
 
@@ -55,14 +53,12 @@ private:
 
 	static void clear();
 	static void setup_builtins();
-	static void add_builtin(std::string name, unsigned type);
 
 	bool load_json(const char *path);
 	void load_uniforms(struct Program *prgm);
 	Shader *reload();
 
 	uint32_t get_variant(uint32_t hash);
-	Program *update_builtins(uint32_t variant_idx, RenderPass::Type pass);
 
 
 	// Variant related stuff
@@ -82,6 +78,50 @@ private:
 	const char *label;
 	int label_len;
 
-	static std::vector<uint8_t> builtins; // Contains < update_idx | type | data > sequenced for each builtin
-	static std::unordered_map<std::string, size_t> builtins_names;
+
+	// Bindings cache system
+
+	struct BindingsCache
+	{
+		enum Object {Uniform, Storage, COUNT};
+		std::unordered_map<std::string, uint32_t> variables;
+
+		void add_builtin(Object type, const std::string &name)
+		{
+			variables[name] = (uint32_t)bindings[type].size();
+			bindings[type].emplace_back();
+		}
+		uint32_t get_slot(Object type, const std::string &name)
+		{
+			auto it = variables.find(name);
+			if (it == variables.end())
+				return -1;
+			return it->second;
+		}
+		void clear()
+		{
+			variables.clear();
+			for (int i = 0; i < Object::COUNT; i++)
+				bindings[i].clear();
+		}
+		inline bool update(Object type, uint32_t slot, uint32_t buf, uint32_t offset, uint32_t size)
+		{
+			buffer_view_t &bound = bindings[type][slot];
+			if (bound.buf == buf && bound.offset == offset && bound.size == size)
+				return false;
+			bound.buf = buf;
+			bound.offset = offset;
+			bound.size = size;
+			return true;
+		}
+
+		struct buffer_view_t
+		{
+			buffer_view_t(): buf(0) {}
+			uint32_t buf;
+			uint32_t offset, size;
+		};
+		std::vector<buffer_view_t> bindings[COUNT];
+	};
+	static BindingsCache bindings_cache;
 };

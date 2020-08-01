@@ -20,15 +20,13 @@ uint32_t GraphicsSystem::init_camera(Entity entity, float fov, float near_plane,
 	cam->clear_color= clear_color;
 	cam->fbo_depth  = 0;
 	cam->fbo_forward= 0;
+	cam->screen_size = vec2(0);
 	cam->fov	= fov;
 	cam->entity	= entity;
 	cam->size_scale = size_scale;
 	cam->ortho	= orthographic;
 	cam->color_texture = color;
 	cam->depth_texture = depth;
-
-	camera_data_t *cam_data = cameras.get<1>() + i;
-	cam_data->resolution = ivec2(0);
 
 	return i;
 }
@@ -46,12 +44,14 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 	return {entity.id(), 0, *this};
 }
 
-Light GraphicsSystem::add_point_light(Entity entity, vec3 color)
+Light GraphicsSystem::add_point_light(Entity entity, vec3 color, float radius)
 {
-	uint32_t i = point_lights.size();
-	indices.map<2>(entity, i + 1);
+	uint32_t i = point_lights.add();
+	indices.map<2>(entity, i);
 
-	point_lights.emplace_back(point_light_t { color, entity });
+	point_lights.get<0>()[i].radius = radius;
+	point_lights.get<0>()[i].color = color;
+	point_lights.get<0>()[i].entity = entity;
 
 	return { entity.id(), 0, *this};
 }
@@ -103,16 +103,15 @@ static inline bool is_smaller(const vec2 &a, const vec2 &b)
 void GraphicsSystem::resize_rt(uint32_t i)
 {
 	camera_t *cam = cameras.get<0>() + i;
-	camera_data_t *cam_data = cameras.get<1>() + i;
 
 	vec2 ws = Input::window_size();
 	vec2 size_scale = cam->size_scale;
 	ivec2 resolution = ivec2(size_scale.x * ws.x, size_scale.y * ws.y);
 
-	if (resolution == cam_data->resolution)
+	if (resolution == cam->screen_size)
 		return;
 
-	cam_data->resolution = resolution;
+	cam->screen_size = resolution;
 
 	cam->depth_buffer.create(resolution, render_texture_t::Format::DEPTH24_STENCIL8);
 
@@ -145,17 +144,17 @@ void GraphicsSystem::resize_rt(uint32_t i)
 void GraphicsSystem::update_projection(uint32_t i)
 {
 	camera_t *cam = cameras.get<0>() + i;
-	camera_data_t *cam_data = cameras.get<1>() + i;
+	vec2 res = cam->screen_size;
 
 	if (cam->ortho)
 	{
 		float half_width = cam->fov * 0.5f;
-		float half_height = half_width * cam_data->resolution.y / (float)cam_data->resolution.x;
+		float half_height = half_width * res.y / res.x;
 		cam->projection = ortho(-half_width, half_width, -half_height, half_height, cam->near_plane, cam->far_plane);
 	}
 	else
 	{
-		float aspect_ratio = (float)cam_data->resolution.x / (float)cam_data->resolution.y;
+		float aspect_ratio = res.x / res.y;
 		cam->projection = perspective(glm::radians(cam->fov), aspect_ratio,
 			cam->near_plane, cam->far_plane);
 	}
@@ -187,5 +186,5 @@ void GraphicsSystem::update_submeshes(uint32_t i, bool remove_previous)
 		r->first_submesh = r->last_submesh = submeshes.invalid_id();
 
 	// Mark draw_order_indices as dirty
-	prev_renderer_count |= -1;
+	objects.capacity |= -1;
 }

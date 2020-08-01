@@ -171,7 +171,8 @@ const void *material_t::bound = nullptr;
 
 void material_t::bind(RenderPass::Type pass) const
 {
-	auto *prgm = shader->update_builtins(variant_idx, pass);
+	Program *prgm = shader->variants[variant_idx].passes[pass];
+	GL::UseProgram(prgm->program);
 
 	// works because sizeof(this) < RenderPass::Count
 	if (bound == (uint8_t*)this + pass) return;

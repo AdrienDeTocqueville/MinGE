@@ -6,30 +6,40 @@
 
 static GLuint empty_vao;
 
-static size_t MATRIX_M, MATRIX_N;
-static size_t MATRIX_VP, VIEW_POS;
+static uint32_t GLOBAL, PER_OBJECT;
 
 void cmd_buffer_t::init()
 {
 	empty_vao = GL::GenVertexArray();
 
 #define INIT_LOCATION(x) x = Shader::get_builtin_location(#x)
-	INIT_LOCATION(MATRIX_M);
-	INIT_LOCATION(MATRIX_N);
-	INIT_LOCATION(MATRIX_VP);
-	INIT_LOCATION(VIEW_POS);
+	INIT_LOCATION(GLOBAL);
+	INIT_LOCATION(PER_OBJECT);
 #undef INIT_LOCATION
 }
 
 void cmd_buffer_t::destroy()
 {
 	GL::DeleteVertexArray(empty_vao);
-
 }
 
-void cmd_buffer_t::setup_camera(camera_data_t *camera)
+
+void cmd_buffer_t::set_uniform_data(uint32_t buffer, void *data, uint32_t size)
 {
-	store(SetupCamera, camera);
+	block_data_t cmd = { buffer, size, data };
+	store(SetUniformData, cmd);
+}
+
+void cmd_buffer_t::set_storage_data(uint32_t buffer, void *data, uint32_t size)
+{
+	block_data_t cmd = { buffer, size, data };
+	store(SetStorageData, cmd);
+}
+
+void cmd_buffer_t::setup_camera(ivec2 res, uint32_t buf, uint32_t offset, uint32_t size)
+{
+	setup_camera_t cmd = { res, buf, offset, size };
+	store(SetupCamera, cmd);
 }
 
 void cmd_buffer_t::set_framebuffer(uint32_t fbo, vec4 color, bool clear_depth)
@@ -38,12 +48,12 @@ void cmd_buffer_t::set_framebuffer(uint32_t fbo, vec4 color, bool clear_depth)
 	store(SetFramebuffer, cmd);
 }
 
-void cmd_buffer_t::draw_batch(submesh_data_t *submeshes, mat4 *matrices, uint32_t *sorted_indices,
-		RenderPass::Type pass, uint32_t count)
+void cmd_buffer_t::draw_batch(submesh_data_t *submeshes, uint32_t *sorted_indices,
+	uint32_t per_object, RenderPass::Type pass, uint32_t count)
 {
 	draw_batch_t cmd = {
-		submeshes, matrices, sorted_indices,
-		pass, count
+		submeshes, sorted_indices,
+		per_object, pass, count
 	};
 	store(DrawBatch, cmd);
 }
@@ -65,11 +75,38 @@ while (i < size)
 Type cmd = consume<Type>(i);
 switch (cmd)
 {
+case SetUniformData:
+{
+	MICROPROFILE_SCOPEI("RENDER_ENGINE", "SetUniformData");
+	MICROPROFILE_SCOPEGPUI("SetUniformData", -1);
+
+	block_data_t &data = consume<block_data_t>(i);
+
+	GL::BindUniformBuffer(data.buffer);
+	glCheck(glBufferData(GL_UNIFORM_BUFFER, data.size, data.data, GL_DYNAMIC_DRAW));
+
+	break;
+}
+
+case SetStorageData:
+{
+	MICROPROFILE_SCOPEI("RENDER_ENGINE", "SetStorageData");
+	MICROPROFILE_SCOPEGPUI("SetStorageData", -1);
+
+	block_data_t &data = consume<block_data_t>(i);
+
+	GL::BindStorageBuffer(data.buffer);
+	glCheck(glBufferData(GL_SHADER_STORAGE_BUFFER, data.size, data.data, GL_DYNAMIC_DRAW));
+
+	break;
+}
+
 case DrawBatch:
 {
 	MICROPROFILE_SCOPEI("RENDER_ENGINE", "DrawBatch");
 	MICROPROFILE_SCOPEGPUI("DrawBatch", -1);
 
+	const unsigned object_size = mem::align(sizeof(mat4) * 2, GL::uniform_offset_alignment);
 	draw_batch_t &batch = consume<draw_batch_t>(i);
 
 	for (uint32_t c = 0; c < batch.count; c++)
@@ -80,9 +117,7 @@ case DrawBatch:
 		if (!material->has_pass(batch.pass))
 			continue;
 
-		// 1.79 + 1.62
-		Shader::set_builtin(MATRIX_M, batch.matrices[data->renderer]);
-		Shader::set_builtin(MATRIX_N, batch.matrices[data->renderer]);
+		Shader::set_uniform(PER_OBJECT, batch.per_object, data->renderer * object_size, object_size);
 
 		// 0.84 + 0.91
 		material->bind(batch.pass);
@@ -126,19 +161,18 @@ case SetupCamera:
 	MICROPROFILE_SCOPEI("RENDER_ENGINE", "SetupCamera");
 	MICROPROFILE_SCOPEGPUI("SetupCamera", -1);
 
-	camera_data_t *&camera = consume<camera_data_t*>(i);
+	setup_camera_t &setup = consume<setup_camera_t>(i);
 
 	GL::Enable(GL::CullFace);
 	GL::Enable(GL::DepthTest);
 	GL::Enable(GL::ScissorTest);
 	GL::Disable(GL::Blend);
 
-	Shader::set_builtin(MATRIX_VP, camera->view_proj);
-	Shader::set_builtin(VIEW_POS, camera->position);
-
-	ivec4 viewport = ivec4(0, 0, camera->resolution);
+	ivec4 viewport = ivec4(0, 0, setup.res.x, setup.res.y);
 	GL::Viewport(viewport);
 	GL::Scissor(viewport);
+
+	Shader::set_storage(GLOBAL, setup.buf, setup.offset, setup.size);
 
 	break;
 }
