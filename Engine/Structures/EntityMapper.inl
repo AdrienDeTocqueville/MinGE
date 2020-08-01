@@ -13,7 +13,7 @@ entity_mapper_t<N>::entity_mapper_t(const nlohmann::json &dump)
 	for (int n = 0; n < N; n++)
 		max_size = std::max(max_size, (uint32_t)dump[n].size());
 
-	size = mem::next_power_of_two(max_size);
+	size = mem::next_power_of_two(max_size + 1);
 	indices = (uint32_t*)calloc(N, size * sizeof(uint32_t));
 	for (int n = 0; n < N; n++)
 	{

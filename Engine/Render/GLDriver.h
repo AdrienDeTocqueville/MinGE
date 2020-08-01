@@ -130,6 +130,8 @@ public:
 		glCheck(glDeleteBuffers(1, &buf));
 		if (state.ubo == buf)
 			state.ubo = 0;
+		else if (state.ssbo == buf)
+			state.ssbo = 0;
 		else if (state.vbo == buf)
 			state.vbo = 0;
 		else if (state.ebo == buf)
