@@ -4,6 +4,7 @@
 #include "Editor/Editor.h"
 #include "Editor/Render/RenderUI.h"
 #include "Editor/Graphics/GraphicsUI.h"
+#include "Utility/stb_sprintf.h"
 
 
 #include <Graphics/Graphics.h>
@@ -38,11 +39,22 @@ struct ActionData
 };
 
 #undef SIMPLE_PROP
-#define SIMPLE_PROP(label, widget, type, owner, prop) do { \
+#define SIMPLE_PROP(label, widget, owner, type, prop) do { \
 void (*func)(type*,type*,ActionData*) = [](type *old, type *val, ActionData *d) { \
 	if (d->sys->has_##owner(d->e)) d->sys->get_##owner(d->e).set_##prop(*val); \
 }; \
 Editor::field(label, widget, owner.prop(), data, func); \
+} while (0)
+
+// TODO: index is not captured
+#undef ARRAY_PROP
+#define ARRAY_PROP(label, widget, owner, type, prop, index) do { \
+char name[64] = ""; \
+stbsp_snprintf(name, sizeof(name), label " %d", index); \
+void (*func)(type*,type*,ActionData*) = [](type *old, type *val, ActionData *d) { \
+	if (d->sys->has_##owner(d->e)) d->sys->get_##owner(d->e).set_##prop(0, *val); \
+}; \
+Editor::field(label, widget, owner.prop(index), data, func); \
 } while (0)
 
 static void edit_entity(GraphicsSystem *sys, Entity e)
@@ -53,9 +65,9 @@ static void edit_entity(GraphicsSystem *sys, Entity e)
 	if (sys->has_camera(e) && ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		Camera camera = sys->get_camera(e);
-		SIMPLE_PROP("Near plane", ImGui::DragFloat, float, camera, near_plane);
-		SIMPLE_PROP("Far plane", ImGui::DragFloat, float, camera, far_plane);
-		SIMPLE_PROP("Field of view", ImGui::DragFloat, float, camera, fov);
+		SIMPLE_PROP("Near plane", ImGui::DragFloat, camera, float, near_plane);
+		SIMPLE_PROP("Far plane", ImGui::DragFloat, camera, float, far_plane);
+		SIMPLE_PROP("Field of view", ImGui::DragFloat, camera, float, fov);
 
 		Debug::frustum(camera.frustum());
 	}
@@ -64,14 +76,18 @@ static void edit_entity(GraphicsSystem *sys, Entity e)
 	if (sys->has_renderer(e) && ImGui::CollapsingHeader("Renderer", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		Renderer renderer = sys->get_renderer(e);
-		SIMPLE_PROP("Mesh", mesh_dropdown, Mesh, renderer, mesh);
+		SIMPLE_PROP("Mesh", mesh_dropdown, renderer, Mesh, mesh);
+
+		int material_count = renderer.material_count();
+		for (int i = 0; i < material_count; i++)
+			ARRAY_PROP("Material", material_dropdown, renderer, Material, material, i);
 	}
 
 	// Light
 	if (sys->has_light(e) && ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		Light light= sys->get_light(e);
-		SIMPLE_PROP("Color", ImGui::ColorEdit3, vec3, light, color);
+		SIMPLE_PROP("Color", ImGui::ColorEdit3, light, vec3, color);
 	}
 }
 

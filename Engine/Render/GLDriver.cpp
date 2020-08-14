@@ -144,7 +144,7 @@ void GLAPIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenu
 	// ignore non-significant error/warning codes
 	if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
 
-	char *source_str, *type_str;
+	const char *source_str, *type_str;
 	switch (source)
 	{
 	case GL_DEBUG_SOURCE_API:             source_str = "API"; break;

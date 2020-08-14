@@ -45,7 +45,26 @@ void Renderer::set_mesh(Mesh val)
 	auto x = sys.indices.get<1>(id());
 	sys.renderers.get<0>()[x].mesh = val;
 
-	sys.update_submeshes(x, true);
+	sys.update_submeshes(x, Material::none, true);
+}
+
+uint32_t Renderer::material_count()
+{
+	auto x = sys.indices.get<1>(id());
+	auto *r = sys.renderers.get<0>() + x;
+	return r->last_submesh - r->first_submesh;
+}
+Material Renderer::material(uint32_t i)
+{
+	auto x = sys.indices.get<1>(id());
+	auto *r = sys.renderers.get<0>() + x;
+	return Material::get(sys.submeshes[r->first_submesh + i].material);
+}
+void Renderer::set_material(uint32_t i, Material m)
+{
+	auto x = sys.indices.get<1>(id());
+	auto *r = sys.renderers.get<0>() + x;
+	sys.submeshes[r->first_submesh + i].material = m.id();
 }
 
 

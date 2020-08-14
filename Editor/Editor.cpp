@@ -222,22 +222,24 @@ void Editor::open_scene(const char *path)
 	system_editors.clear();
 	asset_tabs.clear();
 
-	// Register builtin systems
+	// Register builtin system types
 	Engine::register_system_type(TransformSystem::type);
 	Engine::register_system_type(GraphicsSystem::type);
 	Engine::register_system_type(PostProcessingSystem::type);
-
-	Engine::register_asset_type(Mesh::type);
-	Engine::register_asset_type(Texture::type);
 
 	register_system_editor(TransformSystemUI::editor);
 	register_system_editor(GraphicsSystemUI::editor);
 	register_system_editor(PostProcessingSystemUI::editor);
 
+	// Register builtin asset types
+	Engine::register_asset_type(Mesh::type);
+	Engine::register_asset_type(Texture::type);
+	Engine::register_asset_type(Material::type);
+
 	asset_tabs.push_back(asset_tab_t {"Entity", (void(*)(void*))entity_tab, Entity::none});
 	asset_tabs.push_back(asset_tab_t {"Mesh", (void(*)(void*))mesh_tab, Mesh::none});
-	asset_tabs.push_back(asset_tab_t {"Material", (void(*)(void*))material_tab, Material::none});
 	asset_tabs.push_back(asset_tab_t {"Texture", (void(*)(void*))texture_tab, Texture::none});
+	asset_tabs.push_back(asset_tab_t {"Material", (void(*)(void*))material_tab, Material::none});
 
 	if (scene.load(path))
 	{

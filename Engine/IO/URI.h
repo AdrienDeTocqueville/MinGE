@@ -31,6 +31,12 @@ inline vec2 parse_val(const std::string &val)
 	return res;
 }
 
+template<>
+inline const char *parse_val(const std::string &val)
+{
+	return val.c_str();
+}
+
 struct uri_t
 {
 	bool parse(const char *uri);

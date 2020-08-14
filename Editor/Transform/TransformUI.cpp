@@ -24,7 +24,7 @@ struct ActionData
 	Entity e;
 };
 
-#define SIMPLE_PROP(label, widget, type, owner, prop) do { \
+#define SIMPLE_PROP(label, widget, owner, type, prop) do { \
 void (*func)(type*,type*,ActionData*) = [](type *old, type *val, ActionData *d) { \
 	if (d->sys->has(d->e)) d->sys->get(d->e).set_##prop(*val); \
 }; \
@@ -48,9 +48,9 @@ static void edit_entity(TransformSystem *sys, Entity e)
 	Transform tr = sys->get(e);
 	ActionData data { sys, e };
 
-	SIMPLE_PROP("Position", ImGui::DragFloat3, vec3, tr, position);
+	SIMPLE_PROP("Position", ImGui::DragFloat3, tr, vec3, position);
 	COMPLEX_PROP("Rotation", ImGui::DragFloat3, vec3, rotation, glm::degrees(tr.euler_angles()), glm::radians);
-	SIMPLE_PROP("Scale", ImGui::DragFloat3, vec3, tr, scale);
+	SIMPLE_PROP("Scale", ImGui::DragFloat3, tr, vec3, scale);
 
 	vec3 p = tr.position();
 	Debug::vector(p, tr.vec_to_world(vec3(1, 0, 0)), vec3(1, 0, 0));

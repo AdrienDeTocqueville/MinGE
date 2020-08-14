@@ -5,10 +5,14 @@
 #include "Render/Shader/Program.h"
 #include "Render/Texture/Texture.h"
 
+#include "Core/Asset.inl"
 #include "Utility/Error.h"
 
+#include "IO/URI.h"
+#include "IO/json.hpp"
+
 const Material Material::none;
-multi_array_t<material_t, uint8_t> Material::materials;
+multi_array_t<material_t, char*, uint8_t> Material::materials;
 
 
 void Material::destroy()
@@ -18,15 +22,26 @@ void Material::destroy()
 	auto *uniforms = &materials.get<0>(id())->uniforms;
 	uniforms->~vector<uint8_t>();
 
-	materials.get<0>(id())->shader = NULL;
+	char **uri = materials.get<1>(id());
+	free(*uri);
+	*uri = NULL;
 
-	++(*materials.get<1>(id()));
+	++(*materials.get<2>(id()));
 	materials.remove(id());
 }
 
 
-Material Material::create(Shader *shader)
+Material Material::load(const char *URI)
 {
+	uri_t uri;
+	if (!uri.parse(URI))
+		return Material::none;
+
+	Shader *shader;
+	const char *shader_path;
+	if (!uri.try_get("shader", shader_path) || !(shader = Shader::load(shader_path)))
+		return Material::none;
+
 	uint32_t prev_size = materials.size;
 	uint32_t i = materials.add();
 
@@ -36,10 +51,12 @@ Material Material::create(Shader *shader)
 	new (&materials.get<0>(i)->uniforms) std::vector<uint8_t>();
 	materials.get<0>(i)->sync_uniforms();
 
-	if (prev_size != materials.size)
-		materials.get<1>()[i] = 0;
+	materials.get<1>()[i] = strdup(URI);
 
-	return Material(i, materials.get<1>()[i]);
+	if (prev_size != materials.size)
+		materials.get<2>()[i] = 0;
+
+	return Material(i, materials.get<2>()[i]);
 }
 
 Material Material::copy(Material src)
@@ -50,17 +67,19 @@ Material Material::copy(Material src)
 	std::memcpy(materials.get<0>(i), materials.get<0>(src.id()), sizeof(material_t));
 	new (&materials.get<0>(i)->uniforms) std::vector<uint8_t>(materials.get<0>(src.id())->uniforms);
 
-	if (prev_size != materials.size)
-		materials.get<1>()[i] = 0;
+	materials.get<1>()[i] = strdup(src.uri());
 
-	return Material(i, materials.get<1>()[i]);
+	if (prev_size != materials.size)
+		materials.get<2>()[i] = 0;
+
+	return Material(i, materials.get<2>()[i]);
 }
 
 Material Material::get(uint32_t i)
 {
-	if (materials.get<0>(i)->shader == NULL)
+	if (materials.get<1>()[i] == NULL)
 		return Material::none;
-	return Material(i, materials.get<1>()[i]);
+	return Material(i, materials.get<2>()[i]);
 }
 
 void Material::reload(Shader *shader)
@@ -80,11 +99,13 @@ void Material::clear()
 {
 	for (uint32_t i(1); i <= materials.size; i++)
 	{
-		if (materials.get<0>(i)->shader == NULL)
+		if (materials.get<1>()[i] == NULL)
 			continue;
 
 		auto *uniforms = &materials.get<0>(i)->uniforms;
 		uniforms->~vector<uint8_t>();
+
+		free(materials.get<1>()[i]);
 	}
 	materials.clear();
 }
@@ -195,3 +216,25 @@ void material_t::bind(RenderPass::Type pass) const
 			set_uniform(var.location, var.type, var.num, data);
 	}
 }
+
+
+/// Serialization
+using namespace nlohmann;
+void material_save(json &dump)
+{
+	Asset::save(dump, Material::materials, Material::get);
+}
+
+void material_load(const json &dump)
+{
+	Asset::load<Material, 1, 2>(dump, Material::materials, Material::materials.get<0>());
+}
+
+const asset_type_t Material::type = []() {
+	asset_type_t t{ NULL };
+	t.name = "Material";
+
+	t.save = material_save;
+	t.load = material_load;
+	return t;
+}();

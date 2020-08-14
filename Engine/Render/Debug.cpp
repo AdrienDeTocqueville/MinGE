@@ -126,7 +126,7 @@ static unsigned vbo = 0, vao = 0;
 
 void Debug::init()
 {
-	material = Material::create(Shader::load("asset:shader/debug"));
+	material = Material::load("asset:material?shader=debug");
 
 	vao = GL::GenVertexArray();
 	vbo = GL::GenBuffer();

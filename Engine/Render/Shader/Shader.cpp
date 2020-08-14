@@ -12,7 +12,6 @@
 #include "Utility/Error.h"
 #include "Memory/Memory.h"
 #include "IO/json.hpp"
-#include "IO/URI.h"
 
 using json = nlohmann::json;
 
@@ -55,39 +54,25 @@ static inline std::string get_or_default(const json &n, const char *prop)
 
 
 
-static std::unordered_map<const char*, Shader*> shaders;
+static std::unordered_map<std::string, Shader*> shaders;
 
-Shader* Shader::load(const char *URI)
+Shader* Shader::load(const std::string &name)
 {
-	auto it = shaders.find(URI);
+	auto it = shaders.find(name);
 	if (it != shaders.end())
 		return it->second;
 
-	uri_t uri;
-	if (!uri.parse(URI))
-		return nullptr;
-
-	const char *path = uri.path.c_str();
-	if (!uri.on_disk)
-	{
-		static char buf[256];
-		const char *name = strchr(path, '/');
-		if (name++ == NULL) return nullptr;
-
-		stbsp_snprintf(buf, sizeof(buf), "Assets/Shaders/%s.json", name);
-		path = buf;
-	}
+	static char buf[256];
+	stbsp_snprintf(buf, sizeof(buf), "Assets/Shaders/%s.json", name.c_str());
 
 	Shader *s = new Shader();
-	uri.extract_label(URI, s->label, s->label_len);
-	if (!s->load_json(path))
+	if (!s->load_json(buf))
 	{
 		delete s;
 		return nullptr;
 	}
-	shaders.emplace(URI, s);
-	s->URI = URI;
 
+	shaders.emplace(name, s);
 	return s;
 }
 
@@ -115,27 +100,34 @@ Shader::~Shader()
 
 Shader *Shader::reload()
 {
-	shaders.erase(URI);
-
-	if (Shader *reloaded = Shader::load(URI))
+	for (auto it = shaders.begin(); it != shaders.end(); ++it)
 	{
-		/*
-		std::unordered_map<std::string, size_t> uniforms_names_save;
+		if (it->second == this)
+		{
+			std::string name = it->first;
+			shaders.erase(it);
+			if (Shader *reloaded = Shader::load(name))
+			{
+				/*
+				std::unordered_map<std::string, size_t> uniforms_names_save;
 
-		free_variants(variants);
-		variants.clear();
-		variant_idx.clear();
-		macros.clear();
-		std::swap(uniforms_names, uniforms_names_save);
-		*/
-		delete this;
-		return reloaded;
+				free_variants(variants);
+				variants.clear();
+				variant_idx.clear();
+				macros.clear();
+				std::swap(uniforms_names, uniforms_names_save);
+				*/
+				delete this;
+				return reloaded;
+			}
+			else
+			{
+				shaders.emplace(name, this);
+				return NULL;
+			}
+		}
 	}
-	else
-	{
-		shaders.emplace(URI, this);
-		return NULL;
-	}
+	return NULL;
 }
 
 /// Variant stuff
@@ -284,7 +276,8 @@ uint32_t Shader::get_variant(uint32_t hash)
 		if (!found)
 		{
 			variant.passes[i] = new Program(passes[i].sources, (RenderPass::Type)i, defines.c_str());
-			variant.passes[i]->label(label, label_len);
+			variant.passes[i]->label("shader", 6);
+
 			load_uniforms(variant.passes[i]);
 		}
 	}

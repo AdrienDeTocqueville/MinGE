@@ -104,6 +104,11 @@ GraphicsSystem::GraphicsSystem(const SerializationContext &ctx):
 		indices.map<1>(i, 0);
 		auto renderer = renderer_it.value();
 		add_renderer(Entity::get(i), Mesh::get(renderer["mesh"]));
+		renderer_t *r = renderers.get<0>() + indices.get<1>(i);
+		uint32_t s = r->first_submesh;
+		for (auto m : renderer["materials"])
+			submeshes[s++].material = m;
+
 		++renderer_it;
 	}
 

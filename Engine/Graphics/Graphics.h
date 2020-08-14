@@ -35,7 +35,7 @@ struct GraphicsSystem
 		return {entity.id(), 0, *this};
 	}
 
-	Renderer add_renderer(Entity entity, Mesh mesh);
+	Renderer add_renderer(Entity entity, Mesh mesh, Material material = Material::none);
 
 	Light add_point_light(Entity entity, vec3 color = vec3(150.0f / 255.0f), float radius = 1.0f);
 
@@ -93,7 +93,7 @@ struct GraphicsSystem
 		vec3 color;
 		Entity entity;
 	};
-	
+
 	soa_t<point_light_t> point_lights; // TODO: don't need a whole page
 
 	// System data
@@ -123,7 +123,7 @@ struct GraphicsSystem
 
 	void resize_rt(uint32_t i);
 	void update_projection(uint32_t i);
-	void update_submeshes(uint32_t i, bool remove_previous);
+	void update_submeshes(uint32_t i, Material material, bool remove_previous);
 
 
 	// Serialization

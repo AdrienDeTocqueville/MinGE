@@ -6,6 +6,7 @@
 #include "Utility/Error.h"
 #include "Structures/Bounds.h"
 
+#include "Core/Asset.inl"
 
 const Mesh Mesh::none;
 // submeshes, mesh data, URI, AABB, generation
@@ -199,51 +200,12 @@ void Mesh::clear()
 using namespace nlohmann;
 void mesh_save(json &dump)
 {
-	uint32_t max_id = 0;
-	json meshes = json::array();
-	meshes.get_ptr<json::array_t*>()->reserve(Mesh::meshes.size);
-	for (uint32_t i(1); i <= Mesh::meshes.size; i++)
-	{
-		auto mesh = Mesh::get(i);
-		if (mesh == Mesh::none)
-			continue;
-
-		max_id = i;
-		json mesh_dump = json::object();
-		mesh_dump["uint"] = mesh.uint();
-		mesh_dump["uri"] = mesh.uri();
-		meshes.push_back(mesh_dump);
-	}
-
-	dump["max_id"] = max_id;
-	dump["meshes"].swap(meshes);
+	Asset::save(dump, Mesh::meshes, Mesh::get);
 }
 
 void mesh_load(const json &dump)
 {
-	uint32_t final_slot = 1;
-	uint32_t max_id = dump["max_id"].get<uint32_t>();
-
-	// Clear free list
-	Mesh::meshes.init(max_id);
-	for (uint32_t i(1); i <= max_id; i++)
-		Mesh::meshes.get<2>()[i] = NULL;
-
-	// Populate
-	const json &meshes = dump["meshes"];
-	for (auto it = meshes.rbegin(); it != meshes.rend(); ++it)
-	{
-		UID32 uid = it.value()["uint"].get<uint32_t>();
-
-		auto *data = Mesh::meshes.get<0>();
-		if (uid.id() == 1) final_slot = *(uint32_t*)(data + uid.id());
-		else *(uint32_t*)(data + uid.id() - 1) = *(uint32_t*)(data + uid.id());
-
-		Mesh::meshes.next_slot = uid.id();
-		Mesh::load(it.value()["uri"].get<std::string>().c_str());
-		Mesh::meshes.get<4>()[uid.id()] = uid.gen();
-	}
-	Mesh::meshes.next_slot = final_slot;
+	Asset::load<Mesh, 2, 4>(dump, Mesh::meshes, Mesh::meshes.get<0>());
 }
 
 const asset_type_t Mesh::type = []() {

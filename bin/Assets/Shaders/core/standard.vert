@@ -4,7 +4,7 @@ layout(location = 2) in vec2 in_uv;
 layout(location = 3) in uvec4 in_bones;
 layout(location = 4) in vec4 in_weights;
 
-#include "glsl/builtin.glsl"
+#include "lib/builtin.glsl"
 
 BUILTIN_GLOBAL;
 BUILTIN_PER_OBJECT object;

@@ -31,7 +31,7 @@ uint32_t GraphicsSystem::init_camera(Entity entity, float fov, float near_plane,
 	return i;
 }
 
-Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
+Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh, Material material)
 {
 	uint32_t i = renderers.add();
 	indices.map<1>(entity, i);
@@ -39,7 +39,7 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh)
 	renderers.get<0>()[i].entity = entity;
 	renderers.get<0>()[i].mesh = mesh;
 
-	update_submeshes(i, false);
+	update_submeshes(i, material, false);
 
 	return {entity.id(), 0, *this};
 }
@@ -160,7 +160,7 @@ void GraphicsSystem::update_projection(uint32_t i)
 	}
 }
 
-void GraphicsSystem::update_submeshes(uint32_t i, bool remove_previous)
+void GraphicsSystem::update_submeshes(uint32_t i, Material material, bool remove_previous)
 {
 	renderer_t *r = renderers.get<0>() + i;
 
@@ -169,13 +169,16 @@ void GraphicsSystem::update_submeshes(uint32_t i, bool remove_previous)
 
 	if (r->mesh != Mesh::none)
 	{
+		if (material == Material::none)
+			material = RenderEngine::default_material;
+
 		submeshes_t subs = Mesh::meshes.get<0>()[r->mesh.id()];
 		uint32_t first = submeshes.add(subs.count);
 
 		for (uint32_t s = 0; s < subs.count; s++)
 		{
 			submeshes[first+s].submesh = Mesh::submeshes[subs.first + s];
-			submeshes[first+s].material = RenderEngine::default_material.id();
+			submeshes[first+s].material = material.id();
 			submeshes[first+s].renderer = i - 1;
 		}
 

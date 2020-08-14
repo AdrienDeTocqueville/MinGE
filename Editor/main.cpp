@@ -5,6 +5,10 @@
 
 #include "Editor.h"
 
+// temp for blinn phong
+#include "Render/Shader/Shader.h"
+#include "Render/Shader/Material.inl"
+
 int main(int, char**)
 {
 	std::cout << "  -- MinGE --" << std::endl;
@@ -19,6 +23,10 @@ int main(int, char**)
 	Editor::init();
 
 	Editor::open_scene("Assets/Scenes/gamma.ge");
+
+	auto m = Material::get(4);
+	m.set("tiling", vec2(5.0f, 5.0f));
+	m.set("color_map", Texture::get(7));
 
 	/// Main loop
 	while (!Input::window_closed())

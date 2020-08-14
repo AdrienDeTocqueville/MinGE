@@ -6,6 +6,8 @@
 #include "IO/Input.h"
 #include "IO/URI.h"
 
+#include "Core/Asset.inl"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "Render/Texture/stb_image.h"
 
@@ -223,51 +225,12 @@ void Texture::clear()
 using namespace nlohmann;
 void texture_save(json &dump)
 {
-	uint32_t max_id = 0;
-	json textures = json::array();
-	textures.get_ptr<json::array_t*>()->reserve(Texture::textures.size);
-	for (uint32_t i(1); i <= Texture::textures.size; i++)
-	{
-		auto texture = Texture::get(i);
-		if (texture == Texture::none)
-			continue;
-
-		max_id = i;
-		json texture_dump = json::object();
-		texture_dump["uint"] = texture.uint();
-		texture_dump["uri"] = texture.uri();
-		textures.push_back(texture_dump);
-	}
-
-	dump["max_id"] = max_id;
-	dump["textures"].swap(textures);
+	Asset::save(dump, Texture::textures, Texture::get);
 }
 
 void texture_load(const json &dump)
 {
-	uint32_t final_slot = 1;
-	uint32_t max_id = dump["max_id"].get<uint32_t>();
-
-	// Clear free list
-	Texture::textures.init(max_id);
-	for (uint32_t i(1); i <= max_id; i++)
-		Texture::textures.get<1>()[i] = NULL;
-
-	// Populate
-	const json &textures = dump["textures"];
-	for (auto it = textures.rbegin(); it != textures.rend(); ++it)
-	{
-		UID32 uid = it.value()["uint"].get<uint32_t>();
-
-		auto *data = Texture::textures.get<0>();
-		if (uid.id() == 1) final_slot = *(uint32_t*)(data + uid.id());
-		else *(uint32_t*)(data + uid.id() - 1) = *(uint32_t*)(data + uid.id());
-
-		Texture::textures.next_slot = uid.id();
-		Texture::load(it.value()["uri"].get<std::string>().c_str());
-		Texture::textures.get<2>()[uid.id()] = uid.gen();
-	}
-	Texture::textures.next_slot = final_slot;
+	Asset::load<Texture, 1, 2>(dump, Texture::textures, Texture::textures.get<0>());
 }
 
 const asset_type_t Texture::type = []() {
@@ -278,4 +241,3 @@ const asset_type_t Texture::type = []() {
 	t.load = texture_load;
 	return t;
 }();
-

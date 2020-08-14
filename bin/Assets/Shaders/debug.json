@@ -2,8 +2,8 @@
 "passes": {
 	"forward": {
 		"stages": {
-			"vertex": "glsl/debug.vert",
-			"fragment": "glsl/debug.frag"
+			"vertex": "core/debug.vert",
+			"fragment": "core/debug.frag"
 		}
 	}
 }

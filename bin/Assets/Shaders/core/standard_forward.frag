@@ -1,5 +1,5 @@
-#include "glsl/builtin.glsl"
-#include "glsl/brdf.glsl"
+#include "lib/builtin.glsl"
+#include "lib/brdf.glsl"
 
 BUILTIN_GLOBAL;
 

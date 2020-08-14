@@ -170,7 +170,7 @@ static void update(GraphicsSystem *self)
 		Engine::read_unlock(transforms);
 
 		for (uint32_t i = 1; i < camera_count; i++)
-			memcpy(lights_data + i * global_size, lights_data, light_count * sizeof(light_data_t));
+			memcpy((uint8_t*)lights_data + i * global_size, lights_data, light_count * sizeof(light_data_t));
 	}
 
 	/// Build command buffer

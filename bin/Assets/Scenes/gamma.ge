@@ -1,25 +1,45 @@
 {
     "assets": {
+        "Material": {
+            "data": [
+                {
+                    "uint": 1,
+                    "uri": "asset:material?shader=debug"
+                },
+                {
+                    "uint": 2,
+                    "uri": "asset:material?shader=standard"
+                },
+                {
+                    "uint": 3,
+                    "uri": "asset:material?shader=postprocessing"
+                },
+                {
+                    "uint": 4,
+                    "uri": "asset:material?shader=blinn_phong"
+                }
+            ],
+            "max_id": 4
+        },
         "Mesh": {
-            "max_id": 3,
-            "meshes": [
+            "data": [
                 {
                     "uint": 1,
                     "uri": "asset:mesh/cube?x=1&y=1&z=1"
                 },
                 {
                     "uint": 2,
-                    "uri": "asset:mesh/cube?x=2&y=3&z=3"
+                    "uri": "asset:mesh/cube?x=20&y=20&z=1"
                 },
                 {
                     "uint": 3,
                     "uri": "asset:mesh/sphere?radius=3"
                 }
-            ]
+            ],
+            "max_id": 3
         },
         "Texture": {
-            "max_id": 7,
-            "textures": [
+            "data": [
                 {
                     "uint": 1,
                     "uri": "asset://Textures/0.png?format=srgb8"
@@ -48,7 +68,8 @@
                     "uint": 7,
                     "uri": "asset://Textures/wood.png?format=srgb8"
                 }
-            ]
+            ],
+            "max_id": 7
         }
     },
     "entities": [
@@ -145,28 +166,46 @@
                         1,
                         0,
                         0,
-                        2
+                        2,
+                        3,
+                        4
                     ]
                 ],
                 "max_component": [
                     2,
                     2,
-                    2
+                    4
                 ],
                 "point_lights": [
                     {
                         "color": [
                             1.0,
-                            0.0,
-                            0.0
+                            0.9999899864196777,
+                            0.9999899864196777
                         ],
                         "radius": 1.0
                     },
                     {
                         "color": [
-                            0.12702806293964386,
-                            0.9254902005195618,
-                            0.9254902005195618
+                            0.9999944567680359,
+                            1.0,
+                            0.9999899864196777
+                        ],
+                        "radius": 1.0
+                    },
+                    {
+                        "color": [
+                            1.0,
+                            0.9999899864196777,
+                            0.9999899864196777
+                        ],
+                        "radius": 1.0
+                    },
+                    {
+                        "color": [
+                            0.9999988675117493,
+                            0.9999899864196777,
+                            1.0
                         ],
                         "radius": 1.0
                     }
@@ -174,7 +213,7 @@
                 "renderers": [
                     {
                         "materials": [
-                            2
+                            4
                         ],
                         "mesh": 2
                     },
@@ -195,7 +234,7 @@
             "data": {
                 "color": 4,
                 "depth": 3,
-                "exposure": 1.0,
+                "exposure": 1.399999976158142,
                 "ss_viewport": [
                     0.0,
                     0.0,
@@ -270,20 +309,20 @@
                 "transforms": [
                     {
                         "position": [
-                            6.300000190734863,
+                            7.099999904632568,
                             0.0,
-                            0.0
+                            -0.8500000238418579
                         ],
                         "rotation": [
                             0.0,
                             0.0,
-                            0.0,
-                            1.0
+                            0.7071067690849304,
+                            0.7071067690849304
                         ],
                         "scale": [
-                            14.300000190734863,
-                            6.099999904632568,
-                            0.30000001192092896
+                            1.0,
+                            1.0,
+                            1.0
                         ]
                     },
                     {
@@ -306,7 +345,7 @@
                     },
                     {
                         "position": [
-                            6.0,
+                            10.0,
                             0.0,
                             0.0
                         ],
@@ -360,43 +399,43 @@
                     },
                     {
                         "position": [
+                            8.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "position": [
+                            6.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    {
+                        "position": [
                             4.0,
-                            0.0,
-                            0.0
-                        ],
-                        "rotation": [
-                            0.0,
-                            0.0,
-                            0.0,
-                            1.0
-                        ],
-                        "scale": [
-                            1.0,
-                            1.0,
-                            1.0
-                        ]
-                    },
-                    {
-                        "position": [
-                            2.0,
-                            0.0,
-                            0.0
-                        ],
-                        "rotation": [
-                            0.0,
-                            0.0,
-                            0.0,
-                            1.0
-                        ],
-                        "scale": [
-                            1.0,
-                            1.0,
-                            1.0
-                        ]
-                    },
-                    {
-                        "position": [
-                            0.0,
                             0.0,
                             0.0
                         ],

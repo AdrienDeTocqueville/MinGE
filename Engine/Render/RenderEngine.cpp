@@ -31,7 +31,7 @@ void RenderEngine::init()
 #endif
 
 	Debug::init();
-	default_material = Material::create(Shader::load("asset:shader/standard"));
+	default_material = Material::load("asset:material?shader=standard");
 	default_material.set("color", vec3(0.8f));
 	default_material.set("metallic", 0.0f);
 	default_material.set("roughness", 0.5f);

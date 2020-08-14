@@ -2,8 +2,8 @@
 "passes": {
 	"forward": {
 		"stages": {
-			"vertex": "glsl/fullscreen.vert",
-			"fragment": "glsl/hdr.frag"
+			"vertex": "core/fullscreen.vert",
+			"fragment": "core/hdr.frag"
 		}
 	}
 }

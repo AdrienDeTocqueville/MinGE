@@ -3,16 +3,16 @@
 	"shadow": {
 		"macros": [ "SKINNED" ],
 		"stages": {
-			"vertex": "glsl/standard.vert",
-			"fragment": "glsl/empty.frag"
+			"vertex": "core/standard.vert",
+			"fragment": "core/empty.frag"
 		}
 	},
 
 	"depth": {
 		"macros": [ "SKINNED" ],
 		"stages": {
-			"vertex": "glsl/standard.vert",
-			"fragment": "glsl/standard_depth.frag"
+			"vertex": "core/standard.vert",
+			"fragment": "core/standard_depth.frag"
 		}
 	},
 
@@ -24,8 +24,8 @@
 		],
 
 		"stages": {
-			"vertex": "glsl/standard.vert",
-			"fragment": "glsl/standard_forward.frag"
+			"vertex": "core/standard.vert",
+			"fragment": "core/standard_forward.frag"
 		}
 	}
 }

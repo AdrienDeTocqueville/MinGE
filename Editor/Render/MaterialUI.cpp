@@ -12,7 +12,7 @@ bool material_dropdown(const char *label, Material *selected)
 	bool changed = false;
 	bool valid = selected->is_valid();
 	uint32_t id = selected->id();
-	const char *name = valid ? Material::get(id).shader()->URI : "None";
+	const char *name = valid ? Material::get(id).uri() : "None";
 
 	if (ImGui::BeginCombo(label, name))
 	{
@@ -27,7 +27,7 @@ bool material_dropdown(const char *label, Material *selected)
 				continue;
 
 			const bool is_selected = (valid && i == id);
-			if (ImGui::Selectable(mat.shader()->URI, is_selected) && !is_selected)
+			if (ImGui::Selectable(mat.uri(), is_selected) && !is_selected)
 			{ *selected = mat; changed = true; }
 			if (is_selected)
 				ImGui::SetItemDefaultFocus();

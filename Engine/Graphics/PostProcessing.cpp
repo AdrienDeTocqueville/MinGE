@@ -15,7 +15,7 @@ PostProcessingSystem::PostProcessingSystem(void *system_dependency, Texture dept
 	enable(0), depth(depth_texture), color(color_texture), exposure(exposure)
 {
 	if (post_process == Material::none)
-		post_process = Material::create(Shader::load("asset:shader/postprocessing"));
+		post_process = Material::load("asset:material?shader=postprocessing");
 
 	RenderEngine::add_buffer(&cmd_buffer);
 }

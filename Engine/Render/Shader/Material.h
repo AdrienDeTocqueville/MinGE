@@ -3,7 +3,9 @@
 #include <vector>
 #include <string>
 
+#include "Core/Asset.h"
 #include "Core/UID.h"
+
 #include "Structures/MultiArray.h"
 #include "Render/RenderPass.h"
 
@@ -32,7 +34,8 @@ struct Material: public UID32
 
 	void destroy();
 	class Shader *shader() { return materials.get<0>(id())->shader;  }
-	bool is_valid() { return id() && *materials.get<1>(id()) == gen(); }
+	const char *uri() const { return *materials.get<1>(id()); }
+	bool is_valid() { return id() && *materials.get<2>(id()) == gen(); }
 
 	void define(const std::vector<std::string> &macros);
 	void define(const std::string& macro);
@@ -55,14 +58,17 @@ struct Material: public UID32
 	inline void set(size_t location, const T *values, size_t num);
 
 
-	static Material create(class Shader *shader);
-	static Material copy(Material src);
+	static Material load(const char *URI);
 	static Material get(uint32_t i);
-	static void reload(class Shader *shader);
 	static void clear();
 
+	static void reload(class Shader *shader);
+	static Material copy(Material src);
+
 	static const Material none;
-	static multi_array_t<material_t, uint8_t> materials;
+	static multi_array_t<material_t, char*, uint8_t> materials;
+
+	static const asset_type_t type;
 
 private:
 	Material(uint32_t i, uint32_t g): UID32(i, g) {}

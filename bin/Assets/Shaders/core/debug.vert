@@ -1,7 +1,7 @@
 layout(location = 0) in vec3 in_position;
 layout(location = 1) in vec3 in_color;
 
-#include "glsl/builtin.glsl"
+#include "lib/builtin.glsl"
 
 BUILTIN_GLOBAL;
 

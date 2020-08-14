@@ -218,7 +218,7 @@ SDL_Window *Input::create_window_centered(const char *title, vec2 ratio, int fla
 
 SDL_Window *Input::create_window_maximized(const char *title, int flags, int monitor)
 {
-	return create_window_centered(title, vec2(0.66f), flags | SDL_WINDOW_MAXIMIZED, monitor);
+	return create_window_centered(title, vec2(0.8), flags | SDL_WINDOW_MAXIMIZED, monitor);
 }
 
 void Input::close_window()

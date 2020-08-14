@@ -6,6 +6,11 @@ struct GraphicsSystem;
 inline type prop(); \
 inline void set_##prop(type val);
 
+#define ARRAY_PROP(type, prop) \
+inline uint32_t prop##_count(); \
+inline type prop(uint32_t i); \
+inline void set_##prop(uint32_t i, type val);
+
 struct Camera: UID32
 {
 	SIMPLE_PROP(float, near_plane)
@@ -27,6 +32,7 @@ private:
 struct Renderer: UID32
 {
 	SIMPLE_PROP(Mesh, mesh)
+	ARRAY_PROP(Material, material)
 
 private:
 	Renderer(uint32_t id, uint32_t gen, GraphicsSystem &system):
@@ -47,4 +53,5 @@ private:
 	friend GraphicsSystem;
 };
 
+#undef ARRAY_PROP
 #undef SIMPLE_PROP

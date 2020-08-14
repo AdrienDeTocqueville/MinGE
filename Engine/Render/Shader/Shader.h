@@ -35,14 +35,12 @@ public:
 		uint32_t id;
 	};
 
-	static Shader *load(const char *URI);
+	static Shader *load(const std::string &name);
 
 	static inline uint32_t get_builtin_location(const std::string &name);
 
 	static inline void set_uniform(uint32_t slot, uint32_t buf, uint32_t offset, uint32_t size);
 	static inline void set_storage(uint32_t slot, uint32_t buf, uint32_t offset, uint32_t size);
-
-	const char *URI;
 
 	std::unordered_map<std::string, Macro> macros;
 	std::vector<Variant> variants;
@@ -74,9 +72,6 @@ private:
 
 	uint32_t next_bit;
 	size_t uniform_offset;
-
-	const char *label;
-	int label_len;
 
 
 	// Bindings cache system
