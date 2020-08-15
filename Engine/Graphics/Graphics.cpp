@@ -55,9 +55,9 @@ struct camera_data_t
 struct light_data_t
 {
 	vec3 position;
-	float radius;
+	float falloff;
 	vec3 color;
-	float padding;
+	float intensity;
 };
 
 static void init_indices(uint32_t *__restrict indices, const GraphicsSystem::renderer_t *renderers, uint32_t count)
@@ -163,8 +163,9 @@ static void update(GraphicsSystem *self)
 		{
 			Transform tr = transforms->get(point_lights[i].entity);
 			lights_data[i].position = tr.position();
-			lights_data[i].radius = point_lights[i].radius;
+			lights_data[i].falloff = 1.0f / (point_lights[i].radius*point_lights[i].radius);
 			lights_data[i].color = point_lights[i].color;
+			lights_data[i].intensity = point_lights[i].intensity;
 		}
 
 		Engine::read_unlock(transforms);

@@ -3,12 +3,13 @@
 #include <stdint.h>
 
 #include "Core/System.h"
+#include "Render/Shader/Material.h"
 #include "Render/Texture/Texture.h"
 #include "Render/CommandBuffer.h"
 
 struct PostProcessingSystem
 {
-	PostProcessingSystem(void *system_dependency, Texture depth_texture, Texture color_texture, float exposure = 1.0, vec4 ss_viewport = ivec4(0,0,1,1));
+	PostProcessingSystem(void *system_dependency, Texture depth_texture, Texture color_texture, vec4 ss_viewport = ivec4(0,0,1,1), Material post_processing = Material::none);
 	~PostProcessingSystem();
 
 	void *dependency;
@@ -17,7 +18,7 @@ struct PostProcessingSystem
 
 	int enable;
 	Texture depth, color;
-	float exposure;
+	Material post_process;
 
 	static const system_type_t type;
 

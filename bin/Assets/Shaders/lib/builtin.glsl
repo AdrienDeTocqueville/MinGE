@@ -12,9 +12,9 @@ struct Camera
 struct Light
 {
 	vec3 position;
-	float radius;
+	float falloff;
 	vec3 color;
-	float pad0;
+	float intensity;
 };
 
 #define BUILTIN_GLOBAL \

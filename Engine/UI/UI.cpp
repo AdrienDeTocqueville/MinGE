@@ -199,7 +199,7 @@ void UI::init()
 	set_keymap();
 
 	ImGui_ImplSDL2_Init(Input::window());
-	ImGui_ImplOpenGL3_Init("#version 130");
+	ImGui_ImplOpenGL3_Init("#version 410");
 }
 
 void UI::destroy()

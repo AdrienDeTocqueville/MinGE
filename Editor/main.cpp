@@ -22,11 +22,16 @@ int main(int, char**)
 	Engine::init(window);
 	Editor::init();
 
-	Editor::open_scene("Assets/Scenes/gamma.ge");
+	auto m2 = Material::get(2);
+	m2.set("color", vec3(1.0, 5.0f, 5.0f));
 
-	auto m = Material::get(4);
-	m.set("tiling", vec2(5.0f, 5.0f));
-	m.set("color_map", Texture::get(7));
+	//Editor::open_scene("Assets/tests/dummy_scene.ge");
+	Editor::open_scene("Assets/Scenes/pbr.ge");
+	//Editor::open_scene("Assets/Scenes/gamma.ge");
+
+	//auto m = Material::get(4);
+	//m.set("tiling", vec2(5.0f, 5.0f));
+	//m.set("color_map", Texture::get(7));
 
 	/// Main loop
 	while (!Input::window_closed())

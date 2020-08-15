@@ -63,6 +63,7 @@ void GraphicsSystem::save(SerializationContext &ctx) const
 			json light = json::object();
 
 			light["color"] = ::to_json(point_lights.get<0>()[i].color);
+			light["intensity"] = point_lights.get<0>()[i].intensity;
 			light["radius"] = point_lights.get<0>()[i].radius;
 
 			light_dump.push_back(light);
@@ -120,7 +121,7 @@ GraphicsSystem::GraphicsSystem(const SerializationContext &ctx):
 
 		indices.map<2>(i, 0);
 		auto light = light_it.value();
-		add_point_light(Entity::get(i), ::to_vec3(light["color"]), light["radius"]);
+		add_point_light(Entity::get(i), ::to_vec3(light["color"]), light["intensity"], light["radius"]);
 		++light_it;
 	}
 

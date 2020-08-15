@@ -81,5 +81,7 @@ void Light::set_##prop(type val) {		\
 }
 
 SIMPLE_LIGHT_PROP(vec3, color)
+SIMPLE_LIGHT_PROP(float, radius)
+SIMPLE_LIGHT_PROP(float, intensity)
 
 #undef SIMPLE_LIGHT_PROP

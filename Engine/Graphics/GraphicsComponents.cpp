@@ -44,13 +44,14 @@ Renderer GraphicsSystem::add_renderer(Entity entity, Mesh mesh, Material materia
 	return {entity.id(), 0, *this};
 }
 
-Light GraphicsSystem::add_point_light(Entity entity, vec3 color, float radius)
+Light GraphicsSystem::add_point_light(Entity entity, vec3 color, float intensity, float radius)
 {
 	uint32_t i = point_lights.add();
 	indices.map<2>(entity, i);
 
-	point_lights.get<0>()[i].radius = radius;
 	point_lights.get<0>()[i].color = color;
+	point_lights.get<0>()[i].intensity = intensity;
+	point_lights.get<0>()[i].radius = radius;
 	point_lights.get<0>()[i].entity = entity;
 
 	return { entity.id(), 0, *this};

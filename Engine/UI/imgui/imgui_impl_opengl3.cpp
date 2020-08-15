@@ -482,6 +482,7 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
         "void main()\n"
         "{\n"
         "    Out_Color = Frag_Color * texture(Texture, Frag_UV.st);\n"
+        "    Out_Color = pow(Out_Color, vec4(2.2f));\n"
         "}\n";
 
     // Select shaders matching our GLSL versions

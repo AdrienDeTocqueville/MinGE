@@ -1,10 +1,12 @@
 #pragma once
 
-#ifdef __linux__
+#include "Core/Utils.h"
+
+#ifdef PLATFORM_LINUX
 #include <sys/mman.h>
 #include <unistd.h>
 #include <assert.h>
-#elif _WIN32
+#elif PLATFORM_WINDOWS
 #define NOMINMAX
 #include <Windows.h>
 #endif
@@ -12,7 +14,7 @@
 namespace mem
 {
 
-#ifdef __linux__
+#ifdef PLATFORM_LINUX
 inline void *alloc_page(size_t size) { return mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0); }
 inline void free_page(void *address, size_t size) { assert(munmap(address, size) == 0); }
 
@@ -21,7 +23,7 @@ inline long get_page_size()
 	return sysconf(_SC_PAGESIZE);
 }
 
-#elif _WIN32
+#elif PLATFORM_WINDOWS
 inline void *alloc_page(size_t size) { return VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE); }
 inline void free_page(void *address, size_t size) { VirtualFree(address, 0, MEM_RELEASE); }
 

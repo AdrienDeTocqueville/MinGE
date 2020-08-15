@@ -37,7 +37,7 @@ struct GraphicsSystem
 
 	Renderer add_renderer(Entity entity, Mesh mesh, Material material = Material::none);
 
-	Light add_point_light(Entity entity, vec3 color = vec3(150.0f / 255.0f), float radius = 1.0f);
+	Light add_point_light(Entity entity, vec3 color = vec3(150.0f / 255.0f), float intensity = 10.0f, float radius = 1.0f);
 
 	bool has_camera(Entity entity)	 const	{ return indices.has<0>(entity); }
 	bool has_renderer(Entity entity) const	{ return indices.has<1>(entity); }
@@ -89,8 +89,9 @@ struct GraphicsSystem
 	// Lights
 	struct point_light_t
 	{
-		float radius;
 		vec3 color;
+		float intensity;
+		float radius;
 		Entity entity;
 	};
 

@@ -88,6 +88,8 @@ static void edit_entity(GraphicsSystem *sys, Entity e)
 	{
 		Light light= sys->get_light(e);
 		SIMPLE_PROP("Color", ImGui::ColorEdit3, light, vec3, color);
+		SIMPLE_PROP("Radius", ImGui::DragFloat, light, float, radius);
+		SIMPLE_PROP("Intensity", ImGui::DragFloat, light, float, intensity);
 	}
 }
 
@@ -122,7 +124,6 @@ static void edit_system(PostProcessingSystem *sys)
 	SIMPLE_PROP("Enable HDR", ImGui::Checkbox, int, enable);
 	SIMPLE_PROP("Depth buffer", texture_dropdown, Texture, depth);
 	SIMPLE_PROP("Color buffer", texture_dropdown, Texture, color);
-	SIMPLE_PROP("Exposure", ImGui::DragFloat, float, exposure);
 }
 
 const system_editor_t editor = []() {

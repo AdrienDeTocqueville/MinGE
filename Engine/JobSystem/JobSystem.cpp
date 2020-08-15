@@ -1,12 +1,13 @@
 #include "Profiler/profiler.h"
+#include "Core/Utils.h"
 
 #include <assert.h>
 #include <thread>
 
-#ifdef __linux__
+#ifdef PLATFORM_LINUX
 #include <pthread.h>
 #include <ucontext.h>
-#elif _WIN32
+#elif PLATFORM_WINDOWS
 #define NOMINMAX
 #include <Windows.h>
 #else
@@ -19,7 +20,6 @@
 #include "Math/Random.h"
 #include "Utility/Time.h"
 #include "Utility/stb_sprintf.h"
-#include "Core/Utils.h"
 
 #define SINGLE_THREADED
 
@@ -40,7 +40,7 @@ static thread_local unsigned this_worker;
 static const unsigned JOB_POOL_SIZE = 512;
 static thread_local Job job_pool[JOB_POOL_SIZE];
 static thread_local uint32_t job_pool_index = 0;
-#ifdef __linux__
+#ifdef PLATFORM_LINUX
 static thread_local ucontext_t job_contexts[JOB_POOL_SIZE];
 static thread_local uint8_t job_stacks[JOB_POOL_SIZE][0x1000];
 #endif
@@ -53,7 +53,7 @@ static inline Job* allocate_job()
 
 #include "JobSystem/Fiber.h"
 
-#ifdef __linux__
+#ifdef PLATFORM_LINUX
 #define COMPILER_BARRIER() asm volatile("" ::: "memory")
 
 #define ATOMIC_EXCHANGE  __sync_lock_test_and_set
@@ -61,7 +61,7 @@ static inline Job* allocate_job()
 
 #define THIS_THREAD pthread_self()
 
-#elif _WIN32
+#elif PLATFORM_WINDOWS
 #define COMPILER_BARRIER() std::atomic_thread_fence(std::memory_order_release);
 
 #define ATOMIC_EXCHANGE InterlockedExchange
@@ -209,7 +209,7 @@ static void job_run(Job *job)
 {
 reset_fiber:
 
-#ifdef __linux__
+#ifdef PLATFORM_LINUX
 	this_job = job;
 #endif
 
@@ -323,12 +323,12 @@ static void set_cpu_affinity(const std::thread::native_handle_type handle, const
 {
 	bool failed;
 
-#ifdef __linux__
+#ifdef PLATFORM_LINUX
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
 	CPU_SET(cpu, &cpuset);
 	failed = pthread_setaffinity_np(handle, sizeof(cpu_set_t), &cpuset);
-#elif _WIN32
+#elif PLATFORM_WINDOWS
 	failed = SetThreadAffinityMask(handle, uint64_t(1) << cpu) == 0;
 #endif
 

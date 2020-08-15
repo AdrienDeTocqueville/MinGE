@@ -7,6 +7,8 @@
 #endif
 
 #ifdef __linux__
+#define PLATFORM_LINUX
+
 #define DLL_EXPORT	__attribute__((visibility("default")))
 #define DLL_IMPORT	__attribute__((visibility("default")))
 
@@ -22,6 +24,8 @@
 
 
 #elif _WIN32
+#define PLATFORM_WINDOWS
+
 #define DLL_EXPORT	__declspec(dllexport)
 #define DLL_IMPORT	__declspec(dllimport)
 

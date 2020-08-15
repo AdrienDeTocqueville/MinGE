@@ -1,4 +1,5 @@
 #include "lib/builtin.glsl"
+#include "lib/light.glsl"
 #include "lib/brdf.glsl"
 
 BUILTIN_GLOBAL;
@@ -39,6 +40,7 @@ uniform float roughness = 0.5f;
 float compute_shadow()
 {
 #ifdef RECEIVE_SHADOW
+	// TODO: shadow map atlas
 	vec3 coords = in_fs.pos_light_space.xyz / in_fs.pos_light_space.w;
 	coords = coords * 0.5f + 0.5f;
 
@@ -61,48 +63,23 @@ void main()
 	float roughness = texture(roughness_map, in_fs.uv).x;
 #endif
 
-	float ao = 1.0f;
-
-	// https://learnopengl.com/PBR/Lighting
+        vec3 diffuseColor = (1.0 - metallic) * color.rgb;
+        vec3 f0 = 0.04 * (1.0 - metallic) + color.rgb * metallic;
+        float linearRoughness = roughness * roughness;
 
 	vec3 N = normalize(in_fs.normal);
 	vec3 V = normalize(camera.position - in_fs.pos);
 
-	vec3 F0 = vec3(0.04f);
-	F0 = mix(F0, color, metallic);
-
+	// Evaluate punctual lights
 	vec3 Lo = vec3(0.0f);
 	for (int i = 0; i < lights.length(); i++)
 	{
 		vec3 L = lights[i].position - in_fs.pos;
-		float distance = length(L);
-		L /= distance;
-		vec3 H = normalize(V + L);
-
-		// Compute incoming radiance
-		float attenuation = compute_shadow();
-		vec3 radiance = lights[i].color * attenuation;
-
-		// Cook-Torrance BRDF
-		float NDF = DistributionGGX(N, H, roughness);
-		float G   = GeometrySmith(N, V, L, roughness);
-		vec3  F   = fresnelSchlick(max(dot(H, V), 0.0), F0);
-
-		vec3  nominator   = NDF * G * F;
-		float denominator = 4.0f * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
-		vec3  specular = nominator / max(denominator, 0.001);
-
-		vec3 kS = F;
-		vec3 kD = vec3(1.0) - kS;
-		kD *= 1.0 - metallic;
-
-		// Compute outgoing radiance
-		float NdotL = max(dot(N, L), 0.0);
-		Lo += (kD * color / PI + specular) * radiance * NdotL;
+		vec3 radiance = BRDF(N, V, normalize(L), diffuseColor, f0, linearRoughness);
+		float attenuation = getDistanceAttenuation(L, lights[i].falloff);
+		Lo += (radiance * lights[i].color * lights[i].intensity)
+			* attenuation * compute_shadow();
 	}
 
-	vec3 ambient = vec3(0.03) * color * ao;
-	vec3 final = ambient + Lo;
-
-	out_color = vec4(final, 1.0);
+	out_color = vec4(Lo, 1.0);
 }

@@ -8,11 +8,10 @@
 
 #include "IO/Input.h"
 
-static Material post_process;
-
-PostProcessingSystem::PostProcessingSystem(void *system_dependency, Texture depth_texture, Texture color_texture, float exposure, vec4 ss_viewport):
+PostProcessingSystem::PostProcessingSystem(void *system_dependency, Texture depth_texture, Texture color_texture, vec4 ss_viewport, Material post_processing):
 	dependency(system_dependency), ss_viewport(ss_viewport),
-	enable(0), depth(depth_texture), color(color_texture), exposure(exposure)
+	enable(1), depth(depth_texture), color(color_texture),
+	post_process(post_processing)
 {
 	if (post_process == Material::none)
 		post_process = Material::load("asset:material?shader=postprocessing");
@@ -27,8 +26,8 @@ PostProcessingSystem::~PostProcessingSystem()
 
 static void update(PostProcessingSystem *self)
 {
+	Material post_process = self->post_process;
 	post_process.set("hdr", self->enable);
-	post_process.set("exposure", self->exposure);
 	post_process.set("depth_buffer", self->depth);
 	post_process.set("color_buffer", self->color);
 
@@ -44,8 +43,7 @@ static void update(PostProcessingSystem *self)
 using namespace nlohmann;
 
 PostProcessingSystem::PostProcessingSystem(const SerializationContext &ctx):
-	PostProcessingSystem(ctx.get_dependency(0), Texture::get(ctx["depth"]), Texture::get(ctx["color"]),
-		ctx["exposure"], ::to_vec4(ctx["ss_viewport"]))
+	PostProcessingSystem(ctx.get_dependency(0), Texture::get(ctx["depth"]), Texture::get(ctx["color"]), ::to_vec4(ctx["ss_viewport"]), Material::get(ctx["material"]))
 { }
 
 void PostProcessingSystem::save(SerializationContext &ctx) const
@@ -53,7 +51,7 @@ void PostProcessingSystem::save(SerializationContext &ctx) const
 	json dump = json::object();
 	dump["depth"] = depth.uint();
 	dump["color"] = color.uint();
-	dump["exposure"] = exposure;
+	dump["material"] = post_process.uint();
 	dump["ss_viewport"] = ::to_json(ss_viewport);
 
 	ctx.set_dependencies(dependency);

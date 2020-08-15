@@ -1,46 +1,51 @@
 #ifndef BRDF_GLSL
 #define BRDF_GLSL
 
-const float PI = 3.14159265359;
+#include "lib/math.glsl"
 
-float DistributionGGX(vec3 N, vec3 H, float roughness)
-{
-	float a = roughness*roughness;
-	float a2 = a*a;
-	float NdotH = max(dot(N, H), 0.0);
-	float NdotH2 = NdotH*NdotH;
-
-	float nom   = a2;
-	float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-	denom = PI * denom * denom;
-
-	return nom / denom;
+float D_GGX(float linearRoughness, float NoH) {
+    // Walter et al. 2007, "Microfacet Models for Refraction through Rough Surfaces"
+    float a = NoH * linearRoughness;
+    float k = linearRoughness / (1.0 - NoH * NoH + a * a);
+    return k * k * (1.0 / PI);
 }
 
-float GeometrySchlickGGX(float NdotV, float roughness)
-{
-	float r = (roughness + 1.0);
-	float k = (r*r) / 8.0;
-
-	float nom   = NdotV;
-	float denom = NdotV * (1.0 - k) + k;
-
-	return nom / denom;
+float V_SmithGGXCorrelated(float linearRoughness, float NoV, float NoL) {
+    // Heitz 2014, "Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs"
+    float a2 = linearRoughness * linearRoughness;
+    float GGXV = NoL * sqrt((NoV - a2 * NoV) * NoV + a2);
+    float GGXL = NoV * sqrt((NoL - a2 * NoL) * NoL + a2);
+    return 0.5 / (GGXV + GGXL);
 }
 
-float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
-{
-	float NdotV = max(dot(N, V), 0.0);
-	float NdotL = max(dot(N, L), 0.0);
-	float ggx2 = GeometrySchlickGGX(NdotV, roughness);
-	float ggx1 = GeometrySchlickGGX(NdotL, roughness);
-
-	return ggx1 * ggx2;
+vec3 F_Schlick(const vec3 f0, float VoH) {
+    // Schlick 1994, "An Inexpensive BRDF Model for Physically-Based Rendering"
+    return f0 + (vec3(1.0) - f0) * pow5(1.0 - VoH);
 }
 
-vec3 fresnelSchlick(float cosTheta, vec3 F0)
+float Fd_Lambert() {
+    return 1.0 / PI;
+}
+
+vec3 BRDF(vec3 n, vec3 v, vec3 l, vec3 diffuseColor, vec3 f0, float linearRoughness)
 {
-	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+	vec3 h = normalize(v + l);
+
+	float NoV = abs(dot(n, v)) + 1e-5;
+	float NoL = saturate(dot(n, l));
+	float NoH = saturate(dot(n, h));
+	float LoH = saturate(dot(l, h));
+
+        // specular BRDF
+        float D = D_GGX(linearRoughness, NoH);
+        float V = V_SmithGGXCorrelated(linearRoughness, NoV, NoL);
+        vec3  F = F_Schlick(f0, LoH);
+        vec3 Fr = (D * V) * F;
+
+        // diffuse BRDF
+        vec3 Fd = diffuseColor * Fd_Lambert();
+
+        return (Fd + Fr) * NoL;
 }
 
 #endif

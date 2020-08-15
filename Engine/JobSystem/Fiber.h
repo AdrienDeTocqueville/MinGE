@@ -1,4 +1,4 @@
-#ifdef __linux__ /// LINUX
+#ifdef PLATFORM_LINUX /// LINUX
 
 #define INIT_FIBER_THREAD()
 #define DESTROY_FIBER_THREAD()
@@ -20,7 +20,7 @@ inline void *create_fiber(void (*func)(Job*), unsigned idx)
 
 static Job *this_job;
 
-#elif _WIN32 /// WINDOWS
+#elif PLATFORM_WINDOWS /// WINDOWS
 
 static thread_local void *this_fiber;
 #define INIT_FIBER_THREAD() this_fiber = ConvertThreadToFiber(0);

@@ -82,6 +82,71 @@ static void gamma_scene(bool serialize = false)
 	controller->add(Entity::get("Camera2"));
 }
 
+static void pbr_scene(bool serialize = true)
+{
+	assert(serialize);
+
+	int nrRows = 7;
+	int nrColumns = 7;
+	float spacing = 2.5;
+
+	auto transforms = new(Engine::alloc_system("TransformSystem")) TransformSystem();
+	auto graphics = new(Engine::alloc_system("GraphicsSystem")) GraphicsSystem(transforms);
+	auto controller = new(Engine::alloc_system("CameraControl")) CameraControl(transforms, graphics);
+
+	Material base_material = RenderEngine::default_material;
+
+	/// Create spheres
+	glm::mat4 model = glm::mat4(1.0f);
+	for (int row = 0; row < nrRows; ++row)
+	{
+		for (int col = 0; col < nrColumns; ++col)
+		{
+			float metallic = (float)row / (float)nrRows;
+			float roughness = clamp((float)col / (float)nrColumns, 0.05f, 1.0f);
+
+			Material material = Material::copy(base_material);
+			material.set("metallic", metallic);
+			material.set("roughness", roughness);
+
+			Entity e = Entity::create();
+			transforms->add(e, vec3(
+				(float)(col - (nrColumns / 2)) * spacing,
+				0.0f,
+				(float)(row - (nrRows / 2)) * spacing
+			));
+			graphics->add_renderer(e, sphere, material);
+		}
+	}
+
+	/// Create lights
+	vec3 light_positions[] = {
+		vec3(-4.0f, 10.0f,  4.0f),
+		vec3( 4.0f, 10.0f,  4.0f),
+		vec3(-4.0f, 10.0f, -4.0f),
+		vec3( 4.0f, 10.0f, -4.0f),
+	};
+
+	for (unsigned int i = 0; i < ARRAY_LEN(light_positions); ++i)
+        {
+	    Entity light_ent = Entity::create("Light " + std::to_string(i));
+	    transforms->add(light_ent, light_positions[i]);
+	    graphics->add_point_light(light_ent, vec3(1.0f), 10.0f, 15.0f);
+        }
+
+
+	Entity camera_ent = Entity::create("MainCamera");
+	transforms->add(camera_ent, vec3(0, 15, 0));
+	transforms->get(camera_ent).look_at(vec3(0,0,0));
+	auto cam = graphics->add_camera(camera_ent);
+	controller->add(camera_ent);
+
+	auto postproc = new(Engine::alloc_system("PostProcessingSystem")) PostProcessingSystem(graphics, cam.depth_texture(), cam.color_texture());
+
+	s.set_systems("transforms", transforms, "graphics", graphics, "post-processing", postproc);
+	s.save("Assets/Scenes/pbr.ge");
+}
+
 static void stress_scene(bool serialize)
 {
 	assert(serialize);
@@ -142,8 +207,9 @@ int main(int, char**)
 
 	Engine::register_asset_type(Mesh::type);
 	Engine::register_asset_type(Texture::type);
+	Engine::register_asset_type(Material::type);
 
-	bool serialize = false;
+	bool serialize = true;
 
 	if (serialize)
 	{
@@ -153,11 +219,12 @@ int main(int, char**)
 
 		cube = Mesh::load("asset:mesh/cube?x=1&y=1&z=1");
 		rect = Mesh::load("asset:mesh/cube?x=2&y=3&z=3");
-		sphere = Mesh::load("asset:mesh/sphere?radius=3");
+		sphere = Mesh::load("asset:mesh/sphere?radius=1");
 	}
 
 	//dummy_scene(serialize);
-	gamma_scene(serialize);
+	//gamma_scene();
+	pbr_scene(serialize);
 	//stress_scene(serialize);
 
 	/// Main loop

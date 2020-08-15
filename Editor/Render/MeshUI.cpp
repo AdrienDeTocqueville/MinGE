@@ -26,11 +26,13 @@ bool mesh_dropdown(const char *label, Mesh *selected)
 			if (mesh == Mesh::none)
 				continue;
 
+			ImGui::PushID(i);
 			const bool is_selected = (valid && i == id);
 			if (ImGui::Selectable(mesh.uri(), is_selected) && !is_selected)
 			{ *selected = mesh; changed = true; }
 			if (is_selected)
 				ImGui::SetItemDefaultFocus();
+			ImGui::PopID();
 		}
 		ImGui::EndCombo();
 	}

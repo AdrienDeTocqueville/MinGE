@@ -33,11 +33,13 @@ bool texture_dropdown(const char *label, Texture *selected)
 			if (texture == Texture::none)
 				continue;
 
+			ImGui::PushID(i);
 			const bool is_selected = (valid && i == id);
 			if (ImGui::Selectable(texture.uri(), is_selected) && !is_selected)
 			{ *selected = texture; changed = true; }
 			if (is_selected)
 				ImGui::SetItemDefaultFocus();
+			ImGui::PopID();
 		}
 		ImGui::EndCombo();
 	}

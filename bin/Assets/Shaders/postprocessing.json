@@ -3,7 +3,7 @@
 	"forward": {
 		"stages": {
 			"vertex": "core/fullscreen.vert",
-			"fragment": "core/hdr.frag"
+			"fragment": "core/postprocessing.frag"
 		}
 	}
 }

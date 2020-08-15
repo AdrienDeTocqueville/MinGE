@@ -65,8 +65,10 @@ void GL::init()
 
 	glCullFace(GL_BACK);
 	glEnable(GL_LINE_SMOOTH);
+	glEnable(GL_FRAMEBUFFER_SRGB);
 	glPointSize(7.0f);
 	glLineWidth(1.0f);
+
 
 	glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &uniform_offset_alignment);
 	glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, &storage_offset_alignment);

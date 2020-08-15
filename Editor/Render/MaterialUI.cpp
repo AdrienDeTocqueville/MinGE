@@ -26,11 +26,13 @@ bool material_dropdown(const char *label, Material *selected)
 			if (mat == Material::none)
 				continue;
 
+			ImGui::PushID(i);
 			const bool is_selected = (valid && i == id);
 			if (ImGui::Selectable(mat.uri(), is_selected) && !is_selected)
 			{ *selected = mat; changed = true; }
 			if (is_selected)
 				ImGui::SetItemDefaultFocus();
+			ImGui::PopID();
 		}
 		ImGui::EndCombo();
 	}

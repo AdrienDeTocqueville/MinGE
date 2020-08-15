@@ -209,6 +209,8 @@ SDL_Window *Input::create_window_centered(const char *title, vec2 ratio, int fla
 		return NULL;
 	}
 
+	SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
+
 	vec2 size = vec2(mode.w, mode.h) * ratio;
 
 	int pos = SDL_WINDOWPOS_CENTERED_DISPLAY(monitor);

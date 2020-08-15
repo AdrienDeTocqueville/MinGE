@@ -6,6 +6,7 @@
 #define STB_INCLUDE_LINE_GLSL
 #include "Render/Shader/stb_include.h"
 
+#include "Core/Utils.h"
 #include "Utility/Error.h"
 #include "Utility/stb_sprintf.h"
 
@@ -31,6 +32,23 @@ static bool check_compile(unsigned shader, const char *file)
 {
 	GLint success;
 	glCheck(glGetShaderiv(shader, GL_COMPILE_STATUS, &success));
+
+#if defined(DEBUG) && defined(PLATFORM_LINUX)
+	if (success != GL_TRUE)
+	{
+		GLint stringSize(0);
+		glCheck(glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &stringSize));
+
+		char *error = new char[stringSize + 1];
+
+		glCheck(glGetShaderInfoLog(shader, stringSize, &stringSize, error));
+		error[stringSize] = '\0';
+
+		std::cout << std::endl << error;
+		delete[] error;
+		Error::addf(Error::OPENGL, "Failed to compile shader: %s", file);
+	}
+#endif
 
 	return success == GL_TRUE;
 }
