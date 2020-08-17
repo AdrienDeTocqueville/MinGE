@@ -26,8 +26,8 @@ static const char *find_next(const char *str, char chr)
 bool uri_t::parse(const char *uri)
 {
 	const char *colon = strchr(uri, ':');
-	if (colon == NULL || str_diff("asset", uri))
-		return false;
+	if (colon == NULL) return false;
+	hidden = str_diff("asset", uri);
 	on_disk = !str_diff("//", colon + 1);
 	const char *path_start = colon + (on_disk ? 2 : 1);
 	const char *path_end = find_next(colon + 1, '?');

@@ -31,26 +31,35 @@ void RenderEngine::init()
 #endif
 
 	Debug::init();
-	default_material = Material::load("asset:material?shader=standard");
-	default_material.set("color", vec3(0.8f));
-	default_material.set("metallic", 0.0f);
-	default_material.set("roughness", 0.5f);
+}
+
+void RenderEngine::load()
+{
+	default_material = Material::get(1);
+	if (default_material == Material::none)
+	{
+		default_material = Material::load("asset:material?shader=standard");
+		default_material.set("color", vec3(0.8f));
+		default_material.set("metallic", 0.0f);
+		default_material.set("roughness", 0.5f);
+	}
+
+	Debug::load();
+}
+
+void RenderEngine::clear()
+{
+	UI::clear();
 }
 
 void RenderEngine::destroy()
 {
-	default_material.destroy();
-
-	cmd_buffer_t::destroy();
-
-	UI::destroy();
 	Debug::destroy();
 
+	cmd_buffer_t::destroy();
 	Shader::clear();
-	Texture::clear();
-	Mesh::clear();
-	Material::clear();
 
+	UI::destroy();
 	GL::destroy();
 }
 

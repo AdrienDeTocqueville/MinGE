@@ -1,12 +1,17 @@
 #pragma once
 
+#include <Core/UID.h>
+
 struct Editor
 {
 	typedef void (*Action)(void*, void*, void*);
+	typedef void (*AssetEditor)(UID32*);
 
-	static void init();
+	static void load();
+	static void clear();
 	static void frame();
 	static void register_system_editor(const struct system_editor_t &editor);
+	static void register_asset_editor(const char *name, AssetEditor editor);
 
 	static void open_scene(const char *path);
 	static void save_scene();

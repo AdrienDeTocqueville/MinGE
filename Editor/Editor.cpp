@@ -19,12 +19,11 @@ static char scene_path[255] = "";
 struct asset_tab_t
 {
 	const char *name;
-	void (*callback)(void*);
+	void (*callback)(UID32*);
 	UID32 selected;
 };
 static std::vector<asset_tab_t> asset_tabs;
 
-static Scene scene;
 static std::vector<system_editor_t> system_editors;
 
 namespace ImGui {
@@ -43,7 +42,7 @@ bool ButtonCentered(const char *label)
 }
 }
 
-const system_editor_t *get_editor(const char *type_name)
+static const system_editor_t *get_editor(const char *type_name)
 {
 	for (int i = 0; i < system_editors.size(); i++)
 	{
@@ -53,18 +52,28 @@ const system_editor_t *get_editor(const char *type_name)
 	return NULL;
 }
 
-void menubar()
+static void save_as_dialog()
+{
+	if (choose_file("Save As", scene_path, ARRAY_LEN(scene_path), true))
+		Editor::save_scene_as(scene_path);
+}
+
+static void open_scene_dialog()
+{
+	if (choose_file("Open Scene", scene_path, ARRAY_LEN(scene_path), false))
+		Editor::open_scene(scene_path);
+}
+
+static void menubar()
 {
 	if (ImGui::BeginMenu("File"))
 	{
-		if (ImGui::MenuItem("Save", "Ctrl+S")) Editor::save_scene();
-		if (ImGui::MenuItem("Save As", "Ctrl+Shit+S"))
-		{ }
-		if (ImGui::MenuItem("Open Scene", "Ctrl+O"))
-		{ Editor::open_scene(/*placeholder*/scene_path); }
+		if (ImGui::MenuItem("New Scene", "Ctrl+N"))	Editor::open_scene(NULL);
+		if (ImGui::MenuItem("Save", "Ctrl+S"))		Editor::save_scene();
+		if (ImGui::MenuItem("Save As", "Ctrl+Shit+S"))	save_as_dialog();
+		if (ImGui::MenuItem("Open Scene", "Ctrl+O"))	open_scene_dialog();
 
-		if (ImGui::MenuItem("Exit"))
-			Input::close_window();
+		if (ImGui::MenuItem("Exit")) Input::close_window();
 		ImGui::EndMenu();
 	}
 	if (ImGui::BeginMenu("Edit"))
@@ -80,7 +89,7 @@ void menubar()
 	}
 }
 
-void assets_win(uint32_t id)
+static void assets_win(uint32_t id)
 {
 	if (!ImGui::Begin("assets", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove))
 		return ImGui::End();
@@ -110,7 +119,7 @@ void assets_win(uint32_t id)
 	ImGui::End();
 }
 
-void systems_win(uint32_t id)
+static void systems_win(uint32_t id)
 {
 	if (!ImGui::Begin("systems", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove))
 		return ImGui::End();
@@ -119,10 +128,10 @@ void systems_win(uint32_t id)
 
 	if (ImGui::BeginTabItem("Systems", NULL, ImGuiTabItemFlags_None))
 	{
-		for (int i = 0; i < scene.get_system_count(); i++)
+		for (int i = 0; i < Scene::system_count(); i++)
 		{
-			auto &s = scene.get_systems()[i];
-			auto *t = Engine::get_system_type(s.instance);
+			auto &s = Scene::systems()[i];
+			auto *t = Engine::system_type(s.instance);
 			auto *e = get_editor(t->name);
 			if (e->edit_system && ImGui::CollapsingHeader(s.name, ImGuiTreeNodeFlags_None))
 			{
@@ -156,7 +165,7 @@ void systems_win(uint32_t id)
 	ImGui::End();
 }
 
-bool add_entity(char *buf, size_t size)
+static bool add_entity(char *buf, size_t size)
 {
 	ImGui::PushID("new_entity_name");
 	bool ret = ImGui::InputText("", buf, size, ImGuiInputTextFlags_EnterReturnsTrue);
@@ -165,7 +174,7 @@ bool add_entity(char *buf, size_t size)
 	return ImGui::Button("+") || ret;
 }
 
-void entity_tab(Entity *entity)
+static void entity_tab(Entity *entity)
 {
 	entity_dropdown("Select entity", entity);
 
@@ -179,10 +188,10 @@ void entity_tab(Entity *entity)
 	if (!entity->is_valid())
 		return;
 
-	for (int i = 0; i < scene.get_system_count(); i++)
+	for (int i = 0; i < Scene::system_count(); i++)
 	{
-		auto &s = scene.get_systems()[i];
-		auto *t = Engine::get_system_type(s.instance);
+		auto &s = Scene::systems()[i];
+		auto *t = Engine::system_type(s.instance);
 		auto *e = get_editor(t->name);
 		if (e->edit_entity) e->edit_entity(s.instance, *entity);
 	}
@@ -192,10 +201,10 @@ void entity_tab(Entity *entity)
 		ImGui::OpenPopup("add_comp_popup");
 	if (ImGui::BeginPopup("add_comp_popup"))
 	{
-		for (int i = 0; i < scene.get_system_count(); i++)
+		for (int i = 0; i < Scene::system_count(); i++)
 		{
-			auto &s = scene.get_systems()[i];
-			auto *t = Engine::get_system_type(s.instance);
+			auto &s = Scene::systems()[i];
+			auto *t = Engine::system_type(s.instance);
 			auto *e = get_editor(t->name);
 			if (e->add_component) e->add_component(s.instance, s.name, *entity);
 		}
@@ -203,24 +212,11 @@ void entity_tab(Entity *entity)
 	}
 }
 
-void Editor::init()
+void Editor::load()
 {
 	UI::set_menubar(menubar);
 	UI::create_window(assets_win, 0);
 	UI::create_window(systems_win, 0);
-}
-
-void Editor::register_system_editor(const struct system_editor_t &editor)
-{
-	system_editors.push_back(editor);
-}
-
-void Editor::open_scene(const char *path)
-{
-	clear_history();
-	Engine::clear();
-	system_editors.clear();
-	asset_tabs.clear();
 
 	// Register builtin system types
 	Engine::register_system_type(TransformSystem::type);
@@ -236,35 +232,87 @@ void Editor::open_scene(const char *path)
 	Engine::register_asset_type(Texture::type);
 	Engine::register_asset_type(Material::type);
 
-	asset_tabs.push_back(asset_tab_t {"Entity", (void(*)(void*))entity_tab, Entity::none});
-	asset_tabs.push_back(asset_tab_t {"Mesh", (void(*)(void*))mesh_tab, Mesh::none});
-	asset_tabs.push_back(asset_tab_t {"Texture", (void(*)(void*))texture_tab, Texture::none});
-	asset_tabs.push_back(asset_tab_t {"Material", (void(*)(void*))material_tab, Material::none});
+	register_asset_editor("Entity",	  (AssetEditor)entity_tab);
+	register_asset_editor("Mesh",	  (AssetEditor)mesh_tab);
+	register_asset_editor("Texture",  (AssetEditor)texture_tab);
+	register_asset_editor("Material", (AssetEditor)material_tab);
+}
 
-	if (scene.load(path))
+void Editor::clear()
+{
+	clear_history();
+	system_editors.clear();
+	asset_tabs.clear();
+}
+
+void Editor::register_system_editor(const struct system_editor_t &editor)
+{
+	system_editors.push_back(editor);
+}
+
+void Editor::register_asset_editor(const char *name, AssetEditor editor)
+{
+	asset_tabs.push_back(asset_tab_t {name, editor, UID32()});
+}
+
+void Editor::open_scene(const char *path)
+{
+	Engine::clear();
+	Editor::clear();
+
+	Editor::load();
+
+	if (path && Scene::load(path))
 	{
 		Input::set_window_name(strrchr(path, '/') + 1);
-		strncpy(scene_path, path, sizeof(scene_path));
-
-		GraphicsSystem *g = (GraphicsSystem*)scene.get_system("graphics");
-		//g->add_renderer(Entity::get("Light"), Mesh::get(1));
+		if (path != scene_path)
+			strncpy(scene_path, path, sizeof(scene_path));
 	}
 	else
 	{
 		scene_path[0] = 0;
+		Engine::load();
 		Input::set_window_name("Unnamed Scene");
+
+		auto transforms = new(Engine::alloc_system("TransformSystem"))
+			TransformSystem();
+		auto graphics = new(Engine::alloc_system("GraphicsSystem"))
+			GraphicsSystem(transforms);
+
+		Entity mesh_ent = Entity::create("Cube");
+		transforms->add(mesh_ent);
+		graphics->add_renderer(mesh_ent, Mesh::load("asset:mesh/cube"));
+
+		Entity light_ent = Entity::create("Light");
+		transforms->add(light_ent, vec3(-0.6, -3, 2));
+		graphics->add_point_light(light_ent);
+
+		Entity camera_ent = Entity::create("MainCamera");
+		transforms->add(camera_ent, vec3(-5, -3, 3), radians(vec3(0, 13, 15)));
+		auto cam = graphics->add_camera(camera_ent);
+
+		auto postproc = new(Engine::alloc_system("PostProcessingSystem"))
+			PostProcessingSystem(graphics, cam.depth_texture(), cam.color_texture());
+
+		Scene::set_systems(
+			"transforms", transforms,
+			"graphics", graphics,
+			"post-processing", postproc
+		);
 	}
 }
 
 void Editor::save_scene()
 {
-	printf("saving scene as %s\n", scene_path);
-	scene.save(scene_path);
+	if (*scene_path)
+		Scene::save(scene_path);
+	else
+		save_as_dialog();
 }
 
 void Editor::save_scene_as(const char *path)
 {
-	if (scene.save(path, Scene::Overwrite::Ask))
+	if (Scene::save(path, Scene::Overwrite::Ask))
 		strncpy(scene_path, path, sizeof(scene_path));
 }
 
@@ -272,11 +320,15 @@ void Editor::handle_shortcuts()
 {
 	if (Input::key_down(Key::LeftControl))
 	{
-		if (Input::key_pressed(Key::S)) save_scene();
-		//else if (Input::key_pressed(Key::O)) open_scene(/**/);
-		else if (Input::key_down(Key::LeftShift))
+		if (Input::key_down(Key::LeftShift))
 		{
-			//if (Input::key_pressed(Key::S)) save_scene_as();
+			if (Input::key_pressed(Key::S)) save_as_dialog();
+		}
+		else
+		{
+			if (Input::key_pressed(Key::N)) open_scene(NULL);
+			else if (Input::key_pressed(Key::S)) save_scene();
+			else if (Input::key_pressed(Key::O)) open_scene_dialog();
 		}
 	}
 }

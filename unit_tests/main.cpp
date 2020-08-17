@@ -16,13 +16,13 @@ int main(int, char**)
 	Engine::init(window);
 	printf("Engine initialized\n");
 
-	Engine::register_system_type(TransformSystem::type);
-
 	LAUNCH(entity);
+	LAUNCH(scene);
 	LAUNCH(structures);
 	LAUNCH(transforms);
 	//LAUNCH(systems);
-	BENCH(transforms, 50);
+	BENCH(transforms_creation, 50);
+	BENCH(transforms_access, 50);
 
 	Engine::destroy();
 

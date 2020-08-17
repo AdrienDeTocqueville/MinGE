@@ -2,36 +2,7 @@
 
 #include "tests.h"
 
-static void bench_access(int iterations)
-{
-	bool res = false;
-	const int count = 1000;
-	TransformSystem transforms;
-
-	Entity entities[count];
-	for (int i = 0; i < count; i++)
-	{
-		entities[i] = Entity::create();
-		transforms.add(entities[i]);
-	}
-
-	long time = 0;
-	for (int i = 0; i < iterations; i++)
-	{
-		Time::Chrono timer;
-
-		for (int k = 0; k < count; k++)
-		for (int i = 0; i < count; i++)
-			res |= transforms.has(entities[i]);
-
-		time += timer.time();
-	}
-	TEST(res);
-
-	REPORT("testing " << count * count << " existence: ", time / iterations, 970);
-}
-
-static void bench_creation(int iterations)
+void bench_transforms_creation(int iterations)
 {
 	long time = 0;
 	TransformSystem transforms;
@@ -65,14 +36,38 @@ static void bench_creation(int iterations)
 	REPORT("creating " << 1000 * 5 * 4 << " components: ", time / iterations, 6250);
 }
 
-void benchmark_transforms(int iterations)
+void bench_transforms_access(int iterations)
 {
-	bench_access(iterations);
-	bench_creation(iterations);
+	bool res = false;
+	const int count = 1000;
+	TransformSystem transforms;
+
+	Entity entities[count];
+	for (int i = 0; i < count; i++)
+	{
+		entities[i] = Entity::create();
+		transforms.add(entities[i]);
+	}
+
+	long time = 0;
+	for (int i = 0; i < iterations; i++)
+	{
+		Time::Chrono timer;
+
+		for (int k = 0; k < count; k++)
+		for (int i = 0; i < count; i++)
+			res |= transforms.has(entities[i]);
+
+		time += timer.time();
+	}
+	TEST(res);
+
+	REPORT("testing " << count * count << " existence: ", time / iterations, 970);
 }
 
 void test_transforms()
 {
+	Engine::register_system_type(TransformSystem::type);
 	auto transforms = new(Engine::alloc_system("TransformSystem")) TransformSystem();
 
 	/// Create entities
@@ -121,22 +116,13 @@ void test_transforms()
 
 	TEST(transforms->get(e4).position() == vec3(1, 0, 0));
 
-	Scene s("world", transforms);
-	DUMP_SCENE(dump1, s, "Assets/tests/transforms.ge");
+	Scene::set_systems("world", transforms);
+	DUMP_SCENE(dump1, "Assets/tests/transforms.ge");
 
-	e1.destroy();
-	e2.destroy();
-	e3.destroy();
-	e4.destroy();
-	e5.destroy();
-	e6.destroy();
-	e7.destroy();
-	e8.destroy();
-	_e.destroy();
+	Engine::register_system_type(TransformSystem::type);
+	Scene::load("Assets/tests/transforms.ge");
 
-
-	s.load("Assets/tests/transforms.ge");
-	DUMP_SCENE(dump2, s, "Assets/tests/transforms.ge");
+	DUMP_SCENE(dump2, "Assets/tests/transforms.ge");
 
 	TEST(dump1 == dump2);
 }

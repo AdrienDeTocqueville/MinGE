@@ -2,15 +2,15 @@
     "assets": {},
     "entities": [
         {
-            "name": "d",
+            "name": "a",
             "uint": 16777217
         },
         {
-            "name": "a",
-            "uint": 33554435
+            "name": "b",
+            "uint": 16777218
         },
         {
-            "name": "b",
+            "name": "d",
             "uint": 16777220
         },
         {

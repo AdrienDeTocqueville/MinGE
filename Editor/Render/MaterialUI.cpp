@@ -121,6 +121,9 @@ display_uniform:
 
 		switch (uniform->type)
 		{
+		case GL_INT:
+			ImGui::DragInt(it.first.c_str(), (int*)data, 1);
+			break;
 		case GL_FLOAT:
 			ImGui::DragFloat(it.first.c_str(), (float*)data, 0.1f);
 			break;

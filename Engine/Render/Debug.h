@@ -19,6 +19,7 @@ struct Debug
 
 private:
 	static void init();
+	static void load();
 	static void destroy();
 
 	friend struct RenderEngine;

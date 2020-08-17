@@ -105,7 +105,8 @@ static void update(GraphicsSystem *self)
 	{
 		recompute_indices:
 		self->objects.capacity &= ~(-1);
-		init_indices(self->draw_order_indices, renderers, renderer_count);
+		if (camera_count)
+			init_indices(self->draw_order_indices, renderers, renderer_count);
 		for (uint32_t i = 1; i < camera_count; i++)
 			memcpy(self->draw_order_indices + i * submeshes.count, self->draw_order_indices, submeshes.count * sizeof(uint32_t));
 	}

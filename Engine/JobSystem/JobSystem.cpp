@@ -21,7 +21,7 @@
 #include "Utility/Time.h"
 #include "Utility/stb_sprintf.h"
 
-#define SINGLE_THREADED
+//#define SINGLE_THREADED
 
 
 namespace JobSystem

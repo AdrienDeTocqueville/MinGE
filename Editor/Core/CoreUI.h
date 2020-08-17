@@ -3,7 +3,7 @@
 #include <Core/Entity.h>
 
 // Throw compile error if name does not exist
-#define INIT_SYSTEM_EDITOR(name) { sizeof(name) ? #name : #name }
+#define INIT_SYSTEM_EDITOR(name) { (sizeof(name), #name) }
 
 struct system_editor_t
 {
@@ -16,3 +16,5 @@ struct system_editor_t
 };
 
 bool entity_dropdown(const char *label, Entity *selected);
+
+bool choose_file(const char *name, char *output, size_t size, bool save);

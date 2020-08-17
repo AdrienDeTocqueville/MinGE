@@ -7,7 +7,6 @@
 
 #include "CameraControl.h"
 
-Scene s;
 Mesh cube, rect, sphere;
 Texture white, other;
 
@@ -47,15 +46,15 @@ static void dummy_scene(bool serialize = true)
 	auto postproc = new(Engine::alloc_system("PostProcessingSystem")) PostProcessingSystem(graphics, cam.depth_texture(), cam.color_texture());
 
 
-	s.set_systems("transforms", transforms, "graphics", graphics, "post-processing", postproc);
-	s.save("Assets/tests/dummy_scene.ge");
+	Scene::set_systems("transforms", transforms, "graphics", graphics, "post-processing", postproc);
+	Scene::save("Assets/tests/dummy_scene.ge");
 
 	} else {
 
-	s.load("Assets/tests/dummy_scene.ge");
+	Scene::load("Assets/tests/dummy_scene.ge");
 
-	auto transforms = (TransformSystem*)s.get_system("transforms");
-	auto graphics = (GraphicsSystem*)s.get_system("graphics");
+	auto transforms = (TransformSystem*)Scene::system("transforms");
+	auto graphics = (GraphicsSystem*)Scene::system("graphics");
 
 	auto controller = new(Engine::alloc_system("CameraControl")) CameraControl(transforms, graphics);
 
@@ -71,10 +70,10 @@ static void gamma_scene(bool serialize = false)
 {
 	assert(!serialize);
 
-	s.load("Assets/Scenes/gamma.ge");
+	Scene::load("Assets/Scenes/gamma.ge");
 
-	auto transforms = (TransformSystem*)s.get_system("transforms");
-	auto graphics = (GraphicsSystem*)s.get_system("graphics");
+	auto transforms = (TransformSystem*)Scene::system("transforms");
+	auto graphics = (GraphicsSystem*)Scene::system("graphics");
 
 	auto controller = new(Engine::alloc_system("CameraControl")) CameraControl(transforms, graphics);
 
@@ -108,6 +107,11 @@ static void pbr_scene(bool serialize = true)
 			Material material = Material::copy(base_material);
 			material.set("metallic", metallic);
 			material.set("roughness", roughness);
+			if (col == 2)
+			{
+				material.define("COLOR_MAP");
+				material.set("color_map", other);
+			}
 
 			Entity e = Entity::create();
 			transforms->add(e, vec3(
@@ -129,7 +133,7 @@ static void pbr_scene(bool serialize = true)
 
 	for (unsigned int i = 0; i < ARRAY_LEN(light_positions); ++i)
         {
-	    Entity light_ent = Entity::create("Light " + std::to_string(i));
+	    Entity light_ent = Entity::create(("Light " + std::to_string(i)).c_str());
 	    transforms->add(light_ent, light_positions[i]);
 	    graphics->add_point_light(light_ent, vec3(1.0f), 10.0f, 15.0f);
         }
@@ -143,8 +147,8 @@ static void pbr_scene(bool serialize = true)
 
 	auto postproc = new(Engine::alloc_system("PostProcessingSystem")) PostProcessingSystem(graphics, cam.depth_texture(), cam.color_texture());
 
-	s.set_systems("transforms", transforms, "graphics", graphics, "post-processing", postproc);
-	s.save("Assets/Scenes/pbr.ge");
+	Scene::set_systems("transforms", transforms, "graphics", graphics, "post-processing", postproc);
+	Scene::save("Assets/Scenes/pbr.ge");
 }
 
 static void stress_scene(bool serialize)
@@ -183,8 +187,8 @@ static void stress_scene(bool serialize)
 	auto postproc = new(Engine::alloc_system("PostProcessingSystem")) PostProcessingSystem(graphics, cam.depth_texture(), cam.color_texture());
 
 	/*
-	s.set_systems("transforms", transforms, "graphics", graphics, "post-processing", postproc);
-	s.save("Assets/tests/stress_scene.ge");
+	Scene::set_systems("transforms", transforms, "graphics", graphics, "post-processing", postproc);
+	Scene::save("Assets/tests/stress_scene.ge");
 	*/
 }
 
@@ -214,6 +218,7 @@ int main(int, char**)
 	if (serialize)
 	{
 		// Open assets
+		Engine::load();
 		other = Texture::load("asset://Textures/0.png?format=srgb8");
 		white = Texture::load("asset://Textures/white.png");
 
@@ -223,7 +228,7 @@ int main(int, char**)
 	}
 
 	//dummy_scene(serialize);
-	//gamma_scene();
+	//gamma_scene(serialize);
 	pbr_scene(serialize);
 	//stress_scene(serialize);
 
@@ -248,7 +253,7 @@ int main(int, char**)
 	rect.destroy();
 	sphere.destroy();
 #else
-	s.clear();
+	Scene::clear();
 #endif
 
 	Engine::destroy();

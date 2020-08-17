@@ -126,18 +126,19 @@ static unsigned vbo = 0, vao = 0;
 
 void Debug::init()
 {
-	material = Material::load("asset:material?shader=debug");
-
 	vao = GL::GenVertexArray();
 	vbo = GL::GenBuffer();
+}
+
+void Debug::load()
+{
+	material = Material::load("hidden:material?shader=debug");
 }
 
 void Debug::destroy()
 {
 	GL::DeleteBuffer(vbo);
 	GL::DeleteVertexArray(vao);
-
-	material.destroy();
 }
 
 void flush_points()

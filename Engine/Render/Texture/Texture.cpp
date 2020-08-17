@@ -200,28 +200,11 @@ void Texture::reload(const char *URI)
 
 Texture Texture::get(uint32_t i)
 {
-	if (textures.get<1>()[i] == NULL)
-		return Texture::none;
-	return Texture(i, textures.get<2>()[i]);
-}
-
-void Texture::clear()
-{
-	for (uint32_t i(1); i <= textures.size; i++)
-	{
-		if (textures.get<1>()[i] == NULL)
-			continue;
-
-		GLuint *handle = &textures.get<0>()[i].handle;
-		glCheck(glDeleteTextures(1, handle));
-
-		free(textures.get<1>()[i]);
-	}
-	textures.clear();
+	return ASSET_GET(Texture, 1, 2, textures, i);
 }
 
 
-/// Serialization
+/// Asset type
 using namespace nlohmann;
 void texture_save(json &dump)
 {
@@ -230,7 +213,15 @@ void texture_save(json &dump)
 
 void texture_load(const json &dump)
 {
-	Asset::load<Texture, 1, 2>(dump, Texture::textures, Texture::textures.get<0>());
+	Asset::load<Texture, 1, 2>(dump, Texture::textures);
+}
+
+void texture_clear()
+{
+	Asset::clear<1>(Texture::textures, [](int i) {
+		GLuint *handle = &Texture::textures.get<0>()[i].handle;
+		glCheck(glDeleteTextures(1, handle));
+	});
 }
 
 const asset_type_t Texture::type = []() {
@@ -239,5 +230,6 @@ const asset_type_t Texture::type = []() {
 
 	t.save = texture_save;
 	t.load = texture_load;
+	t.clear = texture_clear;
 	return t;
 }();

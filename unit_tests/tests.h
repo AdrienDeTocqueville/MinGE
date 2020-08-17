@@ -24,11 +24,13 @@
 #endif
 
 #define LAUNCH(func) do { \
+	Engine::clear(); \
 	printf("Testing " #func "...\n"); test_##func(); \
 	} while(0)
 #define _BENCH(func, iter) do { \
+	Engine::clear(); \
 	printf("Mesuring " #func " over %d iterations...\n", iter); \
-	benchmark_##func(iter); \
+	bench_##func(iter); \
 	} while(0)
 #ifdef DEBUG
 #define BENCH(func, iter) _BENCH(func, 1)
@@ -36,16 +38,18 @@
 #define BENCH(func, iter) _BENCH(func, iter)
 #endif
 
-void benchmark_transforms(int iterations);
+void bench_transforms_creation(int iterations);
+void bench_transforms_access(int iterations);
 void test_transforms();
 
 void test_systems();
+void test_scene();
 void test_entity();
 
 void test_structures();
 
-#define DUMP_SCENE(output, s, path) std::string output; do { \
-	s.save(path); s.clear(); \
+#define DUMP_SCENE(output, path) std::string output; do { \
+	Scene::save(path); Engine::clear(); \
 	std::ifstream file; file.open(path); \
 	output = std::string(std::istreambuf_iterator<char>(file), (std::istreambuf_iterator<char>())); \
 } while(0)

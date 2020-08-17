@@ -65,7 +65,6 @@ struct Mesh: public UID32
 
 	static Mesh load(const char *URI);
 	static Mesh get(uint32_t i);
-	static void clear();
 
 	static const Mesh none;
 	static multi_array_t<submeshes_t, mesh_data_t, char*, struct AABB, uint8_t> meshes;

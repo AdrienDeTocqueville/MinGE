@@ -14,6 +14,8 @@ struct RenderEngine
 
 private:
 	static void init();
+	static void load();
+	static void clear();
 	static void destroy();
 
 	static void start_frame();

@@ -90,6 +90,16 @@ static inline nlohmann::json to_json(const mat<R, C, T, Q>& m)
 }
 
 // Deserialize
+static inline int to_int(const nlohmann::json &x)
+{
+	return x.get<int>();
+}
+
+static inline float to_float(const nlohmann::json &x)
+{
+	return x.get<float>();
+}
+
 static inline vec2 to_vec2(const nlohmann::json &x)
 {
 	return vec2(x[0].get<float>(), x[1].get<float>());
@@ -100,14 +110,24 @@ static inline vec3 to_vec3(const nlohmann::json &x)
 	return vec3(x[0].get<float>(), x[1].get<float>(), x[2].get<float>());
 }
 
+static inline vec4 to_vec4(const nlohmann::json &x)
+{
+	return vec4(x[0].get<float>(), x[1].get<float>(), x[2].get<float>(), x[3].get<float>());
+}
+
 static inline quat to_quat(const nlohmann::json &x)
 {
 	return quat(x[3].get<float>(), x[0].get<float>(), x[1].get<float>(), x[2].get<float>());
 }
 
-static inline vec4 to_vec4(const nlohmann::json &x)
+static inline mat3 to_mat3(const nlohmann::json &x)
 {
-	return vec4(x[0].get<float>(), x[1].get<float>(), x[2].get<float>(), x[3].get<float>());
+	return mat3(to_vec3(x[0]), to_vec3(x[1]), to_vec3(x[2]));
+}
+
+static inline mat4 to_mat4(const nlohmann::json &x)
+{
+	return mat4(to_vec4(x[0]), to_vec4(x[1]), to_vec4(x[2]), to_vec4(x[3]));
 }
 
 // Deserialize or default

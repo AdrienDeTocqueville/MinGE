@@ -1,10 +1,13 @@
+#include "Core/Utils.h"
 #include "Utility/Error.h"
 
-#ifdef _WIN32
+#ifdef PLATFORM_WINDOWS
 #define NOMINMAX
 #include <windows.h>
+
 #else
 #include <iostream>
+
 #endif
 
 static const char *get_title(Error::Type type)
@@ -27,7 +30,7 @@ static const char *get_title(Error::Type type)
 	}
 }
 
-#ifdef _WIN32
+#ifdef PLATFORM_WINDOWS
 static int get_icon(Error::Type type)
 {
 	switch (type)
@@ -54,7 +57,7 @@ void Error::add(Error::Type type, const char *description)
 	error = true;
 
 
-#ifdef _WIN32
+#ifdef PLATFORM_WINDOWS
 	MessageBoxA(nullptr, description, get_title(type), get_icon(type));
 #else
 	std::cout << get_title(type) << ": " << description << std::endl;
@@ -68,7 +71,7 @@ bool Error::check()
 	error = false;
 
 
-#ifdef _WIN32
+#ifdef PLATFORM_WINDOWS
 	int r = MessageBoxA(nullptr, "One or more errors occured.\nDo you really want to continue ?",
 					   "MinGE: loading error", MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2);
 	return (r == IDNO);
@@ -79,10 +82,14 @@ bool Error::check()
 
 Error::Answer Error::ask(Error::Type type, const char *question)
 {
-#ifdef _WIN32
-	int r = MessageBoxA(nullptr, question, get_title(type), MB_ICONQUESTION | MB_CANCELTRYCONTINUE | MB_DEFBUTTON2);
+#ifdef PLATFORM_WINDOWS
+	int icon = get_icon(type);
+	icon |= (icon == MB_ICONQUESTION) ? MB_CANCELTRYCONTINUE : MB_YESNO;
+
+	int r = MessageBoxA(nullptr, question, get_title(type), icon | MB_DEFBUTTON2);
 	if (r == IDTRYAGAIN) return Answer::Retry;
 	if (r == IDCONTINUE) return Answer::Ignore;
+	if (r == IDYES) return Answer::Ignore;
 	return Answer::Cancel;
 #else
 	std::cout << get_title(type) << ": " << question << " (cancel)" << std::endl;

@@ -14,7 +14,7 @@ function project_settings()
 	exceptionhandling "off"
 end
 
-function build_settings()
+function build_settings(i)
 	rtti "off"
 	exceptionhandling "off"
 
@@ -25,6 +25,15 @@ function build_settings()
 
 	filter "system:linux"
 		buildoptions { "-mavx2" }
+		if i == 1 then -- Build the Editor with GTK
+			buildoptions {"`pkg-config --cflags gtk+-3.0`"}
+			filter "configurations:debug"
+				linkoptions {"`pkg-config --libs gtk+-3.0`"}
+			filter "configurations:dev"
+				linkoptions {"`pkg-config --libs gtk+-3.0`"}
+			filter "configurations:release"
+				linkoptions {"`pkg-config --libs gtk+-3.0`"}
+		end
 
 	filter "configurations:debug"
 		defines { "DEBUG", "PROFILE" }
@@ -91,7 +100,7 @@ project "Engine"
 			"opengl32.lib",
 		}
 
-	build_settings()
+	build_settings(0)
 
 
 for i = 1, #prj_names do
@@ -131,7 +140,7 @@ for i = 1, #prj_names do
 			"SDL2main", "SDL2"
 		}
 
-	build_settings()
+	build_settings(i)
 end
 
 

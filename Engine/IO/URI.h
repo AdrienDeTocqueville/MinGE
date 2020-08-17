@@ -65,7 +65,7 @@ struct uri_t
 		return it == params.end() ? default_value : parse_val<T>(it->second);
 	}
 
-	bool on_disk;
+	bool on_disk, hidden;
 	std::string path;
 	std::unordered_map<std::string, std::string> params;
 
@@ -73,7 +73,7 @@ struct uri_t
 	void extract_label(const char *uri, const char *&label, int &len)
 	{
 		size_t start = path.rfind('/') + 1;
-		label = uri + strlen("asset:") + (on_disk ? 2 : 0) + start;
+		label = strchr(uri, ':') + (on_disk ? 3 : 1) + start;
 
 		const char *end = strchr(label, '.');
 		if (end == NULL) len = (int)(path.size() - start);

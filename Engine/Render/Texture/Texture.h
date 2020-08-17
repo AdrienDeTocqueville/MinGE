@@ -26,7 +26,6 @@ struct Texture: public UID32
 
 	static Texture load(const char *URI);
 	static Texture get(uint32_t i);
-	static void clear();
 
 	static const Texture none;
 	static multi_array_t<texture_t, char*, uint8_t> textures;

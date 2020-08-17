@@ -169,34 +169,11 @@ Mesh Mesh::load(const char *URI)
 
 Mesh Mesh::get(uint32_t i)
 {
-	if (meshes.get<2>()[i] == NULL)
-		return Mesh::none;
-	return Mesh(i, meshes.get<4>()[i]);
-}
-
-void Mesh::clear()
-{
-	for (uint32_t i(1); i <= meshes.size; i++)
-	{
-		if (meshes.get<2>()[i] == NULL)
-			continue;
-
-		submeshes_t subs = *meshes.get<0>(i);
-		submesh_t sub = submeshes[subs.first];
-
-		GL::DeleteVertexArray(sub.vao);
-		GL::DeleteBuffer(subs.vbo);
-		GL::DeleteBuffer(subs.ebo);
-		free(meshes.get<2>()[i]);
-
-		meshes.get<1>(i)->free();
-	}
-	submeshes.clear();
-	meshes.clear();
+	return ASSET_GET(Mesh, 2, 4, meshes, i);
 }
 
 
-/// Serialization
+/// Asset type
 using namespace nlohmann;
 void mesh_save(json &dump)
 {
@@ -205,7 +182,21 @@ void mesh_save(json &dump)
 
 void mesh_load(const json &dump)
 {
-	Asset::load<Mesh, 2, 4>(dump, Mesh::meshes, Mesh::meshes.get<0>());
+	Asset::load<Mesh, 2, 4>(dump, Mesh::meshes);
+}
+
+void mesh_clear()
+{
+	Asset::clear<2>(Mesh::meshes, [](int i) {
+		submeshes_t subs = *Mesh::meshes.get<0>(i);
+		submesh_t sub = Mesh::submeshes[subs.first];
+
+		GL::DeleteVertexArray(sub.vao);
+		GL::DeleteBuffer(subs.vbo);
+		GL::DeleteBuffer(subs.ebo);
+		Mesh::meshes.get<1>(i)->free();
+	});
+	Mesh::submeshes.clear();
 }
 
 const asset_type_t Mesh::type = []() {
@@ -214,5 +205,6 @@ const asset_type_t Mesh::type = []() {
 
 	t.save = mesh_save;
 	t.load = mesh_load;
+	t.clear = mesh_clear;
 	return t;
 }();

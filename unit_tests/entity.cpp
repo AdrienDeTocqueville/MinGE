@@ -6,47 +6,6 @@
 #include "Structures/ArrayList.h"
 #include "Structures/MultiArray.h"
 
-static void test_scene()
-{
-	char name[2] = "a";
-	Entity e[6];
-	for (int i = 0; i < ARRAY_LEN(e); i++)
-	{
-		name[0] = 'a' + i;
-		e[i] = Entity::create(name);
-	}
-	e[2].destroy();
-
-	TEST(Entity::get("c") == Entity::none);
-
-	Scene s;
-	DUMP_SCENE(dump1, s, "Assets/tests/scene.ge");
-
-	for (int i = 0; i < ARRAY_LEN(e); i++)
-		if (i != 2) e[i].destroy();
-
-	TEST(Entity::get("a") == Entity::none);
-	TEST(Entity::get("b") == Entity::none);
-	TEST(Entity::get("d") == Entity::none);
-	TEST(Entity::get("e") == Entity::none);
-	TEST(Entity::get("f") == Entity::none);
-
-	s.load("Assets/tests/scene.ge");
-
-	TEST(Entity::get("a") != Entity::none);
-	TEST(Entity::get("b") != Entity::none);
-	TEST(Entity::get("d") != Entity::none);
-	TEST(Entity::get("e") != Entity::none);
-	TEST(Entity::get("f") != Entity::none);
-
-	for (int i = 0; i < ARRAY_LEN(e); i++)
-		if (i != 2) TEST(e[i].gen() == Entity::get(e[i].id()).gen());
-
-	DUMP_SCENE(dump2, s, "Assets/tests/scene.ge");
-
-	TEST(dump1 == dump2);
-}
-
 void test_entity()
 {
 	Entity a = Entity::create("a");
@@ -80,6 +39,47 @@ void test_entity()
 	TEST(!b.is_valid());
 	TEST(!e.is_valid());
 	TEST(!e.is_valid());
+}
 
-	test_scene();
+void test_scene()
+{
+	char name[2] = "a";
+	Entity e[6];
+	for (int i = 0; i < ARRAY_LEN(e); i++)
+	{
+		name[0] = 'a' + i;
+		e[i] = Entity::create(name);
+	}
+	e[2].destroy();
+
+	TEST(Entity::get("a") != Entity::none);
+	TEST(Entity::get("b") != Entity::none);
+	TEST(Entity::get("d") != Entity::none);
+	TEST(Entity::get("e") != Entity::none);
+	TEST(Entity::get("f") != Entity::none);
+
+	TEST(Entity::get("c") == Entity::none);
+
+	DUMP_SCENE(dump1, "Assets/tests/scene.ge");
+
+	TEST(Entity::get("a") == Entity::none);
+	TEST(Entity::get("b") == Entity::none);
+	TEST(Entity::get("d") == Entity::none);
+	TEST(Entity::get("e") == Entity::none);
+	TEST(Entity::get("f") == Entity::none);
+
+	Scene::load("Assets/tests/scene.ge");
+
+	TEST(Entity::get("a") != Entity::none);
+	TEST(Entity::get("b") != Entity::none);
+	TEST(Entity::get("d") != Entity::none);
+	TEST(Entity::get("e") != Entity::none);
+	TEST(Entity::get("f") != Entity::none);
+
+	for (int i = 0; i < ARRAY_LEN(e); i++)
+		if (i != 2) TEST(e[i].gen() == Entity::get(e[i].id()).gen());
+
+	DUMP_SCENE(dump2, "Assets/tests/scene.ge");
+
+	TEST(dump1 == dump2);
 }

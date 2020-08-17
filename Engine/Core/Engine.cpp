@@ -110,12 +110,9 @@ void Engine::init(struct SDL_Window *window)
 	RenderEngine::init();
 }
 
-void Engine::destroy()
+void Engine::load()
 {
-	Engine::clear();
-
-	RenderEngine::destroy();
-	JobSystem::destroy();
+	RenderEngine::load();
 }
 
 void Engine::clear()
@@ -149,19 +146,35 @@ void Engine::clear()
 		free(system);
 	*/
 
+	// Destroy systems
 	for (system_t *system : systems)
 	{
 		if (auto callback = system_types[system->type_index].destroy)
 			callback(system->instance());
 		free(system);
 	}
-
 	systems.clear();
 	system_types.clear();
+
+	// Clear assets
+	for (const asset_type_t &asset_type : asset_types)
+	{
+		if (asset_type.clear)
+			asset_type.clear();
+	}
 	asset_types.clear();
 
-	// Destroy entities
+	RenderEngine::clear();
 	Entity::clear();
+	Scene::clear();
+}
+
+void Engine::destroy()
+{
+	Engine::clear();
+
+	RenderEngine::destroy();
+	JobSystem::destroy();
 }
 
 void Engine::frame()
@@ -213,7 +226,7 @@ void Engine::register_system_type(const system_type_t &system_type)
 		system_types.emplace_back(system_type);
 }
 
-const system_type_t *Engine::get_system_type(void *system)
+const system_type_t *Engine::system_type(void *system)
 {
 	system_t *sys = system_t::from_instance(system);
 	return &system_types[sys->type_index];
@@ -315,7 +328,7 @@ void Scene::load_assets(nlohmann::json &scene)
 	}
 }
 
-void Scene::save_assets(nlohmann::json &scene) const
+void Scene::save_assets(nlohmann::json &scene)
 {
 	scene["assets"] = nlohmann::json::object();
 	for (int i(0); i < asset_types.size(); i++)

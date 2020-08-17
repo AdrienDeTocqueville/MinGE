@@ -202,6 +202,12 @@ void UI::init()
 	ImGui_ImplOpenGL3_Init("#version 410");
 }
 
+void UI::clear()
+{
+	menubar = NULL;
+	windows.clear();
+}
+
 void UI::destroy()
 {
 	ImGui_ImplOpenGL3_Shutdown();

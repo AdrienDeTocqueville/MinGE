@@ -138,32 +138,25 @@ static void serialize(TransformSystem *sys, SerializationContext &ctx)
 	const uint32_t max_component = dump["max_component"][0].get<uint32_t>();
 	const uint32_t *indices = sys->indices.indices;
 
-	dump["transforms"] = json::array();
-	dump["transforms"].get_ptr<nlohmann::json::array_t*>()->reserve(max_component);
+	json data = json::array();
+	data.get_ptr<nlohmann::json::array_t*>()->reserve(max_component);
 	for (uint32_t i = 1; i < sys->indices.size; i++)
 	{
 		if (indices[i] == 0) continue;
 
-		json transform = json::object();
-		transform["position"] = ::to_json(transforms[indices[i]].position);
-		transform["rotation"] = ::to_json(transforms[indices[i]].rotation);
-		transform["scale"]    = ::to_json(transforms[indices[i]].scale);
-		dump["transforms"].push_back(transform);
+		json comp = json::object();
+		comp["position"] = ::to_json(transforms[indices[i]].position);
+		comp["rotation"] = ::to_json(transforms[indices[i]].rotation);
+		comp["scale"]    = ::to_json(transforms[indices[i]].scale);
+
+		comp["first_child"]  = hierarchies[indices[i]].first_child;
+		comp["parent"]       = hierarchies[indices[i]].parent;
+		comp["next_sibling"] = hierarchies[indices[i]].next_sibling;
+
+		data.push_back(std::move(comp));
 	}
 
-	dump["hierarchies"] = json::array();
-	dump["hierarchies"].get_ptr<nlohmann::json::array_t*>()->reserve(max_component);
-	for (uint32_t i = 1; i < sys->indices.size; i++)
-	{
-		if (indices[i] == 0) continue;
-
-		json hierarchy = json::object();
-		hierarchy["first_child"]  = hierarchies[indices[i]].first_child;
-		hierarchy["parent"]       = hierarchies[indices[i]].parent;
-		hierarchy["next_sibling"] = hierarchies[indices[i]].next_sibling;
-		dump["hierarchies"].push_back(hierarchy);
-	}
-
+	dump["components"].swap(data);
 	ctx.swap_data(dump);
 }
 
@@ -172,39 +165,38 @@ TransformSystem::TransformSystem(const SerializationContext &ctx):
 {
 	data.init(ctx["max_component"][0].get<uint32_t>());
 
-	auto transform = ctx["transforms"].rbegin();
+	uint32_t final_slot = 1;
+	auto *slots = data.get<0>();
+	auto comp = ctx["components"].rbegin();
 	for (uint32_t i = 1; i < indices.size; i++)
 	{
-		uint32_t comp = indices.get<0>(indices.size - i);
-		if (comp == 0) continue;
+		uint32_t idx = indices.get<0>(indices.size - i);
+		if (idx == 0) continue;
 
-		// Get and mark as used
-		TransformSystem::transform_t *tr = data.get<0>(comp);
-		if (comp == 1) data.next_slot = *(uint32_t*)tr;
-		else     *(uint32_t*)(tr - 1) = *(uint32_t*)tr;
+		if (idx == 1) final_slot = *(uint32_t*)(slots + idx);
+		else *(uint32_t*)(slots + idx - 1) = *(uint32_t*)(slots + idx);
 
-		tr->position = ::to_vec3(transform.value()["position"]);
-		tr->rotation = ::to_quat(transform.value()["rotation"]);
-		tr->scale    = ::to_vec3(transform.value()["scale"]);
+		TransformSystem::transform_t *tr = data.get<0>(idx);
+		tr->position = ::to_vec3(comp.value()["position"]);
+		tr->rotation = ::to_quat(comp.value()["rotation"]);
+		tr->scale    = ::to_vec3(comp.value()["scale"]);
 
-		simd_mul(tr->world, glm::translate(tr->position), glm::toMat4(tr->rotation));
-		simd_mul(tr->world, tr->world, glm::scale(tr->scale));
-		tr->local = glm::inverse(tr->world);
+		TransformSystem::hierarchy_t *hi = data.get<1>(idx);
+		hi->first_child  = comp.value()["first_child"];
+		hi->parent       = comp.value()["parent"];
+		hi->next_sibling = comp.value()["next_sibling"];
 
-		++transform;
+		++comp;
 	}
+	data.next_slot = final_slot;
 
-	auto hierarchy = ctx["hierarchies"].begin();
 	for (uint32_t i = 1; i < indices.size; i++)
 	{
-		uint32_t comp = indices.get<0>(i);
-		if (comp == 0) continue;
+		uint32_t idx = indices.get<0>(indices.size - i);
+		if (idx == 0) continue;
 
-		TransformSystem::hierarchy_t *hi = data.get<1>(comp);
-		hi->first_child  = hierarchy.value()["first_child"].get<uint32_t>();
-		hi->parent       = hierarchy.value()["parent"].get<uint32_t>();
-		hi->next_sibling = hierarchy.value()["next_sibling"].get<uint32_t>();
-		++hierarchy;
+		TransformSystem::hierarchy_t *hi = data.get<1>(idx);
+		if (hi->parent == 0) update_matrices(idx);
 	}
 }
 

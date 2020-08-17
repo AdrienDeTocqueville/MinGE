@@ -28,9 +28,6 @@ struct Entity: public UID32
 	static Entity get(const char *name);
 	static void clear();
 
-	static Entity create(const std::string &name)
-	{ return Entity::create(name.c_str()); }
-
 	static const Entity none;
 	static multi_array_t<entity_t> entities;
 

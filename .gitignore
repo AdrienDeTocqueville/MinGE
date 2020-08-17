@@ -38,5 +38,6 @@ obj/
 bin/*_debug
 bin/*_dev
 bin/*_release
+bin/Assets/Scenes
 *.dat
 *.ini

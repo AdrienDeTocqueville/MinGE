@@ -6,10 +6,9 @@
 #include "Render/Texture/Texture.h"
 
 #include "Core/Asset.inl"
+#include "Core/Serialization.h"
 #include "Utility/Error.h"
-
 #include "IO/URI.h"
-#include "IO/json.hpp"
 
 const Material Material::none;
 multi_array_t<material_t, char*, uint8_t> Material::materials;
@@ -31,7 +30,7 @@ void Material::destroy()
 }
 
 
-Material Material::load(const char *URI)
+Material Material::load(const char *URI, uint32_t variant)
 {
 	uri_t uri;
 	if (!uri.parse(URI))
@@ -42,26 +41,20 @@ Material Material::load(const char *URI)
 	if (!uri.try_get("shader", shader_path) || !(shader = Shader::load(shader_path)))
 		return Material::none;
 
-	uint32_t prev_size = materials.size;
 	uint32_t i = materials.add();
+	material_t *material = materials.get<0>() + i;
 
-	materials.get<0>(i)->variant_hash = 0;
-	materials.get<0>(i)->variant_idx = 0;
-	materials.get<0>(i)->shader = shader;
-	new (&materials.get<0>(i)->uniforms) std::vector<uint8_t>();
-	materials.get<0>(i)->sync_uniforms();
+	material->shader = shader;
+	new (&material->uniforms) std::vector<uint8_t>();
+	material->update_variant(variant);
 
 	materials.get<1>()[i] = strdup(URI);
-
-	if (prev_size != materials.size)
-		materials.get<2>()[i] = 0;
 
 	return Material(i, materials.get<2>()[i]);
 }
 
 Material Material::copy(Material src)
 {
-	uint32_t prev_size = materials.size;
 	uint32_t i = materials.add();
 
 	std::memcpy(materials.get<0>(i), materials.get<0>(src.id()), sizeof(material_t));
@@ -69,17 +62,12 @@ Material Material::copy(Material src)
 
 	materials.get<1>()[i] = strdup(src.uri());
 
-	if (prev_size != materials.size)
-		materials.get<2>()[i] = 0;
-
 	return Material(i, materials.get<2>()[i]);
 }
 
 Material Material::get(uint32_t i)
 {
-	if (materials.get<1>()[i] == NULL)
-		return Material::none;
-	return Material(i, materials.get<2>()[i]);
+	return ASSET_GET(Material, 1, 2, materials, i);
 }
 
 void Material::reload(Shader *shader)
@@ -91,23 +79,11 @@ void Material::reload(Shader *shader)
 	for (uint32_t i(1); i <= materials.size; i++)
 	{
 		if (materials.get<0>(i)->shader == shader)
+		{
 			materials.get<0>(i)->shader = reloaded;
+			materials.get<0>(i)->update_variant(0);
+		}
 	}
-}
-
-void Material::clear()
-{
-	for (uint32_t i(1); i <= materials.size; i++)
-	{
-		if (materials.get<1>()[i] == NULL)
-			continue;
-
-		auto *uniforms = &materials.get<0>(i)->uniforms;
-		uniforms->~vector<uint8_t>();
-
-		free(materials.get<1>()[i]);
-	}
-	materials.clear();
 }
 
 
@@ -218,16 +194,105 @@ void material_t::bind(RenderPass::Type pass) const
 }
 
 
-/// Serialization
+/// Asset type
 using namespace nlohmann;
 void material_save(json &dump)
 {
-	Asset::save(dump, Material::materials, Material::get);
+	Asset::save(dump, Material::materials, Material::get, [](uint32_t i, json &dump) {
+		material_t *material = Material::materials.get<0>(i);
+		dump["variant"] = material->variant_hash;
+		// Save uniforms
+		json u = json::object();
+		Shader *shader = material->shader;
+		for (const auto &it : shader->uniforms_names)
+		{
+			Program::Uniform *uniform = NULL;
+			for (int v = 0; v < shader->variants.size(); v++)
+			for (int p = 0; p < RenderPass::Count; p++)
+			{
+				auto *passes = shader->variants[v].passes;
+				if (passes[p] != NULL)
+				for (auto &uni : passes[p]->uniforms)
+				{
+					if (uni.offset == it.second)
+					{
+						uniform = &uni;
+						goto serialize_uniform;
+					}
+				}
+			}
+			continue;
+
+			serialize_uniform:
+			if (uniform->offset >= material->uniforms.size()) continue;
+			const void *data = material->uniforms.data() + uniform->offset;
+
+			json v;
+			switch (uniform->type)
+			{
+			case GL_INT:	    v = *(int*)data; break;
+			case GL_FLOAT:	    v = *(float*)data; break;
+			case GL_FLOAT_VEC2: v = ::to_json(*(vec2*)data); break;
+			case GL_FLOAT_VEC3: v = ::to_json(*(vec3*)data); break;
+			case GL_FLOAT_VEC4: v = ::to_json(*(vec4*)data); break;
+			case GL_FLOAT_MAT3: v = ::to_json(*(mat3*)data); break;
+			case GL_FLOAT_MAT4: v = ::to_json(*(mat4*)data); break;
+			case GL_SAMPLER_2D: v = ((Texture*)data)->uint(); break;
+			default: continue;
+			}
+
+			json final = json::object();
+			final["type"] = uniform->type;
+			final["value"].swap(v);
+			u[it.first].swap(final);
+		}
+		dump["uniforms"].swap(u);
+	});
 }
 
 void material_load(const json &dump)
 {
-	Asset::load<Material, 1, 2>(dump, Material::materials, Material::materials.get<0>());
+	Asset::load<Material, 1, 2>(dump, Material::materials, [](const json &dump) {
+		auto m = Material::load(dump["uri"].get<std::string>().c_str(), dump["variant"]);
+
+		// Load uniforms
+		material_t *material = Material::materials.get<0>(m.id());
+		Shader *shader = material->shader;
+		const json &data = dump["uniforms"];
+		for (auto it = data.begin(); it != data.end(); ++it)
+		{
+			auto u = shader->uniforms_names.find(it.key());
+			int type = it.value()["type"];
+			if (u != shader->uniforms_names.end())
+			{
+				void *data = material->uniforms.data() + u->second;
+
+				#define LOAD(type) *(type*)data = ::to_##type(it.value()["value"])
+				switch (type)
+				{
+				case GL_INT:	    LOAD(int); break;
+				case GL_FLOAT:	    LOAD(float); break;
+				case GL_FLOAT_VEC2: LOAD(vec2); break;
+				case GL_FLOAT_VEC3: LOAD(vec3); break;
+				case GL_FLOAT_VEC4: LOAD(vec4); break;
+				case GL_FLOAT_MAT3: LOAD(mat3); break;
+				case GL_FLOAT_MAT4: LOAD(mat4); break;
+				case GL_SAMPLER_2D:
+				    *(Texture*)data = Texture::get(it.value()["value"]);
+				    break;
+				default: continue;
+				}
+			}
+		}
+	});
+}
+
+void material_clear()
+{
+	Asset::clear<1>(Material::materials, [](int i) {
+		auto *uniforms = &Material::materials.get<0>(i)->uniforms;
+		uniforms->~vector<uint8_t>();
+	});
 }
 
 const asset_type_t Material::type = []() {
@@ -236,5 +301,6 @@ const asset_type_t Material::type = []() {
 
 	t.save = material_save;
 	t.load = material_load;
+	t.clear = material_clear;
 	return t;
 }();

@@ -58,9 +58,8 @@ struct Material: public UID32
 	inline void set(size_t location, const T *values, size_t num);
 
 
-	static Material load(const char *URI);
+	static Material load(const char *URI, uint32_t variant = 0);
 	static Material get(uint32_t i);
-	static void clear();
 
 	static void reload(class Shader *shader);
 	static Material copy(Material src);

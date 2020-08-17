@@ -10,6 +10,7 @@ struct UI
 
 private:
 	static void init();
+	static void clear();
 	static void destroy();
 
 	static void frame();

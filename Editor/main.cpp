@@ -5,11 +5,7 @@
 
 #include "Editor.h"
 
-// temp for blinn phong
-#include "Render/Shader/Shader.h"
-#include "Render/Shader/Material.inl"
-
-int main(int, char**)
+int main(int argc, char **argv)
 {
 	std::cout << "  -- MinGE --" << std::endl;
 
@@ -20,18 +16,13 @@ int main(int, char**)
 
 	/// Init engine
 	Engine::init(window);
-	Editor::init();
 
-	auto m2 = Material::get(2);
-	m2.set("color", vec3(1.0, 5.0f, 5.0f));
+	const char *scene = "pbr";
+	if (argc == 2) scene = argv[1];
 
-	//Editor::open_scene("Assets/tests/dummy_scene.ge");
-	Editor::open_scene("Assets/Scenes/pbr.ge");
-	//Editor::open_scene("Assets/Scenes/gamma.ge");
-
-	//auto m = Material::get(4);
-	//m.set("tiling", vec2(5.0f, 5.0f));
-	//m.set("color_map", Texture::get(7));
+	char scene_path[255];
+	stbsp_snprintf(scene_path, 255, "Assets/Scenes/%s.ge", scene);
+	Editor::open_scene(scene_path);
 
 	/// Main loop
 	while (!Input::window_closed())

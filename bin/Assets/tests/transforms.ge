@@ -7,11 +7,11 @@
         },
         {
             "name": "e2",
-            "uint": 33554434
+            "uint": 16777218
         },
         {
             "name": "e3",
-            "uint": 33554435
+            "uint": 50331651
         },
         {
             "name": "_e",
@@ -42,46 +42,174 @@
     "systems": {
         "world": {
             "data": {
-                "hierarchies": [
+                "components": [
                     {
                         "first_child": 4,
                         "next_sibling": 0,
-                        "parent": 0
+                        "parent": 0,
+                        "position": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
                     },
                     {
                         "first_child": 0,
                         "next_sibling": 0,
-                        "parent": 1
+                        "parent": 1,
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
                     },
                     {
                         "first_child": 0,
                         "next_sibling": 2,
-                        "parent": 1
+                        "parent": 1,
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
                     },
                     {
                         "first_child": 7,
                         "next_sibling": 3,
-                        "parent": 1
+                        "parent": 1,
+                        "position": [
+                            1.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
                     },
                     {
                         "first_child": 8,
                         "next_sibling": 0,
-                        "parent": 4
+                        "parent": 4,
+                        "position": [
+                            0.0,
+                            1.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
                     },
                     {
                         "first_child": 0,
                         "next_sibling": 6,
-                        "parent": 4
+                        "parent": 4,
+                        "position": [
+                            1.0,
+                            0.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
                     },
                     {
                         "first_child": 0,
                         "next_sibling": 0,
-                        "parent": 6
+                        "parent": 6,
+                        "position": [
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
                     },
                     {
                         "first_child": 0,
                         "next_sibling": 5,
-                        "parent": 6
+                        "parent": 6,
+                        "position": [
+                            0.0,
+                            1.0,
+                            0.0
+                        ],
+                        "rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
                     }
                 ],
                 "indices": [
@@ -99,152 +227,6 @@
                 ],
                 "max_component": [
                     8
-                ],
-                "transforms": [
-                    {
-                        "position": [
-                            1.0,
-                            1.0,
-                            1.0
-                        ],
-                        "rotation": [
-                            0.0,
-                            0.0,
-                            0.0,
-                            1.0
-                        ],
-                        "scale": [
-                            1.0,
-                            1.0,
-                            1.0
-                        ]
-                    },
-                    {
-                        "position": [
-                            0.0,
-                            0.0,
-                            0.0
-                        ],
-                        "rotation": [
-                            0.0,
-                            0.0,
-                            0.0,
-                            1.0
-                        ],
-                        "scale": [
-                            1.0,
-                            1.0,
-                            1.0
-                        ]
-                    },
-                    {
-                        "position": [
-                            0.0,
-                            0.0,
-                            0.0
-                        ],
-                        "rotation": [
-                            0.0,
-                            0.0,
-                            0.0,
-                            1.0
-                        ],
-                        "scale": [
-                            1.0,
-                            1.0,
-                            1.0
-                        ]
-                    },
-                    {
-                        "position": [
-                            1.0,
-                            0.0,
-                            0.0
-                        ],
-                        "rotation": [
-                            0.0,
-                            0.0,
-                            0.0,
-                            1.0
-                        ],
-                        "scale": [
-                            1.0,
-                            1.0,
-                            1.0
-                        ]
-                    },
-                    {
-                        "position": [
-                            0.0,
-                            1.0,
-                            0.0
-                        ],
-                        "rotation": [
-                            0.0,
-                            0.0,
-                            0.0,
-                            1.0
-                        ],
-                        "scale": [
-                            1.0,
-                            1.0,
-                            1.0
-                        ]
-                    },
-                    {
-                        "position": [
-                            1.0,
-                            0.0,
-                            0.0
-                        ],
-                        "rotation": [
-                            0.0,
-                            0.0,
-                            0.0,
-                            1.0
-                        ],
-                        "scale": [
-                            1.0,
-                            1.0,
-                            1.0
-                        ]
-                    },
-                    {
-                        "position": [
-                            0.0,
-                            0.0,
-                            1.0
-                        ],
-                        "rotation": [
-                            0.0,
-                            0.0,
-                            0.0,
-                            1.0
-                        ],
-                        "scale": [
-                            1.0,
-                            1.0,
-                            1.0
-                        ]
-                    },
-                    {
-                        "position": [
-                            0.0,
-                            1.0,
-                            0.0
-                        ],
-                        "rotation": [
-                            0.0,
-                            0.0,
-                            0.0,
-                            1.0
-                        ],
-                        "scale": [
-                            1.0,
-                            1.0,
-                            1.0
-                        ]
-                    }
                 ]
             },
             "type": "TransformSystem"

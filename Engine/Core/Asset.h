@@ -11,4 +11,6 @@ struct asset_type_t
 
 	void (*save)(nlohmann::json&);
 	void (*load)(const nlohmann::json&);
+
+	void (*clear)();
 };
