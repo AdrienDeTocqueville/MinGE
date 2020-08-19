@@ -7,7 +7,7 @@
 #include "Render/Shader/stb_include.h"
 
 #include "Core/Utils.h"
-#include "Utility/Error.h"
+#include "Utility/Log.h"
 #include "Utility/stb_sprintf.h"
 
 #include <fstream>
@@ -46,7 +46,7 @@ static bool check_compile(unsigned shader, const char *file)
 
 		std::cout << std::endl << error;
 		delete[] error;
-		Error::addf(Error::OPENGL, "Failed to compile shader: %s", file);
+		Log::addf(Log::Error, "Failed to compile shader: %s", file);
 	}
 #endif
 
@@ -58,7 +58,7 @@ static unsigned compile(unsigned type, const std::string &path, const char *pass
 	std::ifstream file("Assets/Shaders/" + path);
 	if (!file)
 	{
-		Error::addf(Error::FILE_NOT_FOUND, "Shader file not found: %s", path.c_str());
+		Log::addf(Log::Error, "Shader file not found: %s", path.c_str());
 		return 0;
 	}
 
@@ -67,7 +67,7 @@ static unsigned compile(unsigned type, const std::string &path, const char *pass
 	char *final_source = stb_include_string(glsl.c_str(), glsl.size(), "Assets/Shaders", path.c_str(), error);
 	if (final_source == NULL)
 	{
-		Error::add(Error::FILE_NOT_FOUND, error);
+		Log::add(Log::Error, error);
 		return 0;
 	}
 
@@ -75,7 +75,7 @@ static unsigned compile(unsigned type, const std::string &path, const char *pass
 	if (!shader)
 	{
 		free(final_source);
-		Error::add(Error::OPENGL, "glCreateShader() returns 0");
+		Log::add(Log::Error, "glCreateShader() returns 0");
 		return 0;
 	}
 
@@ -118,10 +118,10 @@ static bool check_link(unsigned program)
 
 		char* error = new char[stringSize + 1];
 
-		glCheck(glGetShaderInfoLog(program, stringSize, &stringSize, error));
+		glCheck(glGetProgramInfoLog(program, stringSize, &stringSize, error));
 		error[stringSize] = '\0';
 
-		Error::addf(Error::OPENGL, "Linker error: %s", error);
+		Log::addf(Log::Error, "Linker error: %s", error);
 
 		delete[] error;
 	}
@@ -156,7 +156,7 @@ static unsigned link(const Stages &stages)
 	return program;
 }
 
-static inline int compile_stages(const ShaderSources &sources, RenderPass::Type pass, const char *defines, Stages &stages)
+static inline void compile_stages(const ShaderSources &sources, RenderPass::Type pass, const char *defines, Stages &stages)
 {
 	#define COMPILE(type, name) (0 == (stages.name ? stages.name :\
 		(stages.name = compile(type, sources.name, pass_define, defines)))) \
@@ -188,15 +188,10 @@ static inline int compile_stages(const ShaderSources &sources, RenderPass::Type 
 		if (!sources.fragment.empty())
 			error |= COMPILE(GL_FRAGMENT_SHADER, fragment);
 
-		if (error)
-		{
-			auto answer = Error::ask(Error::USER, "Failed to compile shader. Retry ?");
-			if (answer != Error::Retry)	return answer;
-		}
+		if (error && !Log::ask(Log::Error, "Failed to compile shader. Retry ?"))
+			exit(EXIT_FAILURE);
 	}
 	while (error);
-
-	return Error::None;
 }
 
 Program::Program(const struct ShaderSources &sources, RenderPass::Type pass, const char *defines):
@@ -204,10 +199,8 @@ Program::Program(const struct ShaderSources &sources, RenderPass::Type pass, con
 {
 	Stages stages;
 
-	auto answer = compile_stages(sources, pass, defines, stages);
-	if (answer == Error::Cancel)	exit(EXIT_FAILURE);
-	else if (answer == Error::None)
-		program = link(stages);
+	compile_stages(sources, pass, defines, stages);
+	program = link(stages);
 
 	auto shaders = (unsigned*)&stages;
 	for (int i(0); i < NUM_STAGES; i++)

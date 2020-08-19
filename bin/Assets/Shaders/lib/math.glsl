@@ -9,6 +9,11 @@ float pow5(float x)
     return x2 * x2 * x;
 }
 
+float max3(float x, float y, float z)
+{
+    return max(max(x, y), z);
+}
+
 float saturate(float x)
 {
 	return clamp(x, 0.0, 1.0);

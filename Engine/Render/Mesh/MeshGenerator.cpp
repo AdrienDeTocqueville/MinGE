@@ -2,7 +2,7 @@
 
 #include "IO/URI.h"
 #include "Math/glm.h"
-#include "Utility/Error.h"
+#include "Utility/Log.h"
 
 static mesh_data_t::flags_t parse_flags(const uri_t &uri)
 {
@@ -262,7 +262,7 @@ bool generate_mesh(const uri_t &uri, mesh_data_t &data)
 	}
 	else
 	{
-		Error::add(Error::USER, "Invalid asset type");
+		Log::add(Log::Error, "Invalid asset type");
 		return false;
 	}
 	return true;

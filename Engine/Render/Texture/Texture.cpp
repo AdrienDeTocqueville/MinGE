@@ -1,6 +1,6 @@
 #include "Render/GLDriver.h"
 #include "Render/Texture/Texture.h"
-#include "Utility/Error.h"
+#include "Utility/Log.h"
 
 #include "IO/json.hpp"
 #include "IO/Input.h"
@@ -41,7 +41,7 @@ static GLint parse_wrap_mode(const char *wrap)
 	else if (!strcmp(wrap, "mirror"))	return GL_MIRRORED_REPEAT;
 	else if (!strcmp(wrap, "repeat"))	return GL_REPEAT;
 
-	else Error::addf(Error::USER, "Wrap mode is not supported: %s", wrap);
+	else Log::addf(Log::Warning, "Wrap mode is not supported: %s", wrap);
 	return 0;
 }
 
@@ -52,7 +52,7 @@ static GLint parse_filter(const char *filter)
 	else if (!strcmp(filter, "nearest"))	return GL_NEAREST;
 	else if (!strcmp(filter, "linear"))	return GL_LINEAR;
 
-	else Error::addf(Error::USER, "Filter mode is not supported: %s", filter);
+	else Log::addf(Log::Warning, "Filter mode is not supported: %s", filter);
 	return 0;
 }
 
@@ -88,7 +88,7 @@ inline static GLint parse_internal_format(const char *format)
 	// depth stencil
 	else if (!strcmp(format, "d24s8"))	return GL_DEPTH24_STENCIL8;
 
-	else Error::addf(Error::USER, "Format is not supported: %s", format);
+	else Log::addf(Log::Warning, "Format is not supported: %s", format);
 	return 0;
 }
 
@@ -171,7 +171,7 @@ Texture Texture::load(const char *URI)
 	unsigned handle;
 	if (load_internal(URI, handle, size))
 	{
-		Error::addf(Error::USER, "Cannot import texture: %s", URI);
+		Log::addf(Log::Warning, "Cannot import texture: %s", URI);
 		return Texture::none;
 	}
 

@@ -14,6 +14,7 @@
 #include "Graphics/PostProcessing.h"
 
 #include "Render/Debug.h"
+#include "Render/RenderEngine.h"
 #include "Render/Texture/Texture.h"
 
 #include "IO/Input.h"
@@ -21,6 +22,6 @@
 #include "Memory/Memory.h"
 
 #include "Utility/Time.h"
-#include "Utility/Error.h"
+#include "Utility/Log.h"
 
 #include "UI/UI.h"

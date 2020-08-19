@@ -19,8 +19,7 @@
 	"forward": {
 		"macros": [
 			"SKINNED",
-			"COLOR_MAP", "METALLIC_MAP", "ROUGHNESS_MAP",
-			["MAIN_LIGHT", "CAST_SHADOW", "NO_LIGHT"]
+			"COLOR_MAP", "METALLIC_MAP", "ROUGHNESS_MAP"
 		],
 
 		"stages": {

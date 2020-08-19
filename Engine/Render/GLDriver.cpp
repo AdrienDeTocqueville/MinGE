@@ -1,7 +1,7 @@
 #include <SDL2/SDL.h>
 
 #include "Render/GLDriver.h"
-#include "Utility/Error.h"
+#include "Utility/Log.h"
 #include "IO/Input.h"
 
 SDL_GLContext GL::context = nullptr;
@@ -38,7 +38,7 @@ void GL::init()
 
 	if (GLenum error = glewInit() != GLEW_OK)
 	{
-		Error::addf(Error::OPENGL, "glewInit() -> Failed with error: %s", glewGetErrorString(error));
+		Log::addf(Log::Error, "glewInit() -> Failed with error: %s", glewGetErrorString(error));
 		exit(0);
 	}
 

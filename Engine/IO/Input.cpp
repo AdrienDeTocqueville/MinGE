@@ -1,7 +1,7 @@
 #include "IO/Input.h"
 
 #include "Profiler/profiler.h"
-#include "Utility/Error.h"
+#include "Utility/Log.h"
 
 #include <SDL2/SDL.h>
 #include <string.h>
@@ -205,7 +205,7 @@ SDL_Window *Input::create_window_centered(const char *title, vec2 ratio, int fla
 	SDL_DisplayMode mode;
 	if (SDL_GetDesktopDisplayMode(monitor, &mode))
 	{
-		Error::addf(Error::MINGE, "Failed to get screen size: %s", SDL_GetError());
+		Log::addf(Log::Error, "Failed to get screen size: %s", SDL_GetError());
 		return NULL;
 	}
 

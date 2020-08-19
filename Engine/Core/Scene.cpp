@@ -14,7 +14,7 @@
 #include "Core/Serialization.h"
 
 #include "IO/json.hpp"
-#include "Utility/Error.h"
+#include "Utility/Log.h"
 #include "Utility/stb_sprintf.h"
 
 using namespace nlohmann;
@@ -29,7 +29,7 @@ bool Scene::load(const char *path)
 	std::ifstream file(path);
 	if (!file)
 	{
-		Error::add(Error::FILE_NOT_FOUND, "File not found.");
+		Log::add(Log::Error, "File not found.");
 		return false;
 	}
 
@@ -208,8 +208,8 @@ bool Scene::save(const char *path, Overwrite mode)
 
 		case Overwrite::Ask:
 		{
-			auto a = Error::ask(Error::WARNING, "File already exists.\nDo you want to replace it?");
-			if (a == Error::Cancel) return false;
+			if (!Log::ask(Log::Warning, "File already exists.\nDo you want to replace it?"))
+				return false;
 			break;
 		}
 

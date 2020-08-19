@@ -3,7 +3,7 @@
 
 #include "IO/URI.h"
 #include "IO/json.hpp"
-#include "Utility/Error.h"
+#include "Utility/Log.h"
 #include "Structures/Bounds.h"
 
 #include "Core/Asset.inl"

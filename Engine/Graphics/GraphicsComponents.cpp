@@ -5,7 +5,7 @@
 #include "Render/RenderEngine.h"
 #include "IO/Input.h"
 #include "Utility/stb_sprintf.h"
-#include "Utility/Error.h"
+#include "Utility/Log.h"
 
 uint32_t GraphicsSystem::init_camera(Entity entity, float fov, float near_plane, float far_plane,
 	bool orthographic, vec2 size_scale, vec4 clear_color, Texture color, Texture depth)
@@ -75,7 +75,7 @@ GLuint validate_framebuffer(GLuint fbo)
 		default: str = "Unknow error code"; break;
 		}
 		stbsp_snprintf(err, sizeof(err), "Failed to create framebuffer -> %s (%d).", str, val);
-		Error::add(Error::OPENGL, err);
+		Log::add(Log::Error, err);
 		GL::DeleteFramebuffer(fbo);
 		return 0;
 	}

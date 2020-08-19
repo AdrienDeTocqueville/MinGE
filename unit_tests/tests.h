@@ -6,7 +6,7 @@
 #include <sstream>
 #endif
 
-#include <MinGE.h>
+#include <doge.h>
 #include <iostream>
 
 #include <SDL2/SDL.h>

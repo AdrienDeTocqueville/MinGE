@@ -52,7 +52,7 @@ end
 -- End of modifiable section
 
 
-workspace "MinGE"
+workspace "doge"
 	architecture "x64"
 	startproject(prj_names[1])
 	flags "MultiProcessorCompile"

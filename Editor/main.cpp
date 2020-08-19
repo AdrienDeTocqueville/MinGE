@@ -1,17 +1,13 @@
-#include <MinGE.h>
+#include <doge.h>
 #include <SDL2/SDL.h>
-
-#include <iostream>
 
 #include "Editor.h"
 
 int main(int argc, char **argv)
 {
-	std::cout << "  -- MinGE --" << std::endl;
-
 	/// Create window
 	SDL_Init(SDL_INIT_VIDEO);
-	SDL_Window *window = Input::create_window_maximized("MinGE",
+	SDL_Window *window = Input::create_window_maximized("doge Editor",
 		SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE, 1);
 
 	/// Init engine

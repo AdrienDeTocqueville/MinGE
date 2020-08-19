@@ -1,8 +1,6 @@
-#include <iostream>
-#include <MinGE.h>
+#include <doge.h>
 #include <SDL2/SDL.h>
 
-#include "Render/RenderEngine.h"
 #include "Render/Shader/Material.inl"
 
 #include "CameraControl.h"
@@ -194,11 +192,9 @@ static void stress_scene(bool serialize)
 
 int main(int, char**)
 {
-	std::cout << "  -- MinGE --" << std::endl;
-
 	/// Create window
 	SDL_Init(SDL_INIT_VIDEO);
-	SDL_Window *window = Input::create_window_centered("MinGE", vec2(0.66f),
+	SDL_Window *window = Input::create_window_centered("doge", vec2(0.66f),
 		SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE, 1);
 
 	/// Init engine

@@ -1,4 +1,4 @@
-# MinGE
+# DOGE
 
 Experimental data oriented 3D game engine.
 

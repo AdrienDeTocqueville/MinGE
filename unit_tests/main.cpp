@@ -1,15 +1,12 @@
-#include <iostream>
-#include <MinGE.h>
+#include <doge.h>
 
 #include "tests.h"
 
 int main(int, char**)
 {
-	std::cout << "  -- MinGE --" << std::endl;
-
 	/// Create window
 	SDL_Init(SDL_INIT_VIDEO);
-	SDL_Window *window = Input::create_window_centered("MinGE unit tests", vec2(0.66f),
+	SDL_Window *window = Input::create_window_centered("unit tests", vec2(0.66f),
 		SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE, 1);
 
 	/// Init engine

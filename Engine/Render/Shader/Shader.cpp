@@ -9,7 +9,7 @@
 #include "Render/GLDriver.h"
 
 #include "Utility/stb_sprintf.h"
-#include "Utility/Error.h"
+#include "Utility/Log.h"
 #include "Memory/Memory.h"
 #include "IO/json.hpp"
 
@@ -143,7 +143,7 @@ bool Shader::load_json(const char *path)
 	std::ifstream file(path);
 	if (!file)
 	{
-		Error::addf(Error::FILE_NOT_FOUND, "Shader file not found: %s", path);
+		Log::addf(Log::Error, "Shader file not found: %s", path);
 		return false;
 	}
 
@@ -163,7 +163,7 @@ bool Shader::load_json(const char *path)
 		auto type = pass_type.find(pass_name);
 		if (type == pass_type.end())
 		{
-			Error::add(Error::USER, "Unknow pass type '" + pass_name + "'. Skipping...");
+			Log::addf(Log::Warning, "Unknown pass '%s'. Skipping...", pass_name);
 			continue;
 		}
 
@@ -207,7 +207,7 @@ bool Shader::load_json(const char *path)
 			}
 			else
 			{
-				Error::add(Error::USER, "Invalid macro");
+				Log::add(Log::Warning, "Invalid macro");
 				return false;
 			}
 		}

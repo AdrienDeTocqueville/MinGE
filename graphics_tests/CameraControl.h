@@ -1,6 +1,6 @@
 #pragma once
 
-#include <MinGE.h>
+#include <doge.h>
 #include "Transform/Transform.h"
 #include "Graphics/Graphics.h"
 

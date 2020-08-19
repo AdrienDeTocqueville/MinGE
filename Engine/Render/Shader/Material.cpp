@@ -7,7 +7,7 @@
 
 #include "Core/Asset.inl"
 #include "Core/Serialization.h"
-#include "Utility/Error.h"
+#include "Utility/Log.h"
 #include "IO/URI.h"
 
 const Material Material::none;
@@ -155,7 +155,7 @@ size_t Material::get_location(const std::string &name) const
 #ifdef DEBUG
 	if (it == shader->uniforms_names.end())
 	{
-		Error::addf(Error::USER, "Unknown uniform: %s", name.c_str());
+		Log::addf(Log::Error, "Unknown uniform: %s", name.c_str());
 		return -1;
 	}
 #endif
