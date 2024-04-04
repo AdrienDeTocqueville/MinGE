@@ -2,7 +2,7 @@
 
 #include "Core/Utils.h"
 
-#ifdef PLATFORM_LINUX
+#if PLATFORM_LINUX
 #include <sys/mman.h>
 #include <unistd.h>
 #include <assert.h>
@@ -14,7 +14,7 @@
 namespace mem
 {
 
-#ifdef PLATFORM_LINUX
+#if PLATFORM_LINUX
 inline void *alloc_page(size_t size) { return mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0); }
 inline void free_page(void *address, size_t size) { assert(munmap(address, size) == 0); }
 

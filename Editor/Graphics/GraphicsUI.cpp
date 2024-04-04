@@ -25,7 +25,7 @@ static void add_component(GraphicsSystem *sys, const char *name, Entity e)
 	if (!c && ImGui::MenuItem("Camera"))
 		sys->add_camera(e);
 	if (!r && ImGui::MenuItem("Renderer"))
-		sys->add_renderer(e, Mesh::none);
+		sys->add_renderer(e, Mesh());
 	if (!l && ImGui::MenuItem("Light"))
 		sys->add_point_light(e);
 

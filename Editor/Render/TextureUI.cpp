@@ -16,6 +16,7 @@ extern std::vector<texture_t> textures;
 
 bool texture_dropdown(const char *label, Texture *selected)
 {
+	/*
 	bool changed = false;
 	bool valid = selected->is_valid();
 	uint32_t id = selected->id();
@@ -44,6 +45,8 @@ bool texture_dropdown(const char *label, Texture *selected)
 		ImGui::EndCombo();
 	}
 	return changed;
+	*/
+	return false;
 }
 
 void texture_tab(Texture *texture)

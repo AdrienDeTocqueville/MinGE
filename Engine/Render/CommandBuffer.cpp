@@ -113,14 +113,14 @@ case DrawBatch:
 	{
 		uint32_t s = batch.sorted_indices[c];
 		submesh_data_t *data = batch.submeshes + s;
-		material_t *material = Material::materials.get<0>(data->material);
-		if (!material->has_pass(batch.pass))
+		Material::material_t &material = Material::materials[data->material];
+		if (!material.has_pass(batch.pass))
 			continue;
 
 		Shader::set_uniform(PER_OBJECT, batch.per_object, data->renderer * object_size, object_size);
 
 		// 0.84 + 0.91
-		material->bind(batch.pass);
+		material.bind(batch.pass);
 
 		// 4.15 + 4.12
 		GL::BindVertexArray(data->submesh.vao);
@@ -193,11 +193,11 @@ case FullscreenPass:
 	GL::Viewport(setup.viewport);
 	GL::Scissor(setup.viewport);
 
-	material_t *material = Material::materials.get<0>(setup.material);
-	if (!material->has_pass(RenderPass::Forward))
+	Material::material_t &material = Material::materials[setup.material];
+	if (!material.has_pass(RenderPass::Forward))
 		break;
 
-	material->bind(RenderPass::Forward);
+	material.bind(RenderPass::Forward);
 
 	GL::BindVertexArray(empty_vao);
 	glCheck(glDrawArrays(GL_TRIANGLES, 0, 3));

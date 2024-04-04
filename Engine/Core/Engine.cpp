@@ -8,20 +8,18 @@
 
 #include "Core/Engine.h"
 #include "Core/Entity.h"
-#include "Core/Asset.h"
-#include "Core/Scene.h"
+#include "Core/AssetDatabase.h"
 
 #include "IO/json.hpp"
 #include "IO/Input.h"
+#include "IO/FileSystem.h"
 #include "JobSystem/JobSystem.inl"
 #include "Math/Random.h"
 #include "Render/RenderEngine.h"
+#include "Utility/Log.h"
 #include "Utility/Time.h"
 #include "Utility/stb_sprintf.h"
 
-
-const Entity Entity::none;
-multi_array_t<entity_t> Entity::entities;
 
 struct system_t
 {
@@ -39,74 +37,17 @@ struct system_t
 static std::vector<system_type_t> system_types;
 static std::vector<system_t*> systems;
 
-static std::vector<asset_type_t> asset_types;
-
-
-/// Entity
-void Entity::destroy()
-{
-	assert(is_valid() && "Invalid entity");
-
-	for (system_t *system : systems)
-	{
-		if (auto callback = system_types[system->type_index].on_destroy_entity)
-			callback(system->instance(), *this);
-	}
-
-	auto *e = entities.get<0>(id());
-	e->gen++;
-	e->destroyed = 1;
-	free(e->name);
-	entities.remove(id());
-}
-
-Entity Entity::create(const char *name)
-{
-	auto idx = entities.add();
-	auto *e = entities.get<0>(idx);
-	e->destroyed = 0;
-	e->name = name ? strdup(name) : NULL;
-	return Entity(idx, e->gen);
-}
-
-Entity Entity::get(uint32_t i)
-{
-	if (entities.get<0>(i)->destroyed)
-		return Entity::none;
-	return Entity(i, entities.get<0>(i)->gen);
-}
-
-Entity Entity::get(const char *name)
-{
-	for (uint32_t i = 1; i <= entities.size; i++)
-	{
-		const char *n = entities.get<0>(i)->name;
-		if ((entities.get<0>(i)->destroyed == 1) | (n == NULL))
-			continue;
-		if (n == name || strcmp(n, name) == 0)
-			return Entity::get(i);
-	}
-	return Entity::none;
-}
-
-void Entity::clear()
-{
-	for (uint32_t i(1); i <= Entity::entities.size; i++)
-	{
-		if (!Entity::entities.get<0>(i)->destroyed)
-			free(entities.get<0>(i)->name);
-	}
-	Entity::entities.clear();
-}
-
+#include "Core/Entity.inl"
 
 /// Engine
-void Engine::init(struct SDL_Window *window)
+void Engine::init(int argc, char **argv, struct SDL_Window *window)
 {
 	Time::init();
 	Random::init();
 	JobSystem::init();
 	Input::init(window);
+
+	AssetDatabase::init(argc, argv);
 	RenderEngine::init();
 }
 
@@ -156,17 +97,7 @@ void Engine::clear()
 	systems.clear();
 	system_types.clear();
 
-	// Clear assets
-	for (const asset_type_t &asset_type : asset_types)
-	{
-		if (asset_type.clear)
-			asset_type.clear();
-	}
-	asset_types.clear();
-
 	RenderEngine::clear();
-	Entity::clear();
-	Scene::clear();
 }
 
 void Engine::destroy()
@@ -175,6 +106,8 @@ void Engine::destroy()
 
 	RenderEngine::destroy();
 	JobSystem::destroy();
+
+	AssetDatabase::destroy();
 }
 
 void Engine::frame()
@@ -210,32 +143,32 @@ void Engine::frame()
 
 
 // systems
-static inline system_type_t *get_type(const char *name)
+void Engine::register_system_type(const system_type_t &type)
+{
+	if (system_type(type.name) == NULL)
+		system_types.emplace_back(type);
+}
+
+const system_type_t *Engine::system_type(const char *type_name)
 {
 	for (system_type_t &type : system_types)
 	{
-		if (type.name == name || strcmp(type.name, name) == 0)
+		if (type.name == type_name || strcmp(type.name, type_name) == 0)
 			return &type;
 	}
 	return NULL;
 }
 
-void Engine::register_system_type(const system_type_t &system_type)
+const system_type_t *Engine::system_type(const void *instance)
 {
-	if (get_type(system_type.name) == NULL)
-		system_types.emplace_back(system_type);
-}
-
-const system_type_t *Engine::system_type(void *system)
-{
-	system_t *sys = system_t::from_instance(system);
+	system_t *sys = system_t::from_instance(instance);
 	return &system_types[sys->type_index];
 }
 
 void *Engine::alloc_system(const char *type_name)
 {
-	auto type = get_type(type_name);
-	assert(type && "No such system type");
+	const system_type_t *type = system_type(type_name);
+	ASSERT(type != nullptr, "No system type named '" << type_name << "'");
 
 	auto system = (system_t*)malloc(sizeof(system_t) + type->size);
 	system->type_index = (uint32_t)(type - system_types.data());
@@ -311,37 +244,6 @@ void Engine::write_unlock(void *system)
 {
 	system_t::from_instance(system)->readers = 0;
 }
-
-// assets
-void Engine::register_asset_type(const asset_type_t &asset_type)
-{
-	asset_types.emplace_back(asset_type);
-}
-
-void Scene::load_assets(nlohmann::json &scene)
-{
-	auto &assets = scene["assets"];
-	for (int i(0); i < asset_types.size(); i++)
-	{
-		if (asset_types[i].load && assets.contains(asset_types[i].name))
-			asset_types[i].load(assets[asset_types[i].name]);
-	}
-}
-
-void Scene::save_assets(nlohmann::json &scene)
-{
-	scene["assets"] = nlohmann::json::object();
-	for (int i(0); i < asset_types.size(); i++)
-	{
-		if (asset_types[i].save)
-		{
-			nlohmann::json asset = nlohmann::json::object();
-			asset_types[i].save(asset);
-			scene["assets"][asset_types[i].name].swap(asset);
-		}
-	}
-}
-
 
 // Input
 void Input::on_resize_window_event()

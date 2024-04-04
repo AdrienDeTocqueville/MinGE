@@ -8,6 +8,7 @@
 #include "Core/Entity.h"
 #include "Core/Scene.h"
 #include "Core/Utils.h"
+#include "Core/AssetDatabase.h"
 
 #include "Transform/Transform.h"
 #include "Graphics/Graphics.h"
@@ -18,6 +19,7 @@
 #include "Render/Texture/Texture.h"
 
 #include "IO/Input.h"
+#include "IO/FileSystem.h"
 #include "Math/Random.h"
 #include "Memory/Memory.h"
 

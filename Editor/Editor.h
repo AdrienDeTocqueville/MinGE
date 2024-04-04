@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/UID.h>
+#include <Core/Utils.h>
 
 struct Editor
 {

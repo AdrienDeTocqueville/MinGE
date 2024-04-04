@@ -48,11 +48,13 @@ void test_entity();
 
 void test_structures();
 
+/*
 #define DUMP_SCENE(output, path) std::string output; do { \
 	Scene::save(path); Engine::clear(); \
 	std::ifstream file; file.open(path); \
 	output = std::string(std::istreambuf_iterator<char>(file), (std::istreambuf_iterator<char>())); \
 } while(0)
+*/
 
 #ifdef DEBUG
 #define REPORT(text, time, ref) std::cout << text << "~" << time << "us\n"

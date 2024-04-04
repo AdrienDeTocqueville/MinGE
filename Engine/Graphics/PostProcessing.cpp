@@ -13,8 +13,12 @@ PostProcessingSystem::PostProcessingSystem(void *system_dependency, Texture dept
 	enable(1), depth(depth_texture), color(color_texture),
 	post_process(post_processing)
 {
-	if (post_process == Material::none)
-		post_process = Material::load("asset:material?shader=postprocessing");
+	if (!post_process.valid())
+	{
+		auto default_path = AssetDatabase::resource_path("Shaders/postprocessing.shader");
+		Shader default_shader = AssetDatabase::get(default_path);
+		post_process = Material::create(default_shader);
+	}
 
 	RenderEngine::add_buffer(&cmd_buffer);
 }
@@ -65,8 +69,6 @@ const system_type_t PostProcessingSystem::type = []() {
 	t.destroy = [](void *system) { ((PostProcessingSystem*)system)->~PostProcessingSystem(); };
 	t.update = (decltype(t.update))update;
 
-	t.save = [](void *system, SerializationContext &ctx) { ((PostProcessingSystem*)system)->save(ctx); };
-	t.load = [](void *system, const SerializationContext &ctx) { new(system) PostProcessingSystem(ctx); };
 	return t;
 }();
 

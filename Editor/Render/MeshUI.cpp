@@ -10,6 +10,7 @@
 bool mesh_dropdown(const char *label, Mesh *selected)
 {
 	bool changed = false;
+	/*
 	bool valid = selected->is_valid();
 	uint32_t id = selected->id();
 	const char *name = valid ? Mesh::get(id).uri() : "None";
@@ -36,6 +37,7 @@ bool mesh_dropdown(const char *label, Mesh *selected)
 		}
 		ImGui::EndCombo();
 	}
+	*/
 	return changed;
 }
 

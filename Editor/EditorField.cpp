@@ -116,7 +116,7 @@ static void write_hist(const char *label,
 
 	action(history + start + sizeof(val_size),
 		history + start + sizeof(val_size) + val_size,
-		history + start + sizeof(val_size) + val_size*2 + sizeof(data_size));
+		history + start + sizeof(val_size) + (uint64_t)val_size*2 + sizeof(data_size));
 }
 
 void Editor::field(const char *label, void (*widget)(),

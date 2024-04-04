@@ -16,6 +16,5 @@ struct system_type_t
 	void (*on_destroy_entity)(void *instance, struct Entity);
 	void (*on_resize_window)(void *instance);
 
-	void (*save)(void *instance, SerializationContext&);
-	void (*load)(void *instance, const SerializationContext&);
+	void (*transfer)(void*, Entity, struct DataModel*);
 };

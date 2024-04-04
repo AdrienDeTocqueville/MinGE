@@ -116,24 +116,24 @@ void GraphicsSystem::resize_rt(uint32_t i)
 
 	cam->depth_buffer.create(resolution, render_texture_t::Format::DEPTH24_STENCIL8);
 
-	static char uri[256];
-	int c = stbsp_snprintf(uri, sizeof(uri), "asset:texture?"
-		"wrap_s=clamp&wrap_t=clamp&"
-		"min_filter=nearest&max_filter=nearest&"
-		"scale=%g,%g&format=", size_scale.x, size_scale.y);
+	Texture::settings_t tex_settings;
+	tex_settings.wrap_mode_s = tex_settings.wrap_mode_t = GL::ClampToEdge;
+	tex_settings.filter_mode = GL::Point;
+	tex_settings.width = resolution.x;
+	tex_settings.height = resolution.y;
 
 	// Depth prepass
-	strcpy(uri + c, "r32f");
-	if (cam->depth_texture == Texture::none) cam->depth_texture = Texture::load(uri);
-	else if (is_smaller(cam->depth_texture.size(), resolution)) cam->depth_texture.reload(uri);
+	tex_settings.format = GL_R32F;
+	if (!cam->depth_texture.valid()) cam->depth_texture = Texture::create(tex_settings);
+	//else if (is_smaller(cam->depth_texture.size(), resolution)) cam->depth_texture.reload(uri);
 
 	if (cam->fbo_depth) GL::DeleteFramebuffer(cam->fbo_depth);
 	cam->fbo_depth = create_framebuffer(cam->depth_buffer, cam->depth_texture.handle());
 
 	// Forward pass
-	strcpy(uri + c, "rgba16f");
-	if (cam->color_texture == Texture::none) cam->color_texture = Texture::load(uri);
-	else if (is_smaller(cam->color_texture.size(), resolution)) cam->color_texture.reload(uri);
+	tex_settings.format = GL_RGBA16F;
+	if (!cam->color_texture.valid()) cam->color_texture = Texture::create(tex_settings);
+	//else if (is_smaller(cam->color_texture.size(), resolution)) cam->color_texture.reload(uri);
 
 	if (cam->fbo_forward) GL::DeleteFramebuffer(cam->fbo_forward);
 	cam->fbo_forward = create_framebuffer(cam->depth_buffer, cam->color_texture.handle());
@@ -168,12 +168,12 @@ void GraphicsSystem::update_submeshes(uint32_t i, Material material, bool remove
 	if (remove_previous && r->first_submesh != submeshes.invalid_id())
 		submeshes.remove(r->first_submesh, r->last_submesh - r->first_submesh);
 
-	if (r->mesh != Mesh::none)
+	if (r->mesh.valid())
 	{
-		if (material == Material::none)
+		if (!material.valid())
 			material = RenderEngine::default_material;
 
-		submeshes_t subs = Mesh::meshes.get<0>()[r->mesh.id()];
+		Mesh::submeshes_t subs = r->mesh.submesh_list();
 		uint32_t first = submeshes.add(subs.count);
 
 		for (uint32_t s = 0; s < subs.count; s++)

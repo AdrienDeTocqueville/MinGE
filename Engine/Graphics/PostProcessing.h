@@ -9,7 +9,7 @@
 
 struct PostProcessingSystem
 {
-	PostProcessingSystem(void *system_dependency, Texture depth_texture, Texture color_texture, vec4 ss_viewport = ivec4(0,0,1,1), Material post_processing = Material::none);
+	PostProcessingSystem(void *system_dependency, Texture depth_texture, Texture color_texture, vec4 ss_viewport = ivec4(0,0,1,1), Material post_processing = Material());
 	~PostProcessingSystem();
 
 	void *dependency;

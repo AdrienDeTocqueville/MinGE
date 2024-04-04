@@ -2,7 +2,7 @@
 
 #include "tests.h"
 
-int main(int, char**)
+int main(int argc, char **argv)
 {
 	/// Create window
 	SDL_Init(SDL_INIT_VIDEO);
@@ -10,7 +10,7 @@ int main(int, char**)
 		SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE, 1);
 
 	/// Init engine
-	Engine::init(window);
+	Engine::init(argc, argv, window);
 	printf("Engine initialized\n");
 
 	LAUNCH(entity);

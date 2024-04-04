@@ -8,6 +8,7 @@ bool entity_dropdown(const char *label, Entity *selected)
 {
 	static const char *unnamed = "Unnamed";
 	bool changed = false;
+	/*
 	bool valid = selected->is_valid();
 	uint32_t id = selected->id();
 	const char *name = valid ? selected->name() ? selected->name() : unnamed : "None";
@@ -34,6 +35,7 @@ bool entity_dropdown(const char *label, Entity *selected)
 		}
 		ImGui::EndCombo();
 	}
+	*/
 	return changed;
 }
 

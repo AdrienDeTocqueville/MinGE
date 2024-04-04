@@ -19,6 +19,8 @@ struct GL
 {
 	enum Capability { CullFace, Blend, DepthTest, ScissorTest, CAP_COUNT };
 	enum DepthFunc { Never, Always, Less, LessEqual, Equal, FUNC_COUNT };
+	enum WrapMode { Repeat = GL_REPEAT, ClampToEdge = GL_CLAMP_TO_EDGE, Mirror = GL_MIRRORED_REPEAT };
+	enum FilterMode { Point = GL_NEAREST, Linear = GL_LINEAR };
 
 	typedef void *SDL_GLContext;
 	static SDL_GLContext context;

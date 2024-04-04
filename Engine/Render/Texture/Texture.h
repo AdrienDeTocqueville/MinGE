@@ -1,37 +1,65 @@
 #pragma once
 
-#include "Core/Asset.h"
-#include "Core/UID.h"
+#include "Core/AssetDatabase.h"
 
 #include "Math/glm.h"
-#include "Structures/MultiArray.h"
+#include "Structures/ArrayList.h"
+
+#include <Render/GLDriver.h>
+#include <GL/glew.h>
+
+struct color32_t
+{
+	uint8_t r, g, b, a;
+};
 
 struct Texture: public UID32
 {
-	struct texture_t
+	struct texture_t : object_data_t
 	{
 		uint32_t handle;
 		uvec2 size;
+		color32_t *pixels;
+	};
+
+	struct settings_t
+	{
+		int width, height;
+		GL::WrapMode wrap_mode_s;
+		GL::WrapMode wrap_mode_t;
+		GL::FilterMode filter_mode;
+		int format;
+		bool generate_mips;
+		const char *name;
+
+		settings_t()
+		{
+			width = height = 1;
+			wrap_mode_s = GL::Repeat;
+			wrap_mode_t = GL::Repeat;
+			filter_mode = GL::Linear;
+			format = GL_RGB8;
+			generate_mips = false;
+			name = nullptr;
+		}
 	};
 
 	Texture() {}
+	Texture(UID32 uid): UID32(uid) {}
 
 	void destroy();
-	void reload(const char *uri);
+	bool is_valid() const { return valid() && textures[id()].valid(gen()); }
 
-	uint32_t handle() const { return id() ? textures.get<0>(id())->handle : 0; }
-	uvec2 size() const { return textures.get<0>(id())->size; }
-	const char *uri() const { return *textures.get<1>(id()); }
-	bool is_valid() const { return id() && *textures.get<2>(id()) == gen(); }
+	uint32_t handle() const { return textures[id()].handle; }
+	uvec2 size() const { return textures[id()].size; }
 
-	static Texture load(const char *URI);
-	static Texture get(uint32_t i);
+	void set_pixel_data(color32_t *data);
 
-	static const Texture none;
-	static multi_array_t<texture_t, char*, uint8_t> textures;
+	static Texture create(const settings_t &settings);
+	static Texture get(uint32_t i) { return UID32(i, textures[i].gen); }
 
-	static const asset_type_t type;
+	static array_list_t<texture_t> textures;
 
-private:
-	Texture(uint32_t i, uint32_t gen): UID32(i, gen) {}
+	static const struct object_type_t type;
+	static const struct asset_importer_t importer;
 };

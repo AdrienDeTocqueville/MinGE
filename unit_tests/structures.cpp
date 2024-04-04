@@ -88,11 +88,11 @@ void test_structures()
 
 	test_multi_array();
 
-	test_array_list<array_list32_t<uint32_t>>();
-	test_array_list<array_list_t<uint64_t>>();
+	test_array_list<array_list_t<uint32_t>>();
+	test_array_list<array_list64_t<uint64_t>>();
 
 	test_soa();
 
 	// Should produce a compilation error
-	//array_list_t<uint32_t>();
+	//array_list64_t<uint32_t>();
 }

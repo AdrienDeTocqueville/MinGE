@@ -10,6 +10,7 @@
 bool material_dropdown(const char *label, Material *selected)
 {
 	bool changed = false;
+	/*
 	bool valid = selected->is_valid();
 	uint32_t id = selected->id();
 	const char *name = valid ? Material::get(id).uri() : "None";
@@ -36,10 +37,11 @@ bool material_dropdown(const char *label, Material *selected)
 		}
 		ImGui::EndCombo();
 	}
+	*/
 	return changed;
 }
 
-void list_macros(material_t *material, Shader *shader)
+void list_macros(Material::material_t *material, Shader shader)
 {
 	ImGui::Separator();
 	ImGui::Text("Macros");
@@ -48,7 +50,7 @@ void list_macros(material_t *material, Shader *shader)
 	ImGui::InputInt("Variant index", (int*)&material->variant_idx, 1, 2, ImGuiInputTextFlags_ReadOnly);
 
 	uint32_t hash_done = 0;
-	for (const auto &it : shader->macros)
+	for (const auto &it : shader.get_data().macros)
 	{
 		uint32_t mask = it.second.mask;
 		bool checked = (material->variant_hash & mask) == it.second.id;
@@ -66,7 +68,7 @@ void list_macros(material_t *material, Shader *shader)
 			hash_done |= mask;
 
 			const char *name = NULL;
-			for (const auto &it2 : shader->macros)
+			for (const auto &it2 : shader.get_data().macros)
 			{
 				if ((material->variant_hash & mask) == it2.second.id)
 				{ name = it2.first.c_str(); break; }
@@ -74,7 +76,7 @@ void list_macros(material_t *material, Shader *shader)
 
 			if (ImGui::BeginCombo(name, NULL, ImGuiComboFlags_NoPreview))
 			{
-				for (const auto &it2 : shader->macros)
+				for (const auto &it2 : shader.get_data().macros)
 				{
 					if (it2.second.mask != mask) continue;
 					checked = (it2.first.c_str() == name);
@@ -92,13 +94,13 @@ void list_macros(material_t *material, Shader *shader)
 	}
 }
 
-void list_uniforms(material_t *material, Shader *shader)
+void list_uniforms(Material::material_t *material, Shader shader)
 {
 	ImGui::Separator();
 	ImGui::Text("Uniforms");
 
-	auto *passes = shader->variants[material->variant_idx].passes;
-	for (const auto &it : shader->uniforms_names)
+	auto *passes = shader.get_data().variants[material->variant_idx].passes;
+	for (const auto &it : shader.get_data().uniforms_names)
 	{
 		Program::Uniform *uniform = NULL;
 		for (int p = 0; p < RenderPass::Count; p++)
@@ -148,23 +150,19 @@ display_uniform:
 
 void material_tab(Material *material)
 {
+	/*
 	material_dropdown("Select material", material);
 
 	if (!material->is_valid())
 		return;
 
-	material_t *selected = Material::materials.get<0>(material->id());
-	Shader *shader = selected->shader;
+	Material::material_t *selected = &Material::materials[material.id()];
+	Shader shader = selected->shader;
 
-	if (ImGui::Button("Reload"))
-	{
-		Material::reload(shader);
-		shader = selected->shader;
-	}
-
-	if (shader->macros.size())
+	if (shader.get_data().macros.size())
 		list_macros(selected, shader);
 
-	if (shader->uniforms_names.size())
+	if (shader.get_data().uniforms_names.size())
 		list_uniforms(selected, shader);
+	*/
 }

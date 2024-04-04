@@ -1,5 +1,5 @@
 -- Modify this section
-local prj_names = {"Editor", "graphics_tests", "unit_tests"}
+local prj_names = {"Editor", "unit_tests"}
 
 filter "system:windows"
 	lib_dir = "../Libs"
@@ -27,12 +27,7 @@ function build_settings(i)
 		buildoptions { "-mavx2" }
 		if i == 1 then -- Build the Editor with GTK
 			buildoptions {"`pkg-config --cflags gtk+-3.0`"}
-			filter "configurations:debug"
-				linkoptions {"`pkg-config --libs gtk+-3.0`"}
-			filter "configurations:dev"
-				linkoptions {"`pkg-config --libs gtk+-3.0`"}
-			filter "configurations:release"
-				linkoptions {"`pkg-config --libs gtk+-3.0`"}
+			linkoptions {"`pkg-config --libs gtk+-3.0`"}
 		end
 
 	filter "configurations:debug"

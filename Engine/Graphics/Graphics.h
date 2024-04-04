@@ -31,11 +31,11 @@ struct GraphicsSystem
 		bool orthographic = false, vec2 size_scale = vec2(1), vec4 clear_color = vec4(0.0f))
 	{
 		resize_rt(init_camera(entity, fov, near_plane, far_plane, orthographic, size_scale,
-			clear_color, Texture::none, Texture::none));
+			clear_color, Texture(), Texture()));
 		return {entity.id(), 0, *this};
 	}
 
-	Renderer add_renderer(Entity entity, Mesh mesh, Material material = Material::none);
+	Renderer add_renderer(Entity entity, Mesh mesh, Material material = Material());
 
 	Light add_point_light(Entity entity, vec3 color = vec3(150.0f / 255.0f), float intensity = 10.0f, float radius = 10.0f);
 
@@ -109,7 +109,7 @@ struct GraphicsSystem
 	uint64_t *renderer_keys;
 
 	struct interface_block {
-		interface_block(): data(NULL), capacity(0) {}
+		interface_block(): data(NULL), buffer(0), capacity(0) {}
 		~interface_block() { free(data); }
 
 		void *data;
@@ -128,8 +128,7 @@ struct GraphicsSystem
 
 
 	// Serialization
-	GraphicsSystem(const SerializationContext &ctx);
-	void save(SerializationContext &ctx) const;
+	void transfer(Entity e, struct DataModel *model);
 
 private:
 	uint32_t init_camera(Entity entity, float fov, float near_plane, float far_plane, bool orthographic,

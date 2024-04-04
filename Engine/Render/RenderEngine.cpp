@@ -35,10 +35,13 @@ void RenderEngine::init()
 
 void RenderEngine::load()
 {
-	default_material = Material::get(1);
-	if (default_material == Material::none)
+	default_material = Material::get(0);
+	if (!default_material.valid())
 	{
-		default_material = Material::load("asset:material?shader=standard");
+		auto default_path = AssetDatabase::resource_path("Shaders/standard.shader");
+		Shader default_shader = AssetDatabase::get(default_path);
+
+		default_material = Material::create(default_shader);
 		default_material.set("color", vec3(0.8f));
 		default_material.set("metallic", 0.0f);
 		default_material.set("roughness", 0.5f);
@@ -57,7 +60,6 @@ void RenderEngine::destroy()
 	Debug::destroy();
 
 	cmd_buffer_t::destroy();
-	Shader::clear();
 
 	UI::destroy();
 	GL::destroy();
@@ -80,7 +82,7 @@ void RenderEngine::flush()
 {
 	MICROPROFILE_SCOPEI("RENDER_ENGINE", "flush");
 
-	material_t::bound = nullptr;
+	Material::material_t::bound = nullptr;
 
 	for (auto *cmd : buffers)
 		cmd->flush();

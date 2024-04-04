@@ -18,8 +18,11 @@ struct slot64_t
 	static const uint32_t invalid = -1;
 };
 
-// Structure to allocate contiguous elements
+#define SAFE_INDEX(i) ASSERT(i != invalid_id() && i < capacity, "Accessing invalid index.")
+
+// Freelist structure to allocate contiguous elements
 // First element returned is at index 0
+// Assumes T is a pod type
 
 template<typename T, typename S>
 struct array_list_t
@@ -28,18 +31,18 @@ struct array_list_t
 	~array_list_t() { mem::free_page(data, capacity); }
 
 	void realloc(uint32_t new_cap);
-	uint32_t add(uint32_t count);
-	void remove(uint32_t index, uint32_t count);
+	uint32_t add(uint32_t count = 1);
+	void remove(uint32_t index, uint32_t count = 1);
 	inline void clear();
 
 	inline const uint32_t invalid_id() const
 	{ return S::invalid; }
 
 	T &operator[](uint32_t index)
-	{ return data[index]; }
+	{ SAFE_INDEX(index); return data[index]; }
 
 	const T &operator[](uint32_t index) const
-	{ return data[index]; }
+	{ SAFE_INDEX(index); return data[index]; }
 
 	// 64 bit
 	union {
@@ -49,7 +52,6 @@ struct array_list_t
 			uint32_t capacity;
 		};
 	};
-
 	// count is the number of allocated element
 	// size is the number of reserved bytes in the buffer
 	uint32_t count, size;
@@ -61,7 +63,7 @@ array_list_t<T, S>::array_list_t():
 	capacity(mem::page_size), count(0), size(0)
 {
 	// Each element can be used to store the amount of free slots and the next free slot index
-	static_assert(sizeof(T) >= sizeof(S), "First element type is too small");
+	static_assert(sizeof(T) >= sizeof(S), "Element type is too small");
 
 	data = (T*)mem::alloc_page((size_t)capacity);
 	next_slot.next = S::invalid;
@@ -167,7 +169,7 @@ void array_list_t<T, S>::clear()
 }
 
 template <typename T>
-using array_list32_t = array_list::array_list_t<T, array_list::slot32_t>;
+using array_list_t = array_list::array_list_t<T, array_list::slot32_t>;
 
 template <typename T>
-using array_list_t = array_list::array_list_t<T, array_list::slot64_t>;
+using array_list64_t = array_list::array_list_t<T, array_list::slot64_t>;

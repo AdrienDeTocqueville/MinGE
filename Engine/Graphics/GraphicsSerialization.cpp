@@ -3,130 +3,55 @@
 #include "Render/RenderEngine.h"
 #include "Render/CommandBuffer.h"
 
-#include "Core/Serialization.h"
+#include "IO/DataModel.h"
 #include "Structures/EntityMapper.inl"
 
-using namespace nlohmann;
-
-void GraphicsSystem::save(SerializationContext &ctx) const
+void GraphicsSystem::transfer(Entity e, DataModel *model)
 {
-	json dump = indices.to_json();
-
+	uint8_t state = 0;
+	if (model->is_writing())
 	{
-		json cam_dump = json::array();
-		cam_dump.get_ptr<nlohmann::json::array_t*>()->reserve(cameras.size);
-		for (uint32_t i = 1; i <= cameras.size; i++)
-		{
-			json cam = json::object();
-
-			cam["near_plane"] = cameras.get<0>()[i].near_plane;
-			cam["far_plane"] = cameras.get<0>()[i].far_plane;
-			cam["clear_color"] = ::to_json(cameras.get<0>()[i].clear_color);
-			cam["fov"] = cameras.get<0>()[i].fov;
-			cam["size_scale"] = ::to_json(cameras.get<0>()[i].size_scale);
-			cam["ortho"] = cameras.get<0>()[i].ortho;
-
-			cam["depth_texture"] = cameras.get<0>()[i].depth_texture.uint();
-			cam["color_texture"] = cameras.get<0>()[i].color_texture.uint();
-
-			cam_dump.push_back(cam);
-		}
-
-		dump["cameras"].swap(cam_dump);
+		if (has_camera(e))   state |= 1 << 0;
+		if (has_renderer(e)) state |= 1 << 1;
+		if (has_light(e))    state |= 1 << 2;
+	}
+	model->transfer("s", state);
+	if (model->is_reading())
+	{
+		if (state & (1 << 0)) add_camera(e);
+		if (state & (1 << 1)) add_renderer(e, Mesh());
+		if (state & (1 << 2)) add_point_light(e);
 	}
 
+	if (has_camera(e))
 	{
-		json renderer_dump = json::array();
-		renderer_dump.get_ptr<nlohmann::json::array_t*>()->reserve(renderers.size);
-		for (uint32_t i = 1; i <= renderers.size; i++)
-		{
-			json renderer = json::object();
-			json materials = json::array();
+		camera_t &camera = cameras.get<0>()[indices.get<0>(e.id())];
 
-			for (uint32_t s = renderers.get<0>()[i].first_submesh; s < renderers.get<0>()[i].last_submesh; s++)
-				materials.push_back(submeshes[s].material);
-
-			renderer["mesh"] = renderers.get<0>()[i].mesh.uint();
-			renderer["materials"] = materials;
-
-			renderer_dump.push_back(renderer);
-		}
-
-		dump["renderers"].swap(renderer_dump);
+		model->transfer("c.near_plane", camera.near_plane);
+		model->transfer("c.far_plane", camera.far_plane);
+		model->transfer("c.clear_color", camera.clear_color);
+		model->transfer("c.fov", camera.fov);
+		model->transfer("c.size_scale", camera.size_scale);
+		model->transfer("c.ortho", camera.ortho);
+		model->transfer("c.depth_texture", camera.depth_texture, Texture::type);
+		model->transfer("c.color_texture", camera.color_texture, Texture::type);
 	}
 
+	if (has_renderer(e))
 	{
-		json light_dump = json::array();
-		light_dump.get_ptr<nlohmann::json::array_t*>()->reserve(point_lights.size);
-		for (uint32_t i = 1; i <= point_lights.size; i++)
-		{
-			json light = json::object();
+		renderer_t &renderer = renderers.get<0>()[indices.get<1>(e.id())];
 
-			light["color"] = ::to_json(point_lights.get<0>()[i].color);
-			light["intensity"] = point_lights.get<0>()[i].intensity;
-			light["radius"] = point_lights.get<0>()[i].radius;
-
-			light_dump.push_back(light);
-		}
-
-		dump["point_lights"].swap(light_dump);
+		model->transfer("r.mesh", renderer.mesh, Mesh::type);
+		//for (uint32_t s = renderers.get<0>()[i].first_submesh; s < renderers.get<0>()[i].last_submesh; s++)
+		//	materials.push_back(submeshes[s].material);
 	}
 
-	ctx.set_dependencies(transforms);
-	ctx.swap_data(dump);
-}
-
-GraphicsSystem::GraphicsSystem(const SerializationContext &ctx):
-	indices_capacity(0), keys_capacity(0),
-	draw_order_indices(NULL), renderer_keys(NULL),
-	transforms((TransformSystem*)ctx.get_dependency(0)),
-	indices(ctx["indices"])
-{
-	auto cam_it = ctx["cameras"].begin();
-	for (uint32_t i = 1; i < indices.size; i++)
+	if (has_light(e))
 	{
-		uint32_t comp = indices.get<0>(i);
-		if (comp == 0) continue;
+		point_light_t &light = point_lights.get<0>()[indices.get<2>(e.id())];
 
-		indices.map<0>(i, 0);
-		auto cam = cam_it.value();
-		resize_rt(init_camera(Entity::get(i), cam["fov"], cam["near_plane"], cam["far_plane"],
-			cam["ortho"], ::to_vec2(cam["size_scale"]), ::to_vec4(cam["clear_color"]),
-			Texture::get(cam["color_texture"]), Texture::get(cam["depth_texture"])));
-		++cam_it;
+		model->transfer("l.color", light.color);
+		model->transfer("l.radius", light.radius);
+		model->transfer("l.intensity", light.intensity);
 	}
-
-	auto renderer_it = ctx["renderers"].begin();
-	for (uint32_t i = 1; i < indices.size; i++)
-	{
-		uint32_t comp = indices.get<1>(i);
-		if (comp == 0) continue;
-
-		indices.map<1>(i, 0);
-		auto renderer = renderer_it.value();
-		add_renderer(Entity::get(i), Mesh::get(renderer["mesh"]));
-		renderer_t *r = renderers.get<0>() + indices.get<1>(i);
-		uint32_t s = r->first_submesh;
-		for (auto m : renderer["materials"])
-			submeshes[s++].material = m;
-
-		++renderer_it;
-	}
-
-	auto light_it = ctx["point_lights"].begin();
-	for (uint32_t i = 1; i < indices.size; i++)
-	{
-		uint32_t comp = indices.get<2>(i);
-		if (comp == 0) continue;
-
-		indices.map<2>(i, 0);
-		auto light = light_it.value();
-		add_point_light(Entity::get(i), ::to_vec3(light["color"]), light["intensity"], light["radius"]);
-		++light_it;
-	}
-
-	RenderEngine::add_buffer(&cmd_buffer);
-
-	global.buffer = GL::GenBuffer();
-	objects.buffer = GL::GenBuffer();
 }

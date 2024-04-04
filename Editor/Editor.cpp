@@ -121,6 +121,7 @@ static void assets_win(uint32_t id)
 
 static void systems_win(uint32_t id)
 {
+	/*
 	if (!ImGui::Begin("systems", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove))
 		return ImGui::End();
 
@@ -163,6 +164,7 @@ static void systems_win(uint32_t id)
 
 	ImGui::EndTabBar();
 	ImGui::End();
+	*/
 }
 
 static bool add_entity(char *buf, size_t size)
@@ -176,6 +178,7 @@ static bool add_entity(char *buf, size_t size)
 
 static void entity_tab(Entity *entity)
 {
+	/*
 	entity_dropdown("Select entity", entity);
 
 	static char new_name[64];
@@ -210,6 +213,7 @@ static void entity_tab(Entity *entity)
 		}
 		ImGui::EndPopup();
 	}
+	*/
 }
 
 void Editor::load()
@@ -218,19 +222,9 @@ void Editor::load()
 	UI::create_window(assets_win, 0);
 	UI::create_window(systems_win, 0);
 
-	// Register builtin system types
-	Engine::register_system_type(TransformSystem::type);
-	Engine::register_system_type(GraphicsSystem::type);
-	Engine::register_system_type(PostProcessingSystem::type);
-
 	register_system_editor(TransformSystemUI::editor);
 	register_system_editor(GraphicsSystemUI::editor);
 	register_system_editor(PostProcessingSystemUI::editor);
-
-	// Register builtin asset types
-	Engine::register_asset_type(Mesh::type);
-	Engine::register_asset_type(Texture::type);
-	Engine::register_asset_type(Material::type);
 
 	register_asset_editor("Entity",	  (AssetEditor)entity_tab);
 	register_asset_editor("Mesh",	  (AssetEditor)mesh_tab);
@@ -257,11 +251,12 @@ void Editor::register_asset_editor(const char *name, AssetEditor editor)
 
 void Editor::open_scene(const char *path)
 {
-	Engine::clear();
+	Engine::clear(); //TODO: will clear asset db
 	Editor::clear();
 
 	Editor::load();
 
+	/*
 	if (path && Scene::load(path))
 	{
 		Input::set_window_name(strrchr(path, '/') + 1);
@@ -300,20 +295,25 @@ void Editor::open_scene(const char *path)
 			"post-processing", postproc
 		);
 	}
+	*/
 }
 
 void Editor::save_scene()
 {
+	/*
 	if (*scene_path)
 		Scene::save(scene_path);
 	else
 		save_as_dialog();
+	*/
 }
 
 void Editor::save_scene_as(const char *path)
 {
+	/*
 	if (Scene::save(path, Scene::Overwrite::Ask))
 		strncpy(scene_path, path, sizeof(scene_path));
+	*/
 }
 
 void Editor::handle_shortcuts()

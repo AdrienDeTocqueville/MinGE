@@ -12,6 +12,9 @@
 #include "Utility/Log.h"
 #include "Memory/Memory.h"
 #include "IO/json.hpp"
+#include "IO/FileSystem.h"
+
+#include "Render/Shader/ShaderImporter.inl"
 
 using json = nlohmann::json;
 
@@ -53,40 +56,18 @@ static inline std::string get_or_default(const json &n, const char *prop)
 }
 
 
+std::unordered_map<uint32_t, Shader::shader_t> Shader::shaders;
+static uint32_t current_id = 0;
 
-static std::unordered_map<std::string, Shader*> shaders;
-
-Shader* Shader::load(const std::string &name)
+static void destroy_shader(UID32 object)
 {
-	auto it = shaders.find(name);
-	if (it != shaders.end())
-		return it->second;
+	Shader shader(object);
+	ASSERT(shader.is_valid(), "Trying to destroy an invalid Shader handle");
 
-	static char buf[256];
-	stbsp_snprintf(buf, sizeof(buf), "Assets/Shaders/%s.json", name.c_str());
+	Shader::shader_t &data = Shader::shaders[object.id()];
 
-	Shader *s = new Shader();
-	if (!s->load_json(buf))
-	{
-		delete s;
-		return nullptr;
-	}
-
-	shaders.emplace(name, s);
-	return s;
-}
-
-void Shader::clear()
-{
-	for (auto &entry: shaders)
-		delete entry.second;
-}
-
-Shader::~Shader()
-{
 	std::unordered_set<Program*> freed;
-
-	for (Shader::Variant &variant : variants)
+	for (Shader::Variant &variant : data.variants)
 	{
 		for (int i(0); i < RenderPass::Count; i++)
 		{
@@ -96,59 +77,51 @@ Shader::~Shader()
 			delete variant.passes[i];
 		}
 	}
+
+	data.destroy();
+	Shader::shaders.erase(object.id());
 }
 
-Shader *Shader::reload()
+void Shader::destroy()
 {
-	for (auto it = shaders.begin(); it != shaders.end(); ++it)
-	{
-		if (it->second == this)
-		{
-			std::string name = it->first;
-			shaders.erase(it);
-			if (Shader *reloaded = Shader::load(name))
-			{
-				/*
-				std::unordered_map<std::string, size_t> uniforms_names_save;
+	destroy_shader(*this);
+}
 
-				free_variants(variants);
-				variants.clear();
-				variant_idx.clear();
-				macros.clear();
-				std::swap(uniforms_names, uniforms_names_save);
-				*/
-				delete this;
-				return reloaded;
-			}
-			else
-			{
-				shaders.emplace(name, this);
-				return NULL;
-			}
-		}
+Shader Shader::create(const std::string &path)
+{
+	// Parse file
+	std::ifstream file(path);
+	if (!file)
+		return Shader();
+
+	json root;
+	file >> root;
+
+	Shader shader(UID32(current_id++, 0));
+	shader_t &data = Shader::shaders[shader.id()];
+
+	bool success = data.load_json(root);
+	data.gen = 0;
+	data.name = strdup(Path::filename(path, false).c_str());
+
+	if (!success)
+	{
+		destroy_shader(shader);
+		return Shader();
 	}
-	return NULL;
+
+	data.get_variant(0);
+	return shader;
 }
 
 /// Variant stuff
-bool Shader::load_json(const char *path)
+bool Shader::shader_t::load_json(json &root)
 {
 	// Clear state
 	for (int i(0); i < RenderPass::Count; i++)
 		passes[i].exists = false;
 	next_bit = 0;
 	uniform_offset = 0;
-
-	// Parse file
-	std::ifstream file(path);
-	if (!file)
-	{
-		Log::addf(Log::Error, "Shader file not found: %s", path);
-		return false;
-	}
-
-	json root;
-	file >> root;
 
 	// Parse passes
 	if (!root.contains("passes"))
@@ -179,7 +152,6 @@ bool Shader::load_json(const char *path)
 				uint32_t count_align = mem::next_power_of_two(count);
 				uint32_t mask = (count_align - 1) << next_bit;
 				passes[type->second].mask |= mask;
-
 
 				// Assume that if first macro is new, all are
 				if (count && macros.find(macro[0].get<std::string>()) == macros.end())
@@ -226,12 +198,10 @@ bool Shader::load_json(const char *path)
 		}
 	}
 
-	get_variant(0);
-
 	return true;
 }
 
-uint32_t Shader::get_variant(uint32_t hash)
+uint32_t Shader::shader_t::get_variant(uint32_t hash)
 {
 	auto it = variant_idx.find(hash);
 	if (it != variant_idx.end())
@@ -299,7 +269,7 @@ void Shader::setup_builtins()
 	bindings_cache.add_builtin(BindingsCache::Storage, "GLOBAL");
 }
 
-void Shader::load_uniforms(Program *prgm)
+void Shader::shader_t::load_uniforms(Program *prgm)
 {
 	unsigned program = prgm->program;
 	GLint uniform_count, uniform_block_count, ssbo_count;
@@ -380,3 +350,10 @@ void Shader::load_uniforms(Program *prgm)
 
 	delete[] temp_name;
 }
+
+const object_type_t Shader::type = []() {
+	object_type_t t = INIT_ASSET_TYPE(Shader);
+
+	t.destroy = destroy_shader;
+	return t;
+}();

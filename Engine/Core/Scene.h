@@ -1,57 +1,29 @@
 #pragma once
 
-#include "IO/json_fwd.hpp"
+#include "Core/AssetDatabase.h"
+#include "Structures/ArrayList.h"
 
-struct Scene
+struct Scene: public UID32
 {
-	struct system_ref_t
+	struct scene_t : object_data_t
 	{
-		char *name;
-		void *instance;
+		std::vector<std::string> system_types;
+		std::string serialized_scene;
 	};
-	enum Overwrite { Yes = 0, No, Ask, Backup };
 
-	static bool load(const char *path);
-	static bool save(const char *path, Overwrite mode = Overwrite::Yes);
-	static void clear();
+	Scene() {}
+	Scene(UID32 uid): UID32(uid) {}
 
-	template<typename... R>
-	static void set_systems(R... refs)
-	{ clear(); reserve(sizeof...(R) / 2); set_system_rec(refs...); }
+	void destroy();
+	bool is_valid() const { return valid() && scenes[id()].valid(gen()); }
 
-	static void add_system(char *name, void *instance);
-	static void remove_system(const char *name);
+	//uint32_t handle() const { return textures[id()].handle; }
 
-	static void *system(const char *name);
-	static const char *system_name(void *system);
+	static Scene create(const char *name);
+	static Scene get(uint32_t i) { return UID32(i, scenes[i].gen); }
 
-	static const system_ref_t *systems() { return sys; }
-	static int system_count() { return sys_count; }
+	static array_list_t<scene_t> scenes;
 
-private:
-	Scene() = delete;
-	Scene(Scene &&s) = delete;
-	Scene(const Scene &s) = delete;
-	~Scene();
-
-	static void reserve(int count);
-
-	static void load_assets(nlohmann::json &scene);
-	static void save_assets(nlohmann::json &scene);
-
-	template<typename... R>
-	static void set_system_rec(const char *name, void *instance, R... refs)
-	{
-		set_system_rec(name, instance);
-		set_system_rec(refs...);
-	}
-	static void set_system_rec(const char *name, void *instance)
-	{
-		sys[sys_count].name = strdup(name);
-		sys[sys_count].instance = instance;
-		sys_count++;
-	}
-
-	static int sys_count, capacity;
-	static system_ref_t *sys;
+	static const struct object_type_t type;
+	static const struct asset_importer_t importer;
 };

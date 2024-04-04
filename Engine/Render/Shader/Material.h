@@ -3,39 +3,36 @@
 #include <vector>
 #include <string>
 
-#include "Core/Asset.h"
-#include "Core/UID.h"
+#include "Core/AssetDatabase.h"
 
-#include "Structures/MultiArray.h"
-#include "Render/RenderPass.h"
-
-
-struct material_t
-{
-	/// Methods (public)
-	inline bool has_pass(RenderPass::Type pass) const;
-	void bind(RenderPass::Type pass) const;
-
-	inline void update_variant(uint32_t hash);
-	inline void sync_uniforms();
-
-	uint32_t variant_hash;
-	uint32_t variant_idx;
-	class Shader *shader;
-	std::vector<uint8_t> uniforms; // Contains < data > sequenced for each uniform
-
-
-	static const void *bound;
-};
+#include "Structures/ArrayList.h"
+#include "Render/Shader/Shader.h"
 
 struct Material: public UID32
 {
+	struct material_t : object_data_t
+	{
+		inline bool has_pass(RenderPass::Type pass) const;
+		void bind(RenderPass::Type pass) const;
+
+		inline void update_variant(uint32_t hash);
+		inline void sync_uniforms();
+
+		uint32_t variant_hash;
+		uint32_t variant_idx;
+		Shader shader;
+		std::vector<uint8_t> uniforms; // Contains < data > sequenced for each uniform
+
+		static const void *bound;
+	};
+
 	Material() {}
+	Material(UID32 uid): UID32(uid) {}
 
 	void destroy();
-	class Shader *shader() { return materials.get<0>(id())->shader;  }
-	const char *uri() const { return *materials.get<1>(id()); }
-	bool is_valid() { return id() && *materials.get<2>(id()) == gen(); }
+	bool is_valid() const { return valid() && materials[id()].valid(gen()); }
+
+	Shader shader() const { return materials[id()].shader;  }
 
 	void define(const std::vector<std::string> &macros);
 	void define(const std::string& macro);
@@ -58,17 +55,12 @@ struct Material: public UID32
 	inline void set(size_t location, const T *values, size_t num);
 
 
-	static Material load(const char *URI, uint32_t variant = 0);
-	static Material get(uint32_t i);
+	static Material create(Material src);
+	static Material create(Shader shader, uint32_t variant = 0);
+	static Material get(uint32_t i) { return UID32(i, materials[i].gen); }
 
-	static void reload(class Shader *shader);
-	static Material copy(Material src);
+	static array_list_t<material_t> materials;
 
-	static const Material none;
-	static multi_array_t<material_t, char*, uint8_t> materials;
-
-	static const asset_type_t type;
-
-private:
-	Material(uint32_t i, uint32_t g): UID32(i, g) {}
+	static const struct object_type_t type;
+	//static const struct asset_importer_t importer;
 };

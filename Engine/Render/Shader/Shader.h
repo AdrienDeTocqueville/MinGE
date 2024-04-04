@@ -6,7 +6,12 @@
 #include <vector>
 #include <unordered_map>
 
+#include "Core/AssetDatabase.h"
+
+// TODO: delete that file, it's wrong logic
 #include "Render/RenderPass.h"
+
+#include "IO/json_fwd.hpp"
 
 struct ShaderSources
 {
@@ -17,9 +22,9 @@ struct ShaderSources
 	std::string fragment;
 };
 
-class Shader
+struct Shader: public UID32
 {
-public:
+	// is it needed ?
 	friend struct Material;
 	friend struct material_t;
 	friend struct RenderEngine;
@@ -35,44 +40,56 @@ public:
 		uint32_t id;
 	};
 
-	static Shader *load(const std::string &name);
-
-	static inline uint32_t get_builtin_location(const std::string &name);
-
-	static inline void set_uniform(uint32_t slot, uint32_t buf, uint32_t offset, uint32_t size);
-	static inline void set_storage(uint32_t slot, uint32_t buf, uint32_t offset, uint32_t size);
-
-	std::unordered_map<std::string, Macro> macros;
-	std::vector<Variant> variants;
-	std::unordered_map<std::string, size_t> uniforms_names;
-
-private:
-	~Shader();
-
-	static void clear();
-	static void setup_builtins();
-
-	bool load_json(const char *path);
-	void load_uniforms(struct Program *prgm);
-	Shader *reload();
-
-	uint32_t get_variant(uint32_t hash);
-
-
-	// Variant related stuff
 	struct Pass
 	{
 		bool exists;
 		uint32_t mask;
 		ShaderSources sources;
 	};
-	Pass passes[RenderPass::Count];
 
-	std::unordered_map<uint32_t, uint32_t> variant_idx;
+	struct shader_t : object_data_t
+	{
+		std::unordered_map<std::string, Macro> macros;
+		std::vector<Variant> variants;
+		std::unordered_map<std::string, size_t> uniforms_names;
 
-	uint32_t next_bit;
-	size_t uniform_offset;
+		// Variant related stuff
+		Pass passes[RenderPass::Count];
 
+		std::unordered_map<uint32_t, uint32_t> variant_idx;
+
+		uint32_t next_bit;
+		size_t uniform_offset;
+
+		bool load_json(nlohmann::json &root);
+		void load_uniforms(struct Program *prgm);
+		uint32_t get_variant(uint32_t hash);
+	};
+
+	Shader() {}
+	Shader(UID32 uid): UID32(uid) {}
+
+	void destroy();
+	bool is_valid() const { return valid() && shaders[id()].valid(gen()); }
+
+	shader_t &get_data() const { return shaders[id()]; }
+
+	static Shader create(const std::string &path);
+	static Shader get(uint32_t i) { return UID32(i, shaders[i].gen); }
+
+	static std::unordered_map<uint32_t, shader_t> shaders;
+
+	static const struct object_type_t type;
+	static const struct asset_importer_t importer;
+
+	static inline uint32_t get_builtin_location(const std::string &name);
+
+	static inline void set_uniform(uint32_t slot, uint32_t buf, uint32_t offset, uint32_t size);
+	static inline void set_storage(uint32_t slot, uint32_t buf, uint32_t offset, uint32_t size);
+
+
+private:
+	static void setup_builtins();
 
 	// Bindings cache system
 

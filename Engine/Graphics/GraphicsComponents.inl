@@ -45,7 +45,7 @@ void Renderer::set_mesh(Mesh val)
 	auto x = sys.indices.get<1>(id());
 	sys.renderers.get<0>()[x].mesh = val;
 
-	sys.update_submeshes(x, Material::none, true);
+	sys.update_submeshes(x, Material(), true);
 }
 
 uint32_t Renderer::material_count()

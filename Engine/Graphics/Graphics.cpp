@@ -203,10 +203,10 @@ static void update(GraphicsSystem *self)
 
 		for (uint32_t j = 0; j < renderer_count; j++)
 		{
-			if (renderers[j].mesh == Mesh::none) continue;
+			if (!renderers[j].mesh.valid()) continue;
 
 			// TODO: don't recompute sphere for each camera ?
-			sphere.init(Mesh::meshes.get<3>()[renderers[j].mesh.id()]);
+			sphere.init(renderers[j].mesh.aabb());
 			sphere.transform(*(mat4*)(matrices + j * object_size));
 
 			// TODO: SIMDify
@@ -277,7 +277,7 @@ static void update(GraphicsSystem *self)
 
 static void on_destroy_entity(GraphicsSystem *self, Entity e)
 {
-	assert(false && "todo");
+	ASSERT(false, "todo");
 }
 
 static void on_resize_window(GraphicsSystem *self)
@@ -295,7 +295,6 @@ const system_type_t GraphicsSystem::type = []() {
 	t.on_destroy_entity = (decltype(t.on_destroy_entity))on_destroy_entity;
 	t.on_resize_window = (decltype(t.on_resize_window))on_resize_window;
 
-	t.save = [](void *system, SerializationContext &ctx) { ((GraphicsSystem*)system)->save(ctx); };
-	t.load = [](void *system, const SerializationContext &ctx) { new(system) GraphicsSystem(ctx); };
+	t.transfer = [](void *system, Entity e, DataModel *m) { ((GraphicsSystem*)system)->transfer(e, m); };
 	return t;
 }();

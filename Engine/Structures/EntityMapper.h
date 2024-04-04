@@ -12,7 +12,7 @@ struct entity_mapper_t
 	template<int n = 0>
 	inline uint32_t get(uint32_t id) const
 	{
-		assert(id < size);
+		ASSERT(id < size, "Invalid index");
 		return indices[id + size * n];
 	}
 
@@ -26,8 +26,8 @@ struct entity_mapper_t
 	template<int n = 0>
 	uint32_t get(Entity entity) const
 	{
-		assert(entity.id() != 0 && "Invalid entity");
-		assert(has<n>(entity) && "Entity has no such component");
+		ASSERT(entity.is_valid(), "Invalid entity");
+		ASSERT(has<n>(entity), "Entity has no such component");
 
 		return indices[entity.id() + size * n];
 	}
@@ -35,15 +35,15 @@ struct entity_mapper_t
 	template<int n = 0>
 	void map(uint32_t id, uint32_t component) const
 	{
-		assert(id < size);
+		ASSERT(id < size, "Invalid index");
 		indices[id + size * n] = component;
 	}
 
 	template<int n = 0>
 	void map(Entity entity, uint32_t component)
 	{
-		assert(entity.id() != 0 && "Invalid entity");
-		assert(!has<n>(entity) && "Entity already has such component");
+		ASSERT(entity.is_valid(), "Invalid entity");
+		ASSERT(!has<n>(entity), "Entity already has such component");
 
 		uint32_t *entity_mapper_realloc(uint32_t*, uint32_t&, uint32_t, int);
 
@@ -55,8 +55,8 @@ struct entity_mapper_t
 	template<int n = 0>
 	void unmap(Entity entity)
 	{
-		assert(entity.id() != 0 && "Invalid entity");
-		assert(has<n>(entity) && "Entity has no such component");
+		ASSERT(entity.is_valid(), "Invalid entity");
+		ASSERT(has<n>(entity), "Entity has no such component");
 
 		indices[entity.id() + size * n] = 0;
 	}

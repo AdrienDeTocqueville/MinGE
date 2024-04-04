@@ -1,5 +1,7 @@
 #include <vector>
 
+#include "Core/AssetDatabase.h"
+
 #include "Render/GLDriver.h"
 #include "Profiler/profiler.h"
 #include "Utility/Time.h"
@@ -101,10 +103,10 @@ static inline void set_style()
 	ImVec4 transparent(0.0f, 0.0f, 0.0f, 0.0f);
 
 	ImVec4 grey0(0.095f, 0.095f, 0.095f, 1.00f);
-	ImVec4 grey1(0.09f, 0.09f, 0.09f, 1.00f);
+	ImVec4 grey1(0.17f, 0.17f, 0.17f, 1.00f);
 	ImVec4 grey2(0.12f, 0.12f, 0.12f, 1.00f);
-	ImVec4 grey3(0.145f, 0.145f, 0.145f, 1.00f);
-	ImVec4 grey4(0.263f, 0.263f, 0.263f, 1.00f);
+	ImVec4 grey3(0.22f, 0.22f, 0.22f, 1.00f);
+	ImVec4 grey4(0.25, 0.25, 0.25, 1.00f);
 	ImVec4 grey5(0.54f, 0.54f, 0.54f, 1.00f);
 	ImVec4 grey6(0.80f, 0.80f, 0.83f, 1.0f);
 
@@ -128,7 +130,7 @@ static inline void set_style()
 
 	style->Colors[ImGuiCol_Header] = transparent;
 	style->Colors[ImGuiCol_HeaderHovered] = grey3;
-	style->Colors[ImGuiCol_HeaderActive] = grey0;
+	style->Colors[ImGuiCol_HeaderActive] = grey4;
 
 	style->Colors[ImGuiCol_Text] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 	style->Colors[ImGuiCol_TextDisabled] = ImVec4(0.82f, 0.82f, 0.82f, 0.39f);
@@ -193,7 +195,7 @@ void UI::init()
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	io.Fonts->AddFontFromFileTTF("Assets/fonts/Ruda-Bold.ttf", 14);
+	io.Fonts->AddFontFromFileTTF(AssetDatabase::resource_path("fonts/Ruda-Bold.ttf").c_str(), 14);
 
 	set_style();
 	set_keymap();

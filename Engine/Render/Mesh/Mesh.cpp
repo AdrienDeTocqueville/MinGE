@@ -2,38 +2,39 @@
 #include "Render/GLDriver.h"
 
 #include "IO/URI.h"
-#include "IO/json.hpp"
+#include "IO/DataModel.h"
 #include "Utility/Log.h"
 #include "Structures/Bounds.h"
 
-#include "Core/Asset.inl"
-
-const Mesh Mesh::none;
-// submeshes, mesh data, URI, AABB, generation
-multi_array_t<submeshes_t, mesh_data_t, char*, AABB, uint8_t> Mesh::meshes;
+array_list_t<Mesh::mesh_t> Mesh::meshes;
 array_list_t<submesh_t> Mesh::submeshes;
 
+static inline void destroy_mesh(UID32 object)
+{
+	Mesh mesh(object);
+	ASSERT(mesh.is_valid(), "Trying to destroy an invalid Mesh handle");
+
+	Mesh::mesh_t &data = Mesh::meshes[object.id()];
+	Mesh::submeshes_t submeshes = data.submeshes;
+	GL::DeleteBuffer(submeshes.vbo);
+	GL::DeleteBuffer(submeshes.ebo);
+
+	for (unsigned i = 0; i < submeshes.count; i++)
+	{
+		submesh_t &submesh = Mesh::submeshes[submeshes.first + i];
+		GL::DeleteVertexArray(submesh.vao);
+	}
+
+	Mesh::submeshes.remove(submeshes.first, submeshes.count);
+	data.data.free();
+
+	data.destroy();
+	Mesh::meshes.remove(object.id());
+}
 
 void Mesh::destroy()
 {
-	assert(is_valid() && "Invalid Mesh handle");
-
-	submeshes_t subs = *meshes.get<0>(id());
-	submesh_t sub = submeshes[subs.first];
-
-	GL::DeleteVertexArray(sub.vao);
-	GL::DeleteBuffer(subs.vbo);
-	GL::DeleteBuffer(subs.ebo);
-	submeshes.remove(subs.first, subs.count);
-
-	meshes.get<1>(id())->free();
-	free(meshes.get<2>()[id()]);
-	*meshes.get<2>(id()) = NULL;
-	++(*meshes.get<4>(id()));
-
-	// Return to pool, generation will be
-	// kept if the slot gets recycled
-	meshes.remove(id());
+	destroy_mesh(*this);
 }
 
 
@@ -89,6 +90,7 @@ static inline void load_buffers(const mesh_data_t &data, uint32_t &vao, uint32_t
 		}
 		glCheck(glUnmapBuffer(GL_ARRAY_BUFFER));
 
+		// VAO
 		#define BIND(slot, stride, x) if (x) { \
 			glCheck(glEnableVertexAttribArray(slot)); \
 			glCheck(glVertexAttribPointer(slot, sizeof(*x) / sizeof(float), GL_FLOAT, GL_FALSE, stride, address)); \
@@ -107,7 +109,7 @@ static inline void load_buffers(const mesh_data_t &data, uint32_t &vao, uint32_t
 			glCheck(glVertexAttribIPointer(3, sizeof(data.bones->bones) / sizeof(int), GL_UNSIGNED_INT, stride, address));
 			address += sizeof(data.bones->bones);
 
-			glCheck(glEnableVertexAttribArray(4));
+			glCheck(glEnableVertexAttribArray(3));
 			glCheck(glVertexAttribPointer(4, sizeof(data.bones->weights) / sizeof(float), GL_FLOAT, GL_FALSE, stride, address));
 			address += sizeof(data.bones->weights);
 		}
@@ -124,29 +126,18 @@ static inline void load_buffers(const mesh_data_t &data, uint32_t &vao, uint32_t
 	GL::BindVertexArray(0);
 }
 
-Mesh Mesh::load(const char *URI)
+void Mesh::set_mesh_data(mesh_data_t &&data, const submesh_t *submeshes, uint32_t submesh_count)
 {
-	uri_t uri;
-	if (!uri.parse(URI))
-		return Mesh::none;
+	mesh_t &mesh = Mesh::meshes[id()];
 
-	uint32_t first_submesh, submesh_count;
+	/*
+	if (!generate_mesh(uri, data))
+	return Mesh::none;
 
-	mesh_data_t data;
-	if (uri.on_disk)
-	{
-		// remember that submesh_t::offset = _first_index * sizeof(uint16_t)
-		return Mesh::none;
-	}
-	else
-	{
-		if (!generate_mesh(uri, data))
-			return Mesh::none;
-
-		submesh_count = 1;
-		first_submesh = submeshes.add(1);
-		submeshes[first_submesh] = submesh_t { GL_TRIANGLES, data.index_count, 0 };
-	}
+	submesh_count = 1;
+	first_submesh = submeshes.add(submesh_count);
+	submeshes[first_submesh] = submesh_t { GL_TRIANGLES, data.index_count, 0 };
+	*/
 
 	vec3 b0, b1;
 	compute_aabb(data, b0, b1);
@@ -154,57 +145,50 @@ Mesh Mesh::load(const char *URI)
 	uint32_t vao, vbo, ebo;
 	load_buffers(data, vao, vbo, ebo);
 
-	uint32_t last_submesh = first_submesh + submesh_count;
-	for (uint32_t i = first_submesh; i < last_submesh; i++)
-		submeshes[i].vao = vao;
+	uint32_t first_submesh = Mesh::submeshes.add(submesh_count);
+	for (uint32_t i = 0; i < submesh_count; i++)
+	{
+		Mesh::submeshes[first_submesh + i] = {
+			submeshes[i].mode,
+			submeshes[i].count,
+			submeshes[i].offset,
+			vao
+		};
+	}
 
+	mesh.submeshes = submeshes_t {first_submesh, submesh_count, vbo, ebo};
+	mesh.data = std::move(data);
+	mesh.aabb.init(b0, b1);
+}
+
+Mesh Mesh::create(const char *name)
+{
 	uint32_t i = meshes.add();
-	meshes.get<0>()[i] = submeshes_t {first_submesh, submesh_count, vbo, ebo};
-	meshes.get<1>()[i] = data;
-	meshes.get<2>()[i] = strdup(URI);
-	meshes.get<3>()[i].init(b0, b1);
+	Mesh::mesh_t &mesh = meshes[i];
 
-	return Mesh(i, meshes.get<4>()[i]);
+	mesh.create();
+	if (name != nullptr)
+		mesh.name = strdup(name);
+
+	return Mesh::get(i);
 }
 
-Mesh Mesh::get(uint32_t i)
+static UID32 transfer(UID32 object, DataModel *model)
 {
-	return ASSET_GET(Mesh, 2, 4, meshes, i);
+	if (!object.valid())
+		object = Mesh::create(NULL);
+	Mesh asset = Mesh(object);
+
+	Mesh::mesh_t &data = Mesh::meshes[asset.id()];
+	model->transfer("name", data.name);
+
+	return object;
 }
 
+const object_type_t Mesh::type = []() {
+	object_type_t t = INIT_ASSET_TYPE(Mesh);
 
-/// Asset type
-using namespace nlohmann;
-void mesh_save(json &dump)
-{
-	Asset::save(dump, Mesh::meshes, Mesh::get);
-}
-
-void mesh_load(const json &dump)
-{
-	Asset::load<Mesh, 2, 4>(dump, Mesh::meshes);
-}
-
-void mesh_clear()
-{
-	Asset::clear<2>(Mesh::meshes, [](int i) {
-		submeshes_t subs = *Mesh::meshes.get<0>(i);
-		submesh_t sub = Mesh::submeshes[subs.first];
-
-		GL::DeleteVertexArray(sub.vao);
-		GL::DeleteBuffer(subs.vbo);
-		GL::DeleteBuffer(subs.ebo);
-		Mesh::meshes.get<1>(i)->free();
-	});
-	Mesh::submeshes.clear();
-}
-
-const asset_type_t Mesh::type = []() {
-	asset_type_t t{ NULL };
-	t.name = "Mesh";
-
-	t.save = mesh_save;
-	t.load = mesh_load;
-	t.clear = mesh_clear;
+	t.destroy = destroy_mesh;
+	t.transfer = transfer;
 	return t;
 }();

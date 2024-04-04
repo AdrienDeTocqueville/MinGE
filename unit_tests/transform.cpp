@@ -116,6 +116,7 @@ void test_transforms()
 
 	TEST(transforms->get(e4).position() == vec3(1, 0, 0));
 
+	/*
 	Scene::set_systems("world", transforms);
 	DUMP_SCENE(dump1, "Assets/tests/transforms.ge");
 
@@ -125,4 +126,5 @@ void test_transforms()
 	DUMP_SCENE(dump2, "Assets/tests/transforms.ge");
 
 	TEST(dump1 == dump2);
+	*/
 }

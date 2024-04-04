@@ -1,36 +1,29 @@
 #pragma once
 
-#include "Core/UID.h"
-#include "Structures/MultiArray.h"
-
-struct entity_t
-{
-	uint32_t reserved;
-	uint8_t gen;
-	uint8_t destroyed;
-	char *name;
-};
+#include "Core/AssetDatabase.h"
+#include "Structures/ArrayList.h"
 
 struct Entity: public UID32
 {
+	struct entity_t : object_data_t
+	{
+	};
+
 	Entity() {}
+	Entity(UID32 uid): UID32(uid) {}
 
 	void destroy();
-	inline const char *name() const { return entities.get<0>(id())->name; }
-	inline bool is_valid() const
-	{
-		auto i = id();
-		return i && (i <= entities.size) && (gen() == entities.get<0>(i)->gen);
-	}
+	bool is_valid() const { return valid() && entities[id()].valid(gen()); }
+
+	const char *name() const { return entities[id()].name; }
 
 	static Entity create(const char *name = NULL);
-	static Entity get(uint32_t i);
+	static Entity get(uint32_t i) { return UID32(i, entities[i].gen); }
 	static Entity get(const char *name);
-	static void clear();
 
 	static const Entity none;
-	static multi_array_t<entity_t> entities;
+	static array_list_t<entity_t> entities;
 
-private:
-	Entity(uint32_t _index, uint32_t _gen): UID32(_index, _gen) {}
+	static const struct object_type_t type;
+	//static const struct asset_importer_t importer;
 };

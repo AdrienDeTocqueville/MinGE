@@ -7,7 +7,7 @@
 #endif
 
 #ifdef __linux__
-#define PLATFORM_LINUX
+#define PLATFORM_LINUX 1
 
 #define DLL_EXPORT	__attribute__((visibility("default")))
 #define DLL_IMPORT	__attribute__((visibility("default")))
@@ -16,25 +16,30 @@
 
 #ifdef DEBUG
 #define ASSERT(x, msg)	if (!(x)) { \
-	std::cerr << "Assert in " << __FILE__ << " at line " << __LINE__ << ": '" << # x << "'\n"; \
+	std::cerr << "[" << __FILE__ << ":" << __LINE__ << "]: " << msg << ". (" << # x << ")\n"; \
 	__builtin_trap(); std::cin.get(); exit(-1);  }
 #else
 #define ASSERT(x, msg)	((void)0)
 #endif
 
 
-#elif _WIN32
-#define PLATFORM_WINDOWS
+#elif defined(_WIN32) || defined(_WIN64)
+#define PLATFORM_WINDOWS 1
 
 #define DLL_EXPORT	__declspec(dllexport)
 #define DLL_IMPORT	__declspec(dllimport)
 
 #define NO_INLINE	__declspec(noinline)
 
+#ifdef _MSC_VER 
+#define strcasecmp _stricmp
+#endif
+
 #ifdef DEBUG
 #include <sstream>
+#include "Memory/Memory.h"
 #define ASSERT(x, msg)	if (!(x)) { std::stringstream str; \
-	str << "Assert in " << __FILE__ << " at line " << __LINE__ << ": '" << # x << "'\n"; \
+	str << "[" << __FILE__ << ":" << __LINE__ << "]: " << msg << ". (" << # x << ")\n"; \
 	OutputDebugStringA(str.str().c_str()); \
 	std::cerr << str.str() << std::endl; \
 	DebugBreak(); std::cin.get(); exit(-1);  }

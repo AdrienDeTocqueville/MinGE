@@ -132,7 +132,9 @@ void Debug::init()
 
 void Debug::load()
 {
-	material = Material::load("hidden:material?shader=debug");
+	auto default_path = AssetDatabase::resource_path("Shaders/debug.shader");
+	Shader default_shader = AssetDatabase::get(default_path);
+	material = Material::create(default_shader);
 }
 
 void Debug::destroy()
@@ -199,7 +201,7 @@ void Debug::flush()
 	GL::Enable(GL::Blend);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	Material::materials.get<0>(material.id())->bind(RenderPass::Forward);
+	Material::materials[material.id()].bind(RenderPass::Forward);
 
 	if (points.size())	flush_points();
 	if (lines.size())	flush_lines();

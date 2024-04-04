@@ -32,8 +32,7 @@ const system_type_t type = []() {
 
 	t.destroy = NULL;
 	t.update = updater;
-	t.save = NULL;
-	t.load = NULL;
+	t.transfer = NULL;
 	return t;
 }();
 
